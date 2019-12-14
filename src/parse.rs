@@ -2,7 +2,6 @@
 
 use core::convert::TryFrom;
 use derive_more::From;
-use std::io::Read;
 use thiserror::Error;
 use wasmparser::{
     CodeSectionReader,
@@ -226,10 +225,11 @@ impl<'b> Module<'b> {
     ///
     /// # Dev Note
     ///
-    /// - For the sake of simplicity we ignore custom section such as the `name` section.
-    /// - We have to skip custom section after every step since they might appear out of order.
+    /// - For the sake of simplicity we ignore custom sections.
+    /// - We have to skip custom section after every step
+    ///   since they might appear out of order.
     /// - The binary Wasm sections are guaranteed to be in the following order.
-    ///   Some sections may be missing.
+    ///   Sections are optional and may be missing.
     ///
     /// | Section  | Description                              |
     /// |----------|------------------------------------------|
@@ -289,7 +289,8 @@ impl<'b> Module<'b> {
         Self::from_raw_parts(types, fn_decls, fn_defs)
     }
 
-    /// Extracts the types from the `type` section and converts them into `runwell` entities.
+    /// Extracts the types from the `type` section and
+    /// converts them into `runwell` Wasm entities.
     fn extract_types(
         types: &mut Vec<FunctionDeclaration>,
         mut section: TypeSectionReader,
@@ -301,7 +302,8 @@ impl<'b> Module<'b> {
         Ok(())
     }
 
-    /// Extracts the declarations from the `function` section and converts them into `runwell` entities.
+    /// Extracts the declarations from the `function` section and
+    /// converts them into `runwell` Wasm entities.
     fn extract_fn_types(
         fn_types: &mut Vec<TypeId>,
         mut section: FunctionSectionReader,
@@ -313,7 +315,8 @@ impl<'b> Module<'b> {
         Ok(())
     }
 
-    /// Extracts the definitions from the `code` section and converts them into `runwell` entities.
+    /// Extracts the definitions from the `code` section and
+    /// converts them into `runwell` Wasm entities.
     fn extract_code<'a>(
         fn_bodies: &mut Vec<FunctionDefinition<'a>>,
         mut section: CodeSectionReader<'a>,
@@ -348,10 +351,8 @@ mod tests {
 
     #[test]
     fn parse_incrementer() {
-        let wasm = std::fs::read("incrementer.wasm")
-            .expect("couldn't read `incrementer.wasm`");
-        let module = Module::new(&wasm).expect("couldn't parse Wasm module");
-        // println!("module = {:#?}", module);
+        let wasm = include_bytes!("../incrementer.wasm");
+        let module = Module::new(wasm).expect("couldn't parse Wasm module");
         for fun in module.iter_fns().take(3) {
             println!("\n\n{:#?}", fun);
         }
