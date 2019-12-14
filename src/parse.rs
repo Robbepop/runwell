@@ -349,10 +349,9 @@ impl<'b> Module<'b> {
         mut section: TypeSectionReader,
     ) -> Result<(), ParseError> {
         debug_assert!(types.is_empty());
-        *types = section
-            .into_iter()
-            .map(|func_type| Ok(FunctionDeclaration::from(func_type?)))
-            .collect::<Result<_, ParseError>>()?;
+        for func_type in section.into_iter() {
+            types.push(FunctionDeclaration::from(func_type?));
+        }
         Ok(())
     }
 
