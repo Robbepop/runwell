@@ -1,4 +1,7 @@
 //! Structures and routines for parsing and validating WebAssembly (Wasm).
+//!
+//! Use the [`Module::new`] constructor in order to parse and validate
+//! a Wasm encoded stream of bytes.
 
 use core::convert::TryFrom;
 use derive_more::From;
@@ -8,6 +11,7 @@ use wasmparser::{
     FuncType,
     FunctionBody,
     FunctionSectionReader,
+    GlobalSectionReader,
     ModuleReader,
     Operator,
     SectionCode,
@@ -65,6 +69,8 @@ pub struct Module<'a> {
     types: Vec<FunctionDeclaration>,
     /// Indices into the `types` table for every function in order.
     fn_decls: Vec<TypeId>,
+    /// Global variable definitions.
+    globals: Vec<GlobalVariable<'a>>,
     /// Function bodies for every function in order.
     ///
     /// # Note
@@ -83,14 +89,16 @@ impl<'a> Module<'a> {
     fn from_raw_parts(
         types: Vec<FunctionDeclaration>,
         fn_decls: Vec<TypeId>,
+        globals: Vec<GlobalVariable<'a>>,
         fn_defs: Vec<FunctionDefinition<'a>>,
-    ) -> Result<Self, ModuleError> {
+    ) -> Result<Self, ParseError> {
         if fn_decls.len() != fn_defs.len() {
-            return Err(ModuleError::UnmatchingFnDeclToDef)
+            return Err(ParseError::UnmatchingFnDeclToDef)
         }
         Ok(Self {
             types,
             fn_decls,
+            globals,
             fn_defs,
         })
     }
@@ -118,10 +126,20 @@ impl<'a> Module<'a> {
         }
     }
 
+    /// Returns an iterator over the global variable definitions.
+    pub fn iter_globals(&self) -> core::slice::Iter<GlobalVariable<'a>> {
+        self.globals.iter()
+    }
+
     /// Returns the number of functions in the Wasm module.
     fn len_fns(&self) -> usize {
         debug_assert_eq!(self.fn_decls.len(), self.fn_defs.len());
         self.fn_decls.len()
+    }
+
+    /// Returns the number of global variable definitions in the Wasm module.
+    fn len_globals(&self) -> usize {
+        self.globals.len()
     }
 }
 
@@ -209,9 +227,38 @@ impl FunctionDefinition<'_> {
     }
 }
 
+/// A global variable definition of a Wasm module.
+#[derive(Debug)]
+pub struct GlobalVariable<'a> {
+    /// The type of the global variable.
+    ty: Type,
+    /// If the global variable is mutable.
+    is_mutable: bool,
+    /// The initialization procedure of the global variable.
+    initializer: Vec<Operator<'a>>,
+}
+
+impl GlobalVariable<'_> {
+    /// Returns the type of the global variable.
+    pub fn ty(&self) -> &Type {
+        &self.ty
+    }
+
+    /// Returns `true` if the global variable is mutable.
+    pub fn is_mutable(&self) -> bool {
+        self.is_mutable
+    }
+
+    /// Returns the operations executed by the
+    /// global variable's initialization procedure.
+    pub fn initializer(&self) -> &[Operator] {
+        &self.initializer
+    }
+}
+
 /// An error that can be encountered upon parsing a Wasm module.
 #[derive(Debug, Error)]
-pub enum ModuleError {
+pub enum ParseError {
     /// An error encountered in the underlying parser.
     #[error("encountered parser error")]
     Parser(#[from] wasmparser::BinaryReaderError),
@@ -244,9 +291,10 @@ impl<'b> Module<'b> {
     /// | Element  | Elements section |
     /// | Code     | Function bodies (code) |
     /// | Data     | Data segments |
-    pub fn new(bytes: &'b [u8]) -> Result<Self, ModuleError> {
+    pub fn new(bytes: &'b [u8]) -> Result<Self, ParseError> {
         let mut types = Vec::new();
         let mut fn_decls = Vec::new();
+        let mut globals = Vec::new();
         let mut fn_defs = Vec::new();
         let mut reader = ModuleReader::new(bytes)?;
         loop {
@@ -271,7 +319,12 @@ impl<'b> Module<'b> {
                 }
                 SectionCode::Table => Ok(()),
                 SectionCode::Memory => Ok(()),
-                SectionCode::Global => Ok(()),
+                SectionCode::Global => {
+                    Self::extract_globals(
+                        &mut globals,
+                        section.get_global_section_reader()?,
+                    )
+                }
                 SectionCode::Export => Ok(()),
                 SectionCode::Start => Ok(()),
                 SectionCode::Element => Ok(()),
@@ -286,7 +339,7 @@ impl<'b> Module<'b> {
                 _ => unreachable!("encountered unsupported custom section"),
             }?
         }
-        Self::from_raw_parts(types, fn_decls, fn_defs)
+        Self::from_raw_parts(types, fn_decls, globals, fn_defs)
     }
 
     /// Extracts the types from the `type` section and
@@ -294,11 +347,11 @@ impl<'b> Module<'b> {
     fn extract_types(
         types: &mut Vec<FunctionDeclaration>,
         mut section: TypeSectionReader,
-    ) -> Result<(), ModuleError> {
+    ) -> Result<(), ParseError> {
         *types = section
             .into_iter()
             .map(|func_type| Ok(FunctionDeclaration::from(func_type?)))
-            .collect::<Result<_, ModuleError>>()?;
+            .collect::<Result<_, ParseError>>()?;
         Ok(())
     }
 
@@ -307,11 +360,38 @@ impl<'b> Module<'b> {
     fn extract_fn_types(
         fn_types: &mut Vec<TypeId>,
         mut section: FunctionSectionReader,
-    ) -> Result<(), ModuleError> {
+    ) -> Result<(), ParseError> {
         *fn_types = section
             .into_iter()
             .map(|id| Ok(TypeId(id? as usize)))
-            .collect::<Result<_, ModuleError>>()?;
+            .collect::<Result<_, ParseError>>()?;
+        Ok(())
+    }
+
+    /// Extracts the definitions from the `global` section and
+    /// converts them into `runwell` Wasm entities.
+    fn extract_globals<'a>(
+        globals: &mut Vec<GlobalVariable<'a>>,
+        mut section: GlobalSectionReader<'a>,
+    ) -> Result<(), ParseError> {
+        *globals = section
+            .into_iter()
+            .map(|global| {
+                let global = global?;
+                let ty = global.ty.content_type;
+                let is_mutable = global.ty.mutable;
+                let initializer = global
+                    .init_expr
+                    .get_operators_reader()
+                    .into_iter()
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(GlobalVariable {
+                    ty,
+                    is_mutable,
+                    initializer,
+                })
+            })
+            .collect::<Result<Vec<_>, ParseError>>()?;
         Ok(())
     }
 
@@ -320,7 +400,7 @@ impl<'b> Module<'b> {
     fn extract_code<'a>(
         fn_bodies: &mut Vec<FunctionDefinition<'a>>,
         mut section: CodeSectionReader<'a>,
-    ) -> Result<(), ModuleError> {
+    ) -> Result<(), ParseError> {
         *fn_bodies = section
             .into_iter()
             .map(|fn_body| {
@@ -333,14 +413,14 @@ impl<'b> Module<'b> {
                             let local = local?;
                             Ok((local.0 as usize, local.1))
                         })
-                        .collect::<Result<_, ModuleError>>()?,
+                        .collect::<Result<_, ParseError>>()?,
                     ops: fn_body
                         .get_operators_reader()?
                         .into_iter()
                         .collect::<Result<_, _>>()?,
                 })
             })
-            .collect::<Result<_, ModuleError>>()?;
+            .collect::<Result<_, ParseError>>()?;
         Ok(())
     }
 }
@@ -355,6 +435,9 @@ mod tests {
         let module = Module::new(wasm).expect("couldn't parse Wasm module");
         for fun in module.iter_fns().take(3) {
             println!("\n\n{:#?}", fun);
+        }
+        for global_variable in module.iter_globals().take(3) {
+            println!("\n{:#?}", global_variable)
         }
     }
 }
