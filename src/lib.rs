@@ -4,13 +4,8 @@
 #[cfg(feature = "bench")]
 extern crate test;
 
-mod op;
-// mod parser;
 pub mod ir;
 pub mod parse;
-mod vm;
-
-mod bench;
 
 // Function 184 of type FuncType { form: Func, params: [I32, I32, I32], returns: [I32] }
 //     I32Const { value: 0 }
