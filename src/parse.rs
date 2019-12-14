@@ -348,6 +348,7 @@ impl<'b> Module<'b> {
         types: &mut Vec<FunctionDeclaration>,
         mut section: TypeSectionReader,
     ) -> Result<(), ParseError> {
+        debug_assert!(types.is_empty());
         *types = section
             .into_iter()
             .map(|func_type| Ok(FunctionDeclaration::from(func_type?)))
@@ -361,6 +362,7 @@ impl<'b> Module<'b> {
         fn_types: &mut Vec<TypeId>,
         mut section: FunctionSectionReader,
     ) -> Result<(), ParseError> {
+        debug_assert!(fn_types.is_empty());
         *fn_types = section
             .into_iter()
             .map(|id| Ok(TypeId(id? as usize)))
@@ -374,6 +376,7 @@ impl<'b> Module<'b> {
         globals: &mut Vec<GlobalVariable<'a>>,
         mut section: GlobalSectionReader<'a>,
     ) -> Result<(), ParseError> {
+        debug_assert!(globals.is_empty());
         *globals = section
             .into_iter()
             .map(|global| {
@@ -401,6 +404,7 @@ impl<'b> Module<'b> {
         fn_bodies: &mut Vec<FunctionDefinition<'a>>,
         mut section: CodeSectionReader<'a>,
     ) -> Result<(), ParseError> {
+        debug_assert!(fn_bodies.is_empty());
         *fn_bodies = section
             .into_iter()
             .map(|fn_body| {
