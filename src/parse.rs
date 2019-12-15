@@ -95,12 +95,12 @@ impl FunctionId {
 
 /// A function declaration.
 #[derive(Debug, From)]
-pub struct FunctionDeclaration {
+pub struct FunctionDecl {
     /// The underlying function type.
     fn_type: wasmparser::FuncType,
 }
 
-impl FunctionDeclaration {
+impl FunctionDecl {
     /// Returns a slice over the input types of `self`.
     pub fn inputs(&self) -> &[Type] {
         &self.fn_type.params
@@ -118,7 +118,7 @@ pub struct Module<'a> {
     /// Types accessible through the Wasm type table.
     ///
     /// Mainly the types of functions are stored here.
-    types: Vec<FunctionDeclaration>,
+    types: Vec<FunctionDecl>,
     /// Imported function declarations from the Wasm module.
     imported_fns: Vec<TypeId>,
     /// Imported global variable declarations from the Wasm module.
@@ -137,7 +137,7 @@ pub struct Module<'a> {
     ///
     /// A function body consists of the local variables and
     /// all the operations within the function.
-    fn_defs: Vec<FunctionDefinition<'a>>,
+    fn_defs: Vec<FunctionDef<'a>>,
     /// Optional start function.
     ///
     /// # Note
@@ -154,14 +154,14 @@ impl<'a> Module<'a> {
     ///
     /// If the raw parts do not combine to valid Wasm.
     fn from_raw_parts(
-        types: Vec<FunctionDeclaration>,
+        types: Vec<FunctionDecl>,
         imported_fns: Vec<TypeId>,
         imported_globals: Vec<GlobalVariableDecl>,
         fn_decls: Vec<TypeId>,
         memory: MemoryType,
         globals: Vec<GlobalVariableDef<'a>>,
         exports: Vec<Export<'a>>,
-        fn_defs: Vec<FunctionDefinition<'a>>,
+        fn_defs: Vec<FunctionDef<'a>>,
         start_fn: Option<FunctionId>,
     ) -> Result<Self, ParseError> {
         if fn_decls.len() != fn_defs.len() {
@@ -190,17 +190,17 @@ impl<'a> Module<'a> {
     }
 
     /// Returns the identified type from the type table.
-    pub fn get_type(&self, id: TypeId) -> &FunctionDeclaration {
+    pub fn get_type(&self, id: TypeId) -> &FunctionDecl {
         &self.types[id.get()]
     }
 
     /// Returns the declaration of the identified function.
-    pub fn get_fn_decl(&self, id: FunctionId) -> &FunctionDeclaration {
+    pub fn get_fn_decl(&self, id: FunctionId) -> &FunctionDecl {
         self.get_type(self.fn_decls[id.get()])
     }
 
     /// Returns the definition of the identified function.
-    pub fn get_fn_def(&self, id: InternalFunctionId) -> &FunctionDefinition {
+    pub fn get_fn_def(&self, id: InternalFunctionId) -> &FunctionDef {
         &self.fn_defs[id.get()]
     }
 
@@ -307,9 +307,9 @@ pub struct Function<'a> {
     /// The global unique identifier of the function.
     id: InternalFunctionId,
     /// The function declaration.
-    decl: &'a FunctionDeclaration,
+    decl: &'a FunctionDecl,
     /// The function definition.
-    def: &'a FunctionDefinition<'a>,
+    def: &'a FunctionDef<'a>,
 }
 
 impl Function<'_> {
@@ -374,7 +374,7 @@ pub struct ImportedFunction<'a> {
     /// The global unique identifier of the function.
     id: FunctionId,
     /// The function declaration.
-    decl: &'a FunctionDeclaration,
+    decl: &'a FunctionDecl,
 }
 
 impl ImportedFunction<'_> {
@@ -396,14 +396,14 @@ impl ImportedFunction<'_> {
 
 /// A function definition.
 #[derive(Debug)]
-pub struct FunctionDefinition<'b> {
+pub struct FunctionDef<'b> {
     /// The locals of the function.
     locals: Vec<(usize, Type)>,
     /// The operations of the function.
     ops: Vec<Operator<'b>>,
 }
 
-impl FunctionDefinition<'_> {
+impl FunctionDef<'_> {
     /// Returns a slice over the local variable declarations.
     pub fn locals(&self) -> &[(usize, Type)] {
         &self.locals
@@ -599,12 +599,12 @@ impl<'b> Module<'b> {
     /// Extracts the types from the `type` section and
     /// converts them into `runwell` Wasm entities.
     fn extract_types(
-        types: &mut Vec<FunctionDeclaration>,
+        types: &mut Vec<FunctionDecl>,
         mut section: TypeSectionReader,
     ) -> Result<(), ParseError> {
         debug_assert!(types.is_empty());
         for func_type in section.into_iter() {
-            types.push(FunctionDeclaration::from(func_type?));
+            types.push(FunctionDecl::from(func_type?));
         }
         Ok(())
     }
@@ -735,7 +735,7 @@ impl<'b> Module<'b> {
     /// Extracts the definitions from the `code` section and
     /// converts them into `runwell` Wasm entities.
     fn extract_code<'a>(
-        fn_bodies: &mut Vec<FunctionDefinition<'a>>,
+        fn_bodies: &mut Vec<FunctionDef<'a>>,
         mut section: CodeSectionReader<'a>,
     ) -> Result<(), ParseError> {
         debug_assert!(fn_bodies.is_empty());
@@ -743,7 +743,7 @@ impl<'b> Module<'b> {
             .into_iter()
             .map(|fn_body| {
                 let fn_body = fn_body?;
-                Ok(FunctionDefinition {
+                Ok(FunctionDef {
                     locals: fn_body
                         .get_locals_reader()?
                         .into_iter()
