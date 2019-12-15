@@ -2,10 +2,10 @@
 
 use cfg_if::cfg_if;
 
-cfg_if! {
-    if #[cfg(feature = "std")] {
-        // Re-export only `alloc` components from `std`.
-        pub use std::{
+/// Used to list all re-exported `alloc` crate items from another namespace.
+macro_rules! reexport_alloc_from {
+    ( $from:ident ) => {
+        pub use ::$from::{
             alloc,
             borrow,
             boxed,
@@ -19,12 +19,20 @@ cfg_if! {
             vec,
             format,
         };
-    } else {
-        // Re-export `alloc` environment.
-        pub use ::alloc::*;
     }
 }
 
+cfg_if! {
+    if #[cfg(feature = "std")] {
+        // Re-export only `alloc` components from `std`.
+        reexport_alloc_from!(std);
+    } else {
+        // Re-export `alloc` environment.
+        reexport_alloc_from!(alloc);
+    }
+}
+
+/// The prelude shared between `std` and `alloc`.
 pub mod prelude {
     pub use super::{
         borrow::ToOwned,
