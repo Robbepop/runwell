@@ -23,10 +23,17 @@ use derive_more::{Display, From};
 use thiserror::Error;
 use wasmparser::{
     CodeSectionReader,
+    Export,
+    ExportSectionReader,
     FuncType,
     FunctionBody,
     FunctionSectionReader,
     GlobalSectionReader,
+    Import,
+    ImportSectionEntryType,
+    ImportSectionReader,
+    MemorySectionReader,
+    MemoryType,
     ModuleReader,
     Operator,
     SectionCode,
@@ -45,12 +52,42 @@ impl TypeId {
     }
 }
 
+/// An index into the internal function table of a Wasm module.
+#[derive(Debug, Copy, Clone)]
+pub struct InternalFunctionId(usize);
+
+impl InternalFunctionId {
+    /// Returns the `FunctionId` for `self`.
+    pub fn into_function_id(self, module: &Module) -> FunctionId {
+        FunctionId(self.get() + module.len_imported_fns())
+    }
+
+    /// Returns the underlying ID.
+    pub fn get(self) -> usize {
+        self.0
+    }
+}
+
 /// An index into the function table of a Wasm module.
 #[derive(Debug, Copy, Clone)]
 pub struct FunctionId(usize);
 
 impl FunctionId {
-    /// Returns the underlying function ID.
+    /// Returns the internal function ID of `self`
+    /// or `None` if `self` refers to an imported function.
+    pub fn into_internal_function_id(
+        self,
+        module: &Module,
+    ) -> Option<InternalFunctionId> {
+        let id = self.get();
+        let imported_fns = module.len_imported_fns();
+        if id < imported_fns {
+            return None
+        }
+        Some(InternalFunctionId(id - imported_fns))
+    }
+
+    /// Returns the underlying ID.
     pub fn get(self) -> usize {
         self.0
     }
@@ -82,10 +119,18 @@ pub struct Module<'a> {
     ///
     /// Mainly the types of functions are stored here.
     types: Vec<FunctionDeclaration>,
+    /// Imported function declarations from the Wasm module.
+    imported_fns: Vec<TypeId>,
+    /// Imported global variable declarations from the Wasm module.
+    imported_globals: Vec<GlobalVariableDecl>,
     /// Indices into the `types` table for every function in order.
     fn_decls: Vec<TypeId>,
+    /// The linear memory section and its limits.
+    memory: MemoryType,
     /// Global variable definitions.
-    globals: Vec<GlobalVariable<'a>>,
+    globals: Vec<GlobalVariableDef<'a>>,
+    /// Export definitions.
+    exports: Vec<Export<'a>>,
     /// Function bodies for every function in order.
     ///
     /// # Note
@@ -93,6 +138,13 @@ pub struct Module<'a> {
     /// A function body consists of the local variables and
     /// all the operations within the function.
     fn_defs: Vec<FunctionDefinition<'a>>,
+    /// Optional start function.
+    ///
+    /// # Note
+    ///
+    /// If this is `Some` the Wasm module is an executable,
+    /// otherwise it is a library.
+    start_fn: Option<FunctionId>,
 }
 
 impl<'a> Module<'a> {
@@ -103,19 +155,38 @@ impl<'a> Module<'a> {
     /// If the raw parts do not combine to valid Wasm.
     fn from_raw_parts(
         types: Vec<FunctionDeclaration>,
+        imported_fns: Vec<TypeId>,
+        imported_globals: Vec<GlobalVariableDecl>,
         fn_decls: Vec<TypeId>,
-        globals: Vec<GlobalVariable<'a>>,
+        memory: MemoryType,
+        globals: Vec<GlobalVariableDef<'a>>,
+        exports: Vec<Export<'a>>,
         fn_defs: Vec<FunctionDefinition<'a>>,
+        start_fn: Option<FunctionId>,
     ) -> Result<Self, ParseError> {
         if fn_decls.len() != fn_defs.len() {
             return Err(ParseError::UnmatchingFnDeclToDef)
         }
         Ok(Self {
             types,
+            imported_fns,
+            imported_globals,
             fn_decls,
+            memory,
             globals,
+            exports,
             fn_defs,
+            start_fn,
         })
+    }
+
+    /// Returns the linear memory declaation.
+    ///
+    /// # Note
+    ///
+    /// Currently only one linear memory entry is allowed.
+    pub fn memory(&self) -> &MemoryType {
+        &self.memory
     }
 
     /// Returns the identified type from the type table.
@@ -129,8 +200,20 @@ impl<'a> Module<'a> {
     }
 
     /// Returns the definition of the identified function.
-    pub fn get_fn_def(&self, id: FunctionId) -> &FunctionDefinition {
+    pub fn get_fn_def(&self, id: InternalFunctionId) -> &FunctionDefinition {
         &self.fn_defs[id.get()]
+    }
+
+    /// Returns the function at index `id`.
+    pub fn get_fn(&self, id: InternalFunctionId) -> Function {
+        let decl = self.get_fn_decl(id.into_function_id(self));
+        let def = self.get_fn_def(id);
+        Function { id, decl, def }
+    }
+
+    /// Returns the start function, if any.
+    pub fn start_fn(&self) -> Option<FunctionId> {
+        self.start_fn
     }
 
     /// Returns an iterator over the function declarations and definitions.
@@ -141,9 +224,34 @@ impl<'a> Module<'a> {
         }
     }
 
+    /// Returns an iterator over the function declarations and definitions.
+    ///
+    /// # Note
+    ///
+    /// This excludes imported functions.
+    pub fn iter_imported_fns(&self) -> ImportedFunctionIter {
+        ImportedFunctionIter::new(self)
+    }
+
     /// Returns an iterator over the global variable definitions.
-    pub fn iter_globals(&self) -> core::slice::Iter<GlobalVariable<'a>> {
+    ///
+    /// # Note
+    ///
+    /// This excludes imported global variables.
+    pub fn iter_globals(&self) -> core::slice::Iter<GlobalVariableDef<'a>> {
         self.globals.iter()
+    }
+
+    /// Returns an iterator over the imported global variable declarations.
+    pub fn iter_imported_globals(
+        &self,
+    ) -> core::slice::Iter<GlobalVariableDecl> {
+        self.imported_globals.iter()
+    }
+
+    /// Returns an iterator over the exported items.
+    pub fn iter_exports(&self) -> core::slice::Iter<Export<'a>> {
+        self.exports.iter()
     }
 
     /// Returns the number of functions in the Wasm module.
@@ -152,9 +260,19 @@ impl<'a> Module<'a> {
         self.fn_decls.len()
     }
 
+    /// Returns the number of imported function in the Wasm module.
+    fn len_imported_fns(&self) -> usize {
+        self.imported_fns.len()
+    }
+
     /// Returns the number of global variable definitions in the Wasm module.
     fn len_globals(&self) -> usize {
         self.globals.len()
+    }
+
+    /// Returns the number of imported global variables in the Wasm module.
+    fn len_imported_globals(&self) -> usize {
+        self.imported_fns.len()
     }
 }
 
@@ -167,11 +285,27 @@ pub struct FunctionIter<'a> {
     current: usize,
 }
 
+impl<'a> Iterator for FunctionIter<'a> {
+    type Item = Function<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current == self.module.len_fns() {
+            return None
+        }
+        let id = InternalFunctionId(self.current);
+        let decl = self.module.get_fn_decl(id.into_function_id(&self.module));
+        let def = self.module.get_fn_def(id);
+        let fun = Self::Item { id, decl, def };
+        self.current += 1;
+        Some(fun)
+    }
+}
+
 /// A Wasm function.
 #[derive(Debug)]
 pub struct Function<'a> {
     /// The global unique identifier of the function.
-    id: FunctionId,
+    id: InternalFunctionId,
     /// The function declaration.
     decl: &'a FunctionDeclaration,
     /// The function definition.
@@ -180,7 +314,7 @@ pub struct Function<'a> {
 
 impl Function<'_> {
     /// The global unique function identifier.
-    pub fn id(&self) -> FunctionId {
+    pub fn id(&self) -> InternalFunctionId {
         self.id
     }
 
@@ -205,19 +339,58 @@ impl Function<'_> {
     }
 }
 
-impl<'a> Iterator for FunctionIter<'a> {
-    type Item = Function<'a>;
+pub struct ImportedFunctionIter<'a> {
+    /// The iterated Wasm module.
+    module: &'a Module<'a>,
+    /// The iterated over imported function type IDs.
+    ids: core::iter::Enumerate<core::slice::Iter<'a, TypeId>>,
+}
+
+impl<'a> ImportedFunctionIter<'a> {
+    pub fn new(module: &'a Module) -> Self {
+        Self {
+            module,
+            ids: module.imported_fns.iter().enumerate(),
+        }
+    }
+}
+
+impl<'a> Iterator for ImportedFunctionIter<'a> {
+    type Item = ImportedFunction<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current == self.module.len_fns() {
-            return None
-        }
-        let id = FunctionId(self.current);
-        let decl = self.module.get_fn_decl(id);
-        let def = self.module.get_fn_def(id);
-        let fun = Self::Item { id, decl, def };
-        self.current += 1;
-        Some(fun)
+        self.ids.next()
+            .map(|(id, &type_id)| {
+                let id = FunctionId(id);
+                let decl = self.module.get_type(type_id);
+                Self::Item { id, decl }
+            })
+    }
+}
+
+/// A Wasm function.
+#[derive(Debug)]
+pub struct ImportedFunction<'a> {
+    /// The global unique identifier of the function.
+    id: FunctionId,
+    /// The function declaration.
+    decl: &'a FunctionDeclaration,
+}
+
+impl ImportedFunction<'_> {
+    /// The global unique function identifier.
+    pub fn id(&self) -> FunctionId {
+        self.id
+    }
+
+    /// The input types of the function.
+    pub fn inputs(&self) -> &[Type] {
+        self.decl.inputs()
+    }
+
+    /// The output types of the function.
+    pub fn outputs(&self) -> &[Type] {
+        self.decl.outputs()
     }
 }
 
@@ -242,18 +415,16 @@ impl FunctionDefinition<'_> {
     }
 }
 
-/// A global variable definition of a Wasm module.
+/// A global variable declaration.
 #[derive(Debug)]
-pub struct GlobalVariable<'a> {
+pub struct GlobalVariableDecl {
     /// The type of the global variable.
     ty: Type,
     /// If the global variable is mutable.
     is_mutable: bool,
-    /// The initialization procedure of the global variable.
-    initializer: Vec<Operator<'a>>,
 }
 
-impl GlobalVariable<'_> {
+impl GlobalVariableDecl {
     /// Returns the type of the global variable.
     pub fn ty(&self) -> &Type {
         &self.ty
@@ -262,6 +433,22 @@ impl GlobalVariable<'_> {
     /// Returns `true` if the global variable is mutable.
     pub fn is_mutable(&self) -> bool {
         self.is_mutable
+    }
+}
+
+/// A global variable definition of a Wasm module.
+#[derive(Debug)]
+pub struct GlobalVariableDef<'a> {
+    /// The global variable declaration.
+    decl: GlobalVariableDecl,
+    /// The initialization procedure of the global variable.
+    initializer: Vec<Operator<'a>>,
+}
+
+impl GlobalVariableDef<'_> {
+    /// Returns the declaration of the global variable.
+    pub fn decl(&self) -> &GlobalVariableDecl {
+        &self.decl
     }
 
     /// Returns the operations executed by the
@@ -282,6 +469,18 @@ pub enum ParseError {
     #[display(fmt = "unmatching fn declarations and definitions")]
     #[from(ignore)]
     UnmatchingFnDeclToDef,
+    /// Encountered upon encountering multiple memory section entries.
+    #[display(fmt = "multiple memory entries are unsupported, yet")]
+    #[from(ignore)]
+    MultipleMemoriesUnsupported,
+    /// Missing a linear memory section or entry.
+    #[display(fmt = "missing linear memory section or entry")]
+    #[from(ignore)]
+    MissingMemoryEntry,
+    /// Min-max linear memory section does not match.
+    #[display(fmt = "unmatching minimum and maximum linear memory limits")]
+    #[from(ignore)]
+    UnmatchingMinMaxMemoryLimits,
 }
 
 impl<'b> Module<'b> {
@@ -310,9 +509,14 @@ impl<'b> Module<'b> {
     /// | Data     | Data segments |
     pub fn new(bytes: &'b [u8]) -> Result<Self, ParseError> {
         let mut types = Vec::new();
+        let mut imported_fns = Vec::new();
+        let mut imported_globals = Vec::new();
         let mut fn_decls = Vec::new();
         let mut globals = Vec::new();
+        let mut exports = Vec::new();
         let mut fn_defs = Vec::new();
+        let mut memory = None;
+        let mut start_fn = None;
         let mut reader = ModuleReader::new(bytes)?;
         loop {
             reader.skip_custom_sections()?;
@@ -327,7 +531,14 @@ impl<'b> Module<'b> {
                         section.get_type_section_reader()?,
                     )
                 }
-                SectionCode::Import => Ok(()),
+                SectionCode::Import => {
+                    Self::extract_imports(
+                        &mut imported_fns,
+                        &mut imported_globals,
+                        &mut memory,
+                        section.get_import_section_reader()?,
+                    )
+                }
                 SectionCode::Function => {
                     Self::extract_fn_types(
                         &mut fn_decls,
@@ -335,15 +546,30 @@ impl<'b> Module<'b> {
                     )
                 }
                 SectionCode::Table => Ok(()),
-                SectionCode::Memory => Ok(()),
+                SectionCode::Memory => {
+                    Self::extract_memories(
+                        &mut memory,
+                        section.get_memory_section_reader()?,
+                    )
+                }
                 SectionCode::Global => {
                     Self::extract_globals(
                         &mut globals,
                         section.get_global_section_reader()?,
                     )
                 }
-                SectionCode::Export => Ok(()),
-                SectionCode::Start => Ok(()),
+                SectionCode::Export => {
+                    Self::extract_exports(
+                        &mut exports,
+                        section.get_export_section_reader()?,
+                    )
+                }
+                SectionCode::Start => {
+                    Self::extract_start_fn(
+                        &mut start_fn,
+                        section.get_start_section_content()?,
+                    )
+                }
                 SectionCode::Element => Ok(()),
                 SectionCode::Code => {
                     Self::extract_code(
@@ -356,7 +582,18 @@ impl<'b> Module<'b> {
                 _ => unreachable!("encountered unsupported custom section"),
             }?
         }
-        Self::from_raw_parts(types, fn_decls, globals, fn_defs)
+        let memory = memory.ok_or_else(|| ParseError::MissingMemoryEntry)?;
+        Self::from_raw_parts(
+            types,
+            imported_fns,
+            imported_globals,
+            fn_decls,
+            memory,
+            globals,
+            exports,
+            fn_defs,
+            start_fn,
+        )
     }
 
     /// Extracts the types from the `type` section and
@@ -368,6 +605,36 @@ impl<'b> Module<'b> {
         debug_assert!(types.is_empty());
         for func_type in section.into_iter() {
             types.push(FunctionDeclaration::from(func_type?));
+        }
+        Ok(())
+    }
+
+    /// Extracts the import declarations from the `import` section.
+    fn extract_imports<'a>(
+        imported_fns: &mut Vec<TypeId>,
+        imported_globals: &mut Vec<GlobalVariableDecl>,
+        memory: &mut Option<MemoryType>,
+        mut section: ImportSectionReader<'a>,
+    ) -> Result<(), ParseError> {
+        debug_assert!(imported_fns.is_empty());
+        debug_assert!(imported_globals.is_empty());
+        for import in section.into_iter() {
+            let import = import?;
+            match import.ty {
+                ImportSectionEntryType::Memory(ty) => {
+                    Self::validate_and_update_memory(ty, memory)?
+                }
+                ImportSectionEntryType::Function(function) => {
+                    imported_fns.push(TypeId(function as usize))
+                }
+                ImportSectionEntryType::Global(global) => {
+                    imported_globals.push(GlobalVariableDecl {
+                        ty: global.content_type,
+                        is_mutable: global.mutable,
+                    })
+                }
+                ImportSectionEntryType::Table(_) => {}
+            }
         }
         Ok(())
     }
@@ -386,10 +653,41 @@ impl<'b> Module<'b> {
         Ok(())
     }
 
+    /// Extracts the linear memory declarations from the `memory` section.
+    fn extract_memories(
+        memory: &mut Option<MemoryType>,
+        mut section: MemorySectionReader,
+    ) -> Result<(), ParseError> {
+        let memories = section.into_iter().collect::<Result<Vec<_>, _>>()?;
+        if memories.is_empty() {
+            return Err(ParseError::MissingMemoryEntry)
+        }
+        if memories.len() >= 2 {
+            return Err(ParseError::MultipleMemoriesUnsupported)
+        }
+        Self::validate_and_update_memory(memories[0], memory)
+    }
+
+    /// Validates the parsed memory type and properly updates it for the module.
+    fn validate_and_update_memory(
+        wasm_memory: MemoryType,
+        rw_memory: &mut Option<MemoryType>,
+    ) -> Result<(), ParseError> {
+        if rw_memory.is_some() {
+            return Err(ParseError::MultipleMemoriesUnsupported)
+        }
+        // TODO: Un-uncomment these lines to re-enable the check.
+        // if Some(wasm_memory.limits.initial) != wasm_memory.limits.maximum {
+        //     return Err(ParseError::UnmatchingMinMaxMemoryLimits)
+        // }
+        *rw_memory = Some(wasm_memory);
+        Ok(())
+    }
+
     /// Extracts the definitions from the `global` section and
     /// converts them into `runwell` Wasm entities.
     fn extract_globals<'a>(
-        globals: &mut Vec<GlobalVariable<'a>>,
+        globals: &mut Vec<GlobalVariableDef<'a>>,
         mut section: GlobalSectionReader<'a>,
     ) -> Result<(), ParseError> {
         debug_assert!(globals.is_empty());
@@ -404,13 +702,33 @@ impl<'b> Module<'b> {
                     .get_operators_reader()
                     .into_iter()
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(GlobalVariable {
-                    ty,
-                    is_mutable,
+                Ok(GlobalVariableDef {
+                    decl: GlobalVariableDecl { ty, is_mutable },
                     initializer,
                 })
             })
             .collect::<Result<Vec<_>, ParseError>>()?;
+        Ok(())
+    }
+
+    /// Extracts the export definitions from the `export` section.
+    fn extract_exports<'a>(
+        exports: &mut Vec<Export<'a>>,
+        mut section: ExportSectionReader<'a>,
+    ) -> Result<(), ParseError> {
+        debug_assert!(exports.is_empty());
+        for export in section.into_iter() {
+            exports.push(export?);
+        }
+        Ok(())
+    }
+
+    /// Extracts the starting function.
+    fn extract_start_fn(
+        start_fn: &mut Option<FunctionId>,
+        content: u32,
+    ) -> Result<(), ParseError> {
+        *start_fn = Some(FunctionId(content as usize));
         Ok(())
     }
 
@@ -453,11 +771,23 @@ mod tests {
     fn parse_incrementer() {
         let wasm = include_bytes!("../incrementer.wasm");
         let module = Module::new(wasm).expect("couldn't parse Wasm module");
-        for fun in module.iter_fns().take(3) {
+        for fun in module.iter_imported_fns().take(2) {
             println!("\n\n{:#?}", fun);
         }
-        for global_variable in module.iter_globals().take(3) {
+        for fun in module.iter_fns().take(2) {
+            println!("\n\n{:#?}", fun);
+        }
+        for global_variable in module.iter_globals().take(2) {
             println!("\n{:#?}", global_variable)
         }
+        for export in module.iter_exports().take(2) {
+            println!("\n{:#?}", export);
+        }
+        println!("\nmemory = {:#?}", module.memory);
+        println!("\nstart fn           = {:#?}", module.start_fn());
+        println!("# imported fns     = {:#?}", module.len_imported_fns());
+        println!("# fns              = {:#?}", module.len_fns());
+        println!("# imported globals = {:#?}", module.len_imported_globals());
+        println!("# globals          = {:#?}", module.len_globals());
     }
 }
