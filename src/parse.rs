@@ -75,7 +75,7 @@ pub struct FunctionId(usize);
 impl FunctionId {
     /// Returns the internal function ID of `self`
     /// or `None` if `self` refers to an imported function.
-    pub fn into_internal_function_id(
+    pub fn into_internal_id(
         self,
         module: &Module,
     ) -> Option<InternalFunctionId> {
@@ -93,14 +93,14 @@ impl FunctionId {
     }
 }
 
-/// A function declaration.
+/// A function signature.
 #[derive(Debug, From)]
-pub struct FunctionDecl {
+pub struct FunctionSig {
     /// The underlying function type.
     fn_type: wasmparser::FuncType,
 }
 
-impl FunctionDecl {
+impl FunctionSig {
     /// Returns a slice over the input types of `self`.
     pub fn inputs(&self) -> &[Type] {
         &self.fn_type.params
@@ -118,7 +118,7 @@ pub struct Module<'a> {
     /// Types accessible through the Wasm type table.
     ///
     /// Mainly the types of functions are stored here.
-    types: Vec<FunctionDecl>,
+    types: Vec<FunctionSig>,
     /// Imported function declarations from the Wasm module.
     imported_fns: Vec<TypeId>,
     /// Imported global variable declarations from the Wasm module.
@@ -137,7 +137,7 @@ pub struct Module<'a> {
     ///
     /// A function body consists of the local variables and
     /// all the operations within the function.
-    fn_defs: Vec<FunctionDef<'a>>,
+    fn_defs: Vec<InternalFunctionDef<'a>>,
     /// Optional start function.
     ///
     /// # Note
@@ -154,14 +154,14 @@ impl<'a> Module<'a> {
     ///
     /// If the raw parts do not combine to valid Wasm.
     fn from_raw_parts(
-        types: Vec<FunctionDecl>,
+        types: Vec<FunctionSig>,
         imported_fns: Vec<TypeId>,
         imported_globals: Vec<GlobalVariableDecl>,
         fn_decls: Vec<TypeId>,
         memory: MemoryType,
         globals: Vec<GlobalVariableDef<'a>>,
         exports: Vec<Export<'a>>,
-        fn_defs: Vec<FunctionDef<'a>>,
+        fn_defs: Vec<InternalFunctionDef<'a>>,
         start_fn: Option<FunctionId>,
     ) -> Result<Self, ParseError> {
         if fn_decls.len() != fn_defs.len() {
@@ -190,35 +190,52 @@ impl<'a> Module<'a> {
     }
 
     /// Returns the identified type from the type table.
-    pub fn get_type(&self, id: TypeId) -> &FunctionDecl {
+    fn get_type(&self, id: TypeId) -> &FunctionSig {
         &self.types[id.get()]
     }
 
     /// Returns the declaration of the identified function.
-    pub fn get_fn_decl(&self, id: FunctionId) -> &FunctionDecl {
+    fn get_fn_decl(&self, id: FunctionId) -> &FunctionSig {
         self.get_type(self.fn_decls[id.get()])
     }
 
     /// Returns the definition of the identified function.
-    pub fn get_fn_def(&self, id: InternalFunctionId) -> &FunctionDef {
+    fn get_fn_def(&self, id: InternalFunctionId) -> &InternalFunctionDef {
         &self.fn_defs[id.get()]
     }
 
-    /// Returns the function at index `id`.
-    pub fn get_fn(&self, id: InternalFunctionId) -> Function {
-        let decl = self.get_fn_decl(id.into_function_id(self));
+    /// Returns the function at the given index.
+    pub fn get_fn(&self, id: FunctionId) -> Function {
+        let sig = self.get_fn_decl(id);
+        Function { id, sig }
+    }
+
+    /// Returns the internal function at the given index.
+    pub fn get_internal_fn(&self, id: InternalFunctionId) -> InternalFunction {
+        let sig = self.get_fn_decl(id.into_function_id(self));
         let def = self.get_fn_def(id);
-        Function { id, decl, def }
+        InternalFunction { id, sig, def }
     }
 
     /// Returns the start function, if any.
+    ///
+    /// # Note
+    ///
+    /// Returns `FunctionId` since the `start` function may also refer to
+    /// an imported function. In case `start` function refers to an internal
+    /// function it is possible to convert the returned `FunctionId` into an
+    /// `InternalFunctionId` using [`FunctionId::into_internal_id`].
     pub fn start_fn(&self) -> Option<FunctionId> {
         self.start_fn
     }
 
     /// Returns an iterator over the function declarations and definitions.
-    pub fn iter_fns(&self) -> FunctionIter {
-        FunctionIter {
+    ///
+    /// # Note
+    ///
+    /// This excludes imported functions.
+    pub fn iter_internal_fns(&self) -> InternalFunctionIter {
+        InternalFunctionIter {
             module: self,
             current: 0,
         }
@@ -228,21 +245,17 @@ impl<'a> Module<'a> {
     ///
     /// # Note
     ///
-    /// This excludes imported functions.
+    /// This excludes internal functions.
     pub fn iter_imported_fns(&self) -> ImportedFunctionIter {
         ImportedFunctionIter::new(self)
     }
 
-    /// Returns an iterator over the global variable definitions.
-    ///
-    /// # Note
-    ///
-    /// This excludes imported global variables.
-    pub fn iter_globals(&self) -> core::slice::Iter<GlobalVariableDef<'a>> {
+    /// Returns an iterator over the internally defined global variables.
+    pub fn iter_internal_globals(&self) -> core::slice::Iter<GlobalVariableDef<'a>> {
         self.globals.iter()
     }
 
-    /// Returns an iterator over the imported global variable declarations.
+    /// Returns an iterator over the imported global variables.
     pub fn iter_imported_globals(
         &self,
     ) -> core::slice::Iter<GlobalVariableDecl> {
@@ -278,24 +291,24 @@ impl<'a> Module<'a> {
 
 /// An iterator over the functions of a Wasm module.
 #[derive(Debug)]
-pub struct FunctionIter<'a> {
+pub struct InternalFunctionIter<'a> {
     /// The iterated Wasm module.
     module: &'a Module<'a>,
     /// The current function index of the iteration.
     current: usize,
 }
 
-impl<'a> Iterator for FunctionIter<'a> {
-    type Item = Function<'a>;
+impl<'a> Iterator for InternalFunctionIter<'a> {
+    type Item = InternalFunction<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current == self.module.len_fns() {
             return None
         }
         let id = InternalFunctionId(self.current);
-        let decl = self.module.get_fn_decl(id.into_function_id(&self.module));
+        let sig = self.module.get_fn_decl(id.into_function_id(&self.module));
         let def = self.module.get_fn_def(id);
-        let fun = Self::Item { id, decl, def };
+        let fun = Self::Item { id, sig, def };
         self.current += 1;
         Some(fun)
     }
@@ -303,29 +316,24 @@ impl<'a> Iterator for FunctionIter<'a> {
 
 /// A Wasm function.
 #[derive(Debug)]
-pub struct Function<'a> {
+pub struct InternalFunction<'a> {
     /// The global unique identifier of the function.
     id: InternalFunctionId,
-    /// The function declaration.
-    decl: &'a FunctionDecl,
+    /// The function signature.
+    sig: &'a FunctionSig,
     /// The function definition.
-    def: &'a FunctionDef<'a>,
+    def: &'a InternalFunctionDef<'a>,
 }
 
-impl Function<'_> {
-    /// The global unique function identifier.
+impl InternalFunction<'_> {
+    /// Returns the function ID.
     pub fn id(&self) -> InternalFunctionId {
         self.id
     }
 
-    /// The input types of the function.
-    pub fn inputs(&self) -> &[Type] {
-        self.decl.inputs()
-    }
-
-    /// The output types of the function.
-    pub fn outputs(&self) -> &[Type] {
-        self.decl.outputs()
+    /// Returns the function signature.
+    pub fn sig(&self) -> &FunctionSig {
+        self.sig
     }
 
     /// The local variable declarations of the function.
@@ -339,6 +347,7 @@ impl Function<'_> {
     }
 }
 
+/// An iterator over the imported functions of a Wasm module.
 pub struct ImportedFunctionIter<'a> {
     /// The iterated Wasm module.
     module: &'a Module<'a>,
@@ -356,54 +365,49 @@ impl<'a> ImportedFunctionIter<'a> {
 }
 
 impl<'a> Iterator for ImportedFunctionIter<'a> {
-    type Item = ImportedFunction<'a>;
+    type Item = Function<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.ids.next()
             .map(|(id, &type_id)| {
                 let id = FunctionId(id);
-                let decl = self.module.get_type(type_id);
-                Self::Item { id, decl }
+                let sig = self.module.get_type(type_id);
+                Self::Item { id, sig }
             })
     }
 }
 
 /// A Wasm function.
 #[derive(Debug)]
-pub struct ImportedFunction<'a> {
+pub struct Function<'a> {
     /// The global unique identifier of the function.
     id: FunctionId,
-    /// The function declaration.
-    decl: &'a FunctionDecl,
+    /// The function signature.
+    sig: &'a FunctionSig,
 }
 
-impl ImportedFunction<'_> {
-    /// The global unique function identifier.
+impl Function<'_> {
+    /// Returns the function ID.
     pub fn id(&self) -> FunctionId {
         self.id
     }
 
-    /// The input types of the function.
-    pub fn inputs(&self) -> &[Type] {
-        self.decl.inputs()
-    }
-
-    /// The output types of the function.
-    pub fn outputs(&self) -> &[Type] {
-        self.decl.outputs()
+    /// Returns the function signature.
+    pub fn sig(&self) -> &FunctionSig {
+        self.sig
     }
 }
 
 /// A function definition.
 #[derive(Debug)]
-pub struct FunctionDef<'b> {
+struct InternalFunctionDef<'b> {
     /// The locals of the function.
     locals: Vec<(usize, Type)>,
     /// The operations of the function.
     ops: Vec<Operator<'b>>,
 }
 
-impl FunctionDef<'_> {
+impl InternalFunctionDef<'_> {
     /// Returns a slice over the local variable declarations.
     pub fn locals(&self) -> &[(usize, Type)] {
         &self.locals
@@ -599,12 +603,12 @@ impl<'b> Module<'b> {
     /// Extracts the types from the `type` section and
     /// converts them into `runwell` Wasm entities.
     fn extract_types(
-        types: &mut Vec<FunctionDecl>,
+        types: &mut Vec<FunctionSig>,
         mut section: TypeSectionReader,
     ) -> Result<(), ParseError> {
         debug_assert!(types.is_empty());
         for func_type in section.into_iter() {
-            types.push(FunctionDecl::from(func_type?));
+            types.push(FunctionSig::from(func_type?));
         }
         Ok(())
     }
@@ -735,7 +739,7 @@ impl<'b> Module<'b> {
     /// Extracts the definitions from the `code` section and
     /// converts them into `runwell` Wasm entities.
     fn extract_code<'a>(
-        fn_bodies: &mut Vec<FunctionDef<'a>>,
+        fn_bodies: &mut Vec<InternalFunctionDef<'a>>,
         mut section: CodeSectionReader<'a>,
     ) -> Result<(), ParseError> {
         debug_assert!(fn_bodies.is_empty());
@@ -743,7 +747,7 @@ impl<'b> Module<'b> {
             .into_iter()
             .map(|fn_body| {
                 let fn_body = fn_body?;
-                Ok(FunctionDef {
+                Ok(InternalFunctionDef {
                     locals: fn_body
                         .get_locals_reader()?
                         .into_iter()
