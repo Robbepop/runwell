@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{Op, TerminalOp};
-use crate::maybe_std::prelude::*;
+use crate::{
+    ir::{Op, TerminalOp},
+    maybe_std::prelude::*,
+};
 
 /// The unique identifier of a function.
 ///

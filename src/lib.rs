@@ -23,8 +23,8 @@ extern crate test;
 extern crate alloc;
 
 pub mod ir;
-pub mod parse;
 pub mod maybe_std;
+pub mod parse;
 
 // Function 184 of type FuncType { form: Func, params: [I32, I32, I32], returns: [I32] }
 //     I32Const { value: 0 }

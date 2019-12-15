@@ -17,6 +17,7 @@
 //! Use the [`Module::new`] constructor in order to parse and validate
 //! a Wasm encoded stream of bytes.
 
+use crate::maybe_std::prelude::*;
 use core::convert::TryFrom;
 use derive_more::{Display, From};
 use thiserror::Error;
@@ -32,7 +33,6 @@ use wasmparser::{
     Type,
     TypeSectionReader,
 };
-use crate::maybe_std::prelude::*;
 
 /// An index into the type table of a Wasm module.
 #[derive(Debug, Copy, Clone)]

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use derive_more::From;
 use crate::maybe_std::prelude::*;
+use derive_more::From;
 
 /// A type.
 #[derive(From)]

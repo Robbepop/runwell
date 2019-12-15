@@ -25,15 +25,15 @@ macro_rules! reexport_alloc_from {
             boxed,
             collections,
             fmt,
+            format,
             rc,
             slice,
             str,
             string,
             sync,
             vec,
-            format,
         };
-    }
+    };
 }
 
 cfg_if! {
@@ -52,7 +52,7 @@ pub mod prelude {
         borrow::ToOwned,
         boxed::Box,
         string::{String, ToString},
-        vec::Vec,
         vec,
+        vec::Vec,
     };
 }

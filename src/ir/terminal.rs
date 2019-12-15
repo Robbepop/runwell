@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{
-    source::{I32Source, Source, Value},
-    Label,
+use crate::{
+    ir::{
+        source::{I32Source, Source, Value},
+        Label,
+    },
+    maybe_std::prelude::*,
 };
 use derive_more::From;
-use crate::maybe_std::prelude::*;
 
 /// Any terminal operation.
 ///
