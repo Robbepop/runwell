@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::ir::{Op, TerminalOp};
+use crate::maybe_std::prelude::*;
 
 /// The unique identifier of a function.
 ///

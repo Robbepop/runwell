@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::ir::{source::Source, Label, LocalVar, Type};
+use crate::maybe_std::prelude::*;
 
 /// Allocates a number of elements of type `ty` on the program stack.
 ///

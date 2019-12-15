@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(unused)]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(feature = "bench", feature(test))]
+#![allow(unused)]
 
 #[cfg(feature = "bench")]
 extern crate test;
 
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 pub mod ir;
 pub mod parse;
+pub mod maybe_std;
 
 // Function 184 of type FuncType { form: Func, params: [I32, I32, I32], returns: [I32] }
 //     I32Const { value: 0 }

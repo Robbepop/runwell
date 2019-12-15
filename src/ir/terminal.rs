@@ -17,6 +17,7 @@ use crate::ir::{
     Label,
 };
 use derive_more::From;
+use crate::maybe_std::prelude::*;
 
 /// Any terminal operation.
 ///

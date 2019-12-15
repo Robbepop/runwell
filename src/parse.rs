@@ -18,7 +18,7 @@
 //! a Wasm encoded stream of bytes.
 
 use core::convert::TryFrom;
-use derive_more::From;
+use derive_more::{Display, From};
 use thiserror::Error;
 use wasmparser::{
     CodeSectionReader,
@@ -32,6 +32,7 @@ use wasmparser::{
     Type,
     TypeSectionReader,
 };
+use crate::maybe_std::prelude::*;
 
 /// An index into the type table of a Wasm module.
 #[derive(Debug, Copy, Clone)]
@@ -271,13 +272,15 @@ impl GlobalVariable<'_> {
 }
 
 /// An error that can be encountered upon parsing a Wasm module.
-#[derive(Debug, Error)]
+#[derive(Debug, Display, From)]
+#[cfg_attr(feature = "std", derive(Error))]
 pub enum ParseError {
     /// An error encountered in the underlying parser.
-    #[error("encountered parser error")]
-    Parser(#[from] wasmparser::BinaryReaderError),
+    #[display(fmt = "encountered parser error")]
+    Parser(wasmparser::BinaryReaderError),
     /// Encountered upon unmatching function declarations and definitions.
-    #[error("unmatching fn declarations and definitions")]
+    #[display(fmt = "unmatching fn declarations and definitions")]
+    #[from(ignore)]
     UnmatchingFnDeclToDef,
 }
 
