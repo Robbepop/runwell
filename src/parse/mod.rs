@@ -23,17 +23,14 @@ mod global_variable;
 mod id;
 mod initializer;
 mod module;
-mod utils;
 mod parser;
+mod utils;
 
 use self::module::ModuleBuilder;
 pub use self::{
     error::ParseError,
     function::{Function, FunctionBody, FunctionSig},
-    global_variable::{
-        GlobalVariable,
-        GlobalVariableDecl,
-    },
+    global_variable::{GlobalVariable, GlobalVariableDecl},
     id::{
         FunctionId,
         FunctionSigId,

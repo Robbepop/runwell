@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use thiserror::Error;
 use derive_more::{Display, From};
+use thiserror::Error;
 
 /// An error that can be encountered upon parsing a Wasm module.
 #[derive(Debug, Display, From)]

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use wasmparser::Operator;
 use core::iter::FromIterator;
+use wasmparser::Operator;
 
 /// A Wasm initializer expression.
 #[derive(Debug)]

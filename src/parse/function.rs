@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use derive_more::From;
-use wasmparser::{Type, Operator};
 use crate::parse::FunctionId;
+use derive_more::From;
+use wasmparser::{Operator, Type};
 
 /// A function signature.
 #[derive(Debug, From)]
