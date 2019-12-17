@@ -18,7 +18,7 @@ use core::marker::PhantomData;
 /// Contains imported and internal entities and provides them
 /// in the same index space but with a separation between them.
 #[derive(Debug)]
-pub struct MergedEntities<'a, T, I> {
+pub struct UnifiedImportedInternal<'a, T, I> {
     /// The number of imported entities.
     len_imported: usize,
     /// Imported entities followed by internal ones.
@@ -38,13 +38,13 @@ pub struct Namespace<'a> {
     field_name: &'a str,
 }
 
-impl<T, I> Default for MergedEntities<'_, T, I> {
+impl<T, I> Default for UnifiedImportedInternal<'_, T, I> {
     fn default() -> Self {
-        MergedEntities::new()
+        UnifiedImportedInternal::new()
     }
 }
 
-impl<T, I> MergedEntities<'_, T, I> {
+impl<T, I> UnifiedImportedInternal<'_, T, I> {
     /// Creates a new empty merged entities container.
     pub fn new() -> Self {
         Self {
@@ -71,7 +71,7 @@ impl<T, I> MergedEntities<'_, T, I> {
     }
 }
 
-impl<T, I> MergedEntities<'_, T, I>
+impl<T, I> UnifiedImportedInternal<'_, T, I>
 where
     I: Identifier,
 {
@@ -86,10 +86,7 @@ where
     }
 }
 
-impl<'a, T, I> MergedEntities<'a, T, I>
-where
-    I: Identifier,
-{
+impl<'a, T, I> UnifiedImportedInternal<'a, T, I> {
     /// Pushes a new imported entitiy.
     ///
     /// # Errors
@@ -105,7 +102,10 @@ where
             return Err(ParseError::ImportedEntityAfterInternal)
         }
         self.entities.push(entity);
-        self.namespaces.push(Namespace { module_name, field_name });
+        self.namespaces.push(Namespace {
+            module_name,
+            field_name,
+        });
         self.len_imported += 1;
         Ok(())
     }

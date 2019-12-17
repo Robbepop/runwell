@@ -22,21 +22,17 @@ use crate::parse::{
 use wasmparser::{
     CodeSectionReader,
     DataSectionReader,
-    Element,
     ElementSectionReader,
-    Export,
     ExportSectionReader,
     FunctionSectionReader,
     GlobalSectionReader,
     ImportSectionEntryType,
     ImportSectionReader,
     MemorySectionReader,
-    MemoryType,
     ModuleReader,
     Section,
     SectionCode,
     TableSectionReader,
-    TableType,
     TypeSectionReader,
 };
 
@@ -218,28 +214,28 @@ fn parse_imports<'a>(
                     module_name,
                     field_name,
                     FunctionSigId(fn_sig_id as usize),
-                );
+                )?;
             }
             ImportSectionEntryType::Table(table_type) => {
                 module.tables.push_imported(
                     module_name,
                     field_name,
                     table_type,
-                );
+                )?;
             }
             ImportSectionEntryType::Memory(memory_type) => {
                 module.linear_memories.push_imported(
                     module_name,
                     field_name,
                     memory_type,
-                );
+                )?;
             }
             ImportSectionEntryType::Global(global_type) => {
                 module.globals.push_imported(
                     module_name,
                     field_name,
                     global_type.into(),
-                );
+                )?;
             }
         }
     }
@@ -317,12 +313,9 @@ fn parse_start<'a>(
 }
 
 fn parse_element<'a>(
-    reader: ElementSectionReader<'a>,
-    module: &mut Module<'a>,
+    _reader: ElementSectionReader<'a>,
+    _module: &mut Module<'a>,
 ) -> Result<(), ParseError> {
-    for element in reader.into_iter() {
-        // module.elements.push(element?);
-    }
     Ok(())
 }
 

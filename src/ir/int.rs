@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{
-    sealed::Sealed,
-    source::{IntSource, Value},
-    IntType,
-    LocalVar,
-};
+use crate::ir::{sealed::Sealed, source::IntSource, IntType, LocalVar};
 use derive_more::From;
 
 /// Any integer operation.

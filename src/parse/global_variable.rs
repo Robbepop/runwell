@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use wasmparser::{Type, Operator};
 use crate::parse::GlobalVariableId;
 use derive_more::From;
-use core::iter::FromIterator;
+use wasmparser::Type;
 
 /// A global variable declaration.
 #[derive(Debug, From)]
@@ -54,25 +53,5 @@ impl GlobalVariable {
     /// Returns the declaration of the global variable.
     pub fn decl(&self) -> &GlobalVariableDecl {
         &self.decl
-    }
-}
-
-/// A global variable initializer code.
-#[derive(Debug)]
-pub struct GlobalVariableInitializer<'a> {
-    /// The initializer code of a global variable.
-    ops: Vec<Operator<'a>>,
-}
-
-impl<'a> GlobalVariableInitializer<'a> {
-    /// Returns the operations of the initializer routine.
-    pub fn ops(&self) -> &[Operator<'a>] {
-        &self.ops
-    }
-}
-
-impl<'a> FromIterator<Operator<'a>> for GlobalVariableInitializer<'a> {
-    fn from_iter<T: IntoIterator<Item = Operator<'a>>>(iter: T) -> Self {
-        Self { ops: iter.into_iter().collect() }
     }
 }

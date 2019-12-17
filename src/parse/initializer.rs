@@ -12,31 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod error;
-mod function;
-mod global_variable;
-mod id;
-mod initializer;
-mod module;
-pub mod utils;
-mod parser;
+use wasmparser::Operator;
+use core::iter::FromIterator;
 
-pub use self::{
-    error::ParseError,
-    function::{Function, FunctionBody, FunctionSig},
-    global_variable::{
-        GlobalVariable,
-        GlobalVariableDecl,
-    },
-    id::{
-        FunctionId,
-        FunctionSigId,
-        GlobalVariableId,
-        Identifier,
-        LinearMemoryId,
-        TableId,
-    },
-    initializer::Initializer,
-    module::Module,
-    parser::parse,
-};
+/// A Wasm initializer expression.
+#[derive(Debug)]
+pub struct Initializer<'a> {
+    /// The operators of the initializer expression.
+    ops: Vec<Operator<'a>>,
+}
+
+impl<'a> Initializer<'a> {
+    /// Returns the operations of the initializer routine.
+    pub fn ops(&self) -> &[Operator<'a>] {
+        &self.ops
+    }
+}
+
+impl<'a> FromIterator<Operator<'a>> for Initializer<'a> {
+    fn from_iter<T: IntoIterator<Item = Operator<'a>>>(iter: T) -> Self {
+        Self {
+            ops: iter.into_iter().collect(),
+        }
+    }
+}

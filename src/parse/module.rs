@@ -13,21 +13,18 @@
 // limitations under the License.
 
 use crate::parse::{
-    utils::MergedEntities,
+    utils::UnifiedImportedInternal,
     FunctionBody,
     FunctionId,
     FunctionSig,
     FunctionSigId,
     GlobalVariableDecl,
     GlobalVariableId,
-    GlobalVariableInitializer,
+    Initializer,
     LinearMemoryId,
-    ParseError,
     TableId,
 };
-use wasmparser::{Data, Element, Export, MemoryType, TableType};
-
-pub type Initializer<'a> = GlobalVariableInitializer<'a>;
+use wasmparser::{Data, Export, MemoryType, TableType};
 
 /// A parsed and validated WebAssembly (Wasm) module.
 #[derive(Debug)]
@@ -36,14 +33,14 @@ pub struct Module<'a> {
     pub(super) signatures: Vec<FunctionSig>,
 
     /// Imported and internal function signatures.
-    pub(super) fn_sigs: MergedEntities<'a, FunctionSigId, FunctionId>,
+    pub(super) fn_sigs: UnifiedImportedInternal<'a, FunctionSigId, FunctionId>,
     /// Imported and internal global variables.
     pub(super) globals:
-        MergedEntities<'a, GlobalVariableDecl, GlobalVariableId>,
+        UnifiedImportedInternal<'a, GlobalVariableDecl, GlobalVariableId>,
     /// Imported and internal linear memory sections.
-    pub(super) linear_memories: MergedEntities<'a, MemoryType, LinearMemoryId>,
+    pub(super) linear_memories: UnifiedImportedInternal<'a, MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
-    pub(super) tables: MergedEntities<'a, TableType, TableId>,
+    pub(super) tables: UnifiedImportedInternal<'a, TableType, TableId>,
 
     /// Export definitions.
     pub(super) exports: Vec<Export<'a>>,
@@ -83,10 +80,10 @@ impl<'a> Module<'a> {
     pub fn new() -> Self {
         Self {
             signatures: Vec::new(),
-            fn_sigs: MergedEntities::new(),
-            globals: MergedEntities::new(),
-            linear_memories: MergedEntities::new(),
-            tables: MergedEntities::new(),
+            fn_sigs: UnifiedImportedInternal::new(),
+            globals: UnifiedImportedInternal::new(),
+            linear_memories: UnifiedImportedInternal::new(),
+            tables: UnifiedImportedInternal::new(),
             exports: Vec::new(),
             start_fn: None,
             fn_bodies: Vec::new(),
