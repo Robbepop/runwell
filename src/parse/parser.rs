@@ -17,6 +17,7 @@ use crate::parse::{
     FunctionId,
     FunctionSigId,
     Module,
+    ModuleBuilder,
     ParseError,
 };
 use wasmparser::{
@@ -39,7 +40,7 @@ use wasmparser::{
 /// The internals of the parser.
 pub struct ParserInternals<'a> {
     /// The module to contain the parsed Wasm module.
-    module: Module<'a>,
+    module: ModuleBuilder<'a>,
     /// The underlying Wasm file reader.
     reader: ModuleReader<'a>,
     /// The last encountered section.
@@ -51,7 +52,7 @@ impl<'a> ParserInternals<'a> {
     fn new(bytes: &'a [u8]) -> Result<Self, ParseError> {
         let mut reader = ModuleReader::new(bytes)?;
         Ok(Self {
-            module: Module::new(),
+            module: Module::build(),
             section: reader.read()?,
             reader,
         })
@@ -89,7 +90,10 @@ impl<'a> Parser<'a> {
     /// Encountering the end of the file will yield `Parser::EndOfFile` state.
     fn for_section<F>(self, code: SectionCode, f: F) -> Self
     where
-        F: FnOnce(&Section<'a>, &mut Module<'a>) -> Result<(), ParseError>,
+        F: FnOnce(
+            &Section<'a>,
+            &mut ModuleBuilder<'a>,
+        ) -> Result<(), ParseError>,
     {
         match self {
             Parser::Parsing(mut parser) if parser.section.code == code => {
@@ -101,7 +105,7 @@ impl<'a> Parser<'a> {
                     return Parser::Error(error.into())
                 }
                 if parser.reader.eof() {
-                    return Parser::Done(Box::new(parser.module))
+                    return Parser::Done(Box::new(parser.module.finalize()))
                 }
                 match parser.reader.read() {
                     Err(error) => Parser::Error(error.into()),
@@ -118,7 +122,7 @@ impl<'a> Parser<'a> {
     /// Finalizes parsing and returns the resulting module or an error.
     fn finish(self) -> Result<Module<'a>, ParseError> {
         match self {
-            Parser::Parsing(parser) => Ok(parser.module),
+            Parser::Parsing(parser) => Ok(parser.module.finalize()),
             Parser::Done(module) => Ok(*module),
             Parser::Error(error) => Err(error),
         }
@@ -192,17 +196,17 @@ pub fn parse(bytes: &[u8]) -> Result<Module, ParseError> {
 
 fn parse_types<'a>(
     reader: TypeSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for signature in reader.into_iter() {
-        module.signatures.push(signature?.into());
+        module.push_fn_signature(signature?.into());
     }
     Ok(())
 }
 
 fn parse_imports<'a>(
     reader: ImportSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for import in reader.into_iter() {
         let import = import?;
@@ -210,28 +214,28 @@ fn parse_imports<'a>(
         let field_name = import.field;
         match import.ty {
             ImportSectionEntryType::Function(fn_sig_id) => {
-                module.fn_sigs.push_imported(
+                module.push_imported_fn(
                     module_name,
                     field_name,
                     FunctionSigId(fn_sig_id as usize),
-                )?;
+                )?
             }
             ImportSectionEntryType::Table(table_type) => {
-                module.tables.push_imported(
+                module.push_imported_table(
                     module_name,
                     field_name,
                     table_type,
                 )?;
             }
             ImportSectionEntryType::Memory(memory_type) => {
-                module.linear_memories.push_imported(
+                module.push_imported_linear_memory(
                     module_name,
                     field_name,
                     memory_type,
                 )?;
             }
             ImportSectionEntryType::Global(global_type) => {
-                module.globals.push_imported(
+                module.push_imported_global(
                     module_name,
                     field_name,
                     global_type.into(),
@@ -244,51 +248,49 @@ fn parse_imports<'a>(
 
 fn parse_function_signatures<'a>(
     reader: FunctionSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for fn_sig in reader.into_iter() {
-        module
-            .fn_sigs
-            .push_internal(FunctionSigId(fn_sig? as usize))
+        module.push_internal_fn(FunctionSigId(fn_sig? as usize))
     }
     Ok(())
 }
 
 fn parse_tables<'a>(
     reader: TableSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for table_type in reader.into_iter() {
-        module.tables.push_internal(table_type?)
+        module.push_internal_table(table_type?)
     }
     Ok(())
 }
 
 fn parse_linear_memories<'a>(
     reader: MemorySectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for memory_type in reader.into_iter() {
-        module.linear_memories.push_internal(memory_type?)
+        module.push_internal_linear_memory(memory_type?)
     }
     Ok(())
 }
 
 fn parse_globals<'a>(
     reader: GlobalSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for global_type in reader.into_iter() {
         let global_type = global_type?;
-        module.globals.push_internal(global_type.ty.into());
-        module.globals_initializers.push(
+        module.push_internal_global(global_type.ty.into());
+        module.push_global_initializer(
             global_type
                 .init_expr
                 .get_operators_reader()
                 .into_iter()
                 .collect::<Result<Vec<_>, _>>()?
                 .into_iter()
-                .collect()
+                .collect(),
         );
     }
     Ok(())
@@ -296,58 +298,60 @@ fn parse_globals<'a>(
 
 fn parse_exports<'a>(
     reader: ExportSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for export in reader.into_iter() {
-        module.exports.push(export?);
+        module.push_export(export?);
     }
     Ok(())
 }
 
 fn parse_start<'a>(
     start_fn_id: u32,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
-    module.start_fn = Some(FunctionId(start_fn_id as usize));
+    module.set_start_fn(FunctionId(start_fn_id as usize));
     Ok(())
 }
 
 fn parse_element<'a>(
     _reader: ElementSectionReader<'a>,
-    _module: &mut Module<'a>,
+    _module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     Ok(())
 }
 
 fn parse_code<'a>(
     reader: CodeSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for function_body in reader.into_iter() {
         let function_body = function_body?;
         let locals = function_body
             .get_locals_reader()?
             .into_iter()
-            .map(|local| match local {
-                Ok((num, ty)) => Ok((num as usize, ty)),
-                Err(err) => Err(err),
+            .map(|local| {
+                match local {
+                    Ok((num, ty)) => Ok((num as usize, ty)),
+                    Err(err) => Err(err),
+                }
             })
             .collect::<Result<Vec<_>, _>>()?;
         let ops = function_body
             .get_operators_reader()?
             .into_iter()
             .collect::<Result<Vec<_>, _>>()?;
-        module.fn_bodies.push(FunctionBody::new(locals, ops));
+        module.push_fn_body(FunctionBody::new(locals, ops));
     }
     Ok(())
 }
 
 fn parse_data<'a>(
     reader: DataSectionReader<'a>,
-    module: &mut Module<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for data in reader.into_iter() {
-        module.data.push(data?)
+        module.push_data(data?)
     }
     Ok(())
 }

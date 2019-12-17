@@ -22,28 +22,30 @@ use crate::parse::{
     GlobalVariableId,
     Initializer,
     LinearMemoryId,
+    ParseError,
     TableId,
 };
 use wasmparser::{Data, Export, MemoryType, TableType};
 
 /// A parsed and validated WebAssembly (Wasm) module.
+///
+/// Use the [`parse`][`crate::parse::parse`] function in order to retrieve an instance of this type.
 #[derive(Debug)]
 pub struct Module<'a> {
     /// Function signature table.
-    pub(super) signatures: Vec<FunctionSig>,
+    signatures: Vec<FunctionSig>,
 
     /// Imported and internal function signatures.
-    pub(super) fn_sigs: UnifiedImportedInternal<'a, FunctionSigId, FunctionId>,
+    fn_sigs: UnifiedImportedInternal<'a, FunctionSigId, FunctionId>,
     /// Imported and internal global variables.
-    pub(super) globals:
-        UnifiedImportedInternal<'a, GlobalVariableDecl, GlobalVariableId>,
+    globals: UnifiedImportedInternal<'a, GlobalVariableDecl, GlobalVariableId>,
     /// Imported and internal linear memory sections.
-    pub(super) linear_memories: UnifiedImportedInternal<'a, MemoryType, LinearMemoryId>,
+    linear_memories: UnifiedImportedInternal<'a, MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
-    pub(super) tables: UnifiedImportedInternal<'a, TableType, TableId>,
+    tables: UnifiedImportedInternal<'a, TableType, TableId>,
 
     /// Export definitions.
-    pub(super) exports: Vec<Export<'a>>,
+    exports: Vec<Export<'a>>,
 
     /// Optional start function.
     ///
@@ -51,33 +53,26 @@ pub struct Module<'a> {
     ///
     /// If this is `Some` the Wasm module is an executable,
     /// otherwise it is a library.
-    pub(super) start_fn: Option<FunctionId>,
+    start_fn: Option<FunctionId>,
 
     // TODO: We don't implement this because `wasmparser::Element`
     //       does not implement `core::fmt::Debug`.
     // /// Elements from the Wasm module.
-    // pub(super) elements: Vec<Element<'a>>,
-
+    // elements: Vec<Element<'a>>,
     /// Internal function bodies.
-    pub(super) fn_bodies: Vec<FunctionBody<'a>>,
+    fn_bodies: Vec<FunctionBody<'a>>,
     /// Internal global definitions.
-    pub(super) globals_initializers: Vec<Initializer<'a>>,
+    globals_initializers: Vec<Initializer<'a>>,
     /// Internal table initializers.
-    pub(super) table_initializers: Vec<Initializer<'a>>,
+    table_initializers: Vec<Initializer<'a>>,
 
     /// Generic data of the Wasm module.
-    pub(super) data: Vec<Data<'a>>,
-}
-
-impl Default for Module<'_> {
-    fn default() -> Self {
-        Module::new()
-    }
+    data: Vec<Data<'a>>,
 }
 
 impl<'a> Module<'a> {
     /// Creates a new empty Wasm module.
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             signatures: Vec::new(),
             fn_sigs: UnifiedImportedInternal::new(),
@@ -91,5 +86,156 @@ impl<'a> Module<'a> {
             table_initializers: Vec::new(),
             data: Vec::new(),
         }
+    }
+
+    /// Helps to build up a new Wasm module.
+    pub(super) fn build() -> ModuleBuilder<'a> {
+        ModuleBuilder {
+            module: Self::new(),
+        }
+    }
+}
+
+/// A builder interface for a Wasm module.
+///
+/// Allows to mutate a module through some dedicated interfaces.
+/// Used by the internal Wasm parser.
+pub struct ModuleBuilder<'a> {
+    /// The Wasm module that is being build.
+    module: Module<'a>,
+}
+
+impl<'a> ModuleBuilder<'a> {
+    /// Pushes the signature to the Wasm module.
+    pub fn push_fn_signature(&mut self, sig: FunctionSig) {
+        self.module.signatures.push(sig);
+    }
+
+    /// Pushes a new imported function to the Wasm module.
+    ///
+    /// # Errors
+    ///
+    /// Errors if an imported function is pushed after an internal
+    /// function has already been pushed to the same Wasm module.
+    pub fn push_imported_fn(
+        &mut self,
+        module_name: &'a str,
+        field_name: &'a str,
+        fn_sig_id: FunctionSigId,
+    ) -> Result<(), ParseError> {
+        self.module
+            .fn_sigs
+            .push_imported(module_name, field_name, fn_sig_id)
+    }
+
+    /// Pushes a new internal function to the Wasm module.
+    pub fn push_internal_fn(&mut self, fn_sig_id: FunctionSigId) {
+        self.module.fn_sigs.push_internal(fn_sig_id)
+    }
+
+    /// Pushes a new imported global variable to the Wasm module.
+    ///
+    /// # Errors
+    ///
+    /// Errors if an imported global variable is pushed after an internal
+    /// global variable has already been pushed to the same Wasm module.
+    pub fn push_imported_global(
+        &mut self,
+        module_name: &'a str,
+        field_name: &'a str,
+        global: GlobalVariableDecl,
+    ) -> Result<(), ParseError> {
+        self.module
+            .globals
+            .push_imported(module_name, field_name, global)
+    }
+
+    /// Pushes a new internal global variable to the Wasm module.
+    pub fn push_internal_global(&mut self, global: GlobalVariableDecl) {
+        self.module.globals.push_internal(global)
+    }
+
+    /// Pushes a new imported linear memory to the Wasm module.
+    ///
+    /// # Errors
+    ///
+    /// Errors if an imported linear memory is pushed after an internal
+    /// linear memory has already been pushed to the same Wasm module.
+    pub fn push_imported_linear_memory(
+        &mut self,
+        module_name: &'a str,
+        field_name: &'a str,
+        memory: MemoryType,
+    ) -> Result<(), ParseError> {
+        self.module.linear_memories.push_imported(
+            module_name,
+            field_name,
+            memory,
+        )
+    }
+
+    /// Pushes a new internal linear memory to the Wasm module.
+    pub fn push_internal_linear_memory(&mut self, memory: MemoryType) {
+        self.module.linear_memories.push_internal(memory)
+    }
+
+    /// Pushes a new imported table to the Wasm module.
+    ///
+    /// # Errors
+    ///
+    /// Errors if an imported table is pushed after an internal
+    /// table has already been pushed to the same Wasm module.
+    pub fn push_imported_table(
+        &mut self,
+        module_name: &'a str,
+        field_name: &'a str,
+        table: TableType,
+    ) -> Result<(), ParseError> {
+        self.module
+            .tables
+            .push_imported(module_name, field_name, table)
+    }
+
+    /// Pushes a new internal linear memory to the Wasm module.
+    pub fn push_internal_table(&mut self, table: TableType) {
+        self.module.tables.push_internal(table)
+    }
+
+    /// Pushes a new export to the Wasm module.
+    pub fn push_export(&mut self, export: Export<'a>) {
+        self.module.exports.push(export)
+    }
+
+    /// Sets the start function to the given function ID.
+    pub fn set_start_fn(&mut self, id: FunctionId) {
+        assert!(self.module.start_fn.is_none());
+        self.module.start_fn = Some(id);
+    }
+
+    /// Pushes a new function body of an internal function to the Wasm module.
+    pub fn push_fn_body(&mut self, fn_body: FunctionBody<'a>) {
+        self.module.fn_bodies.push(fn_body)
+    }
+
+    /// Pushes a new internal global variable initializer expression
+    /// to the Wasm module.
+    pub fn push_global_initializer(&mut self, initializer: Initializer<'a>) {
+        self.module.globals_initializers.push(initializer)
+    }
+
+    /// Pushes a new internal table initializer expression
+    /// to the Wasm module.
+    pub fn push_table_initializer(&mut self, initializer: Initializer<'a>) {
+        self.module.table_initializers.push(initializer)
+    }
+
+    /// Pushes a new data definition to the Wasm module.
+    pub fn push_data(&mut self, data: Data<'a>) {
+        self.module.data.push(data)
+    }
+
+    /// Finalizes building of the Wasm module.
+    pub fn finalize(self) -> Module<'a> {
+        self.module
     }
 }

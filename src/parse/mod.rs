@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Structures and routines for parsing and validating WebAssembly (Wasm).
+//!
+//! Use the [`parse`] function in order to parse and validate a Wasm encoded
+//! stream of bytes.
+
 mod error;
 mod function;
 mod global_variable;
 mod id;
 mod initializer;
 mod module;
-pub mod utils;
+mod utils;
 mod parser;
 
+use self::module::ModuleBuilder;
 pub use self::{
     error::ParseError,
     function::{Function, FunctionBody, FunctionSig},
