@@ -20,7 +20,7 @@ use core::marker::PhantomData;
 /// Contains imported and internal entities and provides them
 /// in the same index space but with a separation between them.
 #[derive(Debug)]
-pub struct UnifiedImportedInternal<'a, T, I> {
+pub struct ImportedOrInternal<'a, T, I> {
     /// The number of imported entities.
     len_imported: usize,
     /// Imported entities followed by internal ones.
@@ -40,13 +40,13 @@ pub struct Namespace<'a> {
     field_name: &'a str,
 }
 
-impl<T, I> Default for UnifiedImportedInternal<'_, T, I> {
+impl<T, I> Default for ImportedOrInternal<'_, T, I> {
     fn default() -> Self {
-        UnifiedImportedInternal::new()
+        ImportedOrInternal::new()
     }
 }
 
-impl<T, I> UnifiedImportedInternal<'_, T, I> {
+impl<T, I> ImportedOrInternal<'_, T, I> {
     /// Creates a new empty merged entities container.
     pub fn new() -> Self {
         Self {
@@ -73,7 +73,7 @@ impl<T, I> UnifiedImportedInternal<'_, T, I> {
     }
 }
 
-impl<T, I> UnifiedImportedInternal<'_, T, I>
+impl<T, I> ImportedOrInternal<'_, T, I>
 where
     I: Identifier,
 {
@@ -88,7 +88,7 @@ where
     }
 }
 
-impl<'a, T, I> UnifiedImportedInternal<'a, T, I> {
+impl<'a, T, I> ImportedOrInternal<'a, T, I> {
     /// Pushes a new imported entitiy.
     ///
     /// # Errors
