@@ -71,6 +71,21 @@ impl<T, I> ImportedOrInternal<'_, T, I> {
     pub fn push_internal(&mut self, entity: T) {
         self.entities.push(entity);
     }
+
+    /// Returns a slice over the imported entities.
+    pub fn imported_entities_slice(&self) -> &[T] {
+        &self.entities[0..self.len_imported()]
+    }
+
+    /// Returns a slice over the internal entities.
+    pub fn internal_entities_slice(&self) -> &[T] {
+        &self.entities[self.len_imported()..]
+    }
+
+    /// Returns a slice over all entities.
+    pub fn entities_slice(&self) -> &[T] {
+        &self.entities[..]
+    }
 }
 
 impl<T, I> ImportedOrInternal<'_, T, I>
@@ -110,5 +125,16 @@ impl<'a, T, I> ImportedOrInternal<'a, T, I> {
         });
         self.len_imported += 1;
         Ok(())
+    }
+}
+
+impl<'a, T, I> core::ops::Index<I> for ImportedOrInternal<'a, T, I>
+where
+    I: Identifier,
+{
+    type Output = T;
+
+    fn index(&self, id: I) -> &Self::Output {
+        &self.entities[id.get()]
     }
 }
