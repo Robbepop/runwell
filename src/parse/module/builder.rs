@@ -13,88 +13,16 @@
 // limitations under the License.
 
 use crate::parse::{
-    utils::UnifiedImportedInternal,
     FunctionBody,
     FunctionId,
     FunctionSig,
     FunctionSigId,
     GlobalVariableDecl,
-    GlobalVariableId,
     Initializer,
-    LinearMemoryId,
+    Module,
     ParseError,
-    TableId,
 };
 use wasmparser::{Data, Export, MemoryType, TableType};
-
-/// A parsed and validated WebAssembly (Wasm) module.
-///
-/// Use the [`parse`][`crate::parse::parse`] function in order to retrieve an instance of this type.
-#[derive(Debug)]
-pub struct Module<'a> {
-    /// Function signature table.
-    signatures: Vec<FunctionSig>,
-
-    /// Imported and internal function signatures.
-    fn_sigs: UnifiedImportedInternal<'a, FunctionSigId, FunctionId>,
-    /// Imported and internal global variables.
-    globals: UnifiedImportedInternal<'a, GlobalVariableDecl, GlobalVariableId>,
-    /// Imported and internal linear memory sections.
-    linear_memories: UnifiedImportedInternal<'a, MemoryType, LinearMemoryId>,
-    /// Imported and internal tables.
-    tables: UnifiedImportedInternal<'a, TableType, TableId>,
-
-    /// Export definitions.
-    exports: Vec<Export<'a>>,
-
-    /// Optional start function.
-    ///
-    /// # Note
-    ///
-    /// If this is `Some` the Wasm module is an executable,
-    /// otherwise it is a library.
-    start_fn: Option<FunctionId>,
-
-    // TODO: We don't implement this because `wasmparser::Element`
-    //       does not implement `core::fmt::Debug`.
-    // /// Elements from the Wasm module.
-    // elements: Vec<Element<'a>>,
-    /// Internal function bodies.
-    fn_bodies: Vec<FunctionBody<'a>>,
-    /// Internal global definitions.
-    globals_initializers: Vec<Initializer<'a>>,
-    /// Internal table initializers.
-    table_initializers: Vec<Initializer<'a>>,
-
-    /// Generic data of the Wasm module.
-    data: Vec<Data<'a>>,
-}
-
-impl<'a> Module<'a> {
-    /// Creates a new empty Wasm module.
-    fn new() -> Self {
-        Self {
-            signatures: Vec::new(),
-            fn_sigs: UnifiedImportedInternal::new(),
-            globals: UnifiedImportedInternal::new(),
-            linear_memories: UnifiedImportedInternal::new(),
-            tables: UnifiedImportedInternal::new(),
-            exports: Vec::new(),
-            start_fn: None,
-            fn_bodies: Vec::new(),
-            globals_initializers: Vec::new(),
-            table_initializers: Vec::new(),
-            data: Vec::new(),
-        }
-    }
-
-    /// Helps to build up a new Wasm module.
-    pub(super) fn build() -> ModuleBuilder<'a> {
-        ModuleBuilder {
-            module: Self::new(),
-        }
-    }
-}
 
 /// A builder interface for a Wasm module.
 ///
@@ -106,6 +34,11 @@ pub struct ModuleBuilder<'a> {
 }
 
 impl<'a> ModuleBuilder<'a> {
+    /// Creates a new module builder for the given module.
+    pub(super) fn new(module: Module<'a>) -> Self {
+        Self { module }
+    }
+
     /// Pushes the signature to the Wasm module.
     pub fn push_fn_signature(&mut self, sig: FunctionSig) {
         self.module.signatures.push(sig);
