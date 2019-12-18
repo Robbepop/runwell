@@ -364,11 +364,11 @@ mod tests {
     fn parse_incrementer() {
         let wasm = include_bytes!("../../incrementer.wasm");
         let module = parse(wasm).expect("invalid Wasm byte code");
-        println!("{:#?}", module);
+        // println!("{:#?}", module);
         // let module = Module::new(wasm).expect("couldn't parse Wasm module");
-        // for fun in module.iter_imported_fns().take(2) {
-        //     println!("\n\n{:#?}", fun);
-        // }
+        for fun in module.iter_internal_fns().take(2) {
+            println!("\n\n{:#?}", fun);
+        }
         // for fun in module.iter_fns().take(2) {
         //     println!("\n\n{:#?}", fun);
         // }
