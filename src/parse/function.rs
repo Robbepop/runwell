@@ -37,16 +37,16 @@ impl FunctionSig {
 
 /// A function.
 #[derive(Debug)]
-pub struct Function {
+pub struct Function<'a> {
     /// The function index.
     id: FunctionId,
     /// The function signature.
-    sig: FunctionSig,
+    sig: &'a FunctionSig,
 }
 
-impl Function {
+impl<'a> Function<'a> {
     /// Creates a new function from the given ID and signature.
-    pub(crate) fn new(id: FunctionId, sig: FunctionSig) -> Self {
+    pub(crate) fn new(id: FunctionId, sig: &'a FunctionSig) -> Self {
         Self { id, sig }
     }
 
@@ -57,7 +57,7 @@ impl Function {
 
     /// Returns the function signature.
     pub fn sig(&self) -> &FunctionSig {
-        &self.sig
+        self.sig
     }
 }
 
