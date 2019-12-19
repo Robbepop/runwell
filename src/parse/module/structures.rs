@@ -33,6 +33,17 @@ pub struct Export<'a> {
     kind: ExportKind,
 }
 
+impl<'a> Export<'a> {
+    /// Returns the export kind.
+    ///
+    /// # Note
+    ///
+    /// Use this to extract further information about the exported entity.
+    pub fn kind(&self) -> &ExportKind {
+        &self.kind
+    }
+}
+
 /// An export kind of an export definition.
 #[derive(Debug)]
 pub enum ExportKind {

@@ -19,7 +19,7 @@ mod structures;
 pub use self::{
     builder::ModuleBuilder,
     iter::{InternalFnIter, InternalGlobalIter},
-    structures::{Element, ElementItemsIter, Export},
+    structures::{Element, ElementItemsIter, Export, ExportKind},
 };
 
 use crate::parse::{
@@ -141,6 +141,26 @@ impl<'a> Module<'a> {
     /// ```
     pub fn get_linear_memory(&self, id: LinearMemoryId) -> &MemoryType {
         &self.linear_memories[id]
+    }
+
+    /// Returns the table identified by `id`.
+    ///
+    /// # Note
+    ///
+    /// Operations in Wasm that do not specify a table ID explicitely
+    /// are implicitely refering to the table that is identified by
+    /// the `0` ID. Use the
+    /// [`Default`](https://doc.rust-lang.org/core/default/trait.Default.html)
+    /// implementation of
+    /// [`TableId`][`crate::parse::TableId`] in order to receive
+    /// the implicit table.
+    ///
+    /// ```no_run
+    /// # let module: runwell::parse::Module = unimplemented!();
+    /// let table = module.get_table(Default::default());
+    /// ```
+    pub fn get_table(&self, id: TableId) -> &TableType {
+        &self.tables[id]
     }
 
     /// Returns an iterator over all internal functions and their bodies.

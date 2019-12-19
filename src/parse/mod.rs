@@ -44,6 +44,7 @@ pub use self::{
         Element,
         ElementItemsIter,
         Export,
+        ExportKind,
         InternalFnIter,
         InternalGlobalIter,
         Module,
