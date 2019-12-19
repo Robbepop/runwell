@@ -58,6 +58,16 @@ impl Identifier for LinearMemoryId {
     }
 }
 
+impl Default for LinearMemoryId {
+    /// Returns the `0` linear memory ID.
+    ///
+    /// Operations that do not include a linear memory ID implicitely refer
+    /// to the linear memory identified by the `0` ID.
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
 /// An index into the table section of a Wasm module.
 #[derive(Debug, Copy, Clone)]
 pub struct TableId(pub(super) usize);
