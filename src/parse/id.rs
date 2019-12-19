@@ -77,3 +77,13 @@ impl Identifier for TableId {
         self.0
     }
 }
+
+impl Default for TableId {
+    /// Returns the `0` table ID.
+    ///
+    /// Operations that do not include a table ID implicitely refer
+    /// to the table identified by the `0` ID.
+    fn default() -> Self {
+        Self(0)
+    }
+}
