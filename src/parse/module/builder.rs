@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::parse::{
+    Element,
     Export,
     FunctionBody,
     FunctionId,
@@ -144,6 +145,11 @@ impl<'a> ModuleBuilder<'a> {
     pub fn set_start_fn(&mut self, id: FunctionId) {
         assert!(self.module.start_fn.is_none());
         self.module.start_fn = Some(id);
+    }
+
+    /// Pushes a new element of the element section to the Wasm module.
+    pub fn push_element(&mut self, element: Element<'a>) {
+        self.module.elements.push(element)
     }
 
     /// Pushes a new function body of an internal function to the Wasm module.

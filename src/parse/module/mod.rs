@@ -19,7 +19,7 @@ mod structures;
 pub use self::{
     builder::ModuleBuilder,
     iter::{InternalFnIter, InternalGlobalIter},
-    structures::Export,
+    structures::{Export, Element, ElementItemsIter},
 };
 
 use crate::parse::{
@@ -46,7 +46,6 @@ use wasmparser::{Data, MemoryType, TableType};
 pub struct Module<'a> {
     /// Function signature table.
     signatures: Vec<FunctionSig>,
-
     /// Imported and internal function signatures.
     fn_sigs: ImportedOrInternal<'a, FunctionSigId, FunctionId>,
     /// Imported and internal global variables.
@@ -55,10 +54,8 @@ pub struct Module<'a> {
     linear_memories: ImportedOrInternal<'a, MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
     tables: ImportedOrInternal<'a, TableType, TableId>,
-
     /// Export definitions.
     exports: Vec<Export<'a>>,
-
     /// Optional start function.
     ///
     /// # Note
@@ -66,17 +63,14 @@ pub struct Module<'a> {
     /// If this is `Some` the Wasm module is an executable,
     /// otherwise it is a library.
     start_fn: Option<FunctionId>,
-
-    // TODO: https://github.com/Robbepop/runwell/issues/1
-    // /// Elements from the Wasm module.
-    // elements: Vec<Element<'a>>,
+    /// Elements from the Wasm module.
+    elements: Vec<Element<'a>>,
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody<'a>>,
     /// Internal global definitions.
     globals_initializers: Vec<Initializer<'a>>,
     /// Internal table initializers.
     table_initializers: Vec<Initializer<'a>>,
-
     /// Generic data of the Wasm module.
     ///
     /// # Note
@@ -165,6 +159,11 @@ impl<'a> Module<'a> {
         self.exports.iter()
     }
 
+    /// Returns an iterator over the elements of the Wasm module.
+    pub fn iter_elements(&self) -> core::slice::Iter<Element<'a>> {
+        self.elements.iter()
+    }
+
     /// Returns the start function of the Wasm module if any.
     pub fn start_fn(&self) -> Option<Function> {
         self.start_fn.map(|fn_id| self.get_fn(fn_id))
@@ -182,6 +181,7 @@ impl<'a> Module<'a> {
             tables: ImportedOrInternal::new(),
             exports: Vec::new(),
             start_fn: None,
+            elements: Vec::new(),
             fn_bodies: Vec::new(),
             globals_initializers: Vec::new(),
             table_initializers: Vec::new(),

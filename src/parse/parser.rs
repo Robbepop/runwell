@@ -340,9 +340,13 @@ fn parse_start<'a>(
 }
 
 fn parse_element<'a>(
-    _reader: ElementSectionReader<'a>,
-    _module: &mut ModuleBuilder<'a>,
+    reader: ElementSectionReader<'a>,
+    module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
+    use core::convert::TryInto as _;
+    for element in reader.into_iter() {
+        module.push_element(element?.try_into()?)
+    }
     Ok(())
 }
 

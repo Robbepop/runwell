@@ -37,4 +37,7 @@ pub enum ParseError {
     /// Imported entity encountered after internal one.
     #[display(fmt = "encountered imported entitiy after internal one")]
     ImportedEntityAfterInternal,
+    /// Unsupported passive element.
+    #[display(fmt = "encountered unsupported passive element")]
+    UnsupportedPassiveElement,
 }
