@@ -178,8 +178,8 @@ impl IntType {
     /// Returns the number of bytes used to represent a value of the type.
     fn width(self) -> usize {
         match self {
-            IntType::I32 => 2,
-            IntType::I64 => 4,
+            IntType::I32 => 4,
+            IntType::I64 => 8,
         }
     }
 }
@@ -331,7 +331,7 @@ impl StoreOp {
         dst_ty: ExtIntType,
     ) -> Result<Self, ParseError> {
         if src_ty.width() <= dst_ty.width() {
-            return Err(ParseError::ExtensionToSmallerInt)
+            return Err(ParseError::TruncationToBiggerInt)
         }
         Ok(Self {
             memarg,
