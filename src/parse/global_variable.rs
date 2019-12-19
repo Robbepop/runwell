@@ -30,7 +30,7 @@ impl GlobalVariableDecl {
     }
 
     /// Returns `true` if `self` is mutable.
-    pub fn is_mutable(&self) -> bool {
+    pub fn is_mutable(self) -> bool {
         self.global_type.mutable
     }
 }
