@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::iter::FromIterator;
+use crate::parse::ParseError;
 use wasmparser::Operator;
 
 /// A Wasm initializer expression.
@@ -29,10 +29,17 @@ impl<'a> Initializer<'a> {
     }
 }
 
-impl<'a> FromIterator<Operator<'a>> for Initializer<'a> {
-    fn from_iter<T: IntoIterator<Item = Operator<'a>>>(iter: T) -> Self {
-        Self {
-            ops: iter.into_iter().collect(),
-        }
+impl<'a> core::convert::TryFrom<wasmparser::InitExpr<'a>> for Initializer<'a> {
+    type Error = ParseError;
+
+    fn try_from(
+        init_expr: wasmparser::InitExpr<'a>,
+    ) -> Result<Self, Self::Error> {
+        Ok(Self {
+            ops: init_expr
+                .get_operators_reader()
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()?,
+        })
     }
 }

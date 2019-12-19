@@ -313,17 +313,10 @@ fn parse_globals<'a>(
     module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for global_type in reader.into_iter() {
+        use core::convert::TryInto;
         let global_type = global_type?;
         module.push_internal_global(global_type.ty.into());
-        module.push_global_initializer(
-            global_type
-                .init_expr
-                .get_operators_reader()
-                .into_iter()
-                .collect::<Result<Vec<_>, _>>()?
-                .into_iter()
-                .collect(),
-        );
+        module.push_global_initializer(global_type.init_expr.try_into()?);
     }
     Ok(())
 }
