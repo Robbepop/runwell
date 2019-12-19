@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::parse::{
+    Export,
     FunctionBody,
     FunctionId,
     FunctionSig,
@@ -22,7 +23,7 @@ use crate::parse::{
     Module,
     ParseError,
 };
-use wasmparser::{Data, Export, MemoryType, TableType};
+use wasmparser::{Data, MemoryType, TableType};
 
 /// A builder interface for a Wasm module.
 ///

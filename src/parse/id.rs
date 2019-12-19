@@ -50,7 +50,7 @@ impl Identifier for FunctionId {
 
 /// An index into the linear memory table of a Wasm module.
 #[derive(Debug, Copy, Clone)]
-pub struct LinearMemoryId(usize);
+pub struct LinearMemoryId(pub(super) usize);
 
 impl Identifier for LinearMemoryId {
     fn get(self) -> usize {
@@ -60,7 +60,7 @@ impl Identifier for LinearMemoryId {
 
 /// An index into the table section of a Wasm module.
 #[derive(Debug, Copy, Clone)]
-pub struct TableId(usize);
+pub struct TableId(pub(super) usize);
 
 impl Identifier for TableId {
     fn get(self) -> usize {

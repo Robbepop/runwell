@@ -14,10 +14,12 @@
 
 mod builder;
 mod iter;
+mod structures;
 
 pub use self::{
     builder::ModuleBuilder,
     iter::{InternalFnIter, InternalGlobalIter},
+    structures::Export,
 };
 
 use crate::parse::{
@@ -35,7 +37,7 @@ use crate::parse::{
     LinearMemoryId,
     TableId,
 };
-use wasmparser::{Data, Export, MemoryType, TableType};
+use wasmparser::{Data, MemoryType, TableType};
 
 /// A parsed and validated WebAssembly (Wasm) module.
 ///
@@ -136,6 +138,11 @@ impl<'a> Module<'a> {
     /// initializer expressions.
     pub fn iter_internal_globals(&self) -> InternalGlobalIter {
         InternalGlobalIter::new(self)
+    }
+
+    /// Returns an iterator over the exports of the Wasm module.
+    pub fn iter_exports(&self) -> core::slice::Iter<Export<'a>> {
+        self.exports.iter()
     }
 
     /// Returns the start function of the Wasm module if any.

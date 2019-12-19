@@ -301,7 +301,7 @@ fn parse_exports<'a>(
     module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for export in reader.into_iter() {
-        module.push_export(export?);
+        module.push_export(export?.into());
     }
     Ok(())
 }
