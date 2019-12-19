@@ -31,10 +31,12 @@ use wasmparser::{
     ImportSectionReader,
     MemorySectionReader,
     ModuleReader,
+    OperatorValidatorConfig,
     Section,
     SectionCode,
     TableSectionReader,
     TypeSectionReader,
+    ValidatingParserConfig,
 };
 
 /// The internals of the parser.
@@ -153,6 +155,7 @@ impl<'a> Parser<'a> {
 /// | Code     | Function bodies (code) |
 /// | Data     | Data segments |
 pub fn parse(bytes: &[u8]) -> Result<Module, ParseError> {
+    validate_wasm(bytes)?;
     use SectionCode::*;
     Parser::new(bytes)
         .for_section(Type, |section, module| {
@@ -192,6 +195,35 @@ pub fn parse(bytes: &[u8]) -> Result<Module, ParseError> {
             parse_data(section.get_data_section_reader()?, module)
         })
         .finish()
+}
+
+/// Validates the Wasm bytes for the `runwell` JIT compiler.
+///
+/// # Notes
+///
+/// | Config                   | flag    | Note                               |
+/// |:-------------------------|:-------:|:-----------------------------------|
+/// | `enable_threads`         | `false` | Not useful for blockchain.         |
+/// | `enable_reference_types` | `false` | Config might change in the future. |
+/// | `enable_simd`            | `false` | Not useful for blockchain.         |
+/// | `enable_bulk_memory`     | `false` | Not useful for blockchain.         |
+/// | `enable_multi_value`     | `false` | Config might change in the future. |
+/// | `deterministic_only`     | `true`  | Disables floating points.          |
+fn validate_wasm(bytes: &[u8]) -> Result<(), ParseError> {
+    wasmparser::validate(
+        bytes,
+        Some(ValidatingParserConfig {
+            operator_config: OperatorValidatorConfig {
+                enable_threads: false,
+                enable_reference_types: false,
+                enable_simd: false,
+                enable_bulk_memory: false,
+                enable_multi_value: false,
+                deterministic_only: true,
+            },
+        }),
+    )?;
+    Ok(())
 }
 
 fn parse_types<'a>(
