@@ -23,11 +23,14 @@ mod global_variable;
 mod id;
 mod initializer;
 mod module;
+pub mod operator;
 mod parser;
 mod utils;
 
 use self::module::ModuleBuilder;
+#[doc(inline)]
 pub use self::{
+    operator::Operator,
     error::ParseError,
     function::{Function, FunctionBody, FunctionSig},
     global_variable::{GlobalVariable, GlobalVariableDecl},

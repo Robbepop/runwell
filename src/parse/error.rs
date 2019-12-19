@@ -40,4 +40,13 @@ pub enum ParseError {
     /// Unsupported passive element.
     #[display(fmt = "encountered unsupported passive element")]
     UnsupportedPassiveElement,
+    /// Encountered unsupported Wasm operator.
+    #[display(fmt = "encountered unsupported Wasm operator")]
+    UnsupportedOperator,
+    /// Encountered invalid extension Wasm operator.
+    #[display(fmt = "encountered invalid extension Wasm operator")]
+    ExtensionToSmallerInt,
+    /// Encountered invalid truncation Wasm operator.
+    #[display(fmt = "encountered invalid truncation Wasm operator")]
+    TruncationToBiggerInt,
 }
