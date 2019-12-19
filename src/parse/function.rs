@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionId, ParseError};
+use crate::parse::{FunctionId, Operator, ParseError};
 use derive_more::From;
-use wasmparser::{Operator, Type};
+use wasmparser::Type;
 
 /// A function signature.
 #[derive(Debug, From)]
@@ -63,16 +63,14 @@ impl<'a> Function<'a> {
 
 /// A function body.
 #[derive(Debug, From)]
-pub struct FunctionBody<'a> {
+pub struct FunctionBody {
     /// The locals of the function.
     locals: Box<[(usize, Type)]>,
     /// The operations of the function.
-    ops: Box<[Operator<'a>]>,
+    ops: Box<[Operator]>,
 }
 
-impl<'a> core::convert::TryFrom<wasmparser::FunctionBody<'a>>
-    for FunctionBody<'a>
-{
+impl<'a> core::convert::TryFrom<wasmparser::FunctionBody<'a>> for FunctionBody {
     type Error = ParseError;
 
     fn try_from(
@@ -92,20 +90,21 @@ impl<'a> core::convert::TryFrom<wasmparser::FunctionBody<'a>>
         let ops = function_body
             .get_operators_reader()?
             .into_iter()
+            .map(|op| Operator::try_from(op?))
             .collect::<Result<Vec<_>, _>>()?
             .into_boxed_slice();
         Ok(Self { locals, ops })
     }
 }
 
-impl<'a> FunctionBody<'a> {
+impl FunctionBody {
     /// Returns the local variable declarations of the function body.
     pub fn locals(&self) -> &[(usize, Type)] {
         &self.locals
     }
 
     /// Returns the operations of the function body.
-    pub fn ops(&self) -> &[Operator<'a>] {
+    pub fn ops(&self) -> &[Operator] {
         &self.ops
     }
 }

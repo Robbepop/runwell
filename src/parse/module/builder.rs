@@ -153,7 +153,7 @@ impl<'a> ModuleBuilder<'a> {
     }
 
     /// Pushes a new function body of an internal function to the Wasm module.
-    pub fn push_fn_body(&mut self, fn_body: FunctionBody<'a>) {
+    pub fn push_fn_body(&mut self, fn_body: FunctionBody) {
         self.module.fn_bodies.push(fn_body)
     }
 
@@ -176,6 +176,8 @@ impl<'a> ModuleBuilder<'a> {
 
     /// Finalizes building of the Wasm module.
     pub fn finalize(self) -> Module<'a> {
+        println!("# linear memories = {}", self.module.linear_memories.len());
+        println!("# tables          = {}", self.module.tables.len());
         self.module
     }
 }

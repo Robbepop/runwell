@@ -31,7 +31,7 @@ pub struct InternalFnIter<'a> {
     /// The slice over function signatures.
     fn_sigs: &'a [FunctionSigId],
     /// The slice over function bodies.
-    fn_bodies: &'a [FunctionBody<'a>],
+    fn_bodies: &'a [FunctionBody],
     /// Current start.
     start: usize,
     /// Current end.
@@ -57,7 +57,7 @@ impl<'a> InternalFnIter<'a> {
     }
 
     /// Queries the yielded pair for the given index.
-    fn query_for(&self, id: usize) -> (Function<'a>, &'a FunctionBody<'a>) {
+    fn query_for(&self, id: usize) -> (Function<'a>, &'a FunctionBody) {
         let fn_id = FunctionId(id);
         let fn_sig = self.module.get_signature(self.fn_sigs[id]);
         let function = Function::new(fn_id, fn_sig);
@@ -67,7 +67,7 @@ impl<'a> InternalFnIter<'a> {
 }
 
 impl<'a> Iterator for InternalFnIter<'a> {
-    type Item = (Function<'a>, &'a FunctionBody<'a>);
+    type Item = (Function<'a>, &'a FunctionBody);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start == self.end {

@@ -66,7 +66,7 @@ pub struct Module<'a> {
     /// Elements from the Wasm module.
     elements: Vec<Element<'a>>,
     /// Internal function bodies.
-    fn_bodies: Vec<FunctionBody<'a>>,
+    fn_bodies: Vec<FunctionBody>,
     /// Internal global definitions.
     globals_initializers: Vec<Initializer<'a>>,
     /// Internal table initializers.
