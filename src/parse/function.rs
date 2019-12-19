@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::FunctionId;
+use crate::parse::{FunctionId, ParseError};
 use derive_more::From;
 use wasmparser::{Operator, Type};
 
@@ -65,23 +65,40 @@ impl<'a> Function<'a> {
 #[derive(Debug, From)]
 pub struct FunctionBody<'a> {
     /// The locals of the function.
-    locals: Vec<(usize, Type)>,
+    locals: Box<[(usize, Type)]>,
     /// The operations of the function.
-    ops: Vec<Operator<'a>>,
+    ops: Box<[Operator<'a>]>,
+}
+
+impl<'a> core::convert::TryFrom<wasmparser::FunctionBody<'a>>
+    for FunctionBody<'a>
+{
+    type Error = ParseError;
+
+    fn try_from(
+        function_body: wasmparser::FunctionBody<'a>,
+    ) -> Result<Self, Self::Error> {
+        let locals = function_body
+            .get_locals_reader()?
+            .into_iter()
+            .map(|local| {
+                match local {
+                    Ok((num, ty)) => Ok((num as usize, ty)),
+                    Err(err) => Err(err),
+                }
+            })
+            .collect::<Result<Vec<_>, _>>()?
+            .into_boxed_slice();
+        let ops = function_body
+            .get_operators_reader()?
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?
+            .into_boxed_slice();
+        Ok(Self { locals, ops })
+    }
 }
 
 impl<'a> FunctionBody<'a> {
-    /// Creates a new function body.
-    pub(crate) fn new<L, O>(locals: L, ops: O) -> Self
-    where
-        L: IntoIterator<Item = (usize, Type)>,
-        O: IntoIterator<Item = Operator<'a>>,
-    {
-        let locals = locals.into_iter().collect::<Vec<_>>();
-        let ops = ops.into_iter().collect::<Vec<_>>();
-        Self { locals, ops }
-    }
-
     /// Returns the local variable declarations of the function body.
     pub fn locals(&self) -> &[(usize, Type)] {
         &self.locals

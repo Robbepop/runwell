@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use crate::parse::{
-    FunctionBody,
     FunctionId,
     FunctionSigId,
     Module,
@@ -38,6 +37,7 @@ use wasmparser::{
     TypeSectionReader,
     ValidatingParserConfig,
 };
+use core::convert::TryInto as _;
 
 /// The internals of the parser.
 pub struct ParserInternals<'a> {
@@ -313,7 +313,6 @@ fn parse_globals<'a>(
     module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for global_type in reader.into_iter() {
-        use core::convert::TryInto;
         let global_type = global_type?;
         module.push_internal_global(global_type.ty.into());
         module.push_global_initializer(global_type.init_expr.try_into()?);
@@ -343,7 +342,6 @@ fn parse_element<'a>(
     reader: ElementSectionReader<'a>,
     module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
-    use core::convert::TryInto as _;
     for element in reader.into_iter() {
         module.push_element(element?.try_into()?)
     }
@@ -355,22 +353,7 @@ fn parse_code<'a>(
     module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for function_body in reader.into_iter() {
-        let function_body = function_body?;
-        let locals = function_body
-            .get_locals_reader()?
-            .into_iter()
-            .map(|local| {
-                match local {
-                    Ok((num, ty)) => Ok((num as usize, ty)),
-                    Err(err) => Err(err),
-                }
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        let ops = function_body
-            .get_operators_reader()?
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()?;
-        module.push_fn_body(FunctionBody::new(locals, ops));
+        module.push_fn_body(function_body?.try_into()?);
     }
     Ok(())
 }
