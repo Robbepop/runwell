@@ -20,7 +20,13 @@
 //!
 //! Does not contain Wasm operators that are unsupported in the `runwell` JIT.
 
-use crate::parse::{FunctionId, GlobalVariableId, ParseError, TableId};
+use crate::parse::{
+    FunctionId,
+    GlobalVariableId,
+    LinearMemoryId,
+    ParseError,
+    TableId,
+};
 use derive_more::From;
 use wasmparser::{MemoryImmediate, TypeOrFuncType};
 
@@ -466,6 +472,20 @@ pub struct TruncateOp {
     pub source_ty: IntType,
 }
 
+impl TruncateOp {
+    /// Creates a new truncate operation.
+    ///
+    /// # Errors
+    ///
+    /// If the operation would truncate the source type to a bigger width.
+    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
+        if result_ty.width() >= source_ty.width() {
+            return Err(ParseError::TruncationToBiggerInt)
+        }
+        Ok(Self { result_ty, source_ty })
+    }
+}
+
 /// Zero-extend integer operation.
 #[derive(Debug)]
 pub struct ZeroExtendOp {
@@ -475,6 +495,20 @@ pub struct ZeroExtendOp {
     pub source_ty: IntType,
 }
 
+impl ZeroExtendOp {
+    /// Creates a new zero-extend operation.
+    ///
+    /// # Errors
+    ///
+    /// If the operation would extend the source type to a smaller width.
+    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
+        if result_ty.width() <= source_ty.width() {
+            return Err(ParseError::ExtensionToSmallerInt)
+        }
+        Ok(Self { result_ty, source_ty })
+    }
+}
+
 /// Sign-extend integer operation.
 #[derive(Debug)]
 pub struct SignExtendOp {
@@ -482,6 +516,48 @@ pub struct SignExtendOp {
     pub result_ty: IntType,
     /// The input integer type before the extension.
     pub source_ty: IntType,
+}
+
+impl SignExtendOp {
+    /// Creates a new sign-extend operation.
+    ///
+    /// # Errors
+    ///
+    /// If the operation would extend the source type to a smaller width.
+    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
+        if result_ty.width() <= source_ty.width() {
+            return Err(ParseError::ExtensionToSmallerInt)
+        }
+        Ok(Self { result_ty, source_ty })
+    }
+}
+
+/// The Wasm `memory.grow` operation.
+#[derive(Debug)]
+pub struct MemoryGrowOp {
+    /// The identifier of the operated on linear memory.
+    pub id: LinearMemoryId,
+}
+
+impl MemoryGrowOp {
+    /// Creates a new `memory.grow` operation.
+    fn new(id: LinearMemoryId) -> Self {
+        Self { id }
+    }
+}
+
+/// The Wasm `memory.size` operation.
+#[derive(Debug)]
+pub struct MemorySizeOp {
+    /// The identifier of the operated on linear memory.
+    pub id: LinearMemoryId,
+}
+
+impl MemorySizeOp {
+    /// Creates a new `memory.size` operation.
+    fn new(id: LinearMemoryId) -> Self {
+        Self { id }
+    }
 }
 
 /// Runwell-Wasm operators.
@@ -546,6 +622,8 @@ pub enum Operator {
     ZeroExtend(ZeroExtendOp),
     SignExtend(SignExtendOp),
     Truncate(TruncateOp),
+    MemoryGrow(MemoryGrowOp),
+    MemorySize(MemorySizeOp),
 }
 
 impl<'a> core::convert::TryFrom<wasmparser::Operator<'a>> for Operator {
@@ -770,9 +848,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Operator<'a>> for Operator {
             WasmOperator::I32Ctz => {
                 CountTrailingZerosOp::new(IntType::I32).into()
             }
-            WasmOperator::I32Popcnt => {
-                PopcountOp::new(IntType::I32).into()
-            }
+            WasmOperator::I32Popcnt => PopcountOp::new(IntType::I32).into(),
 
             WasmOperator::I64Clz => {
                 CountLeadingZerosOp::new(IntType::I64).into()
@@ -780,9 +856,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Operator<'a>> for Operator {
             WasmOperator::I64Ctz => {
                 CountTrailingZerosOp::new(IntType::I64).into()
             }
-            WasmOperator::I64Popcnt => {
-                PopcountOp::new(IntType::I64).into()
-            }
+            WasmOperator::I64Popcnt => PopcountOp::new(IntType::I64).into(),
 
             WasmOperator::I32Add => AddOp::new(IntType::I32).into(),
             WasmOperator::I32Sub => SubOp::new(IntType::I32).into(),
@@ -815,6 +889,23 @@ impl<'a> core::convert::TryFrom<wasmparser::Operator<'a>> for Operator {
             WasmOperator::I64ShrU => UshrOp::new(IntType::I64).into(),
             WasmOperator::I64Rotl => RotLeftOp::new(IntType::I64).into(),
             WasmOperator::I64Rotr => RotRightOp::new(IntType::I64).into(),
+
+            WasmOperator::MemoryGrow { reserved } => {
+                MemoryGrowOp::new(LinearMemoryId(reserved as usize)).into()
+            }
+            WasmOperator::MemorySize { reserved } => {
+                MemorySizeOp::new(LinearMemoryId(reserved as usize)).into()
+            }
+
+            WasmOperator::I32WrapI64 => {
+                TruncateOp::new(IntType::I32, IntType::I64)?.into()
+            }
+            WasmOperator::I64ExtendI32S => {
+                SignExtendOp::new(IntType::I64, IntType::I32)?.into()
+            }
+            WasmOperator::I64ExtendI32U => {
+                ZeroExtendOp::new(IntType::I64, IntType::I32)?.into()
+            }
 
             unsupported => {
                 println!(
