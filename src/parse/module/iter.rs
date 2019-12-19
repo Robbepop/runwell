@@ -59,8 +59,7 @@ impl<'a> InternalFnIter<'a> {
     /// Queries the yielded pair for the given index.
     fn query_for(&self, id: usize) -> (Function<'a>, &'a FunctionBody<'a>) {
         let fn_id = FunctionId(id);
-        let fn_sig =
-            self.module.get_signature(self.fn_sigs[id]);
+        let fn_sig = self.module.get_signature(self.fn_sigs[id]);
         let function = Function::new(fn_id, fn_sig);
         let fn_body = &self.module.fn_bodies[id];
         (function, fn_body)

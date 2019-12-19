@@ -40,6 +40,6 @@ pub use self::{
         TableId,
     },
     initializer::Initializer,
-    module::{InternalFnIter, InternalGlobalIter, Module, Export},
+    module::{Export, InternalFnIter, InternalGlobalIter, Module},
     parser::parse,
 };
