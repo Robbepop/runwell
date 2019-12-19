@@ -138,6 +138,10 @@ impl<'a> Module<'a> {
         InternalGlobalIter::new(self)
     }
 
+    /// Returns the start function of the Wasm module if any.
+    pub fn start_fn(&self) -> Option<Function> {
+        self.start_fn.map(|fn_id| self.get_fn(fn_id))
+    }
 }
 
 impl<'a> Module<'a> {
