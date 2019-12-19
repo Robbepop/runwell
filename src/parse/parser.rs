@@ -19,6 +19,7 @@ use crate::parse::{
     ModuleBuilder,
     ParseError,
 };
+use core::convert::TryInto as _;
 use wasmparser::{
     CodeSectionReader,
     DataSectionReader,
@@ -37,7 +38,6 @@ use wasmparser::{
     TypeSectionReader,
     ValidatingParserConfig,
 };
-use core::convert::TryInto as _;
 
 /// The internals of the parser.
 pub struct ParserInternals<'a> {

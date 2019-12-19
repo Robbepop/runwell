@@ -19,7 +19,7 @@ mod structures;
 pub use self::{
     builder::ModuleBuilder,
     iter::{InternalFnIter, InternalGlobalIter},
-    structures::{Export, Element, ElementItemsIter},
+    structures::{Element, ElementItemsIter, Export},
 };
 
 use crate::parse::{
