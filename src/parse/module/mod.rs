@@ -65,8 +65,7 @@ pub struct Module<'a> {
     /// otherwise it is a library.
     start_fn: Option<FunctionId>,
 
-    // TODO: We don't implement this because `wasmparser::Element`
-    //       does not implement `core::fmt::Debug`.
+    // TODO: https://github.com/Robbepop/runwell/issues/1
     // /// Elements from the Wasm module.
     // elements: Vec<Element<'a>>,
     /// Internal function bodies.
@@ -77,6 +76,10 @@ pub struct Module<'a> {
     table_initializers: Vec<Initializer<'a>>,
 
     /// Generic data of the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Used to initialize the linear memory section.
     data: Vec<Data<'a>>,
 }
 
@@ -94,7 +97,11 @@ impl<'a> Module<'a> {
 
     /// Returns the function body identified by `id`.
     ///
-    /// If `id` refers to an imported function returns `None`.
+    /// Returns `None` if the identified function is imported.
+    ///
+    /// # Note
+    ///
+    /// Required for utilities such as `start_fn`.
     pub fn get_fn_body(&self, id: FunctionId) -> Option<&FunctionBody> {
         id.get()
             // Convert the identified into an internal one.
