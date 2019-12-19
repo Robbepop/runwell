@@ -24,22 +24,17 @@ pub enum ParseError {
     Parser(wasmparser::BinaryReaderError),
     /// Encountered upon unmatching function declarations and definitions.
     #[display(fmt = "unmatching fn declarations and definitions")]
-    #[from(ignore)]
     UnmatchingFnDeclToDef,
     /// Encountered upon encountering multiple memory section entries.
     #[display(fmt = "multiple memory entries are unsupported, yet")]
-    #[from(ignore)]
     MultipleMemoriesUnsupported,
     /// Missing a linear memory section or entry.
     #[display(fmt = "missing linear memory section or entry")]
-    #[from(ignore)]
     MissingMemoryEntry,
     /// Min-max linear memory section does not match.
     #[display(fmt = "unmatching minimum and maximum linear memory limits")]
-    #[from(ignore)]
     UnmatchingMinMaxMemoryLimits,
     /// Imported entity encountered after internal one.
     #[display(fmt = "encountered imported entitiy after internal one")]
-    #[from(ignore)]
     ImportedEntityAfterInternal,
 }
