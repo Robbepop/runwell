@@ -57,6 +57,11 @@ impl<T, I> ImportedOrInternal<'_, T, I> {
         }
     }
 
+    /// Returns the number of imported and internal entities.
+    pub fn len(&self) -> usize {
+        self.entities.len()
+    }
+
     /// Returns the number of imported entities.
     pub fn len_imported(&self) -> usize {
         self.len_imported
@@ -64,7 +69,7 @@ impl<T, I> ImportedOrInternal<'_, T, I> {
 
     /// Returns the number of internal entities.
     pub fn len_internal(&self) -> usize {
-        self.entities.len() - self.len_imported
+        self.len() - self.len_imported
     }
 
     /// Pushes a new internal entity.
