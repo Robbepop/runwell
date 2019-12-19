@@ -129,6 +129,26 @@ impl<'a> Module<'a> {
             .map(|internal_id| &self.globals_initializers[internal_id])
     }
 
+    /// Returns the linear memory identified by `id`.
+    ///
+    /// # Note
+    ///
+    /// Operations in Wasm that do not specify a linear memory ID explicitely
+    /// are implicitely refering to the linear memory that is identified by
+    /// the `0` ID. Use the
+    /// [`Default`](https://doc.rust-lang.org/core/default/trait.Default.html)
+    /// implementation of
+    /// [`LinearMemoryId`][`crate::parse::LinearMemoryId`] in order to receive
+    /// the implicit linear memory.
+    ///
+    /// ```no_run
+    /// # let module: runwell::parse::Module = unimplemented!();
+    /// let mem = module.get_linear_memory(Default::default());
+    /// ```
+    pub fn get_linear_memory(&self, id: LinearMemoryId) -> &MemoryType {
+        &self.linear_memories[id]
+    }
+
     /// Returns an iterator over all internal functions and their bodies.
     pub fn iter_internal_fns(&self) -> InternalFnIter {
         InternalFnIter::new(self)
