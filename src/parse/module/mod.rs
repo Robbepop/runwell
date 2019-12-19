@@ -15,7 +15,10 @@
 mod builder;
 mod iter;
 
-pub use self::{builder::ModuleBuilder, iter::InternalFnIter};
+pub use self::{
+    builder::ModuleBuilder,
+    iter::{InternalFnIter, InternalGlobalIter},
+};
 
 use crate::parse::{
     utils::ImportedOrInternal,
@@ -24,6 +27,7 @@ use crate::parse::{
     FunctionId,
     FunctionSig,
     FunctionSigId,
+    GlobalVariable,
     GlobalVariableDecl,
     GlobalVariableId,
     Identifier,
@@ -98,10 +102,35 @@ impl<'a> Module<'a> {
             .map(|internal_id| &self.fn_bodies[internal_id])
     }
 
+    /// Returns the global variable identified by `id`.
+    pub fn get_global(&self, id: GlobalVariableId) -> GlobalVariable {
+        let decl = self.globals[id];
+        GlobalVariable::new(id, decl)
+    }
+
+    /// Returns the global variable initializer expression identified by `id`.
+    ///
+    /// Returns `None` if the identified global variable is imported.
+    pub fn get_global_initializer(
+        &self,
+        id: GlobalVariableId,
+    ) -> Option<&Initializer<'a>> {
+        id.get()
+            .checked_sub(self.globals.len_imported())
+            .map(|internal_id| &self.globals_initializers[internal_id])
+    }
+
     /// Returns an iterator over all internal functions and their bodies.
     pub fn iter_internal_fns(&self) -> InternalFnIter {
         InternalFnIter::new(self)
     }
+
+    /// Returns an iterator over all internal global variables and their
+    /// initializer expressions.
+    pub fn iter_internal_globals(&self) -> InternalGlobalIter {
+        InternalGlobalIter::new(self)
+    }
+
 }
 
 impl<'a> Module<'a> {

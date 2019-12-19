@@ -17,7 +17,7 @@ use derive_more::From;
 use wasmparser::Type;
 
 /// A global variable declaration.
-#[derive(Debug, From)]
+#[derive(Debug, From, Copy, Clone)]
 pub struct GlobalVariableDecl {
     /// The `wasmparser` wrapped type.
     global_type: wasmparser::GlobalType,
@@ -36,7 +36,7 @@ impl GlobalVariableDecl {
 }
 
 /// A global variable declaration.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct GlobalVariable {
     /// The global unique identifier of the global variable.
     id: GlobalVariableId,
@@ -45,6 +45,11 @@ pub struct GlobalVariable {
 }
 
 impl GlobalVariable {
+    /// Creates a new global variable wrapper.
+    pub(super) fn new(id: GlobalVariableId, decl: GlobalVariableDecl) -> Self {
+        Self { id, decl }
+    }
+
     /// Returns the identifier of the global variable.
     pub fn id(&self) -> GlobalVariableId {
         self.id

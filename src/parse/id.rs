@@ -30,7 +30,7 @@ impl Identifier for FunctionSigId {
 
 /// An index into the internal global variable table of a Wasm module.
 #[derive(Debug, Copy, Clone)]
-pub struct GlobalVariableId(usize);
+pub struct GlobalVariableId(pub(super) usize);
 
 impl Identifier for GlobalVariableId {
     fn get(self) -> usize {

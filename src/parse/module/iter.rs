@@ -16,8 +16,11 @@ use crate::parse::{
     Function,
     FunctionBody,
     FunctionId,
-    FunctionSig,
     FunctionSigId,
+    GlobalVariable,
+    GlobalVariableDecl,
+    GlobalVariableId,
+    Initializer,
     Module,
 };
 
@@ -56,10 +59,10 @@ impl<'a> InternalFnIter<'a> {
     /// Queries the yielded pair for the given index.
     fn query_for(&self, id: usize) -> (Function<'a>, &'a FunctionBody<'a>) {
         let fn_id = FunctionId(id);
-        let fn_sig: &'a FunctionSig =
+        let fn_sig =
             self.module.get_signature(self.fn_sigs[id]);
-        let function: Function<'a> = Function::new(fn_id, fn_sig);
-        let fn_body: &'a FunctionBody<'a> = &self.module.fn_bodies[id];
+        let function = Function::new(fn_id, fn_sig);
+        let fn_body = &self.module.fn_bodies[id];
         (function, fn_body)
     }
 }
@@ -98,3 +101,80 @@ impl<'a> core::iter::DoubleEndedIterator for InternalFnIter<'a> {
 impl<'a> core::iter::ExactSizeIterator for InternalFnIter<'a> {}
 
 impl<'a> core::iter::FusedIterator for InternalFnIter<'a> {}
+
+/// Iterator over the internal global variables of a Wasm module.
+pub struct InternalGlobalIter<'a> {
+    /// The underlying Wasm module.
+    module: &'a Module<'a>,
+    /// The slice over global variable declarations.
+    global_decls: &'a [GlobalVariableDecl],
+    /// The slice over global variable initializer expressions.
+    global_initializers: &'a [Initializer<'a>],
+    /// Current start.
+    start: usize,
+    /// Current end.
+    end: usize,
+}
+
+impl<'a> InternalGlobalIter<'a> {
+    /// Creates a new internal global variable iterator for the given Wasm module.
+    pub(super) fn new(module: &'a Module) -> Self {
+        let global_decls = module.globals.internal_entities_slice();
+        let global_initializers = &module.globals_initializers[..];
+        // We should assume that both of these slices are the same
+        // but to be extra defensive we want to also assert it.
+        assert_eq!(global_decls.len(), global_initializers.len());
+        let end = global_decls.len();
+        Self {
+            module,
+            global_decls,
+            global_initializers,
+            start: 0,
+            end,
+        }
+    }
+
+    /// Queries the yielded pair for the given index.
+    fn query_for(&self, id: usize) -> (GlobalVariable, &'a Initializer<'a>) {
+        let global_id = GlobalVariableId(id);
+        let global_decl = self.global_decls[id];
+        let global = GlobalVariable::new(global_id, global_decl);
+        let global_initializer = &self.global_initializers[id];
+        (global, global_initializer)
+    }
+}
+
+impl<'a> Iterator for InternalGlobalIter<'a> {
+    type Item = (GlobalVariable, &'a Initializer<'a>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            return None
+        }
+        let start = self.start;
+        let res = self.query_for(start);
+        self.start += 1;
+        Some(res)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.end - self.start;
+        (remaining, Some(remaining))
+    }
+}
+
+impl<'a> core::iter::DoubleEndedIterator for InternalGlobalIter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            return None
+        }
+        let end = self.end;
+        let res = self.query_for(end);
+        self.end -= 1;
+        Some(res)
+    }
+}
+
+impl<'a> core::iter::ExactSizeIterator for InternalGlobalIter<'a> {}
+
+impl<'a> core::iter::FusedIterator for InternalGlobalIter<'a> {}
