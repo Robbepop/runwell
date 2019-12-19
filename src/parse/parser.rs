@@ -366,18 +366,18 @@ mod tests {
         let module = parse(wasm).expect("invalid Wasm byte code");
         // println!("{:#?}", module);
         // let module = Module::new(wasm).expect("couldn't parse Wasm module");
-        for fun in module.iter_internal_fns().take(2) {
+        for fun in module.iter_internal_fns().skip(110).take(10) {
             println!("\n\n{:#?}", fun);
         }
         // for fun in module.iter_fns().take(2) {
         //     println!("\n\n{:#?}", fun);
         // }
-        // for global_variable in module.iter_globals().take(2) {
-        //     println!("\n{:#?}", global_variable)
-        // }
-        // for export in module.iter_exports().take(2) {
-        //     println!("\n{:#?}", export);
-        // }
+        for global_variable in module.iter_internal_globals().take(2) {
+            println!("\n{:#?}", global_variable)
+        }
+        for export in module.iter_exports().take(2) {
+            println!("\n{:#?}", export);
+        }
         // println!("\nmemory = {:#?}", module.memory);
         // println!("\nstart fn           = {:#?}", module.start_fn());
         // println!("# imported fns     = {:#?}", module.len_imported_fns());
