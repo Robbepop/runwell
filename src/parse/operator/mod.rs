@@ -21,6 +21,7 @@
 //! Does not contain Wasm operators that are unsupported in the `runwell` JIT.
 
 mod convert;
+mod display;
 mod utils;
 
 use crate::parse::{
@@ -33,11 +34,7 @@ use crate::parse::{
 use derive_more::From;
 use wasmparser::{MemoryImmediate, TypeOrFuncType};
 
-pub use self::utils::{
-    LocalId,
-    ExtIntType,
-    IntType,
-};
+pub use self::utils::{ExtIntType, IntType, LocalId};
 
 /// A Wasm block operator.
 #[derive(Debug)]
@@ -298,6 +295,11 @@ pub struct IntCmpOp {
     /// The kind of the integer comparison.
     pub kind: IntCmpOpKind,
     /// The expected input integer types.
+    ///
+    /// # Dev Note (TODO)
+    ///
+    /// We might be able to throw away `ty` because in Wasm
+    /// a comparison operation is always performed on a `i32`.
     pub ty: IntType,
 }
 

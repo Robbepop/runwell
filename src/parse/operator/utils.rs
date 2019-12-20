@@ -12,11 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::parse::Identifier;
+
 /// A local variable ID.
 ///
 /// Used to access local variables of Wasm functions.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct LocalId(pub(super) usize);
+
+impl Identifier for LocalId {
+    fn get(self) -> usize {
+        self.0
+    }
+}
 
 /// The extended set of integer types.
 ///
