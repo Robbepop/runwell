@@ -151,6 +151,11 @@ pub enum ExtIntType {
 }
 
 impl ExtIntType {
+    /// Returns `true` if `self` type is extendable to the `dst` type.
+    fn is_extendable_to(self, dst: IntType) -> bool {
+        self.width() < dst.width()
+    }
+
     /// Returns the number of bytes used to represent a value of the type.
     fn width(self) -> usize {
         match self {
@@ -181,6 +186,11 @@ pub enum IntType {
 }
 
 impl IntType {
+    /// Returns `true` if `self` is truncatable to the `dst` type.
+    fn is_truncatable_to(self, dst: ExtIntType) -> bool {
+        self.width() > dst.width()
+    }
+
     /// Returns the number of bytes used to represent a value of the type.
     fn width(self) -> usize {
         match self {
@@ -231,7 +241,7 @@ impl LoadOp {
         result_ty: IntType,
         source_ty: ExtIntType,
     ) -> Result<Self, ParseError> {
-        if result_ty.width() <= source_ty.width() {
+        if !source_ty.is_extendable_to(result_ty) {
             return Err(ParseError::ExtensionToSmallerInt)
         }
         Ok(Self {
@@ -254,7 +264,7 @@ impl LoadOp {
         result_ty: IntType,
         source_ty: ExtIntType,
     ) -> Result<Self, ParseError> {
-        if result_ty.width() <= source_ty.width() {
+        if !source_ty.is_extendable_to(result_ty) {
             return Err(ParseError::ExtensionToSmallerInt)
         }
         Ok(Self {
@@ -336,7 +346,7 @@ impl StoreOp {
         src_ty: IntType,
         dst_ty: ExtIntType,
     ) -> Result<Self, ParseError> {
-        if src_ty.width() <= dst_ty.width() {
+        if !src_ty.is_truncatable_to(dst_ty) {
             return Err(ParseError::TruncationToBiggerInt)
         }
         Ok(Self {
@@ -479,7 +489,7 @@ impl TruncateOp {
     ///
     /// If the operation would truncate the source type to a bigger width.
     fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
-        if result_ty.width() >= source_ty.width() {
+        if !source_ty.is_truncatable_to(result_ty.into()) {
             return Err(ParseError::TruncationToBiggerInt)
         }
         Ok(Self { result_ty, source_ty })
@@ -502,7 +512,7 @@ impl ZeroExtendOp {
     ///
     /// If the operation would extend the source type to a smaller width.
     fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
-        if result_ty.width() <= source_ty.width() {
+        if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
             return Err(ParseError::ExtensionToSmallerInt)
         }
         Ok(Self { result_ty, source_ty })
@@ -525,7 +535,7 @@ impl SignExtendOp {
     ///
     /// If the operation would extend the source type to a smaller width.
     fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
-        if result_ty.width() <= source_ty.width() {
+        if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
             return Err(ParseError::ExtensionToSmallerInt)
         }
         Ok(Self { result_ty, source_ty })
