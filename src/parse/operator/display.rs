@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Implements `Display` for all operators and utility structures used by them.
+//!
+//! This effort exists mainly to help and support readability while analysing
+//! the parsed bytecode. The displayed representation tries to be close to the
+//! Wasm spec but will have a special appearance in some aspects for improved
+//! readability.
+
 use crate::parse::{operator::*, Identifier};
 use core::fmt::{Display, Formatter, Result};
 
