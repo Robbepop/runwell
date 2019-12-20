@@ -174,7 +174,7 @@ impl Display for LoadOp {
 impl Display for StoreOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
         if self.has_conversion() {
-            write!(f, "{}.store{}", self.dst_ty, self.src_ty.width())
+            write!(f, "{}.store{}", self.dst_ty, self.src_ty.width() * 8)
         } else {
             write!(f, "{}.store", self.dst_ty)
         }
@@ -252,19 +252,19 @@ impl_display_for_simple_op! {
 
 impl Display for TruncateOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}.wrap_{}", self.result_ty, self.source_ty.width())
+        write!(f, "{}.wrap_{}", self.result_ty, self.source_ty.width() * 8)
     }
 }
 
 impl Display for ZeroExtendOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}.extend_{}_u", self.result_ty, self.source_ty.width())
+        write!(f, "{}.extend_{}_u", self.result_ty, self.source_ty.width() * 8)
     }
 }
 
 impl Display for SignExtendOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}.extend_{}_s", self.result_ty, self.source_ty.width())
+        write!(f, "{}.extend_{}_s", self.result_ty, self.source_ty.width() * 8)
     }
 }
 
