@@ -37,7 +37,6 @@ pub use self::utils::{
     LocalId,
     ExtIntType,
     IntType,
-    Signedness,
 };
 
 /// A Wasm block operator.

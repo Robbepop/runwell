@@ -18,7 +18,6 @@
 #[derive(Debug)]
 pub struct LocalId(pub(super) usize);
 
-
 /// The extended set of integer types.
 ///
 /// # Note
@@ -85,11 +84,4 @@ impl IntType {
             IntType::I64 => 8,
         }
     }
-}
-
-/// Either signed or unsigned.
-#[derive(Debug, Copy, Clone)]
-pub enum Signedness {
-    Unsigned,
-    Signed,
 }
