@@ -160,7 +160,7 @@ mod display_impls {
                         .into_iter()
                         .cloned()
                         .map(TypeWrapper::from)
-                        .map(DebugToDisplay::from),
+                        .map(DebugToDisplay),
                 )
                 .finish()?;
             write!(f, " => ")?;
@@ -171,7 +171,7 @@ mod display_impls {
                         .into_iter()
                         .cloned()
                         .map(TypeWrapper::from)
-                        .map(DebugToDisplay::from),
+                        .map(DebugToDisplay),
                 )
                 .finish()?;
             Ok(())
