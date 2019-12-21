@@ -108,3 +108,86 @@ impl FunctionBody {
         &self.ops
     }
 }
+
+mod display_impls {
+    use super::*;
+    use core::fmt::{Display, Formatter, Result};
+
+    #[derive(From)]
+    pub struct TypeWrapper {
+        ty: wasmparser::Type,
+    }
+
+    impl Display for Function<'_> {
+        fn fmt(&self, f: &mut Formatter) -> Result {
+            use crate::parse::Identifier as _;
+            write!(f, "\nfunction {}: [", self.id().get())?;
+            for input in self.sig().inputs().iter() {
+                write!(f, "{}", TypeWrapper::from(*input))?;
+            }
+            write!(f, "] => [")?;
+            for output in self.sig().outputs().iter() {
+                write!(f, "{}", TypeWrapper::from(*output))?;
+            }
+            write!(f, "]")
+        }
+    }
+
+    impl Display for TypeWrapper {
+        fn fmt(&self, f: &mut Formatter) -> Result {
+            match self.ty {
+                wasmparser::Type::I32 => write!(f, "i32"),
+                wasmparser::Type::I64 => write!(f, "i64"),
+                wasmparser::Type::F32 => write!(f, "f32"),
+                wasmparser::Type::F64 => write!(f, "f64"),
+                wasmparser::Type::V128 => write!(f, "v128"),
+                wasmparser::Type::AnyFunc => write!(f, "anyfunc"),
+                wasmparser::Type::AnyRef => write!(f, "anyref"),
+                wasmparser::Type::Func => write!(f, "func"),
+                wasmparser::Type::EmptyBlockType => write!(f, "emptyblock"),
+                wasmparser::Type::Null => write!(f, "null"),
+            }
+        }
+    }
+
+    impl Display for FunctionBody {
+        fn fmt(&self, f: &mut Formatter) -> Result {
+            let ws_per_indent = 4;
+            let indent_frag = " ".repeat(ws_per_indent);
+            let mut indent = indent_frag.clone();
+
+            if !self.locals().is_empty() {
+                write!(f, "\nlocals")?;
+                for (local_num, local_type) in self.locals() {
+                    write!(
+                        f,
+                        "\n{}{} x {}",
+                        indent,
+                        local_num,
+                        TypeWrapper::from(*local_type)
+                    )?;
+                }
+                write!(f, "\nend")?;
+            }
+
+            write!(f, "\nbody")?;
+            for op in self.ops() {
+                if let Operator::End = op {
+                    for _ in 0..ws_per_indent {
+                        indent.pop();
+                    }
+                }
+                write!(f, "\n{}{}", indent, op)?;
+                match op {
+                    Operator::Block(_)
+                    | Operator::If(_)
+                    | Operator::Loop(_) => {
+                        indent.push_str(&indent_frag);
+                    }
+                    _ => {}
+                }
+            }
+            Ok(())
+        }
+    }
+}
