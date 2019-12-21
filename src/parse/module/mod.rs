@@ -64,13 +64,13 @@ pub struct Module<'a> {
     /// otherwise it is a library.
     start_fn: Option<FunctionId>,
     /// Elements from the Wasm module.
-    elements: Vec<Element<'a>>,
+    elements: Vec<Element>,
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody>,
     /// Internal global definitions.
-    globals_initializers: Vec<Initializer<'a>>,
+    globals_initializers: Vec<Initializer>,
     /// Internal table initializers.
-    table_initializers: Vec<Initializer<'a>>,
+    table_initializers: Vec<Initializer>,
     /// Generic data of the Wasm module.
     ///
     /// # Note
@@ -117,7 +117,7 @@ impl<'a> Module<'a> {
     pub fn get_global_initializer(
         &self,
         id: GlobalVariableId,
-    ) -> Option<&Initializer<'a>> {
+    ) -> Option<&Initializer> {
         id.get()
             .checked_sub(self.globals.len_imported())
             .map(|internal_id| &self.globals_initializers[internal_id])
@@ -180,7 +180,7 @@ impl<'a> Module<'a> {
     }
 
     /// Returns an iterator over the elements of the Wasm module.
-    pub fn iter_elements(&self) -> core::slice::Iter<Element<'a>> {
+    pub fn iter_elements(&self) -> core::slice::Iter<Element> {
         self.elements.iter()
     }
 

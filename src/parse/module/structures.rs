@@ -76,16 +76,16 @@ impl<'a> From<wasmparser::Export<'a>> for Export<'a> {
 
 /// An element of the element section of a Wasm module.
 #[derive(Debug)]
-pub struct Element<'a> {
+pub struct Element {
     /// The referred to table index.
     table_id: TableId,
     /// The offset within the table for the initialized elements.
-    offset: Initializer<'a>,
+    offset: Initializer,
     /// The function signatures for the initialized table elements.
     items: Box<[FunctionId]>,
 }
 
-impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
+impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
     type Error = ParseError;
 
     fn try_from(element: wasmparser::Element<'a>) -> Result<Self, Self::Error> {
@@ -129,19 +129,19 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
     }
 }
 
-impl<'a> Element<'a> {
+impl Element {
     /// Returns the table index.
     pub fn table_id(&self) -> TableId {
         self.table_id
     }
 
     /// Returns the offset initializer expression.
-    pub fn offset(&'a self) -> &'a Initializer<'a> {
+    pub fn offset(&self) -> &Initializer {
         &self.offset
     }
 
     /// Returns the functions with which the elements shall be initialized.
-    pub fn items(&'a self, module: &'a Module<'a>) -> ElementItemsIter<'a> {
+    pub fn items<'a>(&'a self, module: &'a Module<'a>) -> ElementItemsIter<'a> {
         ElementItemsIter::new(self, module)
     }
 }
@@ -156,7 +156,7 @@ pub struct ElementItemsIter<'a> {
 
 impl<'a> ElementItemsIter<'a> {
     /// Creates a new element items iterator.
-    fn new(element: &'a Element<'a>, module: &'a Module<'a>) -> Self {
+    fn new(element: &'a Element, module: &'a Module<'a>) -> Self {
         Self {
             module,
             items: element.items.iter(),

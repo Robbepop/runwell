@@ -148,7 +148,7 @@ impl<'a> ModuleBuilder<'a> {
     }
 
     /// Pushes a new element of the element section to the Wasm module.
-    pub fn push_element(&mut self, element: Element<'a>) {
+    pub fn push_element(&mut self, element: Element) {
         self.module.elements.push(element)
     }
 
@@ -159,13 +159,13 @@ impl<'a> ModuleBuilder<'a> {
 
     /// Pushes a new internal global variable initializer expression
     /// to the Wasm module.
-    pub fn push_global_initializer(&mut self, initializer: Initializer<'a>) {
+    pub fn push_global_initializer(&mut self, initializer: Initializer) {
         self.module.globals_initializers.push(initializer)
     }
 
     /// Pushes a new internal table initializer expression
     /// to the Wasm module.
-    pub fn push_table_initializer(&mut self, initializer: Initializer<'a>) {
+    pub fn push_table_initializer(&mut self, initializer: Initializer) {
         self.module.table_initializers.push(initializer)
     }
 

@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::ParseError;
-use wasmparser::Operator;
+use crate::parse::{Operator, ParseError};
 
 /// A Wasm initializer expression.
 #[derive(Debug)]
-pub struct Initializer<'a> {
+pub struct Initializer {
     /// The operators of the initializer expression.
-    ops: Vec<Operator<'a>>,
+    ops: Vec<Operator>,
 }
 
-impl<'a> Initializer<'a> {
+impl Initializer {
     /// Returns the operations of the initializer routine.
-    pub fn ops(&self) -> &[Operator<'a>] {
+    pub fn ops(&self) -> &[Operator] {
         &self.ops
     }
 }
 
-impl<'a> core::convert::TryFrom<wasmparser::InitExpr<'a>> for Initializer<'a> {
+impl<'a> core::convert::TryFrom<wasmparser::InitExpr<'a>> for Initializer {
     type Error = ParseError;
 
     fn try_from(
@@ -39,6 +38,7 @@ impl<'a> core::convert::TryFrom<wasmparser::InitExpr<'a>> for Initializer<'a> {
             ops: init_expr
                 .get_operators_reader()
                 .into_iter()
+                .map(|op| Operator::try_from(op?))
                 .collect::<Result<Vec<_>, _>>()?,
         })
     }

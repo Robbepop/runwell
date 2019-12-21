@@ -108,7 +108,7 @@ pub struct InternalGlobalIter<'a> {
     /// The slice over global variable declarations.
     global_decls: &'a [GlobalVariableDecl],
     /// The slice over global variable initializer expressions.
-    global_initializers: &'a [Initializer<'a>],
+    global_initializers: &'a [Initializer],
     /// Current start.
     start: usize,
     /// Current end.
@@ -134,7 +134,7 @@ impl<'a> InternalGlobalIter<'a> {
     }
 
     /// Queries the yielded pair for the given index.
-    fn query_for(&self, id: usize) -> (GlobalVariable, &'a Initializer<'a>) {
+    fn query_for(&self, id: usize) -> (GlobalVariable, &'a Initializer) {
         let global_id = GlobalVariableId(id);
         let global_decl = self.global_decls[id];
         let global = GlobalVariable::new(global_id, global_decl);
@@ -144,7 +144,7 @@ impl<'a> InternalGlobalIter<'a> {
 }
 
 impl<'a> Iterator for InternalGlobalIter<'a> {
-    type Item = (GlobalVariable, &'a Initializer<'a>);
+    type Item = (GlobalVariable, &'a Initializer);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
