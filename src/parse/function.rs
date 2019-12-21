@@ -113,24 +113,10 @@ mod display_impls {
     use super::*;
     use core::fmt::{Display, Formatter, Result};
 
+    /// Thin wrapper around [`wasmparser::Type`] that has a `Display` impl.
     #[derive(From)]
     pub struct TypeWrapper {
         ty: wasmparser::Type,
-    }
-
-    impl Display for Function<'_> {
-        fn fmt(&self, f: &mut Formatter) -> Result {
-            use crate::parse::Identifier as _;
-            write!(f, "\nfunction {}: [", self.id().get())?;
-            for input in self.sig().inputs().iter() {
-                write!(f, "{}", TypeWrapper::from(*input))?;
-            }
-            write!(f, "] => [")?;
-            for output in self.sig().outputs().iter() {
-                write!(f, "{}", TypeWrapper::from(*output))?;
-            }
-            write!(f, "]")
-        }
     }
 
     impl Display for TypeWrapper {
@@ -147,6 +133,48 @@ mod display_impls {
                 wasmparser::Type::EmptyBlockType => write!(f, "emptyblock"),
                 wasmparser::Type::Null => write!(f, "null"),
             }
+        }
+    }
+
+    /// Wrapper type used to forward the `Debug` implementation of the wrapper
+    /// to the `Display` implementation of `T`.
+    #[derive(From)]
+    pub struct DebugToDisplay<T>(T);
+    impl<T> core::fmt::Debug for DebugToDisplay<T>
+    where
+        T: Display,
+    {
+        fn fmt(&self, f: &mut Formatter) -> Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    impl Display for Function<'_> {
+        fn fmt(&self, f: &mut Formatter) -> Result {
+            use crate::parse::Identifier as _;
+            write!(f, "\nfunction {}: ", self.id().get())?;
+            f.debug_list()
+                .entries(
+                    self.sig()
+                        .inputs()
+                        .into_iter()
+                        .cloned()
+                        .map(TypeWrapper::from)
+                        .map(DebugToDisplay::from),
+                )
+                .finish()?;
+            write!(f, " => ")?;
+            f.debug_list()
+                .entries(
+                    self.sig()
+                        .outputs()
+                        .into_iter()
+                        .cloned()
+                        .map(TypeWrapper::from)
+                        .map(DebugToDisplay::from),
+                )
+                .finish()?;
+            Ok(())
         }
     }
 
