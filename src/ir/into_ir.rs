@@ -68,35 +68,35 @@
 // function 89: [%0: i32] => []
 //     %1 <- local i32
 //     %2 <- local i32
-//     %3 <- global.get $0
+//     %3 <- global.get 0
 //     %4 <- i32.const 16
 //     %5 <- i32.sub %3 %4
-//     local.set %1 <- %5
-//     global.set $0 <- %5
+//     local.set 0 <- %5
+//     global.set 0 <- %5
 //     %6 <- i32.const 8
 //     %7 <- i32.add %5 %6
-//     %8 <- local.get %0
-//     %9 <- call $120 (%7, %8)
-//     %10 <- local.get %1
-//     %11 <- i32.load $0[12], alignment: 2
-//     local.set %2 <- %11
-//     %12 <- local.get %2
+//     %8 <- local.get 0
+//     %9 <- call 120 (%7, %8)
+//     %10 <- local.get 1
+//     %11 <- i32.load 0 offset: 12, alignment: 2
+//     local.set 2 <- %11
+//     %12 <- local.get 2
 //     %13 <- i32.const 0
-//     %14 <- icmp -eq %12 %13
+//     %14 <- i32.cmp -eq %12 %13
 //     ite %14 %15 %16
 //
-// %15 <- block
-//     %17 <- local.get %0
-//     %18 <- i32.load $0[0], alignment: 2
-//     %19 <- local.get %1
-//     %20 <- i32.load $0[8], alignment: 2
-//     %21 <- local.get %2
-//     %22 <- call $76 (%20, %21)
+// %15 <- block:
+//     %17 <- local.get 0
+//     %18 <- i32.load 0 offset: 0, alignment: 2
+//     %19 <- local.get 1
+//     %20 <- i32.load 0 offset: 8, alignment: 2
+//     %21 <- local.get 2
+//     %22 <- call 76 (%20, %21)
 //     br %16
 //
-// %16 <- block
-//     %23 <- local.get %1
+// %16 <- block:
+//     %23 <- local.get 1
 //     %24 <- i32.const 16
 //     %25 <- i32.add %23 %24
-//     global.set $0 %25
+//     global.set 0 <- %25
 //     return
