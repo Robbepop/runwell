@@ -14,10 +14,10 @@
 
 use crate::{
     ir::ValueId,
-    parse::{LocalVariableId, GlobalVariableId},
+    parse::{GlobalVariableId, LocalVariableId},
 };
-use wasmparser::Type;
 use derive_more::From;
+use wasmparser::Type;
 
 /// A local or global variable identifier.
 #[derive(From)]

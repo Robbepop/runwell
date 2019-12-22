@@ -17,8 +17,5 @@ mod utils;
 
 pub use self::{
     operator::*,
-    utils::{
-        ValueId,
-        BlockId,
-    },
+    utils::{BlockId, ValueId},
 };

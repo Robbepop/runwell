@@ -14,10 +14,7 @@
 
 use crate::{
     ir::ValueId,
-    parse::{
-        operator::IntType,
-        LinearMemoryId,
-    },
+    parse::{operator::IntType, LinearMemoryId},
 };
 
 /// The location within the linear memory and alignment.

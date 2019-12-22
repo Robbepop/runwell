@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{
-    operator::*,
-    Operator,
-    ParseError,
-    LinearMemoryId,
-};
+use crate::parse::{operator::*, LinearMemoryId, Operator, ParseError};
 use core::convert::TryFrom;
 
 impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {

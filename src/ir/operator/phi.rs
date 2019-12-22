@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{ValueId, BlockId};
-use crate::parse::operator::IntType as Type;
+use crate::{
+    ir::{BlockId, ValueId},
+    parse::operator::IntType as Type,
+};
 
 /// An SSA phi node.
 ///

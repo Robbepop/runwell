@@ -265,13 +265,23 @@ impl Display for TruncateOp {
 
 impl Display for ZeroExtendOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}.extend_{}_u", self.result_ty, self.source_ty.width() * 8)
+        write!(
+            f,
+            "{}.extend_{}_u",
+            self.result_ty,
+            self.source_ty.width() * 8
+        )
     }
 }
 
 impl Display for SignExtendOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}.extend_{}_s", self.result_ty, self.source_ty.width() * 8)
+        write!(
+            f,
+            "{}.extend_{}_s",
+            self.result_ty,
+            self.source_ty.width() * 8
+        )
     }
 }
 

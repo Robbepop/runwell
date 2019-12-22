@@ -24,7 +24,7 @@ mod terminal;
 mod utils;
 
 pub use self::{
-    call::{CallOp, CallIndirectOp},
+    call::{CallIndirectOp, CallOp},
     constant::ConstOp,
     convert::{SignExtendOp, TruncateOp, ZeroExtendOp},
     load_store::{LoadOp, StoreOp},
@@ -35,9 +35,9 @@ pub use self::{
     terminal::{
         BranchOp,
         BranchTableOp,
+        CallTailOp,
         IteOp,
         ReturnOp,
-        CallTailOp,
         TerminalOp,
     },
     utils::CallParam,

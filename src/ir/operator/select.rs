@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::ValueId;
-use crate::parse::operator::IntType as Type;
+use crate::{ir::ValueId, parse::operator::IntType as Type};
 
 /// Choose a value based on a condition without IR-level branching.
 ///
