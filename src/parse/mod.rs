@@ -30,7 +30,7 @@ mod utils;
 use self::module::ModuleBuilder;
 #[doc(inline)]
 pub use self::{
-    operator::{Operator, LocalId},
+    operator::{Operator, LocalVariableId},
     error::ParseError,
     function::{Function, FunctionBody, FunctionSig},
     global_variable::{GlobalVariable, GlobalVariableDecl},
