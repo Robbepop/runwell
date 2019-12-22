@@ -13,6 +13,7 @@
 // limitations under the License.
 
 mod call;
+mod constant;
 mod convert;
 mod load_store;
 mod local_global;
@@ -23,6 +24,7 @@ mod utils;
 
 pub use self::{
     call::{CallOp, CallIndirectOp},
+    constant::ConstOp,
     convert::{SignExtendOp, TruncateOp, ZeroExtendOp},
     load_store::{LoadOp, StoreOp},
     local_global::{GetOp, LocalOp, SetOp},
@@ -52,6 +54,7 @@ use derive_more::From;
 /// completely to guarantee the runtime behaviour of the compilation.
 #[derive(From)]
 pub enum Operator {
+    Const(ConstOp),
     Local(LocalOp),
     Get(GetOp),
     Set(SetOp),
