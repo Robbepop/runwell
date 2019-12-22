@@ -314,7 +314,7 @@ impl<'a> TryFrom<wasmparser::BrTable<'a>> for BrTableOp {
     fn try_from(table: wasmparser::BrTable<'a>) -> Result<Self, Self::Error> {
         let (relative_depths, default) = table.read_table()?;
         let relative_depths = relative_depths
-            .into_iter()
+            .iter()
             .map(|&relative_depth| relative_depth as usize)
             .collect::<Vec<_>>()
             .into_boxed_slice();
