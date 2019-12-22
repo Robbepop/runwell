@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Operators of the `runwell` IR.
+
 mod call;
 mod constant;
 mod convert;
@@ -24,6 +26,7 @@ mod select;
 mod terminal;
 mod utils;
 
+#[doc(inline)]
 pub use self::{
     call::{CallIndirectOp, CallOp},
     constant::ConstOp,

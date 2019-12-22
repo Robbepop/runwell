@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod operator;
+mod basicblock;
+mod function;
+pub mod operator;
 mod utils;
 
+#[doc(inline)]
 pub use self::{
-    operator::*,
+    basicblock::BasicBlock,
+    function::Function,
     utils::{BlockId, ValueId},
+    operator::{Operator, CallParam, TerminalOp},
 };

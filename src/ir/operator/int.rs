@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Integer type operations.
+
 use crate::ir::ValueId;
 use crate::parse::operator::IntType as Type;
 use derive_more::From;
