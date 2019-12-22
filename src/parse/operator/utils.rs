@@ -55,8 +55,8 @@ impl ExtIntType {
         match self {
             ExtIntType::I8 => 1,
             ExtIntType::I16 => 2,
-            ExtIntType::I32 => 3,
-            ExtIntType::I64 => 4,
+            ExtIntType::I32 => 4,
+            ExtIntType::I64 => 8,
         }
     }
 }

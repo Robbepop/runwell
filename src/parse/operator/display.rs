@@ -158,7 +158,7 @@ impl Display for LoadOp {
                     f,
                     "{}.load{}_s {}",
                     result_ty,
-                    source_ty.width(),
+                    source_ty.width() * 8,
                     MemoryImmediate::from(self.memarg)
                 )
             }
@@ -170,7 +170,7 @@ impl Display for LoadOp {
                     f,
                     "{}.load{}_u {}",
                     result_ty,
-                    source_ty.width(),
+                    source_ty.width() * 8,
                     MemoryImmediate::from(self.memarg)
                 )
             }
@@ -199,7 +199,7 @@ impl Display for ConstOp {
 
 impl Display for IntCmpOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        self.kind.fmt(f)
+        write!(f, "{}.{}", self.ty, self.kind)
     }
 }
 
@@ -230,7 +230,7 @@ macro_rules! impl_display_for_simple_op {
         $(
             impl Display for $name {
                 fn fmt(&self, f: &mut Formatter) -> Result {
-                    write!(f, "{}{}", self.ty, $repr)
+                    write!(f, "{}.{}", self.ty, $repr)
                 }
             }
         )*
