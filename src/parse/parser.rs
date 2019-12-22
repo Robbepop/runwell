@@ -376,25 +376,8 @@ mod tests {
     fn parse_incrementer() {
         let wasm = include_bytes!("../../incrementer.wasm");
         let module = parse(wasm).expect("invalid Wasm byte code");
-        // println!("{:#?}", module);
-        // let module = Module::new(wasm).expect("couldn't parse Wasm module");
-        for fun in module.iter_internal_fns().skip(110).take(10) {
-            println!("\n\n{:#?}", fun);
+        for (fn_sig, fn_body) in module.iter_internal_fns().skip(165).take(1) {
+            println!("{}{}", fn_sig, fn_body);
         }
-        // for fun in module.iter_fns().take(2) {
-        //     println!("\n\n{:#?}", fun);
-        // }
-        for global_variable in module.iter_internal_globals().take(2) {
-            println!("\n{:#?}", global_variable)
-        }
-        for export in module.iter_exports().take(2) {
-            println!("\n{:#?}", export);
-        }
-        // println!("\nmemory = {:#?}", module.memory);
-        // println!("\nstart fn           = {:#?}", module.start_fn());
-        // println!("# imported fns     = {:#?}", module.len_imported_fns());
-        // println!("# fns              = {:#?}", module.len_fns());
-        // println!("# imported globals = {:#?}", module.len_imported_globals());
-        // println!("# globals          = {:#?}", module.len_globals());
     }
 }
