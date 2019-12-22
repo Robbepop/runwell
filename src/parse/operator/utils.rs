@@ -18,9 +18,9 @@ use crate::parse::Identifier;
 ///
 /// Used to access local variables of Wasm functions.
 #[derive(Debug, Copy, Clone)]
-pub struct LocalId(pub(super) usize);
+pub struct LocalVariableId(pub(super) usize);
 
-impl Identifier for LocalId {
+impl Identifier for LocalVariableId {
     fn get(self) -> usize {
         self.0
     }

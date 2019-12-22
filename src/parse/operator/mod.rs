@@ -34,7 +34,7 @@ use crate::parse::{
 use derive_more::From;
 use wasmparser::{MemoryImmediate, TypeOrFuncType};
 
-pub use self::utils::{ExtIntType, IntType, LocalId};
+pub use self::utils::{ExtIntType, IntType, LocalVariableId};
 
 /// A Wasm block operator.
 #[derive(Debug)]
@@ -101,21 +101,21 @@ pub struct CallIndirectOp {
 #[derive(Debug)]
 pub struct LocalGetOp {
     /// The local variable identifier.
-    pub id: LocalId,
+    pub id: LocalVariableId,
 }
 
 /// Sets the identified local variable.
 #[derive(Debug)]
 pub struct LocalSetOp {
     /// The local variable identifier.
-    pub id: LocalId,
+    pub id: LocalVariableId,
 }
 
 /// Sets and returns back the value of the identified local variable.
 #[derive(Debug)]
 pub struct LocalTeeOp {
     /// The local variable identifier.
-    pub id: LocalId,
+    pub id: LocalVariableId,
 }
 
 /// Gets the identified global variable.

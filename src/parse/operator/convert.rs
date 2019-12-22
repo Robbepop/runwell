@@ -72,19 +72,19 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
 
             WasmOperator::LocalGet { local_index } => {
                 LocalGetOp {
-                    id: LocalId(local_index as usize),
+                    id: LocalVariableId(local_index as usize),
                 }
                 .into()
             }
             WasmOperator::LocalSet { local_index } => {
                 LocalSetOp {
-                    id: LocalId(local_index as usize),
+                    id: LocalVariableId(local_index as usize),
                 }
                 .into()
             }
             WasmOperator::LocalTee { local_index } => {
                 LocalTeeOp {
-                    id: LocalId(local_index as usize),
+                    id: LocalVariableId(local_index as usize),
                 }
                 .into()
             }
