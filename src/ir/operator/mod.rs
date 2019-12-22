@@ -19,6 +19,7 @@ mod load_store;
 mod local_global;
 mod memory;
 mod phi;
+mod select;
 mod terminal;
 mod utils;
 
@@ -30,6 +31,7 @@ pub use self::{
     local_global::{GetOp, LocalOp, SetOp},
     memory::{MemoryGrowOp, MemorySizeOp},
     phi::{PhiOp, PhiOpOrigin},
+    select::SelectOp,
     terminal::{
         BranchOp,
         BranchTableOp,
@@ -68,6 +70,7 @@ pub enum Operator {
     // Int(IntOp),
     Truncate(TruncateOp),
     ZeroExtend(ZeroExtendOp),
+    Select(SelectOp),
     SignExtend(SignExtendOp),
     Terminal(TerminalOp),
 }
