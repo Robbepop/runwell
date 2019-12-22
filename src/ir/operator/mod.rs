@@ -13,6 +13,7 @@
 // limitations under the License.
 
 mod call;
+mod convert;
 mod load_store;
 mod local_global;
 mod memory;
@@ -22,6 +23,7 @@ mod utils;
 
 pub use self::{
     call::{CallOp, CallIndirectOp},
+    convert::{SignExtendOp, TruncateOp, ZeroExtendOp},
     load_store::{LoadOp, StoreOp},
     local_global::{GetOp, LocalOp, SetOp},
     memory::{MemoryGrowOp, MemorySizeOp},
@@ -61,7 +63,8 @@ pub enum Operator {
     Call(CallOp),
     CallIndirect(CallIndirectOp),
     // Int(IntOp),
-    // Truncate
-    // Extend
+    Truncate(TruncateOp),
+    ZeroExtend(ZeroExtendOp),
+    SignExtend(SignExtendOp),
     Terminal(TerminalOp),
 }

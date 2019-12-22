@@ -36,13 +36,44 @@ pub struct TruncateOp {
     src_ty: Type,
 }
 
+/// Zero-extends the value to the biffer type and stores it into `dst`.
+///
+/// # Example
+///
+/// Zero-extends the `%2` of type `i32` into a value of type `i64` and stores
+/// the result into `%1`.
+///
+/// ```no_compile
+/// %1 <- i64.zero_extend i32 %2
+/// ```
 pub struct ZeroExtendOp {
+    /// The destination of the extension.
     dst: ValueId,
+    /// The type after extension.
     dst_ty: Type,
+    /// The source value of the extension.
     src: ValueId,
+    /// The type before extension.
     src_ty: Type,
 }
 
+/// Sign-extends the value to the biffer type and stores it into `dst`.
+///
+/// # Example
+///
+/// Sign-extends the `%2` of type `i32` into a value of type `i64` and stores
+/// the result into `%1`.
+///
+/// ```no_compile
+/// %1 <- i64.sign_extend i32 %2
+/// ```
 pub struct SignExtendOp {
-
+    /// The destination of the extension.
+    dst: ValueId,
+    /// The type after extension.
+    dst_ty: Type,
+    /// The source value of the extension.
+    src: ValueId,
+    /// The type before extension.
+    src_ty: Type,
 }
