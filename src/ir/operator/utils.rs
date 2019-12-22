@@ -12,26 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::Identifier;
+use crate::{ir::ValueId, parse::operator::IntType as Type};
 
-/// A block identifier within a function that allows to jump to.
-#[derive(Debug, Copy, Clone)]
-pub struct BlockId(usize);
-
-impl Identifier for BlockId {
-    /// Returns the underlying `usize` value.
-    fn get(self) -> usize {
-        self.0
-    }
-}
-
-/// An SSA value identifier within a function or basic block.
-#[derive(Debug, Copy, Clone)]
-pub struct ValueId(usize);
-
-impl Identifier for ValueId {
-    /// Returns the underlying `usize` value.
-    fn get(self) -> usize {
-        self.0
-    }
+/// A single parameter of a function call.
+pub struct CallParam {
+    /// The type of the parameter.
+    ty: Type,
+    /// The value of the parameter.
+    val: ValueId,
 }

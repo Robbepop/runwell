@@ -13,11 +13,8 @@
 // limitations under the License.
 
 use crate::{
-    ir::{
-        source::{I32Source, Source, Value},
-        Label,
-    },
-    maybe_std::prelude::*,
+    ir::{BlockId, CallParam, ValueId},
+    parse::FunctionId,
 };
 use derive_more::From;
 
@@ -37,27 +34,39 @@ pub enum TerminalOp {
     Ite(IteOp),
     BranchTable(BranchTableOp),
     Unreachable,
+    CallTail(CallTailOp),
 }
 
-/// Unconditionally branches to the given label.
+/// Unconditionally branches to the given block.
 ///
-/// Branches are function local and can only branch into a block or labelled
-/// entity defined within the same function.
+/// Branches to blocks are always local to the current function.
+///
+/// ```no_compile
+/// br block 2
+/// ```
 pub struct BranchOp {
     /// The label to branch to.
-    label: Label,
+    id: BlockId,
 }
 
 /// An if-then-else branch instruction.
 ///
 /// Jumps to `then_br` if `cond` evaluates to `!= 0` or to `else_br` otherwise.
+///
+/// # Examples
+///
+/// Without returning a value:
+///
+/// ```no_compile
+/// ite %1 then block %0, else block %2
+/// ```
 pub struct IteOp {
     /// The condition. Should gracefully evaluate to `1` (true) or `0` (false).
-    cond: I32Source,
+    cond: ValueId,
     /// The branch taken if `cond` evaluates to `!= 0`.
-    then_br: Label,
+    then_block: BlockId,
     /// The branch taken if `cond` evaluates to `== 0`.
-    else_br: Label,
+    else_block: BlockId,
 }
 
 /// A branch table to jump to either of the destinations given `src`.
@@ -65,19 +74,65 @@ pub struct IteOp {
 /// # Note
 ///
 /// If `src` doesn't match with either destination a jump to `default` is taken.
+///
+/// # Examples
+///
+/// Without returning a value:
+///
+/// ```no_compile
+/// brtable default block 0 [block 2, block 0, block 1]]
+/// ```
 pub struct BranchTableOp {
-    src: Source,
-    default: Label,
-    locs: Vec<Label>,
+    /// The source value ID.
+    src: ValueId,
+    /// The default branch block.
+    default: BlockId,
+    /// The blocks used for branches.
+    locs: Vec<BlockId>,
 }
 
 /// Returns back to the caller from the current function.
 ///
 /// Optionally carries a return value.
 /// Returns `()` if nothing specified.
+///
+/// # Examples
+///
+/// Without returning a value:
+///
+/// ```no_compile
+/// return
+/// ```
+///
+/// Returning a value:
+///
+/// ```no_compile
+/// return %1
+/// ```
 pub struct ReturnOp {
     /// The optional return type.
     ///
     /// Has to match the return type of the enclosing function.
-    value: Option<Value>,
+    value: Option<ValueId>,
+}
+
+/// Tail-calls the function identified by the ID.
+///
+/// # Note
+///
+/// Useful to optimize certain recursive call schemes.
+///
+/// # Examples
+///
+/// Tail calls the function identified by `120` with parameters `%1` of type
+/// `i32`, `%2` of type `i64` and `%4` of type `i32`.
+///
+/// ```no_compile
+/// call.tail fn 120 params [ i32 %1, i64 %2, i32 %4 ]
+/// ```
+pub struct CallTailOp {
+    /// The tail-called function ID.
+    id: FunctionId,
+    /// The function call parameters.
+    params: Vec<CallParam>,
 }
