@@ -15,6 +15,7 @@
 mod call;
 mod constant;
 mod convert;
+pub mod int;
 mod load_store;
 mod local_global;
 mod memory;
@@ -27,6 +28,11 @@ pub use self::{
     call::{CallIndirectOp, CallOp},
     constant::ConstOp,
     convert::{SignExtendOp, TruncateOp, ZeroExtendOp},
+    int::{
+        IntOp,
+        GenericUnaryIntOp,
+        GenericBinaryIntOp,
+    },
     load_store::{LoadOp, StoreOp},
     local_global::{GetOp, LocalOp, SetOp},
     memory::{MemoryGrowOp, MemorySizeOp},
@@ -67,10 +73,10 @@ pub enum Operator {
     MemorySize(MemorySizeOp),
     Call(CallOp),
     CallIndirect(CallIndirectOp),
-    // Int(IntOp),
     Truncate(TruncateOp),
     ZeroExtend(ZeroExtendOp),
     Select(SelectOp),
     SignExtend(SignExtendOp),
+    Int(IntOp),
     Terminal(TerminalOp),
 }
