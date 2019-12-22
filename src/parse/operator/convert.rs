@@ -297,11 +297,10 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
             }
 
             unsupported => {
-                println!(
-                    "encountered unsupported Wasm operator: {:?}",
+                return Err(ParseError::UnsupportedOperator(format!(
+                    "{:?}",
                     unsupported
-                );
-                return Err(ParseError::UnsupportedOperator)
+                )))
             }
         };
         Ok(result_op)

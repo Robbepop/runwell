@@ -41,8 +41,12 @@ pub enum ParseError {
     #[display(fmt = "encountered unsupported passive element")]
     UnsupportedPassiveElement,
     /// Encountered unsupported Wasm operator.
-    #[display(fmt = "encountered unsupported Wasm operator")]
-    UnsupportedOperator,
+    #[display(fmt = "encountered unsupported Wasm operator: {}", self.0)]
+    // We only store the string representation of the unsupported operator
+    // instead of storing the real `wasmparser::Operator` that caused the
+    // error because it would introduce a lifetime that we do not want at
+    // this point.
+    UnsupportedOperator(String),
     /// Encountered invalid extension Wasm operator.
     #[display(fmt = "encountered invalid extension Wasm operator")]
     ExtensionToSmallerInt,
