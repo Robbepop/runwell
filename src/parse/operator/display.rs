@@ -56,7 +56,7 @@ impl Display for BrTableOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(
             f,
-            "brtable default: {}, cases: {:?}",
+            "brtable default {}, cases {:?}",
             self.default, &self.relative_depths,
         )
     }
@@ -118,7 +118,7 @@ impl Display for MemoryImmediate {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(
             f,
-            "offset: {}, alignment: {}",
+            "offset {}, alignment {}",
             self.mem.offset, self.mem.flags
         )
     }
