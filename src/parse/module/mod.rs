@@ -79,7 +79,40 @@ pub struct Module<'a> {
     data: Vec<Data<'a>>,
 }
 
+/// The kind of an entity that can be imported or defined internally.
+#[derive(Debug, Copy, Clone)]
+pub enum ImportExportKind {
+    /// A function.
+    Function,
+    /// A global variable.
+    Global,
+    /// A table.
+    Table,
+    /// A linear memory.
+    LinearMemory,
+}
+
 impl<'a> Module<'a> {
+    /// Returns the number of imported items from the given kind.
+    pub fn len_imported(&self, kind: ImportExportKind) -> usize {
+        match kind {
+            ImportExportKind::Function => self.fn_sigs.len_imported(),
+            ImportExportKind::Global => self.globals.len_imported(),
+            ImportExportKind::Table => self.tables.len_imported(),
+            ImportExportKind::LinearMemory => self.linear_memories.len_imported(),
+        }
+    }
+
+    /// Returns the number of internal items from the given kind.
+    pub fn len_internal(&self, kind: ImportExportKind) -> usize {
+        match kind {
+            ImportExportKind::Function => self.fn_sigs.len_internal(),
+            ImportExportKind::Global => self.globals.len_internal(),
+            ImportExportKind::Table => self.tables.len_internal(),
+            ImportExportKind::LinearMemory => self.linear_memories.len_internal(),
+        }
+    }
+
     /// Returns the function signature identified by `id`.
     fn get_signature(&self, id: FunctionSigId) -> &FunctionSig {
         &self.signatures[id.get()]
