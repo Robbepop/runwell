@@ -26,6 +26,7 @@ mod utils;
 
 use crate::parse::{
     FunctionId,
+    FunctionSigId,
     GlobalVariableId,
     LinearMemoryId,
     ParseError,
@@ -94,7 +95,7 @@ pub struct CallIndirectOp {
     /// The table where the called function pointers are stored.
     pub table_id: TableId,
     /// The offset into the indirect call table.
-    pub offset: usize,
+    pub fn_sig_id: FunctionSigId,
 }
 
 /// Gets the identified local variable.

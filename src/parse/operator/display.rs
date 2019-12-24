@@ -72,9 +72,9 @@ impl Display for CallIndirectOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(
             f,
-            "callindirect table: {}, offset: {}",
+            "call_indirect type {}, table {}",
+            self.fn_sig_id.get(),
             self.table_id.get(),
-            self.offset,
         )
     }
 }

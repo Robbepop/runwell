@@ -57,7 +57,7 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
             WasmOperator::CallIndirect { index, table_index } => {
                 CallIndirectOp {
                     table_id: TableId(table_index as usize),
-                    offset: index as usize,
+                    fn_sig_id: FunctionSigId(index as usize),
                 }
                 .into()
             }
