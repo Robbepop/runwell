@@ -57,12 +57,20 @@ impl<'a> InternalFnIter<'a> {
         }
     }
 
-    /// Queries the yielded pair for the given index.
-    fn query_for(&self, id: usize) -> (Function<'a>, &'a FunctionBody) {
+    /// Queries the yielded pair for the given internal index.
+    fn query_for(
+        &self,
+        internal_id: usize,
+    ) -> (Function<'a>, &'a FunctionBody) {
+        // We are given an internal index and have to convert that
+        // into a normal index before we use it to index into the
+        // function signatures.
+        let id =
+            internal_id + self.module.len_imported(ImportExportKind::Function);
         let fn_id = FunctionId(id);
         let fn_sig = self.module.get_signature(self.fn_sigs[id]);
         let function = Function::new(fn_id, fn_sig);
-        let fn_body = &self.module.fn_bodies[id];
+        let fn_body = &self.module.fn_bodies[internal_id];
         (function, fn_body)
     }
 }
@@ -135,11 +143,19 @@ impl<'a> InternalGlobalIter<'a> {
     }
 
     /// Queries the yielded pair for the given index.
-    fn query_for(&self, id: usize) -> (GlobalVariable, &'a Initializer) {
+    fn query_for(
+        &self,
+        internal_id: usize,
+    ) -> (GlobalVariable, &'a Initializer) {
+        // We are given an internal index and have to convert that
+        // into a normal index before we use it to index into the
+        // function signatures.
+        let id =
+            internal_id + self.module.len_imported(ImportExportKind::Function);
         let global_id = GlobalVariableId(id);
         let global_decl = self.global_decls[id];
         let global = GlobalVariable::new(global_id, global_decl);
-        let global_initializer = &self.global_initializers[id];
+        let global_initializer = &self.global_initializers[internal_id];
         (global, global_initializer)
     }
 }
