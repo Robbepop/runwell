@@ -12,16 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod basicblock;
-mod error;
-mod function;
-pub mod operator;
-mod utils;
+use crate::parse;
+use derive_more::{Display, From};
 
-#[doc(inline)]
-pub use self::{
-    basicblock::BasicBlock,
-    function::Function,
-    utils::{BlockId, ValueId},
-    operator::{Operator, CallParam, TerminalOp},
-};
+/// An error occuring in the IR transformations.
+#[derive(Display, From)]
+pub enum IrError {
+    /// A parsing error.
+    Parse(parse::ParseError),
+}
