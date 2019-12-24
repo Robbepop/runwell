@@ -62,13 +62,13 @@ impl<'a> InternalFnIter<'a> {
         &self,
         internal_id: usize,
     ) -> (Function<'a>, &'a FunctionBody) {
-        // We are given an internal index and have to convert that
-        // into a normal index before we use it to index into the
-        // function signatures.
-        let id =
-            internal_id + self.module.len_imported(ImportExportKind::Function);
-        let fn_id = FunctionId(id);
-        let fn_sig = self.module.get_signature(self.fn_sigs[id]);
+        let fn_id = FunctionId(
+            // We are given an internal index and have to convert that
+            // into a normal index before we use it to index into the
+            // function signatures.
+            internal_id + self.module.len_imported(ImportExportKind::Function),
+        );
+        let fn_sig = self.module.get_signature(self.fn_sigs[internal_id]);
         let function = Function::new(fn_id, fn_sig);
         let fn_body = &self.module.fn_bodies[internal_id];
         (function, fn_body)
@@ -147,13 +147,13 @@ impl<'a> InternalGlobalIter<'a> {
         &self,
         internal_id: usize,
     ) -> (GlobalVariable, &'a Initializer) {
-        // We are given an internal index and have to convert that
-        // into a normal index before we use it to index into the
-        // function signatures.
-        let id =
-            internal_id + self.module.len_imported(ImportExportKind::Function);
-        let global_id = GlobalVariableId(id);
-        let global_decl = self.global_decls[id];
+        let global_id = GlobalVariableId(
+            // We are given an internal index and have to convert that
+            // into a normal index before we use it to index into the
+            // function signatures.
+            internal_id + self.module.len_imported(ImportExportKind::Function),
+        );
+        let global_decl = self.global_decls[internal_id];
         let global = GlobalVariable::new(global_id, global_decl);
         let global_initializer = &self.global_initializers[internal_id];
         (global, global_initializer)
