@@ -20,6 +20,7 @@ use crate::parse::{
     GlobalVariable,
     GlobalVariableDecl,
     GlobalVariableId,
+    ImportExportKind,
     Initializer,
     Module,
 };
