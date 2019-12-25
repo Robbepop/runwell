@@ -176,8 +176,6 @@ impl<'a> ModuleBuilder<'a> {
 
     /// Finalizes building of the Wasm module.
     pub fn finalize(self) -> Module<'a> {
-        println!("# linear memories = {}", self.module.linear_memories.len());
-        println!("# tables          = {}", self.module.tables.len());
         self.module
     }
 }
