@@ -231,7 +231,7 @@ fn parse_types<'a>(
     module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
     for signature in reader.into_iter() {
-        module.push_fn_signature(signature?.into());
+        module.push_fn_signature(signature?.try_into()?);
     }
     Ok(())
 }

@@ -46,6 +46,7 @@ pub enum ParseError {
     // instead of storing the real `wasmparser::Operator` that caused the
     // error because it would introduce a lifetime that we do not want at
     // this point.
+    #[from(ignore)]
     UnsupportedOperator(String),
     /// Encountered invalid extension Wasm operator.
     #[display(fmt = "encountered invalid extension Wasm operator")]
@@ -53,4 +54,8 @@ pub enum ParseError {
     /// Encountered invalid truncation Wasm operator.
     #[display(fmt = "encountered invalid truncation Wasm operator")]
     TruncationToBiggerInt,
+    /// Encountered an unsupported Wasm type.
+    #[display(fmt = "encountered unsupported Wasm type: {:?}", self.0)]
+    #[from(ignore)]
+    UnsupportedType(String),
 }

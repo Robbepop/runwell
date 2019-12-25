@@ -13,25 +13,90 @@
 // limitations under the License.
 
 use crate::parse::{FunctionId, Operator, ParseError};
+use core::convert::TryFrom;
 use derive_more::From;
-use wasmparser::Type;
+
+/// A `runwell` type.
+#[derive(Debug, Clone)]
+pub enum Type {
+    /// The 32-bit `i32` integer type.
+    I32,
+    /// The 64-bit `i64` integer type.
+    I64,
+}
+
+impl core::fmt::Display for Type {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            Type::I32 => write!(f, "i32"),
+            Type::I64 => write!(f, "i64"),
+        }
+    }
+}
+
+impl TryFrom<wasmparser::Type> for Type {
+    type Error = ParseError;
+
+    fn try_from(ty: wasmparser::Type) -> Result<Self, Self::Error> {
+        let result = match ty {
+            wasmparser::Type::I32 => Type::I32,
+            wasmparser::Type::I64 => Type::I64,
+            unsupported => return Err(ParseError::UnsupportedType(format!("{:?}", unsupported))),
+        };
+        Ok(result)
+    }
+}
 
 /// A function signature.
-#[derive(Debug, From)]
+#[derive(Debug)]
 pub struct FunctionSig {
-    /// The underlying function type.
-    fn_type: wasmparser::FuncType,
+    /// The input types of the function.
+    inputs: Box<[Type]>,
+    /// The output types of the function.
+    outputs: Box<[Type]>,
+}
+
+impl TryFrom<wasmparser::FuncType> for FunctionSig {
+    type Error = ParseError;
+
+    fn try_from(func_ty: wasmparser::FuncType) -> Result<Self, Self::Error> {
+        let inputs = func_ty
+            .params
+            .into_iter()
+            .cloned()
+            .map(|ty| Type::try_from(ty))
+            .collect::<Result<Vec<_>, _>>()?;
+        let outputs = func_ty
+            .params
+            .into_iter()
+            .cloned()
+            .map(|ty| Type::try_from(ty))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self::new(inputs, outputs))
+    }
 }
 
 impl FunctionSig {
+    /// Creates a new function signature.
+    pub fn new<I, O>(inputs: I, outputs: O) -> Self
+    where
+        I: IntoIterator<Item = Type>,
+        O: IntoIterator<Item = Type>,
+    {
+        Self {
+            inputs: inputs.into_iter().collect::<Vec<_>>().into_boxed_slice(),
+            outputs: outputs.into_iter().collect::<Vec<_>>().into_boxed_slice(),
+        }
+    }
+
     /// Returns a slice over the input types of `self`.
     pub fn inputs(&self) -> &[Type] {
-        &self.fn_type.params
+        &self.inputs
     }
 
     /// Returns a slice over the output types of `self`.
     pub fn outputs(&self) -> &[Type] {
-        &self.fn_type.returns
+        &self.outputs
     }
 }
 
@@ -81,11 +146,11 @@ impl<'a> core::convert::TryFrom<wasmparser::FunctionBody<'a>> for FunctionBody {
             .into_iter()
             .map(|local| {
                 match local {
-                    Ok((num, ty)) => Ok((num as usize, ty)),
-                    Err(err) => Err(err),
+                    Ok((num, ty)) => Ok((num as usize, Type::try_from(ty)?)),
+                    Err(err) => Err(err.into()),
                 }
             })
-            .collect::<Result<Vec<_>, _>>()?
+            .collect::<Result<Vec<_>, ParseError>>()?
             .into_boxed_slice();
         let ops = function_body
             .get_operators_reader()?
@@ -113,42 +178,6 @@ mod display_impls {
     use super::*;
     use core::fmt::{Display, Formatter, Result};
 
-    /// Thin wrapper around [`wasmparser::Type`] that has a `Display` impl.
-    #[derive(From)]
-    pub struct TypeWrapper {
-        ty: wasmparser::Type,
-    }
-
-    impl Display for TypeWrapper {
-        fn fmt(&self, f: &mut Formatter) -> Result {
-            match self.ty {
-                wasmparser::Type::I32 => write!(f, "i32"),
-                wasmparser::Type::I64 => write!(f, "i64"),
-                wasmparser::Type::F32 => write!(f, "f32"),
-                wasmparser::Type::F64 => write!(f, "f64"),
-                wasmparser::Type::V128 => write!(f, "v128"),
-                wasmparser::Type::AnyFunc => write!(f, "anyfunc"),
-                wasmparser::Type::AnyRef => write!(f, "anyref"),
-                wasmparser::Type::Func => write!(f, "func"),
-                wasmparser::Type::EmptyBlockType => write!(f, "emptyblock"),
-                wasmparser::Type::Null => write!(f, "null"),
-            }
-        }
-    }
-
-    /// Wrapper type used to forward the `Debug` implementation of the wrapper
-    /// to the `Display` implementation of `T`.
-    #[derive(From)]
-    pub struct DebugToDisplay<T>(T);
-    impl<T> core::fmt::Debug for DebugToDisplay<T>
-    where
-        T: Display,
-    {
-        fn fmt(&self, f: &mut Formatter) -> Result {
-            write!(f, "{}", self.0)
-        }
-    }
-
     impl Display for Function<'_> {
         fn fmt(&self, f: &mut Formatter) -> Result {
             use crate::parse::Identifier as _;
@@ -158,9 +187,6 @@ mod display_impls {
                     self.sig()
                         .inputs()
                         .into_iter()
-                        .cloned()
-                        .map(TypeWrapper::from)
-                        .map(DebugToDisplay),
                 )
                 .finish()?;
             write!(f, " => ")?;
@@ -169,9 +195,6 @@ mod display_impls {
                     self.sig()
                         .outputs()
                         .into_iter()
-                        .cloned()
-                        .map(TypeWrapper::from)
-                        .map(DebugToDisplay),
                 )
                 .finish()?;
             Ok(())
@@ -192,7 +215,7 @@ mod display_impls {
                         "\n{}{} x {}",
                         indent,
                         local_num,
-                        TypeWrapper::from(*local_type)
+                        local_type,
                     )?;
                 }
                 write!(f, "\nend")?;
