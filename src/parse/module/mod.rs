@@ -99,7 +99,9 @@ impl<'a> Module<'a> {
             ImportExportKind::Function => self.fn_sigs.len_imported(),
             ImportExportKind::Global => self.globals.len_imported(),
             ImportExportKind::Table => self.tables.len_imported(),
-            ImportExportKind::LinearMemory => self.linear_memories.len_imported(),
+            ImportExportKind::LinearMemory => {
+                self.linear_memories.len_imported()
+            }
         }
     }
 
@@ -109,7 +111,9 @@ impl<'a> Module<'a> {
             ImportExportKind::Function => self.fn_sigs.len_internal(),
             ImportExportKind::Global => self.globals.len_internal(),
             ImportExportKind::Table => self.tables.len_internal(),
-            ImportExportKind::LinearMemory => self.linear_memories.len_internal(),
+            ImportExportKind::LinearMemory => {
+                self.linear_memories.len_internal()
+            }
         }
     }
 

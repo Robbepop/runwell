@@ -41,7 +41,12 @@ impl TryFrom<wasmparser::Type> for Type {
         let result = match ty {
             wasmparser::Type::I32 => Type::I32,
             wasmparser::Type::I64 => Type::I64,
-            unsupported => return Err(ParseError::UnsupportedType(format!("{:?}", unsupported))),
+            unsupported => {
+                return Err(ParseError::UnsupportedType(format!(
+                    "{:?}",
+                    unsupported
+                )))
+            }
         };
         Ok(result)
     }
@@ -183,19 +188,11 @@ mod display_impls {
             use crate::parse::Identifier as _;
             write!(f, "\nfunction {}: ", self.id().get())?;
             f.debug_list()
-                .entries(
-                    self.sig()
-                        .inputs()
-                        .into_iter()
-                )
+                .entries(self.sig().inputs().into_iter())
                 .finish()?;
             write!(f, " => ")?;
             f.debug_list()
-                .entries(
-                    self.sig()
-                        .outputs()
-                        .into_iter()
-                )
+                .entries(self.sig().outputs().into_iter())
                 .finish()?;
             Ok(())
         }
@@ -210,13 +207,7 @@ mod display_impls {
             if !self.locals().is_empty() {
                 write!(f, "\nlocals")?;
                 for (local_num, local_type) in self.locals() {
-                    write!(
-                        f,
-                        "\n{}{} x {}",
-                        indent,
-                        local_num,
-                        local_type,
-                    )?;
+                    write!(f, "\n{}{} x {}", indent, local_num, local_type,)?;
                 }
                 write!(f, "\nend")?;
             }

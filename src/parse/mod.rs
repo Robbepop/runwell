@@ -31,7 +31,7 @@ use self::module::ModuleBuilder;
 #[doc(inline)]
 pub use self::{
     error::ParseError,
-    function::{Type, Function, FunctionBody, FunctionSig},
+    function::{Function, FunctionBody, FunctionSig, Type},
     global_variable::{GlobalVariable, GlobalVariableDecl},
     id::{
         FunctionId,
