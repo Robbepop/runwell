@@ -52,6 +52,6 @@ pub use self::{
         InternalGlobalIter,
         Module,
     },
-    operator::{LocalVariableId, Operator},
+    operator::{LocalVariableId, MemoryImmediate, Operator},
     parser::parse,
 };

@@ -33,9 +33,9 @@ use crate::parse::{
     TableId,
 };
 use derive_more::From;
-use wasmparser::{MemoryImmediate, TypeOrFuncType};
+use wasmparser::TypeOrFuncType;
 
-pub use self::utils::{ExtIntType, IntType, LocalVariableId};
+pub use self::utils::{ExtIntType, IntType, LocalVariableId, MemoryImmediate};
 
 /// A Wasm block operator.
 #[derive(Debug)]

@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{operator::*, LinearMemoryId, Operator, ParseError};
+use crate::parse::{
+    operator::*,
+    LinearMemoryId,
+    MemoryImmediate,
+    Operator,
+    ParseError,
+};
 use core::convert::TryFrom;
 
 impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
@@ -98,67 +104,97 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
             }
 
             WasmOperator::I32Load { memarg } => {
-                LoadOp::simple(memarg, IntType::I32).into()
+                LoadOp::simple(memarg.into(), IntType::I32).into()
             }
             WasmOperator::I64Load { memarg } => {
-                LoadOp::simple(memarg, IntType::I64).into()
+                LoadOp::simple(memarg.into(), IntType::I64).into()
             }
             WasmOperator::I32Load8S { memarg } => {
-                LoadOp::load_sext(memarg, IntType::I32, ExtIntType::I8)?.into()
+                LoadOp::load_sext(memarg.into(), IntType::I32, ExtIntType::I8)?
+                    .into()
             }
             WasmOperator::I32Load8U { memarg } => {
-                LoadOp::load_zext(memarg, IntType::I32, ExtIntType::I8)?.into()
+                LoadOp::load_zext(memarg.into(), IntType::I32, ExtIntType::I8)?
+                    .into()
             }
             WasmOperator::I32Load16S { memarg } => {
-                LoadOp::load_sext(memarg, IntType::I32, ExtIntType::I16)?.into()
+                LoadOp::load_sext(memarg.into(), IntType::I32, ExtIntType::I16)?
+                    .into()
             }
             WasmOperator::I32Load16U { memarg } => {
-                LoadOp::load_zext(memarg, IntType::I32, ExtIntType::I16)?.into()
+                LoadOp::load_zext(memarg.into(), IntType::I32, ExtIntType::I16)?
+                    .into()
             }
             WasmOperator::I64Load8S { memarg } => {
-                LoadOp::load_sext(memarg, IntType::I64, ExtIntType::I8)?.into()
+                LoadOp::load_sext(memarg.into(), IntType::I64, ExtIntType::I8)?
+                    .into()
             }
             WasmOperator::I64Load8U { memarg } => {
-                LoadOp::load_zext(memarg, IntType::I64, ExtIntType::I8)?.into()
+                LoadOp::load_zext(memarg.into(), IntType::I64, ExtIntType::I8)?
+                    .into()
             }
             WasmOperator::I64Load16S { memarg } => {
-                LoadOp::load_sext(memarg, IntType::I64, ExtIntType::I16)?.into()
+                LoadOp::load_sext(memarg.into(), IntType::I64, ExtIntType::I16)?
+                    .into()
             }
             WasmOperator::I64Load16U { memarg } => {
-                LoadOp::load_zext(memarg, IntType::I64, ExtIntType::I16)?.into()
+                LoadOp::load_zext(memarg.into(), IntType::I64, ExtIntType::I16)?
+                    .into()
             }
             WasmOperator::I64Load32S { memarg } => {
-                LoadOp::load_sext(memarg, IntType::I64, ExtIntType::I32)?.into()
+                LoadOp::load_sext(memarg.into(), IntType::I64, ExtIntType::I32)?
+                    .into()
             }
             WasmOperator::I64Load32U { memarg } => {
-                LoadOp::load_zext(memarg, IntType::I64, ExtIntType::I32)?.into()
+                LoadOp::load_zext(memarg.into(), IntType::I64, ExtIntType::I32)?
+                    .into()
             }
 
             WasmOperator::I32Store { memarg } => {
-                StoreOp::simple(memarg, IntType::I32).into()
+                StoreOp::simple(memarg.into(), IntType::I32).into()
             }
             WasmOperator::I64Store { memarg } => {
-                StoreOp::simple(memarg, IntType::I64).into()
+                StoreOp::simple(memarg.into(), IntType::I64).into()
             }
             WasmOperator::I32Store8 { memarg } => {
-                StoreOp::store_truncate(memarg, IntType::I32, ExtIntType::I8)?
-                    .into()
+                StoreOp::store_truncate(
+                    memarg.into(),
+                    IntType::I32,
+                    ExtIntType::I8,
+                )?
+                .into()
             }
             WasmOperator::I32Store16 { memarg } => {
-                StoreOp::store_truncate(memarg, IntType::I32, ExtIntType::I16)?
-                    .into()
+                StoreOp::store_truncate(
+                    memarg.into(),
+                    IntType::I32,
+                    ExtIntType::I16,
+                )?
+                .into()
             }
             WasmOperator::I64Store8 { memarg } => {
-                StoreOp::store_truncate(memarg, IntType::I64, ExtIntType::I8)?
-                    .into()
+                StoreOp::store_truncate(
+                    memarg.into(),
+                    IntType::I64,
+                    ExtIntType::I8,
+                )?
+                .into()
             }
             WasmOperator::I64Store16 { memarg } => {
-                StoreOp::store_truncate(memarg, IntType::I64, ExtIntType::I16)?
-                    .into()
+                StoreOp::store_truncate(
+                    memarg.into(),
+                    IntType::I64,
+                    ExtIntType::I16,
+                )?
+                .into()
             }
             WasmOperator::I64Store32 { memarg } => {
-                StoreOp::store_truncate(memarg, IntType::I64, ExtIntType::I32)?
-                    .into()
+                StoreOp::store_truncate(
+                    memarg.into(),
+                    IntType::I64,
+                    ExtIntType::I32,
+                )?
+                .into()
             }
 
             WasmOperator::I32Const { value } => ConstOp::I32(value).into(),

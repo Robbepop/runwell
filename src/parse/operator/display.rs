@@ -19,7 +19,7 @@
 //! Wasm spec but will have a special appearance in some aspects for improved
 //! readability.
 
-use crate::parse::{operator::*, Identifier};
+use crate::parse::{operator::*, Identifier, MemoryImmediate};
 use core::fmt::{Display, Formatter, Result};
 
 impl Display for BlockOp {
@@ -109,17 +109,13 @@ impl Display for GlobalSetOp {
     }
 }
 
-#[derive(Debug, From)]
-pub struct MemoryImmediate {
-    mem: wasmparser::MemoryImmediate,
-}
-
 impl Display for MemoryImmediate {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(
             f,
             "offset {}, alignment {}",
-            self.mem.offset, self.mem.flags
+            self.offset(),
+            self.alignment()
         )
     }
 }

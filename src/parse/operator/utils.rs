@@ -14,6 +14,46 @@
 
 use crate::parse::Identifier;
 
+/// Memory access parameters.
+#[derive(Debug, Copy, Clone)]
+pub struct MemoryImmediate {
+    /// The offset of the memory access.
+    offset: usize,
+    /// The alignment of the memory access.
+    ///
+    /// Given as power of two:
+    /// I.e. an `alignment` of `3` represents `2^3 = 8` bytes alignment.
+    alignment: usize,
+}
+
+impl From<wasmparser::MemoryImmediate> for MemoryImmediate {
+    fn from(imm: wasmparser::MemoryImmediate) -> Self {
+        MemoryImmediate::new(imm.offset as usize, imm.flags as usize)
+    }
+}
+
+impl MemoryImmediate {
+    /// Creates memory parameters for the given offset and alignment.
+    ///
+    /// # Note
+    ///
+    /// The alignment is given as power-of-two alignment.
+    /// I.e. an `alignment` of `3` represents `2^3 = 8` bytes alignment.
+    pub fn new(offset: usize, alignment: usize) -> Self {
+        Self { offset, alignment }
+    }
+
+    /// Returns the offset.
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
+
+    /// Returns the alignment as power-of-two.
+    pub fn alignment(&self) -> usize {
+        self.alignment
+    }
+}
+
 /// A local variable ID.
 ///
 /// Used to access local variables of Wasm functions.
