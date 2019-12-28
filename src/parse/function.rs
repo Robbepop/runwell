@@ -72,7 +72,7 @@ impl TryFrom<wasmparser::FuncType> for FunctionSig {
             .map(|ty| Type::try_from(ty))
             .collect::<Result<Vec<_>, _>>()?;
         let outputs = func_ty
-            .params
+            .returns
             .into_iter()
             .cloned()
             .map(|ty| Type::try_from(ty))
