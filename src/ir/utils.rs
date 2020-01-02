@@ -26,7 +26,7 @@ impl Identifier for BlockId {
 }
 
 /// An SSA value identifier within a function or basic block.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
 pub struct ValueId(usize);
 
 impl Identifier for ValueId {
