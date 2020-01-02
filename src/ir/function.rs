@@ -15,15 +15,15 @@
 use crate::{
     ir::BasicBlock,
     maybe_std::prelude::*,
-    parse::{FunctionId, FunctionSig},
+    parse::{FunctionId, FunctionSigId},
 };
 
 /// A `runwell` IR function.
 pub struct Function {
-    /// The globally unique identifier of the function.
+    /// The function identifier.
     id: FunctionId,
-    /// The signature of the function.
-    signature: FunctionSig,
+    /// The identifier of the function signature.
+    sig_id: FunctionSigId,
     /// The non-empty set of basic blocks that form the operations
     /// performance by the function seen as a whole.
     /// The first basic block (entry block) is special in that it is executed
