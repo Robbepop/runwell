@@ -21,6 +21,7 @@ mod utils;
 #[doc(inline)]
 pub use self::{
     basicblock::BasicBlock,
+    error::IrError,
     function::Function,
     operator::{CallParam, Operator, TerminalOp},
     utils::{BlockId, ValueId, ValueIdGen},
