@@ -15,7 +15,6 @@
 use crate::parse::{
     operator::*,
     LinearMemoryId,
-    MemoryImmediate,
     Operator,
     ParseError,
 };
