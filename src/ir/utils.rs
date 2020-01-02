@@ -35,3 +35,23 @@ impl Identifier for ValueId {
         self.0
     }
 }
+
+/// Generates new unique value identifiers.
+pub struct ValueIdGen {
+    /// The current value identifier.
+    current: usize,
+}
+
+impl ValueIdGen {
+    /// Creates a new value generator.
+    pub fn new() -> Self {
+        Self { current: 0 }
+    }
+
+    /// Generates a new unique value identifier.
+    pub fn gen(&mut self) -> ValueId {
+        let result = ValueId(self.current);
+        self.current += 1;
+        result
+    }
+}
