@@ -30,6 +30,25 @@ pub struct BasicBlock {
 }
 
 impl BasicBlock {
+    /// Creates a new empty basic block.
+    ///
+    /// # Note
+    ///
+    /// This basic block is not valid after construction
+    /// since valid basic blocks must have a terminal final
+    /// instruction.
+    pub fn new() -> Self {
+        Self { ops: Vec::new() }
+    }
+
+    /// Pushes an operator to the end of the basic block.
+    pub fn push_op<O>(&mut self, op: O)
+    where
+        O: Into<Operator>,
+    {
+        self.ops.push(op.into())
+    }
+
     /// Returns an iterator over the operations of the basic block.
     pub fn ops(&self) -> core::slice::Iter<Operator> {
         self.ops.iter()
@@ -48,9 +67,11 @@ impl BasicBlock {
             .expect("unexpected empty list of operations in basic block");
         match term {
             Operator::Terminal(terminal) => terminal,
-            _ => panic!(
+            _ => {
+                panic!(
                 "unexpected non-terminal operation at the end of a basic block"
-            ),
+            )
+            }
         }
     }
 
