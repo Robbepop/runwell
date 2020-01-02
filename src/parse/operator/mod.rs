@@ -35,7 +35,13 @@ use crate::parse::{
 use derive_more::From;
 use wasmparser::TypeOrFuncType;
 
-pub use self::utils::{ExtIntType, IntType, LocalVariableId, MemoryImmediate};
+pub use self::utils::{
+    ExtIntType,
+    IntType,
+    LocalVariableId,
+    LocalVariableIdGen,
+    MemoryImmediate,
+};
 
 /// A Wasm block operator.
 #[derive(Debug)]

@@ -66,6 +66,26 @@ impl Identifier for LocalVariableId {
     }
 }
 
+/// Generates new unique local variable identifiers.
+pub struct LocalVariableIdGen {
+    /// The current local variable identifier.
+    current: usize,
+}
+
+impl LocalVariableIdGen {
+    /// Creates a new local variable generator.
+    pub fn new() -> Self {
+        Self { current: 0 }
+    }
+
+    /// Generates a new unique local variable identifier.
+    pub fn gen(&mut self) -> LocalVariableId {
+        let result = LocalVariableId(self.current);
+        self.current += 1;
+        result
+    }
+}
+
 /// The extended set of integer types.
 ///
 /// # Note
