@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ir::ValueId, parse::operator::IntType as Type};
+use crate::{
+    ir::{operator::DestinationId, ValueId},
+    parse::operator::IntType as Type,
+};
 
 /// Truncates the value to the smaller type and stores it into `dst`.
 ///
@@ -33,6 +36,12 @@ pub struct TruncateOp {
     src: ValueId,
     /// The type before the truncation.
     src_ty: Type,
+}
+
+impl DestinationId for TruncateOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }
 
 /// Zero-extends the value to the biffer type and stores it into `dst`.
@@ -56,6 +65,12 @@ pub struct ZeroExtendOp {
     src_ty: Type,
 }
 
+impl DestinationId for ZeroExtendOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
+}
+
 /// Sign-extends the value to the biffer type and stores it into `dst`.
 ///
 /// # Example
@@ -75,4 +90,10 @@ pub struct SignExtendOp {
     src: ValueId,
     /// The type before extension.
     src_ty: Type,
+}
+
+impl DestinationId for SignExtendOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::CallParam,
+    ir::{operator::DestinationId, CallParam, ValueId},
     parse::{FunctionId, TableId},
 };
 
@@ -27,13 +27,21 @@ use crate::{
 /// and `%5` of type `i64`.
 ///
 /// ```no_compile
-/// call fn 42 params [ i32 %1, i64 %5 ]
+/// %dst <- call fn 42 params [ i32 %1, i64 %5 ]
 /// ```
 pub struct CallOp {
+    /// The destination value.
+    dst: ValueId,
     /// The identified of the called function.
     id: FunctionId,
     /// The parameters of the function call.
     params: Vec<CallParam>,
+}
+
+impl DestinationId for CallOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }
 
 /// Calls a function indirectly through a table.
@@ -47,13 +55,21 @@ pub struct CallOp {
 /// type `i64`.
 ///
 /// ```no_compile
-/// call.indirect table 2 offset 5 params [ i64 %2, i64 %4 ]
+/// %dst <- call.indirect table 2 offset 5 params [ i64 %2, i64 %4 ]
 /// ```
 pub struct CallIndirectOp {
+    /// The destination value.
+    dst: ValueId,
     /// The table ID for receiving the indirectly called function pointers.
     table_id: TableId,
     /// The offset within the table.
     table_offset: usize,
     /// The parameters of the function call.
     params: Vec<CallParam>,
+}
+
+impl DestinationId for CallIndirectOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }

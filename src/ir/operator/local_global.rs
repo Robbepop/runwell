@@ -13,11 +13,10 @@
 // limitations under the License.
 
 use crate::{
-    ir::ValueId,
-    parse::{GlobalVariableId, LocalVariableId},
+    ir::{operator::DestinationId, ValueId},
+    parse::{GlobalVariableId, LocalVariableId, Type},
 };
 use derive_more::From;
-use wasmparser::Type;
 
 /// A local or global variable identifier.
 #[derive(From)]
@@ -37,10 +36,25 @@ pub enum VariableId {
 /// %2 <- i64.local
 /// ```
 pub struct LocalOp {
-    /// The ID of the local variable.
+    /// The destination binding of the `runwell` SSA binding.
+    dst: ValueId,
+    /// The ID of the Wasm local variable.
     id: LocalVariableId,
     /// The type of the local variable.
     ty: Type,
+}
+
+impl LocalOp {
+    /// Creates a new local variable declarator.
+    pub fn new(dst: ValueId, id: LocalVariableId, ty: Type) -> Self {
+        Self { dst, id, ty }
+    }
+}
+
+impl DestinationId for LocalOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }
 
 /// Returns the value of a local or global variable.
@@ -61,10 +75,18 @@ pub struct LocalOp {
 /// %2 <- i64.get global 1
 /// ```
 pub struct GetOp {
+    /// The destination binding.
+    dst: ValueId,
     /// The ID of the local variable.
     id: VariableId,
     /// The type of the loaded value.
     ty: Type,
+}
+
+impl DestinationId for GetOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }
 
 /// Sets the value of a local or global variable.
@@ -89,4 +111,10 @@ pub struct SetOp {
     id: VariableId,
     /// The type of the stored value.
     val: ValueId,
+}
+
+impl DestinationId for SetOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        None
+    }
 }

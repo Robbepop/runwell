@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::ValueId,
+    ir::{operator::DestinationId, ValueId},
     parse::{operator::IntType, LinearMemoryId},
 };
 
@@ -48,6 +48,12 @@ pub struct LoadOp {
     memory: MemoryParams,
 }
 
+impl DestinationId for LoadOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
+}
+
 /// Stores the value of `src` into the memory location of `dst`.
 ///
 /// # Example
@@ -65,4 +71,10 @@ pub struct StoreOp {
     ty: IntType,
     /// The linear memory location and alignment.
     memory: MemoryParams,
+}
+
+impl DestinationId for StoreOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        None
+    }
 }

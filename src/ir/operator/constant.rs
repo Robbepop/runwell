@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ir::ValueId, parse::operator::IntType as Type};
+use crate::{
+    ir::{operator::DestinationId, ValueId},
+    parse::operator::IntType as Type,
+};
 
 /// Loads the constant value.
 ///
@@ -38,4 +41,10 @@ pub enum ConstValue {
     I32(i32),
     /// An constant value of type `i64`.
     I64(i64),
+}
+
+impl DestinationId for ConstOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }

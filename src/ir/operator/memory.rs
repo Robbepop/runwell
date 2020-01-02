@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ir::ValueId, parse::LinearMemoryId};
+use crate::{
+    ir::{operator::DestinationId, ValueId},
+    parse::LinearMemoryId,
+};
 
 /// The Wasm `memory.grow` operation in SSA form.
 ///
@@ -31,6 +34,12 @@ pub struct MemoryGrowOp {
     grow_by: ValueId,
 }
 
+impl DestinationId for MemoryGrowOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        None
+    }
+}
+
 /// The Wasm `memory.size` operation in SSA form.
 ///
 /// # Example
@@ -42,7 +51,13 @@ pub struct MemoryGrowOp {
 /// ```
 pub struct MemorySizeOp {
     /// The value to store the result to.
-    val: ValueId,
+    dst: ValueId,
     /// The identifier of the linear memory.
     memory: LinearMemoryId,
+}
+
+impl DestinationId for MemorySizeOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }

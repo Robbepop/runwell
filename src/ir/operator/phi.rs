@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::{BlockId, ValueId},
+    ir::{operator::DestinationId, BlockId, ValueId},
     parse::operator::IntType as Type,
 };
 
@@ -49,6 +49,12 @@ pub struct PhiOp {
     ///
     /// Must contain at least 2 origins.
     origins: Vec<PhiOpOrigin>,
+}
+
+impl DestinationId for PhiOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }
 
 /// An origin of a phi operation.

@@ -14,8 +14,10 @@
 
 //! Integer type operations.
 
-use crate::ir::ValueId;
-use crate::parse::operator::IntType as Type;
+use crate::{
+    ir::{operator::DestinationId, ValueId},
+    parse::operator::IntType as Type,
+};
 use derive_more::From;
 
 /// Any integer operation.
@@ -40,6 +42,32 @@ pub enum IntOp {
     Ushr(UshrOp),
     Rotl(RotlOp),
     Rotr(RotrOp),
+}
+
+impl DestinationId for IntOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        match self {
+            Self::LeadingZeros(op) => op.destination_id(),
+            Self::TrailingZeros(op) => op.destination_id(),
+            Self::Popcount(op) => op.destination_id(),
+            Self::Add(op) => op.destination_id(),
+            Self::Mul(op) => op.destination_id(),
+            Self::Sub(op) => op.destination_id(),
+            Self::Sdiv(op) => op.destination_id(),
+            Self::Udiv(op) => op.destination_id(),
+            Self::Srem(op) => op.destination_id(),
+            Self::Urem(op) => op.destination_id(),
+            Self::Compare(op) => op.destination_id(),
+            Self::And(op) => op.destination_id(),
+            Self::Or(op) => op.destination_id(),
+            Self::Xor(op) => op.destination_id(),
+            Self::Shl(op) => op.destination_id(),
+            Self::Sshr(op) => op.destination_id(),
+            Self::Ushr(op) => op.destination_id(),
+            Self::Rotl(op) => op.destination_id(),
+            Self::Rotr(op) => op.destination_id(),
+        }
+    }
 }
 
 mod seal {
@@ -158,6 +186,15 @@ where
     kind: Kind,
 }
 
+impl<Kind> DestinationId for GenericUnaryIntOp<Kind>
+where
+    Kind: Sealed,
+{
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
+}
+
 /// Returns the leading zeros of the integer operand.
 pub type LeadingZerosOp = GenericUnaryIntOp<kinds::LeadingZerosOpKind>;
 
@@ -228,6 +265,15 @@ pub struct GenericBinaryIntOp<Kind> {
     ty: Type,
     /// The underlying kind of the binary operation.
     kind: Kind,
+}
+
+impl<Kind> DestinationId for GenericBinaryIntOp<Kind>
+where
+    Kind: Sealed,
+{
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }
 
 /// A simple integer addition. Stores the result into `dst`.

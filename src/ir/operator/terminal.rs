@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::{BlockId, CallParam, ValueId},
+    ir::{operator::DestinationId, BlockId, CallParam, ValueId},
     parse::FunctionId,
 };
 use derive_more::From;
@@ -29,12 +29,19 @@ use derive_more::From;
 /// A basic block requires a terminal instruction at its last operation.
 #[derive(From)]
 pub enum TerminalOp {
+    Unreachable,
     Return(ReturnOp),
     Branch(BranchOp),
     Ite(IteOp),
     BranchTable(BranchTableOp),
-    Unreachable,
     CallTail(CallTailOp),
+}
+
+impl DestinationId for TerminalOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        // By definition terminal operations cannot have bindings.
+        None
+    }
 }
 
 /// Unconditionally branches to the given block.
@@ -47,6 +54,13 @@ pub enum TerminalOp {
 pub struct BranchOp {
     /// The label to branch to.
     id: BlockId,
+}
+
+impl DestinationId for BranchOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        // By definition terminal operations cannot have bindings.
+        None
+    }
 }
 
 /// An if-then-else branch instruction.
@@ -69,6 +83,13 @@ pub struct IteOp {
     else_block: BlockId,
 }
 
+impl DestinationId for IteOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        // By definition terminal operations cannot have bindings.
+        None
+    }
+}
+
 /// A branch table to jump to either of the destinations given `src`.
 ///
 /// # Note
@@ -89,6 +110,13 @@ pub struct BranchTableOp {
     default: BlockId,
     /// The blocks used for branches.
     locs: Vec<BlockId>,
+}
+
+impl DestinationId for BranchTableOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        // By definition terminal operations cannot have bindings.
+        None
+    }
 }
 
 /// Returns back to the caller from the current function.
@@ -116,6 +144,13 @@ pub struct ReturnOp {
     value: Option<ValueId>,
 }
 
+impl DestinationId for ReturnOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        // By definition terminal operations cannot have bindings.
+        None
+    }
+}
+
 /// Tail-calls the function identified by the ID.
 ///
 /// # Note
@@ -135,4 +170,11 @@ pub struct CallTailOp {
     id: FunctionId,
     /// The function call parameters.
     params: Vec<CallParam>,
+}
+
+impl DestinationId for CallTailOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        // By definition terminal operations cannot have bindings.
+        None
+    }
 }

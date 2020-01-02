@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ir::ValueId, parse::operator::IntType as Type};
+use crate::{
+    ir::{operator::DestinationId, ValueId},
+    parse::operator::IntType as Type,
+};
 
 /// Choose a value based on a condition without IR-level branching.
 ///
@@ -30,6 +33,8 @@ use crate::{ir::ValueId, parse::operator::IntType as Type};
 /// %0 <- i32.select %1 <- %2 or %3
 /// ```
 pub struct SelectOp {
+    /// The destination binding.
+    dst: ValueId,
     /// The condition value.
     condition: ValueId,
     /// The type of the resulting value.
@@ -38,4 +43,10 @@ pub struct SelectOp {
     true_val: ValueId,
     /// The value if `condition` evaluates to `false`.
     false_val: ValueId,
+}
+
+impl DestinationId for SelectOp {
+    fn destination_id(&self) -> Option<ValueId> {
+        Some(self.dst)
+    }
 }
