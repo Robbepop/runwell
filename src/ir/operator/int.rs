@@ -338,3 +338,99 @@ pub type RotlOp = GenericBinaryIntOp<SimpleOp<kinds::RotlOpKind>>;
 
 /// Rotate-right operation.
 pub type RotrOp = GenericBinaryIntOp<SimpleOp<kinds::RotrOpKind>>;
+
+impl From<AddOp> for ir::Operator {
+    fn from(op: AddOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<MulOp> for ir::Operator {
+    fn from(op: MulOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<SubOp> for ir::Operator {
+    fn from(op: SubOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<SdivOp> for ir::Operator {
+    fn from(op: SdivOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<UdivOp> for ir::Operator {
+    fn from(op: UdivOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<SremOp> for ir::Operator {
+    fn from(op: SremOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<UremOp> for ir::Operator {
+    fn from(op: UremOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<CompareOp> for ir::Operator {
+    fn from(op: CompareOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<AndOp> for ir::Operator {
+    fn from(op: AndOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<OrOp> for ir::Operator {
+    fn from(op: OrOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<XorOp> for ir::Operator {
+    fn from(op: XorOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<ShlOp> for ir::Operator {
+    fn from(op: ShlOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<SshrOp> for ir::Operator {
+    fn from(op: SshrOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<UshrOp> for ir::Operator {
+    fn from(op: UshrOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<RotlOp> for ir::Operator {
+    fn from(op: RotlOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}
+
+impl From<RotrOp> for ir::Operator {
+    fn from(op: RotrOp) -> Self {
+        ir::Operator::Int(IntOp::from(op))
+    }
+}

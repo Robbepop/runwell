@@ -146,5 +146,32 @@ pub struct CallTailOp {
     params: Vec<CallParam>,
 }
 
+impl From<BranchOp> for ir::Operator {
+    fn from(op: BranchOp) -> Self {
+        ir::Operator::Terminal(TerminalOp::from(op))
+    }
+}
+
+impl From<IteOp> for ir::Operator {
+    fn from(op: IteOp) -> Self {
+        ir::Operator::Terminal(TerminalOp::from(op))
+    }
+}
+
+impl From<BranchTableOp> for ir::Operator {
+    fn from(op: BranchTableOp) -> Self {
+        ir::Operator::Terminal(TerminalOp::from(op))
+    }
+}
+
+impl From<ReturnOp> for ir::Operator {
+    fn from(op: ReturnOp) -> Self {
+        ir::Operator::Terminal(TerminalOp::from(op))
+    }
+}
+
+impl From<CallTailOp> for ir::Operator {
+    fn from(op: CallTailOp) -> Self {
+        ir::Operator::Terminal(TerminalOp::from(op))
     }
 }

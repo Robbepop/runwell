@@ -38,5 +38,24 @@ pub enum ConstValue {
     I64(i64),
 }
 
+impl From<i32> for ConstOp {
+    fn from(val: i32) -> Self {
+        Self { val: ConstValue::I32(val) }
+    }
+}
+
+impl From<i64> for ConstOp {
+    fn from(val: i64) -> Self {
+        Self { val: ConstValue::I64(val) }
+    }
+}
+
+impl ConstOp {
+    /// Returns the type of the constant value.
+    pub fn ty(&self) -> Type {
+        match self.val {
+            ConstValue::I32(_) => Type::I32,
+            ConstValue::I64(_) => Type::I64,
+        }
     }
 }
