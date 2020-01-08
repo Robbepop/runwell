@@ -115,6 +115,8 @@ pub struct BranchTableOp {
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ReturnOp {
+    /// The type of the return value.
+    ty: Type,
     /// The optional return type.
     ///
     /// Has to match the return type of the enclosing function.
