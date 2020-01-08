@@ -123,6 +123,16 @@ pub struct ReturnOp {
     value: Option<Binding>,
 }
 
+impl ReturnOp {
+    /// Creates a new return operator.
+    pub fn new<T>(ty: Type, value: T) -> Self
+    where
+        T: Into<Option<Binding>>,
+    {
+        Self {
+            ty,
+            value: value.into(),
+        }
     }
 }
 
