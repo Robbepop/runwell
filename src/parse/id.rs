@@ -19,7 +19,7 @@ pub trait Identifier: Copy {
 }
 
 /// An index into the function signature table of a Wasm module.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FunctionSigId(pub(super) usize);
 
 impl Identifier for FunctionSigId {
@@ -29,7 +29,7 @@ impl Identifier for FunctionSigId {
 }
 
 /// An index into the internal global variable table of a Wasm module.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GlobalVariableId(pub(super) usize);
 
 impl Identifier for GlobalVariableId {
@@ -39,7 +39,7 @@ impl Identifier for GlobalVariableId {
 }
 
 /// An index into the function table of a Wasm module.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FunctionId(pub(super) usize);
 
 impl Identifier for FunctionId {
@@ -49,7 +49,7 @@ impl Identifier for FunctionId {
 }
 
 /// An index into the linear memory table of a Wasm module.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LinearMemoryId(pub(super) usize);
 
 impl Identifier for LinearMemoryId {
@@ -69,7 +69,7 @@ impl Default for LinearMemoryId {
 }
 
 /// An index into the table section of a Wasm module.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TableId(pub(super) usize);
 
 impl Identifier for TableId {

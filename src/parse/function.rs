@@ -17,7 +17,7 @@ use core::convert::TryFrom;
 use derive_more::From;
 
 /// A `runwell` type.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Type {
     /// The 32-bit `i32` integer type.
     I32,

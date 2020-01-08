@@ -15,7 +15,7 @@
 use crate::parse::Identifier;
 
 /// Memory access parameters.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MemoryImmediate {
     /// The offset of the memory access.
     offset: usize,
@@ -57,7 +57,7 @@ impl MemoryImmediate {
 /// A local variable ID.
 ///
 /// Used to access local variables of Wasm functions.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LocalVariableId(pub(super) usize);
 
 impl Identifier for LocalVariableId {
@@ -92,7 +92,7 @@ impl LocalVariableIdGen {
 ///
 /// Required for generic `load` and `store` as well as for
 /// conversion routines.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ExtIntType {
     /// 8-bit integer type.
     I8,
@@ -131,7 +131,7 @@ impl From<IntType> for ExtIntType {
 }
 
 /// A Wasm integer type.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum IntType {
     /// 32-bit integer type.
     I32,
