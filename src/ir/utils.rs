@@ -13,44 +13,56 @@
 // limitations under the License.
 
 use crate::parse::Identifier;
+use core::num::NonZeroUsize;
 
 /// A block identifier within a function that allows to jump to.
-#[derive(Debug, Copy, Clone)]
-pub struct BlockId(usize);
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct BlockId(NonZeroUsize);
 
 impl Identifier for BlockId {
     /// Returns the underlying `usize` value.
     fn get(self) -> usize {
-        self.0
+        self.0.get()
     }
 }
 
-/// An SSA value identifier within a function or basic block.
+/// An SSA instruction binding.
 #[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
-pub struct ValueId(usize);
+pub struct Binding(NonZeroUsize);
 
-impl Identifier for ValueId {
+impl Identifier for Binding {
     /// Returns the underlying `usize` value.
     fn get(self) -> usize {
-        self.0
+        self.0.get()
     }
 }
 
-/// Generates new unique value identifiers.
-pub struct ValueIdGen {
+/// Generates new unique binding.
+#[derive(Debug)]
+pub struct BindingGen {
     /// The current value identifier.
     current: usize,
 }
 
-impl ValueIdGen {
-    /// Creates a new value generator.
+impl BindingGen {
+    /// Creates a new binding generator.
     pub fn new() -> Self {
-        Self { current: 0 }
+        Self {
+            // We start at `1` because bindings are non-zero.
+            current: 1,
+        }
     }
 
-    /// Generates a new unique value identifier.
-    pub fn gen(&mut self) -> ValueId {
-        let result = ValueId(self.current);
+    /// Resets the binding generator.
+    pub fn reset(&mut self) {
+        self.current = 1;
+    }
+
+    /// Generates a new unique binding identifier.
+    pub fn gen(&mut self) -> Binding {
+        let result = Binding(
+            NonZeroUsize::new(self.current).expect("we start counting at 1"),
+        );
         self.current += 1;
         result
     }
