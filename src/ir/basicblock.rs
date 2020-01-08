@@ -23,6 +23,7 @@ use crate::{
 /// They contain the ordered list of operations that they perform wholefully
 /// upon being executed and are guaranteed to have an ending terminal operation
 /// at the end.
+#[derive(Debug)]
 pub struct BasicBlock {
     /// The non-empty ordered list of operations
     /// with a terminal operation at the end.
@@ -39,6 +40,44 @@ impl BasicBlock {
     /// instruction.
     pub fn new() -> Self {
         Self { ops: Vec::new() }
+    }
+
+    /// Returns the first operator of the basic block.
+    pub fn first_op(&self) -> &Operator {
+        self.ops
+            .first()
+            .expect("basic blocks have at least one operator")
+    }
+
+    /// Returns the first operator of the basic block.
+    pub fn first_op_mut(&mut self) -> &mut Operator {
+        self.ops
+            .first_mut()
+            .expect("basic blocks have at least one operator")
+    }
+
+    /// Returns the last operator of the basic block.
+    ///
+    /// # Note
+    ///
+    /// If the basic block is valid the last operator can be assumed to be a
+    /// terminal operator.
+    pub fn last_op(&self) -> &Operator {
+        self.ops
+            .last()
+            .expect("basic blocks have at least one operator")
+    }
+
+    /// Returns the last operator of the basic block.
+    ///
+    /// # Note
+    ///
+    /// If the basic block is valid the last operator can be assumed to be a
+    /// terminal operator.
+    pub fn last_op_mut(&mut self) -> &mut Operator {
+        self.ops
+            .last_mut()
+            .expect("basic blocks have at least one operator")
     }
 
     /// Pushes an operator to the end of the basic block.
