@@ -35,12 +35,6 @@ pub struct MemoryGrowOp {
     grow_by: ValueId,
 }
 
-impl DestinationId for MemoryGrowOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        None
-    }
-}
-
 /// The Wasm `memory.size` operation in SSA form.
 ///
 /// # Example
@@ -52,14 +46,6 @@ impl DestinationId for MemoryGrowOp {
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MemorySizeOp {
-    /// The value to store the result to.
-    dst: ValueId,
     /// The identifier of the linear memory.
     memory: LinearMemoryId,
-}
-
-impl DestinationId for MemorySizeOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }

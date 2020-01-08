@@ -34,8 +34,6 @@ use crate::{
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SelectOp {
-    /// The destination binding.
-    dst: ValueId,
     /// The condition value.
     condition: ValueId,
     /// The type of the resulting value.
@@ -46,8 +44,5 @@ pub struct SelectOp {
     false_val: ValueId,
 }
 
-impl DestinationId for SelectOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
     }
 }

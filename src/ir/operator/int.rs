@@ -44,32 +44,6 @@ pub enum IntOp {
     Rotr(RotrOp),
 }
 
-impl DestinationId for IntOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        match self {
-            Self::LeadingZeros(op) => op.destination_id(),
-            Self::TrailingZeros(op) => op.destination_id(),
-            Self::Popcount(op) => op.destination_id(),
-            Self::Add(op) => op.destination_id(),
-            Self::Mul(op) => op.destination_id(),
-            Self::Sub(op) => op.destination_id(),
-            Self::Sdiv(op) => op.destination_id(),
-            Self::Udiv(op) => op.destination_id(),
-            Self::Srem(op) => op.destination_id(),
-            Self::Urem(op) => op.destination_id(),
-            Self::Compare(op) => op.destination_id(),
-            Self::And(op) => op.destination_id(),
-            Self::Or(op) => op.destination_id(),
-            Self::Xor(op) => op.destination_id(),
-            Self::Shl(op) => op.destination_id(),
-            Self::Sshr(op) => op.destination_id(),
-            Self::Ushr(op) => op.destination_id(),
-            Self::Rotl(op) => op.destination_id(),
-            Self::Rotr(op) => op.destination_id(),
-        }
-    }
-}
-
 mod seal {
     pub trait Sealed {}
 }
@@ -177,23 +151,12 @@ pub struct GenericUnaryIntOp<Kind>
 where
     Kind: Sealed,
 {
-    /// The local variable binding to store the result.
-    dst: ValueId,
     /// The source binding or value of the operation.
     src: ValueId,
     /// The integer type of the resulting operation.
     ty: Type,
     /// The kind of the operation.
     kind: Kind,
-}
-
-impl<Kind> DestinationId for GenericUnaryIntOp<Kind>
-where
-    Kind: Sealed,
-{
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }
 
 /// Returns the leading zeros of the integer operand.
@@ -257,8 +220,6 @@ pub type PopcountOp = GenericUnaryIntOp<kinds::PopcountOpKind>;
 /// - `sgt`: Signed greater-than
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GenericBinaryIntOp<Kind> {
-    /// The local variable binding to store the result.
-    dst: ValueId,
     /// The left-hand side integer source.
     lhs: ValueId,
     /// The right-hand side integer source.
@@ -269,12 +230,8 @@ pub struct GenericBinaryIntOp<Kind> {
     kind: Kind,
 }
 
-impl<Kind> DestinationId for GenericBinaryIntOp<Kind>
 where
-    Kind: Sealed,
 {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
     }
 }
 

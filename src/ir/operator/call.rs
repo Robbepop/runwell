@@ -31,18 +31,10 @@ use crate::{
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallOp {
-    /// The destination value.
-    dst: ValueId,
     /// The identified of the called function.
     id: FunctionId,
     /// The parameters of the function call.
     params: Vec<CallParam>,
-}
-
-impl DestinationId for CallOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }
 
 /// Calls a function indirectly through a table.
@@ -60,18 +52,10 @@ impl DestinationId for CallOp {
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallIndirectOp {
-    /// The destination value.
-    dst: ValueId,
     /// The table ID for receiving the indirectly called function pointers.
     table_id: TableId,
     /// The offset within the table.
     table_offset: usize,
     /// The parameters of the function call.
     params: Vec<CallParam>,
-}
-
-impl DestinationId for CallIndirectOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }

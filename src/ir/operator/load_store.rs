@@ -48,9 +48,6 @@ pub struct LoadOp {
     memory: MemoryParams,
 }
 
-impl DestinationId for LoadOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
     }
 }
 
@@ -73,8 +70,5 @@ pub struct StoreOp {
     memory: MemoryParams,
 }
 
-impl DestinationId for StoreOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        None
     }
 }

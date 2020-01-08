@@ -84,26 +84,5 @@ pub enum Operator {
     Terminal(TerminalOp),
 }
 
-impl DestinationId for Operator {
-    fn destination_id(&self) -> Option<ValueId> {
-        match self {
-            Self::Const(op) => op.destination_id(),
-            Self::Local(op) => op.destination_id(),
-            Self::Get(op) => op.destination_id(),
-            Self::Set(op) => op.destination_id(),
-            Self::Load(op) => op.destination_id(),
-            Self::Store(op) => op.destination_id(),
-            Self::Phi(op) => op.destination_id(),
-            Self::MemoryGrow(op) => op.destination_id(),
-            Self::MemorySize(op) => op.destination_id(),
-            Self::Call(op) => op.destination_id(),
-            Self::CallIndirect(op) => op.destination_id(),
-            Self::Truncate(op) => op.destination_id(),
-            Self::ZeroExtend(op) => op.destination_id(),
-            Self::Select(op) => op.destination_id(),
-            Self::SignExtend(op) => op.destination_id(),
-            Self::Int(op) => op.destination_id(),
-            Self::Terminal(op) => op.destination_id(),
-        }
     }
 }

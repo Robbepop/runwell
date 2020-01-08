@@ -29,20 +29,12 @@ use crate::{
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TruncateOp {
-    /// The value to store the truncation result.
-    dst: ValueId,
     /// The type after the truncation.
     dst_ty: Type,
     /// The source value of the truncation.
     src: ValueId,
     /// The type before the truncation.
     src_ty: Type,
-}
-
-impl DestinationId for TruncateOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }
 
 /// Zero-extends the value to the biffer type and stores it into `dst`.
@@ -57,20 +49,12 @@ impl DestinationId for TruncateOp {
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ZeroExtendOp {
-    /// The destination of the extension.
-    dst: ValueId,
     /// The type after extension.
     dst_ty: Type,
     /// The source value of the extension.
     src: ValueId,
     /// The type before extension.
     src_ty: Type,
-}
-
-impl DestinationId for ZeroExtendOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }
 
 /// Sign-extends the value to the biffer type and stores it into `dst`.
@@ -85,18 +69,10 @@ impl DestinationId for ZeroExtendOp {
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SignExtendOp {
-    /// The destination of the extension.
-    dst: ValueId,
     /// The type after extension.
     dst_ty: Type,
     /// The source value of the extension.
     src: ValueId,
     /// The type before extension.
     src_ty: Type,
-}
-
-impl DestinationId for SignExtendOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }

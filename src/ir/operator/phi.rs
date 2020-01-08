@@ -40,8 +40,6 @@ use crate::{
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PhiOp {
-    /// The local variable binding.
-    dst: ValueId,
     /// The result type of the operation.
     ///
     /// All origins must be of the same type.
@@ -50,12 +48,6 @@ pub struct PhiOp {
     ///
     /// Must contain at least 2 origins.
     origins: Vec<PhiOpOrigin>,
-}
-
-impl DestinationId for PhiOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
-    }
 }
 
 /// An origin of a phi operation.

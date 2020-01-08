@@ -28,8 +28,6 @@ use crate::{
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ConstOp {
-    /// The destination value to store the constant value.
-    dst: ValueId,
     /// The constant value.
     val: ConstValue,
     /// The type of the constant value.
@@ -45,8 +43,5 @@ pub enum ConstValue {
     I64(i64),
 }
 
-impl DestinationId for ConstOp {
-    fn destination_id(&self) -> Option<ValueId> {
-        Some(self.dst)
     }
 }
