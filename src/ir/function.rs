@@ -12,18 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    ir::BasicBlock,
-    maybe_std::prelude::*,
-    parse::{FunctionId, FunctionSigId},
-};
+use crate::{ir::BasicBlock, maybe_std::prelude::*, parse::FunctionSigId};
 
 /// A `runwell` IR function.
+#[derive(Debug)]
 pub struct Function {
-    /// The function identifier.
-    id: FunctionId,
-    /// The identifier of the function signature.
-    sig_id: FunctionSigId,
     /// The non-empty set of basic blocks that form the operations
     /// performance by the function seen as a whole.
     /// The first basic block (entry block) is special in that it is executed
@@ -34,6 +27,16 @@ pub struct Function {
 }
 
 impl Function {
+    /// Creates a new function from the given id, signature id and blocks.
+    pub fn new<B>(blocks: B) -> Self
+    where
+        B: IntoIterator<Item = BasicBlock>,
+    {
+        Self {
+            blocks: blocks.into_iter().collect::<Vec<_>>(),
+        }
+    }
+
     /// Returns the entry block of the function.
     pub fn entry_block(&self) -> &BasicBlock {
         // This can never fail since `blocks` is guaranteed to be non-empty.
