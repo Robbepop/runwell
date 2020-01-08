@@ -17,6 +17,45 @@ use crate::{
     parse::{operator::IntType, LinearMemoryId},
 };
 
+/// A local variable declaration.
+///
+/// Has a type and a number of allocated local elements.
+///
+/// # Example
+///
+/// - Allocates a single `i32` local variable and stores it as `%1`.
+///   Note that `%1` refers to a pointer to an `i32`.
+///
+/// ```no_compile
+/// %1 <- local i32 len 1
+/// ```
+///
+/// - Allocates an array of 4 `i64` local variables and store them as `%1`.
+///   Note that `%1` refers to a pointer to `i64`.
+///
+/// ```no_compile
+/// %1 <- local i64 len 4
+/// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LocalOp {
+    /// The type of the local variable.
+    ty: Type,
+    /// The number of local elements.
+    len: usize,
+}
+
+impl LocalOp {
+    /// Allocates a single local elements of given type.
+    pub fn single(ty: Type) -> Self {
+        Self { ty, len: 1 }
+    }
+
+    /// Allocates an array of local elements of given type and length.
+    pub fn array(ty: Type, len: usize) -> Self {
+        Self { ty, len }
+    }
+}
+
 /// The location within the linear memory and alignment.
 pub struct MemoryParams {
     /// The memory location of the loaded value.

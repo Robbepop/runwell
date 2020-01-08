@@ -20,7 +20,6 @@ mod convert;
 mod destination;
 pub mod int;
 mod load_store;
-mod local_global;
 mod memory;
 mod phi;
 mod select;
@@ -36,8 +35,7 @@ pub use self::{
     convert::{SignExtendOp, TruncateOp, ZeroExtendOp},
     destination::DestinationId,
     int::{GenericBinaryIntOp, GenericUnaryIntOp, IntOp},
-    load_store::{LoadOp, StoreOp},
-    local_global::{GetOp, LocalOp, SetOp},
+    load_store::{LocalOp, LoadOp, StoreOp},
     memory::{MemoryGrowOp, MemorySizeOp},
     phi::{PhiOp, PhiOpOrigin},
     select::SelectOp,
@@ -67,8 +65,6 @@ use derive_more::From;
 pub enum Operator {
     Const(ConstOp),
     Local(LocalOp),
-    Get(GetOp),
-    Set(SetOp),
     Load(LoadOp),
     Store(StoreOp),
     Phi(PhiOp),
