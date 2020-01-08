@@ -38,6 +38,7 @@ use crate::{
 /// ```no_compile
 /// %0 <- i32.phi [ %1 <- block 0, %2 <- block 1 ]
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PhiOp {
     /// The local variable binding.
     dst: ValueId,
@@ -58,6 +59,7 @@ impl DestinationId for PhiOp {
 }
 
 /// An origin of a phi operation.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PhiOpOrigin {
     /// The block of the origin.
     origin: BlockId,

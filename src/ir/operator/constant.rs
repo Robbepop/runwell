@@ -26,6 +26,7 @@ use crate::{
 /// ```no_compile
 /// %1 <- i32.const 42
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ConstOp {
     /// The destination value to store the constant value.
     dst: ValueId,
@@ -36,6 +37,7 @@ pub struct ConstOp {
 }
 
 /// A constant value.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ConstValue {
     /// An constant value of type `i32`.
     I32(i32),

@@ -27,6 +27,7 @@ use crate::{
 /// ```no_compile
 /// %1 <- i32.truncate i64 %2
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TruncateOp {
     /// The value to store the truncation result.
     dst: ValueId,
@@ -54,6 +55,7 @@ impl DestinationId for TruncateOp {
 /// ```no_compile
 /// %1 <- i64.zero_extend i32 %2
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ZeroExtendOp {
     /// The destination of the extension.
     dst: ValueId,
@@ -81,6 +83,7 @@ impl DestinationId for ZeroExtendOp {
 /// ```no_compile
 /// %1 <- i64.sign_extend i32 %2
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SignExtendOp {
     /// The destination of the extension.
     dst: ValueId,

@@ -27,7 +27,7 @@ use derive_more::From;
 /// # Note
 ///
 /// A basic block requires a terminal instruction at its last operation.
-#[derive(From)]
+#[derive(From, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TerminalOp {
     Unreachable,
     Return(ReturnOp),
@@ -51,6 +51,7 @@ impl DestinationId for TerminalOp {
 /// ```no_compile
 /// br block 2
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BranchOp {
     /// The label to branch to.
     id: BlockId,
@@ -74,6 +75,7 @@ impl DestinationId for BranchOp {
 /// ```no_compile
 /// ite %1 then block %0, else block %2
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct IteOp {
     /// The condition. Should gracefully evaluate to `1` (true) or `0` (false).
     cond: ValueId,
@@ -103,6 +105,7 @@ impl DestinationId for IteOp {
 /// ```no_compile
 /// brtable default block 0 [block 2, block 0, block 1]]
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BranchTableOp {
     /// The source value ID.
     src: ValueId,
@@ -137,6 +140,7 @@ impl DestinationId for BranchTableOp {
 /// ```no_compile
 /// return %1
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ReturnOp {
     /// The optional return type.
     ///
@@ -165,6 +169,7 @@ impl DestinationId for ReturnOp {
 /// ```no_compile
 /// call.tail fn 120 params [ i32 %1, i64 %2, i32 %4 ]
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallTailOp {
     /// The tail-called function ID.
     id: FunctionId,

@@ -29,6 +29,7 @@ use crate::{
 /// ```no_compile
 /// %dst <- call fn 42 params [ i32 %1, i64 %5 ]
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallOp {
     /// The destination value.
     dst: ValueId,
@@ -57,6 +58,7 @@ impl DestinationId for CallOp {
 /// ```no_compile
 /// %dst <- call.indirect table 2 offset 5 params [ i64 %2, i64 %4 ]
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallIndirectOp {
     /// The destination value.
     dst: ValueId,

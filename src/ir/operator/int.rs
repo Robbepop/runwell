@@ -21,7 +21,7 @@ use crate::{
 use derive_more::From;
 
 /// Any integer operation.
-#[derive(From)]
+#[derive(From, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum IntOp {
     LeadingZeros(LeadingZerosOp),
     TrailingZeros(TrailingZerosOp),
@@ -129,7 +129,7 @@ mod kinds {
     );
 
     /// Compares two integers by the associated operand.
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
     pub enum CompareOpKind {
         /// Equals
         Eq,
@@ -172,6 +172,7 @@ pub use self::kinds::CompareOpKind;
 /// - `popcnt`
 /// - `leadingzeros`
 /// - `trailingzeros`
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GenericUnaryIntOp<Kind>
 where
     Kind: Sealed,
@@ -254,6 +255,7 @@ pub type PopcountOp = GenericUnaryIntOp<kinds::PopcountOpKind>;
 /// - `slt`: Signed less-than
 /// - `sge`: Signed greater-equals
 /// - `sgt`: Signed greater-than
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GenericBinaryIntOp<Kind> {
     /// The local variable binding to store the result.
     dst: ValueId,

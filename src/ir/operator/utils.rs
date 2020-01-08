@@ -15,6 +15,7 @@
 use crate::{ir::ValueId, parse::operator::IntType as Type};
 
 /// A single parameter of a function call.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallParam {
     /// The type of the parameter.
     ty: Type,

@@ -32,6 +32,7 @@ use crate::{
 /// ```no_compile
 /// %0 <- i32.select %1 <- %2 or %3
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SelectOp {
     /// The destination binding.
     dst: ValueId,

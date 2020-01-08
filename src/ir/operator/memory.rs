@@ -27,6 +27,7 @@ use crate::{
 /// ```no_compile
 /// memory.grow memory 0 <- %1
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MemoryGrowOp {
     /// The identifier of the linear memory to grow.
     memory: LinearMemoryId,
@@ -49,6 +50,7 @@ impl DestinationId for MemoryGrowOp {
 /// ```no_compile
 /// %1 <- memory.size memory 0
 /// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MemorySizeOp {
     /// The value to store the result to.
     dst: ValueId,

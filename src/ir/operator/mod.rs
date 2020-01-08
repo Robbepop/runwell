@@ -63,7 +63,7 @@ use derive_more::From;
 /// generally not guaranteed to be in minimal or pruned SSA form.
 /// Even if optimizations are turned on they are not guaranteed to compute
 /// completely to guarantee the runtime behaviour of the compilation.
-#[derive(From)]
+#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Operator {
     Const(ConstOp),
     Local(LocalOp),
