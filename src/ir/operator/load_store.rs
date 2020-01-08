@@ -56,37 +56,88 @@ impl LocalOp {
     }
 }
 
-/// The location within the linear memory and alignment.
-pub struct MemoryParams {
-    /// The memory location of the loaded value.
-    memory: Option<LinearMemoryId>,
-    /// The offset within the linear memory of the loaded value.
-    offset: usize,
-    /// The alignment of the loaded value.
-    alignment: Option<usize>,
+/// Specifies the kind of memory location.
+///
+/// # Note
+///
+/// Mainly used by optimizer in order to produce better code.
+/// Local variable accesses can potentially be reordered.
+/// Optimizers can assume that all memory spaces are disjunct from each other.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum MemoryKind {
+    /// A function local variable memory location.
+    Local,
+    /// A global variable memory location.
+    Global,
+    /// A linear memory location.
+    LinearMemory(LinearMemoryId),
 }
 
-/// Loads the value stored at the memory location into `dst`.
+impl MemoryKind {
+    /// Creates a default linear memory kind.
+    fn default_memory() -> Self {
+        Self::LinearMemory(Default::default())
+    }
+}
+
+/// Loads the value stored at the memory location.
+///
+/// # Note
+///
+/// Allows to operate on `local`, `global` and from any linear memory region.
 ///
 /// # Example
 ///
-/// Load the value of type `i32` at offset `12` with alignment `2` of
-/// memory identified by `0` into `%1`.
+///
+/// - Load the value of type `i32` at index `%0` with alignment of 2 from
+///   linear memory 0 and store it as `%1`.
 ///
 /// ```no_compile
-/// %1 <- i32.load memory 0 at 12 alignment 2
-/// %1 <- i32.load at 12 alignment 2          ;; memory 0 is implicit
-/// %1 <- i32.load at 12                      ;; alignment is deferred from type
+/// %1 <- i32.load memory 0 at %0 align 2
 /// ```
+///
+/// - Load the value of type `i64` at local index `%0` with alignment of 2^3
+///   (= 8) and store it as `%1`.
+///
+/// ```no_compile
+/// %1 <- i64.load local at %0 align 3
+/// ```
+///
+/// - Load the value of type `i32` at global index `%0` with alignment of 2^2
+///   (= 4) and store it as `%1`.
+///
+/// ```no_compile
+/// %1 <- i32.load global at %0 align 2
+/// ```
+///
+/// - Loads the local variables with different offsets into their respective
+///   bindings.
+///
+/// ```no_compile
+/// %0 <- alloc i32 2
+/// %1 <- load i32 local at %0 align 2
+/// %2 <- const i32 1
+/// %3 <- getelemptr %0 %2
+/// %4 <- load i32 local at %3 align 2
+/// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LoadOp {
-    /// The destination value.
-    dst: ValueId,
-    /// The type of the loaded entity.
-    ty: IntType,
-    /// The linear memory location and alignment.
-    memory: MemoryParams,
+    /// The type of the memory where the value is being loaded.
+    kind: MemoryKind,
+    /// The type of the loaded value.
+    ty: Type,
+    /// The index where the load is performed.
+    at: Binding,
 }
 
+impl LoadOp {
+    /// Creates a new load operation to load the value of a local variable.
+    pub fn load_local(ty: Type, at: Binding) -> Self {
+        Self {
+            kind: MemoryKind::Local,
+            ty,
+            at,
+        }
     }
 }
 
@@ -94,20 +145,46 @@ pub struct LoadOp {
 ///
 /// # Example
 ///
-/// Stores the value stored at `%1` of type `i64` at offset `0` with
-/// alignmnet `4` into memory identified by `0`.
+/// - Store the value stored at `%1` of type `i64` with an alignment of
+/// 2^3 (= 8) into linear memory 0.
 ///
 /// ```no_compile
-/// i64.store memory 0 at 42 alignment 4 <- %1
+/// i64.store memory 0 value %1 at %2 align 3
 /// ```
+///
+/// - Store the local value stored at `%1` of type `i32` with an alignment of
+///   2^2 (= 4).
+///
+/// ```no_compile
+/// i32.store local value %1 at %2 align 2
+/// ```
+///
+/// - Store the global value stored at `%1` of type `i32` with an alignment of
+///   2^2 (= 4).
+///
+/// ```no_compile
+/// i32.store global value %1 at %2 align 2
+/// ```
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct StoreOp {
-    /// The source local binding.
-    src: ValueId,
+    /// The type of the memory where the value is being stored.
+    kind: MemoryKind,
     /// The type of the stored value.
-    ty: IntType,
-    /// The linear memory location and alignment.
-    memory: MemoryParams,
+    ty: Type,
+    /// The index where the store is performed.
+    dst: Binding,
+    /// The value that is being stored.
+    src: Binding,
 }
 
+impl StoreOp {
+    /// Creates a new store operation to store a value into a local variable.
+    pub fn store_local(ty: Type, dst: Binding, src: Binding) -> Self {
+        Self {
+            kind: MemoryKind::Local,
+            ty,
+            dst,
+            src,
+        }
     }
 }
