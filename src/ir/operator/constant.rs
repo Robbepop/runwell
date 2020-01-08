@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    ir::{operator::DestinationId, ValueId},
-    parse::operator::IntType as Type,
-};
+use crate::parse::operator::IntType as Type;
 
 /// Loads the constant value.
 ///
@@ -30,8 +27,6 @@ use crate::{
 pub struct ConstOp {
     /// The constant value.
     val: ConstValue,
-    /// The type of the constant value.
-    ty: Type,
 }
 
 /// A constant value.
