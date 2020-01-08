@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::{operator::DestinationId, CallParam, ValueId},
+    ir::CallParam,
     parse::{FunctionId, TableId},
 };
 
