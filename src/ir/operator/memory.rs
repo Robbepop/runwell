@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    ir::{operator::DestinationId, ValueId},
-    parse::LinearMemoryId,
-};
+use crate::{ir::Binding, parse::LinearMemoryId};
 
 /// The Wasm `memory.grow` operation in SSA form.
 ///
@@ -32,7 +29,7 @@ pub struct MemoryGrowOp {
     /// The identifier of the linear memory to grow.
     memory: LinearMemoryId,
     /// The amount of bytes to grow the linear memory buffer.
-    grow_by: ValueId,
+    grow_by: Binding,
 }
 
 /// The Wasm `memory.size` operation in SSA form.

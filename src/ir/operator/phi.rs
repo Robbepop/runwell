@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::{operator::DestinationId, BlockId, ValueId},
+    ir::{Binding, BlockId},
     parse::operator::IntType as Type,
 };
 
@@ -56,5 +56,5 @@ pub struct PhiOpOrigin {
     /// The block of the origin.
     origin: BlockId,
     /// The value of the origin.
-    src: ValueId,
+    src: Binding,
 }

@@ -14,10 +14,7 @@
 
 //! Integer type operations.
 
-use crate::{
-    ir::{operator::DestinationId, ValueId},
-    parse::operator::IntType as Type,
-};
+use crate::{ir, ir::Binding, parse::Type};
 use derive_more::From;
 
 /// Any integer operation.
@@ -152,7 +149,7 @@ where
     Kind: Sealed,
 {
     /// The source binding or value of the operation.
-    src: ValueId,
+    src: Binding,
     /// The integer type of the resulting operation.
     ty: Type,
     /// The kind of the operation.
@@ -221,9 +218,9 @@ pub type PopcountOp = GenericUnaryIntOp<kinds::PopcountOpKind>;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GenericBinaryIntOp<Kind> {
     /// The left-hand side integer source.
-    lhs: ValueId,
+    lhs: Binding,
     /// The right-hand side integer source.
-    rhs: ValueId,
+    rhs: Binding,
     /// The resulting integer type of the operation.
     ty: Type,
     /// The underlying kind of the binary operation.

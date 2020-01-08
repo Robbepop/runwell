@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::{
-    ir::{operator::DestinationId, ValueId},
-    parse::{operator::IntType, LinearMemoryId},
+    ir::Binding,
+    parse::{LinearMemoryId, Type},
 };
 
 /// A local variable declaration.

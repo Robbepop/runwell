@@ -13,8 +13,9 @@
 // limitations under the License.
 
 use crate::{
-    ir::{operator::DestinationId, BlockId, CallParam, ValueId},
-    parse::FunctionId,
+    ir,
+    ir::{Binding, BlockId, CallParam},
+    parse::{FunctionId, Type},
 };
 use derive_more::From;
 
@@ -64,7 +65,7 @@ pub struct BranchOp {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct IteOp {
     /// The condition. Should gracefully evaluate to `1` (true) or `0` (false).
-    cond: ValueId,
+    cond: Binding,
     /// The branch taken if `cond` evaluates to `!= 0`.
     then_block: BlockId,
     /// The branch taken if `cond` evaluates to `== 0`.
@@ -87,7 +88,7 @@ pub struct IteOp {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BranchTableOp {
     /// The source value ID.
-    src: ValueId,
+    src: Binding,
     /// The default branch block.
     default: BlockId,
     /// The blocks used for branches.
@@ -117,7 +118,7 @@ pub struct ReturnOp {
     /// The optional return type.
     ///
     /// Has to match the return type of the enclosing function.
-    value: Option<ValueId>,
+    value: Option<Binding>,
 }
 
     }

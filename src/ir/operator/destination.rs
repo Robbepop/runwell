@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::ValueId;
+use crate::ir::Binding;
 
 /// Implemented by `runwell` IR operators to return their destination value.
 ///
@@ -22,5 +22,5 @@ use crate::ir::ValueId;
 /// - `i32.store %1 %2` returns `None` since it has no destination value
 pub trait DestinationId {
     /// Returns the destination value ID from the `runwell` IR operator.
-    fn destination_id(&self) -> Option<ValueId>;
+    fn destination_id(&self) -> Option<Binding>;
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ir::ValueId, parse::operator::IntType as Type};
+use crate::{ir::Binding, parse::operator::IntType as Type};
 
 /// A single parameter of a function call.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -20,5 +20,5 @@ pub struct CallParam {
     /// The type of the parameter.
     ty: Type,
     /// The value of the parameter.
-    val: ValueId,
+    val: Binding,
 }

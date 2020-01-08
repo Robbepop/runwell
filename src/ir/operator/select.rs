@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    ir::{operator::DestinationId, ValueId},
-    parse::operator::IntType as Type,
-};
+use crate::{ir::Binding, parse::Type};
 
 /// Choose a value based on a condition without IR-level branching.
 ///
@@ -35,14 +32,18 @@ use crate::{
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SelectOp {
     /// The condition value.
-    condition: ValueId,
+    cond: Binding,
     /// The type of the resulting value.
     ty: Type,
     /// The value if `condition` evaluates to `true`.
-    true_val: ValueId,
+    true_val: Binding,
     /// The value if `condition` evaluates to `false`.
-    false_val: ValueId,
+    false_val: Binding,
 }
 
+impl SelectOp {
+    /// Creates a new select operation.
+    pub fn new(cond: Binding, ty: Type, true_val: Binding, false_val: Binding) -> Self {
+        Self { cond, ty, true_val, false_val }
     }
 }

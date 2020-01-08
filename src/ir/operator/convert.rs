@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    ir::{operator::DestinationId, ValueId},
-    parse::operator::IntType as Type,
-};
+use crate::{ir::Binding, parse::operator::IntType as Type};
 
 /// Truncates the value to the smaller type and stores it into `dst`.
 ///
@@ -32,7 +29,7 @@ pub struct TruncateOp {
     /// The type after the truncation.
     dst_ty: Type,
     /// The source value of the truncation.
-    src: ValueId,
+    src: Binding,
     /// The type before the truncation.
     src_ty: Type,
 }
@@ -52,7 +49,7 @@ pub struct ZeroExtendOp {
     /// The type after extension.
     dst_ty: Type,
     /// The source value of the extension.
-    src: ValueId,
+    src: Binding,
     /// The type before extension.
     src_ty: Type,
 }
@@ -72,7 +69,7 @@ pub struct SignExtendOp {
     /// The type after extension.
     dst_ty: Type,
     /// The source value of the extension.
-    src: ValueId,
+    src: Binding,
     /// The type before extension.
     src_ty: Type,
 }

@@ -26,7 +26,7 @@ mod select;
 mod terminal;
 mod utils;
 
-use crate::ir::ValueId;
+use crate::ir::Binding;
 
 #[doc(inline)]
 pub use self::{
