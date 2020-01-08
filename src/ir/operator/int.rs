@@ -247,8 +247,30 @@ pub struct GenericBinaryIntOp<Kind> {
     kind: Kind,
 }
 
+impl<Kind> GenericBinaryIntOp<SimpleOp<Kind>>
 where
+    Kind: Sealed + Default,
 {
+    /// Creates a new binary integer operator.
+    pub fn new(ty: Type, lhs: Binding, rhs: Binding) -> Self {
+        Self {
+            ty,
+            lhs,
+            rhs,
+            kind: Default::default(),
+        }
+    }
+}
+
+impl CompareOp {
+    /// Creates a new integer compare operator.
+    pub fn new(
+        ty: Type,
+        kind: CompareOpKind,
+        lhs: Binding,
+        rhs: Binding,
+    ) -> Self {
+        Self { ty, lhs, rhs, kind }
     }
 }
 
