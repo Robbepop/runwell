@@ -49,12 +49,30 @@ use self::seal::Sealed;
 mod kinds {
     use super::Sealed;
 
+    /// Marks operator kinds such as `AddOpKind` that are simple operator
+    /// markers to differentiate from more complex operator kinds such as
+    /// `CompareOpKind`.
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct SimpleOp<T> {
+        marker: core::marker::PhantomData<fn() -> T>,
+    }
+
+    impl<T> Sealed for SimpleOp<T> where T: Sealed {}
+
+    impl<T> Default for SimpleOp<T> {
+        fn default() -> Self {
+            Self {
+                marker: Default::default(),
+            }
+        }
+    }
+
     macro_rules! simple_marker {
         ( $( $(#[$doc:meta])* $name:ident),* $(,)? ) => {
             $(
                 $( #[$doc] )*
-                #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-                pub enum $name {}
+                #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+                pub struct $name {}
                 impl Sealed for $name {}
             )*
         }
@@ -125,7 +143,7 @@ mod kinds {
     }
     impl Sealed for CompareOpKind {}
 }
-pub use self::kinds::CompareOpKind;
+pub use self::kinds::{CompareOpKind, SimpleOp};
 
 /// A generic unary integer operation.
 ///
@@ -157,13 +175,15 @@ where
 }
 
 /// Returns the leading zeros of the integer operand.
-pub type LeadingZerosOp = GenericUnaryIntOp<kinds::LeadingZerosOpKind>;
+pub type LeadingZerosOp =
+    GenericUnaryIntOp<SimpleOp<kinds::LeadingZerosOpKind>>;
 
 /// Returns the trailing zeros of the integer operand.
-pub type TrailingZerosOp = GenericUnaryIntOp<kinds::TrailingZerosOpKind>;
+pub type TrailingZerosOp =
+    GenericUnaryIntOp<SimpleOp<kinds::TrailingZerosOpKind>>;
 
 /// Returns the number of ones in the integer operand.
-pub type PopcountOp = GenericUnaryIntOp<kinds::PopcountOpKind>;
+pub type PopcountOp = GenericUnaryIntOp<SimpleOp<kinds::PopcountOpKind>>;
 
 /// A generic binary integer operation.
 ///
@@ -173,7 +193,7 @@ pub type PopcountOp = GenericUnaryIntOp<kinds::PopcountOpKind>;
 /// result into `%1`.
 ///
 /// ```no_compile
-/// %1 <- i32.<op> %2 %3
+/// %1 <- <op> i32 %2 %3
 /// ```
 ///
 /// Where `<op>` is one of
@@ -238,7 +258,7 @@ where
 ///
 /// Since Wasm expects twos-complement integers the operation
 /// is the same for signed and unsigned integers.
-pub type AddOp = GenericBinaryIntOp<kinds::AddOpKind>;
+pub type AddOp = GenericBinaryIntOp<SimpleOp<kinds::AddOpKind>>;
 
 /// An integer multiplication. Stores the result into `dst`.
 ///
@@ -246,7 +266,7 @@ pub type AddOp = GenericBinaryIntOp<kinds::AddOpKind>;
 ///
 /// Since Wasm expects twos-complement integers the operation
 /// is the same for signed and unsigned integers.
-pub type MulOp = GenericBinaryIntOp<kinds::MulOpKind>;
+pub type MulOp = GenericBinaryIntOp<SimpleOp<kinds::MulOpKind>>;
 
 /// An integer subtraction. Stores the result into `dst`.
 ///
@@ -254,19 +274,19 @@ pub type MulOp = GenericBinaryIntOp<kinds::MulOpKind>;
 ///
 /// Since Wasm expects twos-complement integers the operation
 /// is the same for signed and unsigned integers.
-pub type SubOp = GenericBinaryIntOp<kinds::SubOpKind>;
+pub type SubOp = GenericBinaryIntOp<SimpleOp<kinds::SubOpKind>>;
 
 /// A signed integer division. Stores the result into `dst`.
-pub type SdivOp = GenericBinaryIntOp<kinds::SdivOpKind>;
+pub type SdivOp = GenericBinaryIntOp<SimpleOp<kinds::SdivOpKind>>;
 
 /// An unsigned integer division. Stores the result into `dst`.
-pub type UdivOp = GenericBinaryIntOp<kinds::UdivOpKind>;
+pub type UdivOp = GenericBinaryIntOp<SimpleOp<kinds::UdivOpKind>>;
 
 /// A signed integer remainder. Stores the result into `dst`.
-pub type SremOp = GenericBinaryIntOp<kinds::SremOpKind>;
+pub type SremOp = GenericBinaryIntOp<SimpleOp<kinds::SremOpKind>>;
 
 /// An unsigned integer remainder. Stores the result into `dst`.
-pub type UremOp = GenericBinaryIntOp<kinds::UremOpKind>;
+pub type UremOp = GenericBinaryIntOp<SimpleOp<kinds::UremOpKind>>;
 
 /// Integer compare operation.
 ///
@@ -274,25 +294,25 @@ pub type UremOp = GenericBinaryIntOp<kinds::UremOpKind>;
 pub type CompareOp = GenericBinaryIntOp<kinds::CompareOpKind>;
 
 /// Bitwise and operation.
-pub type AndOp = GenericBinaryIntOp<kinds::AndOpKind>;
+pub type AndOp = GenericBinaryIntOp<SimpleOp<kinds::AndOpKind>>;
 
 /// Bitwise or operation.
-pub type OrOp = GenericBinaryIntOp<kinds::OrOpKind>;
+pub type OrOp = GenericBinaryIntOp<SimpleOp<kinds::OrOpKind>>;
 
 /// Bitwise xor operation.
-pub type XorOp = GenericBinaryIntOp<kinds::XorOpKind>;
+pub type XorOp = GenericBinaryIntOp<SimpleOp<kinds::XorOpKind>>;
 
 /// Shift-left operation.
-pub type ShlOp = GenericBinaryIntOp<kinds::ShlOpKind>;
+pub type ShlOp = GenericBinaryIntOp<SimpleOp<kinds::ShlOpKind>>;
 
 /// Arithmetic shift-right (a.k.a. signed shift-right) operation.
-pub type SshrOp = GenericBinaryIntOp<kinds::SshrOpKind>;
+pub type SshrOp = GenericBinaryIntOp<SimpleOp<kinds::SshrOpKind>>;
 
 /// Logical shift-right (a.k.a. unsigned shift-right) operation.
-pub type UshrOp = GenericBinaryIntOp<kinds::UshrOpKind>;
+pub type UshrOp = GenericBinaryIntOp<SimpleOp<kinds::UshrOpKind>>;
 
 /// Rotate-left operation.
-pub type RotlOp = GenericBinaryIntOp<kinds::RotlOpKind>;
+pub type RotlOp = GenericBinaryIntOp<SimpleOp<kinds::RotlOpKind>>;
 
 /// Rotate-right operation.
-pub type RotrOp = GenericBinaryIntOp<kinds::RotrOpKind>;
+pub type RotrOp = GenericBinaryIntOp<SimpleOp<kinds::RotrOpKind>>;
