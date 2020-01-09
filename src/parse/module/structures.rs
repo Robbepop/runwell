@@ -91,34 +91,36 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
     fn try_from(element: wasmparser::Element<'a>) -> Result<Self, Self::Error> {
         use wasmparser::ElementKind;
         match element.kind {
-            ElementKind::Passive { .. } => {
+            ElementKind::Passive => {
                 Err(ParseError::UnsupportedPassiveElement)
+            }
+            ElementKind::Declared => {
+                Err(ParseError::UnsupportedDeclaredElement)
             }
             ElementKind::Active {
                 table_index,
                 init_expr,
-                items,
             } => {
                 let table_id = TableId(table_index as usize);
                 let offset = Initializer::try_from(init_expr)?;
                 let items = {
-                    let mut reader = items.get_items_reader()?;
+                    let mut reader = element.items.get_items_reader()?;
                     let mut items = Vec::new();
-                    while let Ok(id) = reader.read() {
-                        items.push(FunctionId(id as usize))
+                    while let Ok(kind) = reader.read() {
+                        match kind {
+                            wasmparser::ElementItem::Null => {
+                                return Err(ParseError::UnsupportedElementKind)
+                            }
+                            wasmparser::ElementItem::Func(id) => {
+                                items.push(FunctionId(id as usize))
+                            }
+                        }
                     }
                     items.into_boxed_slice()
                 };
-                // TODO: Replace above code with below code after
+                // TODO: Replace above code with iterator based version after
                 //       https://github.com/bytecodealliance/wasmparser/issues/167
                 //       has been implemented, merged and released.
-                //
-                // let items = items
-                //     .get_items_reader()
-                //     .into_iter()
-                //     .map(|id| FunctionId(id as usize))
-                //     .collect::<Result<Vec<_>, _>>()?
-                //     .into_boxed_slice();
                 Ok(Element {
                     table_id,
                     offset,

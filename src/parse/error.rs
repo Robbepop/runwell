@@ -40,6 +40,12 @@ pub enum ParseError {
     /// Unsupported passive element.
     #[display(fmt = "encountered unsupported passive element")]
     UnsupportedPassiveElement,
+    /// Unsupported declared element.
+    #[display(fmt = "encountered unsupported declared element")]
+    UnsupportedDeclaredElement,
+    /// Unsupported element kind (Null).
+    #[display(fmt = "encountered unsupported null element kind")]
+    UnsupportedElementKind,
     /// Encountered unsupported Wasm operator.
     #[display(fmt = "encountered unsupported Wasm operator: {}", self.0)]
     // We only store the string representation of the unsupported operator
