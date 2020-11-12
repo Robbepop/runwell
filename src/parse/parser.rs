@@ -220,6 +220,8 @@ fn validate_wasm(bytes: &[u8]) -> Result<(), ParseError> {
                 enable_bulk_memory: false,
                 enable_multi_value: false,
                 deterministic_only: true,
+                enable_tail_call: false,
+                enable_module_linking: false,
             },
         }),
     )?;
@@ -230,8 +232,18 @@ fn parse_types<'a>(
     reader: TypeSectionReader<'a>,
     module: &mut ModuleBuilder<'a>,
 ) -> Result<(), ParseError> {
-    for signature in reader.into_iter() {
-        module.push_fn_signature(signature?.try_into()?);
+    for type_def in reader.into_iter() {
+        match type_def? {
+            wasmparser::TypeDef::Func(func_type) => {
+                module.push_fn_signature(func_type.try_into()?);
+            }
+            wasmparser::TypeDef::Instance(_) => {
+                unimplemented!("instance definitions are not supported in the Runwell JIT")
+            }
+            wasmparser::TypeDef::Module(_) => {
+                unimplemented!("module definitions are not supported in the Runwell JIT")
+            }
+        }
     }
     Ok(())
 }
@@ -248,30 +260,36 @@ fn parse_imports<'a>(
             ImportSectionEntryType::Function(fn_sig_id) => {
                 module.push_imported_fn(
                     module_name,
-                    field_name,
+                    field_name.unwrap_or(""),
                     FunctionSigId(fn_sig_id as usize),
                 )?
             }
             ImportSectionEntryType::Table(table_type) => {
                 module.push_imported_table(
                     module_name,
-                    field_name,
+                    field_name.unwrap_or(""),
                     table_type,
                 )?;
             }
             ImportSectionEntryType::Memory(memory_type) => {
                 module.push_imported_linear_memory(
                     module_name,
-                    field_name,
+                    field_name.unwrap_or(""),
                     memory_type,
                 )?;
             }
             ImportSectionEntryType::Global(global_type) => {
                 module.push_imported_global(
                     module_name,
-                    field_name,
+                    field_name.unwrap_or(""),
                     global_type.into(),
                 )?;
+            }
+            ImportSectionEntryType::Module(_module_id) => {
+                unimplemented!("module imports are not support in the Runwell JIT")
+            }
+            ImportSectionEntryType::Instance(_instance_id) => {
+                unimplemented!("instance imports are not supported in the Runwell JIT")
             }
         }
     }

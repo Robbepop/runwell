@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{ir::BasicBlock, maybe_std::prelude::*, parse::FunctionSigId};
+use crate::{ir::BasicBlock, maybe_std::prelude::*};
 
 /// A `runwell` IR function.
 #[derive(Debug)]

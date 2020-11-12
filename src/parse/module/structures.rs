@@ -69,6 +69,15 @@ impl<'a> From<wasmparser::Export<'a>> for Export<'a> {
                 }
                 ExternalKind::Memory => ExportKind::Memory(LinearMemoryId(id)),
                 ExternalKind::Table => ExportKind::Table(TableId(id)),
+                ExternalKind::Module => {
+                    unimplemented!("module exports are not supported by the Runwell JIT")
+                }
+                ExternalKind::Instance => {
+                    unimplemented!("instance exports are not supported by the Runwell JIT")
+                }
+                ExternalKind::Type => {
+                    unimplemented!("type exports are not supported by the Runwell JIT")
+                }
             },
         }
     }
@@ -108,7 +117,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
                     let mut items = Vec::new();
                     while let Ok(kind) = reader.read() {
                         match kind {
-                            wasmparser::ElementItem::Null => {
+                            wasmparser::ElementItem::Null(_type) => {
                                 return Err(ParseError::UnsupportedElementKind)
                             }
                             wasmparser::ElementItem::Func(id) => {
