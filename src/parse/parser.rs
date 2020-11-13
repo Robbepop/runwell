@@ -395,10 +395,13 @@ fn parse_fn_body(
     module: &mut ModuleBuilder,
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
-    let (mut fn_validator, op_reader) = validator.code_section_entry(&body)?;
-    for (offset, operator) in op_reader.into_iter().enumerate() {
-        let operator = operator?;
-        fn_validator.op(offset, &operator)?;
+    let mut fn_validator = validator.code_section_entry()?;
+    let mut reader = body.get_binary_reader();
+    fn_validator.read_locals(&mut reader)?;
+    while !reader.eof() {
+        let pos = reader.original_position();
+        let op = reader.read_operator()?;
+        fn_validator.op(pos, &op)?;
     }
     let fn_body = FunctionBody::try_from(body)?;
     module.push_fn_body(fn_body)?;

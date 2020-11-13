@@ -341,13 +341,21 @@ impl<'a> TryFrom<wasmparser::BrTable<'a>> for BrTableOp {
     type Error = ParseError;
 
     fn try_from(table: wasmparser::BrTable<'a>) -> Result<Self, Self::Error> {
-        let (relative_depths, default) = table.read_table()?;
-        let relative_depths = relative_depths
-            .iter()
-            .map(|&relative_depth| relative_depth as usize)
-            .collect::<Vec<_>>()
-            .into_boxed_slice();
-        let default = default as usize;
+        let len_targets = table.len();
+        let mut targets = table.targets();
+        let mut relative_depths = Vec::new();
+        for target in (&mut targets).take(len_targets) {
+            let (depth, is_default) = target?;
+            assert!(!is_default);
+            relative_depths.push(depth as usize);
+        }
+        let default = targets
+            .next()
+            .expect("encountered missing default depth")
+            .map(|(depth, is_default)| {
+                assert!(is_default);
+                depth
+            })? as usize;
         Ok(Self {
             relative_depths,
             default,

@@ -82,7 +82,9 @@ pub struct BrIfOp {
 #[derive(Debug)]
 pub struct BrTableOp {
     /// The relative branching depths.
-    relative_depths: Box<[usize]>,
+    ///
+    /// Does not contain the default branching depth.
+    relative_depths: Vec<usize>,
     /// The default branching depth.
     pub default: usize,
 }
