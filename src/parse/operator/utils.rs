@@ -28,7 +28,7 @@ pub struct MemoryImmediate {
 
 impl From<wasmparser::MemoryImmediate> for MemoryImmediate {
     fn from(imm: wasmparser::MemoryImmediate) -> Self {
-        MemoryImmediate::new(imm.offset as usize, imm.flags as usize)
+        MemoryImmediate::new(imm.offset as usize, imm.align as usize)
     }
 }
 

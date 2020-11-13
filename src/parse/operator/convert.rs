@@ -309,11 +309,11 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
             WasmOperator::I64Rotl => RotLeftOp::new(IntType::I64).into(),
             WasmOperator::I64Rotr => RotRightOp::new(IntType::I64).into(),
 
-            WasmOperator::MemoryGrow { reserved } => {
-                MemoryGrowOp::new(LinearMemoryId(reserved as usize)).into()
+            WasmOperator::MemoryGrow { mem, mem_byte: _ } => {
+                MemoryGrowOp::new(LinearMemoryId(mem as usize)).into()
             }
-            WasmOperator::MemorySize { reserved } => {
-                MemorySizeOp::new(LinearMemoryId(reserved as usize)).into()
+            WasmOperator::MemorySize { mem, mem_byte: _ } => {
+                MemorySizeOp::new(LinearMemoryId(mem as usize)).into()
             }
 
             WasmOperator::I32WrapI64 => {
