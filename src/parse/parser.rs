@@ -1,4 +1,4 @@
-// Copyright 2019 Robin Freyler
+// Copyright 2020 Robin Freyler
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::parse::{
+    module::Data,
     FunctionId,
     FunctionSigId,
     Module,
@@ -20,8 +21,10 @@ use crate::parse::{
     ParseError,
 };
 use core::convert::TryInto as _;
+use derive_more::Display;
+use std::convert::TryFrom;
 use wasmparser::{
-    CodeSectionReader,
+    Chunk,
     DataSectionReader,
     ElementSectionReader,
     ExportSectionReader,
@@ -30,228 +33,219 @@ use wasmparser::{
     ImportSectionEntryType,
     ImportSectionReader,
     MemorySectionReader,
-    ModuleReader,
-    OperatorValidatorConfig,
-    Section,
-    SectionCode,
+    Parser as WasmParser,
+    Payload,
+    Range as WasmRange,
     TableSectionReader,
     TypeSectionReader,
-    ValidatingParserConfig,
+    Validator,
 };
 
-/// The internals of the parser.
-pub struct ParserInternals<'a> {
-    /// The module to contain the parsed Wasm module.
-    module: ModuleBuilder<'a>,
-    /// The underlying Wasm file reader.
-    reader: ModuleReader<'a>,
-    /// The last encountered section.
-    section: Section<'a>,
+use super::FunctionBody;
+
+/// Errors returned by [`Read::read`].
+#[derive(Debug, Display)]
+pub enum ReadError {
+    /// The source has reached the end of the stream.
+    #[display(fmt = "encountered unexpected end of stream")]
+    EndOfStream,
+    /// An unknown error occurred.
+    #[display(fmt = "encountered unknown read error")]
+    UnknownError,
 }
 
-impl<'a> ParserInternals<'a> {
-    /// Creates a new Wasm parser.
-    fn new(bytes: &'a [u8]) -> Result<Self, ParseError> {
-        let mut reader = ModuleReader::new(bytes)?;
-        Ok(Self {
-            module: Module::build(),
-            section: reader.read()?,
-            reader,
+/// The Read trait allows for reading bytes from a source.
+///
+/// # Note
+///
+/// Provides a subset of the interface provided by Rust's [`std::io::Read`][std_io_read] trait.
+///
+/// [std_io_read]: https://doc.rust-lang.org/std/io/trait.Read.html
+pub trait Read {
+    /// Pull some bytes from this source into the specified buffer, returning how many bytes were read.
+    ///
+    /// # Note
+    ///
+    /// Provides the same guarantees to the caller as [`std::io::Read::read`][io_read_read].
+    ///
+    /// [io_read_read]: https://doc.rust-lang.org/std/io/trait.Read.html#tymethod.read
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, ReadError>;
+}
+
+#[cfg(feature = "std")]
+impl<T> Read for T
+where
+    T: ::std::io::Read,
+{
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, ReadError> {
+        <T as ::std::io::Read>::read(self, buf).map_err(|err| {
+            match err.kind() {
+                ::std::io::ErrorKind::UnexpectedEof => ReadError::EndOfStream,
+                _ => ReadError::UnknownError,
+            }
         })
     }
 }
 
-/// The parser and the states it can be in.
-pub enum Parser<'a> {
-    /// The parser is running and has not encountered errors.
-    Parsing(Box<ParserInternals<'a>>),
-    /// The parser reached the end of the Wasm file and is done.
-    Done(Box<Module<'a>>),
-    /// The parser encountered an error.
-    Error(ParseError),
+#[cfg(not(feature = "std"))]
+impl<'a> Read for &'a [u8] {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, ReadError> {
+        let len_copy = core::cmp::min(self.len(), buf.len());
+        buf.copy_from_slice(&self[..len_copy]);
+        *self = &self[len_copy..];
+        Ok(len_copy)
+    }
 }
 
-impl<'a> Parser<'a> {
-    /// Creates a new parser from the given bytes.
-    fn new(bytes: &'a [u8]) -> Self {
-        match ParserInternals::new(bytes) {
-            Ok(parser) => Parser::Parsing(Box::new(parser)),
-            Err(error) => Parser::Error(error),
-        }
-    }
+pub fn parse<R>(mut reader: R) -> Result<Module, ParseError>
+where
+    R: Read,
+{
+    let mut buf = Vec::new();
+    let mut parser = WasmParser::new(0);
+    let mut eof = false;
+    let mut module = Module::build();
+    let mut validator = Validator::default();
+    loop {
+        match parser.parse(&buf, eof)? {
+            Chunk::NeedMoreData(hint) => {
+                assert!(!eof); // Otherwise an error would be returned by `parse`.
 
-    /// Applies `f` for parsing the given Wasm section.
-    ///
-    /// # Dev Note
-    ///
-    /// This is the heart of the parser with a mondaic interface.
-    /// It will simply apply `f` if the current section of the parser
-    /// is the one that applies to `code` and otherwise does nothing.
-    ///
-    /// Encountering errors will yield in `Parser::Error` state.
-    /// Encountering the end of the file will yield `Parser::EndOfFile` state.
-    fn for_section<F>(self, code: SectionCode, f: F) -> Self
-    where
-        F: FnOnce(
-            &Section<'a>,
-            &mut ModuleBuilder<'a>,
-        ) -> Result<(), ParseError>,
-    {
-        match self {
-            Parser::Parsing(mut parser) if parser.section.code == code => {
-                if let Err(error) = f(&parser.section, &mut parser.module) {
-                    return Parser::Error(error)
-                }
-                // TODO: Maybe insert another check for `reader.eof` here.
-                if let Err(error) = parser.reader.skip_custom_sections() {
-                    return Parser::Error(error.into())
-                }
-                if parser.reader.eof() {
-                    return Parser::Done(Box::new(parser.module.finalize()))
-                }
-                match parser.reader.read() {
-                    Err(error) => Parser::Error(error.into()),
-                    Ok(section) => {
-                        parser.section = section;
-                        Parser::Parsing(parser)
-                    }
+                // Use the hint to preallocate more space, then read
+                // some more data into the buffer.
+                //
+                // Note that the buffer management here is not ideal,
+                // but it's compact enough to fit in an example!
+                let len = buf.len();
+                buf.extend((0..hint).map(|_| 0u8));
+                let n = reader
+                    .read(&mut buf[len..])
+                    .map_err(|_| ReadError::UnknownError)?;
+                buf.truncate(len + n);
+                eof = n == 0;
+                continue
+            }
+            Chunk::Parsed { consumed, payload } => {
+                let end_section =
+                    process_payload(payload, &mut module, &mut validator)?;
+                // Cut away the parts from the intermediate buffer that have already been parsed.
+                buf.drain(..consumed);
+                if end_section {
+                    break
                 }
             }
-            otherwise => otherwise,
-        }
+        };
     }
+    let finalized = module.finalize()?;
+    Ok(finalized)
+}
 
-    /// Finalizes parsing and returns the resulting module or an error.
-    fn finish(self) -> Result<Module<'a>, ParseError> {
-        match self {
-            Parser::Parsing(parser) => Ok(parser.module.finalize()),
-            Parser::Done(module) => Ok(*module),
-            Parser::Error(error) => Err(error),
+/// Validates the payload and feeds it into the module.
+///
+/// Returns `true` if payload is the end section.
+fn process_payload<'a>(
+    payload: Payload,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
+) -> Result<bool, ParseError> {
+    match payload {
+        Payload::Version { num, range } => {
+            validator.version(num, &range)?;
         }
+        Payload::TypeSection(section_reader) => {
+            parse_types(section_reader, module, validator)?;
+        }
+        Payload::ImportSection(section_reader) => {
+            parse_imports(section_reader, module, validator)?;
+        }
+        Payload::FunctionSection(section_reader) => {
+            parse_function_signatures(section_reader, module, validator)?;
+        }
+        Payload::TableSection(section_reader) => {
+            parse_tables(section_reader, module, validator)?;
+        }
+        Payload::MemorySection(section_reader) => {
+            parse_linear_memories(section_reader, module, validator)?;
+        }
+        Payload::GlobalSection(section_reader) => {
+            parse_globals(section_reader, module, validator)?;
+        }
+        Payload::ExportSection(section_reader) => {
+            parse_exports(section_reader, module, validator)?;
+        }
+        Payload::StartSection { func, range } => {
+            parse_start(func, range, module, validator)?;
+        }
+        Payload::ElementSection(section_reader) => {
+            parse_element(section_reader, module, validator)?;
+        }
+        Payload::CodeSectionStart {
+            count,
+            range,
+            size: _,
+        } => {
+            parse_code_start(count, range, module, validator)?;
+        }
+        Payload::CodeSectionEntry(body) => {
+            parse_fn_body(body, module, validator)?;
+        }
+        Payload::DataCountSection { count, range } => {
+            parse_data_count(count, range, module, validator)?;
+        }
+        Payload::DataSection(section_reader) => {
+            parse_data(section_reader, module, validator)?;
+        }
+
+        Payload::AliasSection(_section_reader) => { /* ... */ }
+        Payload::InstanceSection(_section_reader) => { /* ... */ }
+        Payload::ModuleSection(_)
+        | Payload::ModuleCodeSectionStart { .. }
+        | Payload::ModuleCodeSectionEntry { .. } => { /* ... */ }
+
+        Payload::CustomSection {
+            name: _,
+            data_offset: _,
+            data: _,
+        } => { /* ... */ }
+        Payload::UnknownSection {
+            id: _,
+            contents: _,
+            range: _,
+        } => { /* ... */ }
+
+        Payload::End => return Ok(true),
     }
+    Ok(false)
 }
 
-/// Parses a byte stream representing a binary Wasm module.
-///
-/// # Dev Note
-///
-/// - For the sake of simplicity we ignore custom sections.
-/// - We have to skip custom section after every step
-///   since they might appear out of order.
-/// - The binary Wasm sections are guaranteed to be in the following order.
-///   Sections are optional and may be missing.
-///
-/// | Section  | Description                              |
-/// |----------|------------------------------------------|
-/// | Type     | Function signature declarations |
-/// | Import   | Import declarations |
-/// | Function | Function declarations |
-/// | Table    | Indirect function table and other tables |
-/// | Memory   | Memory attributes |
-/// | Global   | Global declarations |
-/// | Export   | Exports |
-/// | Start    | Start function declaration |
-/// | Element  | Elements section |
-/// | Code     | Function bodies (code) |
-/// | Data     | Data segments |
-pub fn parse(bytes: &[u8]) -> Result<Module, ParseError> {
-    validate_wasm(bytes)?;
-    use SectionCode::*;
-    Parser::new(bytes)
-        .for_section(Type, |section, module| {
-            parse_types(section.get_type_section_reader()?, module)
-        })
-        .for_section(Import, |section, module| {
-            parse_imports(section.get_import_section_reader()?, module)
-        })
-        .for_section(Function, |section, module| {
-            parse_function_signatures(
-                section.get_function_section_reader()?,
-                module,
-            )
-        })
-        .for_section(Table, |section, module| {
-            parse_tables(section.get_table_section_reader()?, module)
-        })
-        .for_section(Memory, |section, module| {
-            parse_linear_memories(section.get_memory_section_reader()?, module)
-        })
-        .for_section(Global, |section, module| {
-            parse_globals(section.get_global_section_reader()?, module)
-        })
-        .for_section(Export, |section, module| {
-            parse_exports(section.get_export_section_reader()?, module)
-        })
-        .for_section(Start, |section, module| {
-            parse_start(section.get_start_section_content()?, module)
-        })
-        .for_section(Element, |section, module| {
-            parse_element(section.get_element_section_reader()?, module)
-        })
-        .for_section(Code, |section, module| {
-            parse_code(section.get_code_section_reader()?, module)
-        })
-        .for_section(Data, |section, module| {
-            parse_data(section.get_data_section_reader()?, module)
-        })
-        .finish()
-}
-
-/// Validates the Wasm bytes for the `runwell` JIT compiler.
-///
-/// # Notes
-///
-/// | Config                   | flag    | Note                               |
-/// |:-------------------------|:-------:|:-----------------------------------|
-/// | `enable_threads`         | `false` | Not useful for blockchain.         |
-/// | `enable_reference_types` | `false` | Config might change in the future. |
-/// | `enable_simd`            | `false` | Not useful for blockchain.         |
-/// | `enable_bulk_memory`     | `false` | Not useful for blockchain.         |
-/// | `enable_multi_value`     | `false` | Config might change in the future. |
-/// | `deterministic_only`     | `true`  | Disables floating points.          |
-fn validate_wasm(bytes: &[u8]) -> Result<(), ParseError> {
-    wasmparser::validate(
-        bytes,
-        Some(ValidatingParserConfig {
-            operator_config: OperatorValidatorConfig {
-                enable_threads: false,
-                enable_reference_types: false,
-                enable_simd: false,
-                enable_bulk_memory: false,
-                enable_multi_value: false,
-                deterministic_only: true,
-                enable_tail_call: false,
-                enable_module_linking: false,
-            },
-        }),
-    )?;
-    Ok(())
-}
-
-fn parse_types<'a>(
-    reader: TypeSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_types(
+    reader: TypeSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.type_section(&reader)?;
     for type_def in reader.into_iter() {
         match type_def? {
             wasmparser::TypeDef::Func(func_type) => {
                 module.push_fn_signature(func_type.try_into()?);
             }
             wasmparser::TypeDef::Instance(_) => {
-                unimplemented!("instance definitions are not supported in the Runwell JIT")
+                return Err(ParseError::UnsupportedInstanceDefinition)
             }
             wasmparser::TypeDef::Module(_) => {
-                unimplemented!("module definitions are not supported in the Runwell JIT")
+                return Err(ParseError::UnsupportedModuleDefinition)
             }
         }
     }
     Ok(())
 }
 
-fn parse_imports<'a>(
-    reader: ImportSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_imports(
+    reader: ImportSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.import_section(&reader)?;
     for import in reader.into_iter() {
         let import = import?;
         let module_name = import.module;
@@ -286,50 +280,62 @@ fn parse_imports<'a>(
                 )?;
             }
             ImportSectionEntryType::Module(_module_id) => {
-                unimplemented!("module imports are not support in the Runwell JIT")
+                unimplemented!(
+                    "module imports are not support in the Runwell JIT"
+                )
             }
             ImportSectionEntryType::Instance(_instance_id) => {
-                unimplemented!("instance imports are not supported in the Runwell JIT")
+                unimplemented!(
+                    "instance imports are not supported in the Runwell JIT"
+                )
             }
         }
     }
     Ok(())
 }
 
-fn parse_function_signatures<'a>(
-    reader: FunctionSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_function_signatures(
+    reader: FunctionSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.function_section(&reader)?;
     for fn_sig in reader.into_iter() {
         module.push_internal_fn(FunctionSigId(fn_sig? as usize))
     }
     Ok(())
 }
 
-fn parse_tables<'a>(
-    reader: TableSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_tables(
+    reader: TableSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.table_section(&reader)?;
     for table_type in reader.into_iter() {
         module.push_internal_table(table_type?)
     }
     Ok(())
 }
 
-fn parse_linear_memories<'a>(
-    reader: MemorySectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_linear_memories(
+    reader: MemorySectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.memory_section(&reader)?;
     for memory_type in reader.into_iter() {
         module.push_internal_linear_memory(memory_type?)
     }
     Ok(())
 }
 
-fn parse_globals<'a>(
-    reader: GlobalSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_globals(
+    reader: GlobalSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.global_section(&reader)?;
     for global_type in reader.into_iter() {
         let global_type = global_type?;
         module.push_internal_global(global_type.ty.into());
@@ -338,50 +344,87 @@ fn parse_globals<'a>(
     Ok(())
 }
 
-fn parse_exports<'a>(
-    reader: ExportSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_exports(
+    reader: ExportSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.export_section(&reader)?;
     for export in reader.into_iter() {
         module.push_export(export?.into());
     }
     Ok(())
 }
 
-fn parse_start<'a>(
+fn parse_start(
     start_fn_id: u32,
-    module: &mut ModuleBuilder<'a>,
+    range: WasmRange,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.start_section(start_fn_id, &range)?;
     module.set_start_fn(FunctionId(start_fn_id as usize));
     Ok(())
 }
 
-fn parse_element<'a>(
-    reader: ElementSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_element(
+    reader: ElementSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    validator.element_section(&reader)?;
     for element in reader.into_iter() {
         module.push_element(element?.try_into()?)
     }
     Ok(())
 }
 
-fn parse_code<'a>(
-    reader: CodeSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_code_start(
+    count: u32,
+    range: WasmRange,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
-    for function_body in reader.into_iter() {
-        module.push_fn_body(function_body?.try_into()?);
-    }
+    validator.code_section_start(count, &range)?;
+    module.reserve_fn_bodies(count as usize)?;
     Ok(())
 }
 
-fn parse_data<'a>(
-    reader: DataSectionReader<'a>,
-    module: &mut ModuleBuilder<'a>,
+fn parse_fn_body(
+    body: wasmparser::FunctionBody,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
 ) -> Result<(), ParseError> {
+    let (mut fn_validator, op_reader) = validator.code_section_entry(&body)?;
+    for (offset, operator) in op_reader.into_iter().enumerate() {
+        let operator = operator?;
+        fn_validator.op(offset, &operator)?;
+    }
+    let fn_body = FunctionBody::try_from(body)?;
+    module.push_fn_body(fn_body)?;
+    Ok(())
+}
+
+fn parse_data_count(
+    count: u32,
+    range: WasmRange,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
+) -> Result<(), ParseError> {
+    validator.data_count_section(count, &range)?;
+    module.reserve_data_elements(count as usize)?;
+    Ok(())
+}
+
+fn parse_data(
+    reader: DataSectionReader,
+    module: &mut ModuleBuilder,
+    validator: &mut Validator,
+) -> Result<(), ParseError> {
+    validator.data_section(&reader)?;
     for data in reader.into_iter() {
-        module.push_data(data?)
+        let data = data?;
+        module.push_data(Data::from(data))?;
     }
     Ok(())
 }
@@ -393,7 +436,7 @@ mod tests {
     #[test]
     fn parse_incrementer() {
         let wasm = include_bytes!("../../incrementer.wasm");
-        let module = parse(wasm).expect("invalid Wasm byte code");
+        let module = parse(&mut &wasm[..]).expect("invalid Wasm byte code");
         for (fn_sig, fn_body) in module.iter_internal_fns().skip(165).take(1) {
             println!("{}{}", fn_sig, fn_body);
         }

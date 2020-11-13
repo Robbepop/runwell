@@ -26,14 +26,14 @@ use wasmparser::ExternalKind;
 
 /// An export definition of a Wasm module.
 #[derive(Debug)]
-pub struct Export<'a> {
+pub struct Export {
     /// The export field name.
-    field: &'a str,
+    field: String,
     /// The export kind.
     kind: ExportKind,
 }
 
-impl<'a> Export<'a> {
+impl Export {
     /// Returns the export kind.
     ///
     /// # Note
@@ -57,11 +57,11 @@ pub enum ExportKind {
     Table(TableId),
 }
 
-impl<'a> From<wasmparser::Export<'a>> for Export<'a> {
+impl<'a> From<wasmparser::Export<'a>> for Export {
     fn from(wasm_export: wasmparser::Export<'a>) -> Self {
         let id = wasm_export.index as usize;
         Self {
-            field: wasm_export.field,
+            field: wasm_export.field.to_string(),
             kind: match wasm_export.kind {
                 ExternalKind::Function => ExportKind::Function(FunctionId(id)),
                 ExternalKind::Global => {
@@ -152,7 +152,7 @@ impl Element {
     }
 
     /// Returns the functions with which the elements shall be initialized.
-    pub fn items<'a>(&'a self, module: &'a Module<'a>) -> ElementItemsIter<'a> {
+    pub fn items<'a>(&'a self, module: &'a Module) -> ElementItemsIter<'a> {
         ElementItemsIter::new(self, module)
     }
 }
@@ -160,14 +160,14 @@ impl Element {
 /// An iterator over the element items of a Wasm module element.
 pub struct ElementItemsIter<'a> {
     /// The associated Wasm module.
-    module: &'a Module<'a>,
+    module: &'a Module,
     /// The element items.
     items: core::slice::Iter<'a, FunctionId>,
 }
 
 impl<'a> ElementItemsIter<'a> {
     /// Creates a new element items iterator.
-    fn new(element: &'a Element, module: &'a Module<'a>) -> Self {
+    fn new(element: &'a Element, module: &'a Module) -> Self {
         Self {
             module,
             items: element.items.iter(),

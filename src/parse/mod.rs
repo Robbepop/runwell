@@ -58,5 +58,9 @@ pub use self::{
         MemoryImmediate,
         Operator,
     },
-    parser::parse,
+    parser::{
+        Read,
+        ReadError,
+        parse,
+    }
 };

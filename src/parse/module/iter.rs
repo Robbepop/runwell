@@ -28,7 +28,7 @@ use crate::parse::{
 /// Iterator over the internal functions of a Wasm module.
 pub struct InternalFnIter<'a> {
     /// The underlying Wasm module.
-    module: &'a Module<'a>,
+    module: &'a Module,
     /// The slice over function signatures.
     fn_sigs: &'a [FunctionSigId],
     /// The slice over function bodies.
@@ -113,7 +113,7 @@ impl<'a> core::iter::FusedIterator for InternalFnIter<'a> {}
 /// Iterator over the internal global variables of a Wasm module.
 pub struct InternalGlobalIter<'a> {
     /// The underlying Wasm module.
-    module: &'a Module<'a>,
+    module: &'a Module,
     /// The slice over global variable declarations.
     global_decls: &'a [GlobalVariableDecl],
     /// The slice over global variable initializer expressions.

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::parse::{
+    module::Data,
     Element,
     Export,
     FunctionBody,
@@ -24,21 +25,48 @@ use crate::parse::{
     Module,
     ParseError,
 };
-use wasmparser::{Data, MemoryType, TableType};
+use derive_more::Display;
+use wasmparser::{MemoryType, TableType};
 
 /// A builder interface for a Wasm module.
 ///
 /// Allows to mutate a module through some dedicated interfaces.
 /// Used by the internal Wasm parser.
-pub struct ModuleBuilder<'a> {
+pub struct ModuleBuilder {
     /// The Wasm module that is being build.
-    module: Module<'a>,
+    module: Module,
+    /// Count of expected function bodies.
+    expected_fn_bodies: Option<usize>,
+    /// Count of expected data elements.
+    expected_data_elems: Option<usize>,
 }
 
-impl<'a> ModuleBuilder<'a> {
+#[derive(Debug, Display, PartialEq, Eq)]
+pub enum BuildError {
+    #[display(fmt = "encountered duplicate code start section")]
+    DuplicateCodeStartSection,
+    #[display(fmt = "missing code start section")]
+    MissingCodeStartSection,
+    #[display(fmt = "encountered fewer function bodies than expected")]
+    TooFewFnBodies,
+    #[display(fmt = "encountered more function bodies than expected")]
+    TooManyFnBodies,
+    #[display(fmt = "encountered duplicate data count section")]
+    DuplicateDataCountSection,
+    #[display(fmt = "encountered fewer data elements than expected")]
+    TooFewDataElements,
+    #[display(fmt = "encountered more data elements than expected")]
+    TooManyDataElements,
+}
+
+impl<'a> ModuleBuilder {
     /// Creates a new module builder for the given module.
-    pub(super) fn new(module: Module<'a>) -> Self {
-        Self { module }
+    pub(super) fn new(module: Module) -> Self {
+        Self {
+            module,
+            expected_fn_bodies: None,
+            expected_data_elems: None,
+        }
     }
 
     /// Pushes the signature to the Wasm module.
@@ -137,7 +165,7 @@ impl<'a> ModuleBuilder<'a> {
     }
 
     /// Pushes a new export to the Wasm module.
-    pub fn push_export(&mut self, export: Export<'a>) {
+    pub fn push_export(&mut self, export: Export) {
         self.module.exports.push(export)
     }
 
@@ -152,9 +180,35 @@ impl<'a> ModuleBuilder<'a> {
         self.module.elements.push(element)
     }
 
+    /// Reserves space for `count` expected function bodies.
+    pub fn reserve_fn_bodies(
+        &mut self,
+        count: usize,
+    ) -> Result<(), BuildError> {
+        match self.expected_fn_bodies {
+            None => {
+                self.module.fn_bodies.reserve(count);
+                self.expected_fn_bodies = Some(count);
+            }
+            Some(_) => return Err(BuildError::DuplicateCodeStartSection),
+        }
+        Ok(())
+    }
+
     /// Pushes a new function body of an internal function to the Wasm module.
-    pub fn push_fn_body(&mut self, fn_body: FunctionBody) {
-        self.module.fn_bodies.push(fn_body)
+    pub fn push_fn_body(
+        &mut self,
+        fn_body: FunctionBody,
+    ) -> Result<(), BuildError> {
+        match self.expected_fn_bodies.as_mut() {
+            Some(0) => return Err(BuildError::TooManyFnBodies),
+            None => return Err(BuildError::MissingCodeStartSection),
+            Some(value) => {
+                *value -= 1;
+                self.module.fn_bodies.push(fn_body);
+            }
+        }
+        Ok(())
     }
 
     /// Pushes a new internal global variable initializer expression
@@ -169,13 +223,46 @@ impl<'a> ModuleBuilder<'a> {
         self.module.table_initializers.push(initializer)
     }
 
+    /// Reserves space for `count` expected data elements.
+    pub fn reserve_data_elements(
+        &mut self,
+        count: usize,
+    ) -> Result<(), BuildError> {
+        match self.expected_data_elems {
+            None => {
+                self.module.fn_bodies.reserve(count);
+                self.expected_fn_bodies = Some(count);
+            }
+            Some(_) => return Err(BuildError::DuplicateDataCountSection),
+        }
+        Ok(())
+    }
+
     /// Pushes a new data definition to the Wasm module.
-    pub fn push_data(&mut self, data: Data<'a>) {
-        self.module.data.push(data)
+    pub fn push_data(&mut self, data: Data) -> Result<(), BuildError> {
+        match self.expected_data_elems.as_mut() {
+            Some(0) => return Err(BuildError::TooManyDataElements),
+            None => (),
+            Some(value) => {
+                *value -= 1;
+            }
+        }
+        self.module.data.push(data);
+        Ok(())
     }
 
     /// Finalizes building of the Wasm module.
-    pub fn finalize(self) -> Module<'a> {
-        self.module
+    pub fn finalize(self) -> Result<Module, BuildError> {
+        if let Some(remaining) = self.expected_data_elems {
+            if remaining != 0 {
+                return Err(BuildError::TooFewDataElements)
+            }
+        }
+        if let Some(remaining) = self.expected_fn_bodies {
+            if remaining != 0 {
+                return Err(BuildError::TooFewFnBodies)
+            }
+        }
+        Ok(self.module)
     }
 }

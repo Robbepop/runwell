@@ -13,15 +13,16 @@
 // limitations under the License.
 
 mod builder;
+mod data;
 mod iter;
 mod structures;
 
 pub use self::{
-    builder::ModuleBuilder,
+    builder::{BuildError, ModuleBuilder},
+    data::Data,
     iter::{InternalFnIter, InternalGlobalIter},
     structures::{Element, ElementItemsIter, Export, ExportKind},
 };
-
 use crate::parse::{
     utils::ImportedOrInternal,
     Function,
@@ -37,25 +38,25 @@ use crate::parse::{
     LinearMemoryId,
     TableId,
 };
-use wasmparser::{Data, MemoryType, TableType};
+use wasmparser::{MemoryType, TableType};
 
 /// A parsed and validated WebAssembly (Wasm) module.
 ///
 /// Use the [`parse`][`crate::parse::parse`] function in order to retrieve an instance of this type.
 #[derive(Debug)]
-pub struct Module<'a> {
+pub struct Module {
     /// Function signature table.
     signatures: Vec<FunctionSig>,
     /// Imported and internal function signatures.
-    fn_sigs: ImportedOrInternal<'a, FunctionSigId, FunctionId>,
+    fn_sigs: ImportedOrInternal<FunctionSigId, FunctionId>,
     /// Imported and internal global variables.
-    globals: ImportedOrInternal<'a, GlobalVariableDecl, GlobalVariableId>,
+    globals: ImportedOrInternal<GlobalVariableDecl, GlobalVariableId>,
     /// Imported and internal linear memory sections.
-    linear_memories: ImportedOrInternal<'a, MemoryType, LinearMemoryId>,
+    linear_memories: ImportedOrInternal<MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
-    tables: ImportedOrInternal<'a, TableType, TableId>,
+    tables: ImportedOrInternal<TableType, TableId>,
     /// Export definitions.
-    exports: Vec<Export<'a>>,
+    exports: Vec<Export>,
     /// Optional start function.
     ///
     /// # Note
@@ -76,7 +77,7 @@ pub struct Module<'a> {
     /// # Note
     ///
     /// Used to initialize the linear memory section.
-    data: Vec<Data<'a>>,
+    data: Vec<Data>,
 }
 
 /// The kind of an entity that can be imported or defined internally.
@@ -92,7 +93,7 @@ pub enum ImportExportKind {
     LinearMemory,
 }
 
-impl<'a> Module<'a> {
+impl<'a> Module {
     /// Returns the number of imported items from the given kind.
     pub fn len_imported(&self, kind: ImportExportKind) -> usize {
         match kind {
@@ -212,7 +213,7 @@ impl<'a> Module<'a> {
     }
 
     /// Returns an iterator over the exports of the Wasm module.
-    pub fn iter_exports(&self) -> core::slice::Iter<Export<'a>> {
+    pub fn iter_exports(&self) -> core::slice::Iter<Export> {
         self.exports.iter()
     }
 
@@ -227,7 +228,7 @@ impl<'a> Module<'a> {
     }
 }
 
-impl<'a> Module<'a> {
+impl<'a> Module {
     /// Creates a new empty Wasm module.
     fn new() -> Self {
         Self {
@@ -247,7 +248,7 @@ impl<'a> Module<'a> {
     }
 
     /// Helps to build up a new Wasm module.
-    pub(super) fn build() -> ModuleBuilder<'a> {
+    pub(super) fn build() -> ModuleBuilder {
         ModuleBuilder::new(Self::new())
     }
 }

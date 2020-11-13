@@ -20,33 +20,33 @@ use core::marker::PhantomData;
 /// Contains imported and internal entities and provides them
 /// in the same index space but with a separation between them.
 #[derive(Debug)]
-pub struct ImportedOrInternal<'a, T, I> {
+pub struct ImportedOrInternal<T, I> {
     /// The number of imported entities.
     len_imported: usize,
     /// Imported entities followed by internal ones.
     entities: Vec<T>,
     /// Namespace of imported entities.
-    namespaces: Vec<Namespace<'a>>,
+    namespaces: Vec<Namespace>,
     /// Marker to trick Rust into `I` being used.
-    id_marker: PhantomData<fn() -> &'a I>,
+    id_marker: PhantomData<fn() -> I>,
 }
 
 /// The namespace of an imported entity.
 #[derive(Debug)]
-pub struct Namespace<'a> {
+pub struct Namespace {
     /// The imported module name.
-    module_name: &'a str,
+    module_name: String,
     /// The imported field name.
-    field_name: &'a str,
+    field_name: String,
 }
 
-impl<T, I> Default for ImportedOrInternal<'_, T, I> {
+impl<T, I> Default for ImportedOrInternal<T, I> {
     fn default() -> Self {
         ImportedOrInternal::new()
     }
 }
 
-impl<T, I> ImportedOrInternal<'_, T, I> {
+impl<T, I> ImportedOrInternal<T, I> {
     /// Creates a new empty merged entities container.
     pub fn new() -> Self {
         Self {
@@ -93,7 +93,7 @@ impl<T, I> ImportedOrInternal<'_, T, I> {
     }
 }
 
-impl<T, I> ImportedOrInternal<'_, T, I>
+impl<T, I> ImportedOrInternal<T, I>
 where
     I: Identifier,
 {
@@ -108,7 +108,7 @@ where
     }
 }
 
-impl<'a, T, I> ImportedOrInternal<'a, T, I> {
+impl<'a, T, I> ImportedOrInternal<T, I> {
     /// Pushes a new imported entitiy.
     ///
     /// # Errors
@@ -125,15 +125,15 @@ impl<'a, T, I> ImportedOrInternal<'a, T, I> {
         }
         self.entities.push(entity);
         self.namespaces.push(Namespace {
-            module_name,
-            field_name,
+            module_name: module_name.to_string(),
+            field_name: field_name.to_string(),
         });
         self.len_imported += 1;
         Ok(())
     }
 }
 
-impl<'a, T, I> core::ops::Index<I> for ImportedOrInternal<'a, T, I>
+impl<'a, T, I> core::ops::Index<I> for ImportedOrInternal<T, I>
 where
     I: Identifier,
 {

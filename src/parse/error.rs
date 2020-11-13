@@ -14,14 +14,27 @@
 
 use derive_more::{Display, From};
 use thiserror::Error;
+use crate::parse::ReadError;
+use crate::parse::module::BuildError;
 
 /// An error that can be encountered upon parsing a Wasm module.
 #[derive(Debug, Display, From)]
 #[cfg_attr(feature = "std", derive(Error))]
 pub enum ParseError {
+    /// An error while reading from the input.
+    Read(ReadError),
+    /// An error while building up the Wasm module.
+    Build(BuildError),
     /// An error encountered in the underlying parser.
     #[display(fmt = "encountered parser error")]
     Parser(wasmparser::BinaryReaderError),
+    /// Encountered upon encountering a module section in the input.
+    #[display(fmt = "encountered unsupported module section")]
+    UnsupportedModuleSection,
+    #[display(fmt = "encountered unsupported module definition")]
+    UnsupportedModuleDefinition,
+    #[display(fmt = "encountered unsupported instance definition")]
+    UnsupportedInstanceDefinition,
     /// Encountered upon unmatching function declarations and definitions.
     #[display(fmt = "unmatching fn declarations and definitions")]
     UnmatchingFnDeclToDef,
