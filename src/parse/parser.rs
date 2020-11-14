@@ -97,15 +97,15 @@ impl<'a> Read for &'a [u8] {
     }
 }
 
-pub fn parse<R>(mut reader: R) -> Result<Module, ParseError>
+pub fn parse<R>(mut reader: R, buf: &mut Vec<u8>) -> Result<Module, ParseError>
 where
     R: Read,
 {
-    let mut buf = Vec::new();
     let mut parser = WasmParser::new(0);
     let mut eof = false;
     let mut module = Module::build();
     let mut validator = Validator::default();
+    buf.clear();
     loop {
         match parser.parse(&buf, eof)? {
             Chunk::NeedMoreData(hint) => {
@@ -281,8 +281,8 @@ fn parse_imports(
                     global_type.into(),
                 )?;
             }
-            ImportSectionEntryType::Module(_) |
-            ImportSectionEntryType::Instance(_) => {
+            ImportSectionEntryType::Module(_)
+            | ImportSectionEntryType::Instance(_) => {
                 return Err(ParseError::UnsupportedModuleDefinition)
             }
         }
@@ -435,7 +435,7 @@ mod tests {
     #[test]
     fn parse_incrementer() {
         let wasm = include_bytes!("../../incrementer.wasm");
-        let module = parse(&mut &wasm[..]).expect("invalid Wasm byte code");
+        let module = parse(&mut &wasm[..], &mut Vec::new()).expect("invalid Wasm byte code");
         for (fn_sig, fn_body) in module.iter_internal_fns().skip(165).take(1) {
             println!("{}{}", fn_sig, fn_body);
         }
