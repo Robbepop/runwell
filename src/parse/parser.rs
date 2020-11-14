@@ -196,11 +196,13 @@ fn process_payload<'a>(
             parse_data(section_reader, module, validator)?;
         }
 
-        Payload::AliasSection(_section_reader) => { /* ... */ }
-        Payload::InstanceSection(_section_reader) => { /* ... */ }
-        Payload::ModuleSection(_)
+        Payload::AliasSection(_)
+        | Payload::InstanceSection(_)
+        | Payload::ModuleSection(_)
         | Payload::ModuleCodeSectionStart { .. }
-        | Payload::ModuleCodeSectionEntry { .. } => { /* ... */ }
+        | Payload::ModuleCodeSectionEntry { .. } => {
+            return Err(ParseError::UnsupportedModuleDefinition)
+        }
 
         Payload::CustomSection {
             name: _,
@@ -279,15 +281,9 @@ fn parse_imports(
                     global_type.into(),
                 )?;
             }
-            ImportSectionEntryType::Module(_module_id) => {
-                unimplemented!(
-                    "module imports are not support in the Runwell JIT"
-                )
-            }
-            ImportSectionEntryType::Instance(_instance_id) => {
-                unimplemented!(
-                    "instance imports are not supported in the Runwell JIT"
-                )
+            ImportSectionEntryType::Module(_) |
+            ImportSectionEntryType::Instance(_) => {
+                return Err(ParseError::UnsupportedModuleDefinition)
             }
         }
     }
