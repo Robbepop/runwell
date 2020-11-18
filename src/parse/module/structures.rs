@@ -59,16 +59,16 @@ pub enum ExportKind {
 
 impl<'a> From<wasmparser::Export<'a>> for Export {
     fn from(wasm_export: wasmparser::Export<'a>) -> Self {
-        let id = wasm_export.index as usize;
+        let id = wasm_export.index;
         Self {
             field: wasm_export.field.to_string(),
             kind: match wasm_export.kind {
-                ExternalKind::Function => ExportKind::Function(FunctionId(id)),
+                ExternalKind::Function => ExportKind::Function(FunctionId::from_u32(id)),
                 ExternalKind::Global => {
-                    ExportKind::Global(GlobalVariableId(id))
+                    ExportKind::Global(GlobalVariableId::from_u32(id))
                 }
-                ExternalKind::Memory => ExportKind::Memory(LinearMemoryId(id)),
-                ExternalKind::Table => ExportKind::Table(TableId(id)),
+                ExternalKind::Memory => ExportKind::Memory(LinearMemoryId::from_u32(id)),
+                ExternalKind::Table => ExportKind::Table(TableId::from_u32(id)),
                 ExternalKind::Module => {
                     unimplemented!("module exports are not supported by the Runwell JIT")
                 }
@@ -110,7 +110,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
                 table_index,
                 init_expr,
             } => {
-                let table_id = TableId(table_index as usize);
+                let table_id = TableId::from_u32(table_index);
                 let offset = Initializer::try_from(init_expr)?;
                 let items = {
                     let mut reader = element.items.get_items_reader()?;
@@ -121,7 +121,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
                                 return Err(ParseError::UnsupportedElementKind)
                             }
                             wasmparser::ElementItem::Func(id) => {
-                                items.push(FunctionId(id as usize))
+                                items.push(FunctionId::from_u32(id))
                             }
                         }
                     }

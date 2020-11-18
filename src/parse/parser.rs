@@ -377,7 +377,7 @@ fn parse_start(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.start_section(start_fn_id, &range)?;
-    module.set_start_fn(FunctionId(start_fn_id as usize));
+    module.set_start_fn(FunctionId::from_u32(start_fn_id));
     Ok(())
 }
 

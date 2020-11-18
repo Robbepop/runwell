@@ -59,35 +59,17 @@ define_id_type! {
     /// An index into the function signature table of a Wasm module.
     pub struct FunctionSigId;
 }
-
-/// An index into the internal global variable table of a Wasm module.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct GlobalVariableId(pub(super) usize);
-
-impl Identifier for GlobalVariableId {
-    fn get(self) -> usize {
-        self.0
-    }
+define_id_type! {
+    /// An index into the internal global variable table of a Wasm module.
+    pub struct GlobalVariableId;
 }
-
-/// An index into the function table of a Wasm module.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct FunctionId(pub(super) usize);
-
-impl Identifier for FunctionId {
-    fn get(self) -> usize {
-        self.0
-    }
+define_id_type! {
+    /// An index into the function table of a Wasm module.
+    pub struct FunctionId;
 }
-
-/// An index into the linear memory table of a Wasm module.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct LinearMemoryId(pub(super) usize);
-
-impl Identifier for LinearMemoryId {
-    fn get(self) -> usize {
-        self.0
-    }
+define_id_type! {
+    /// An index into the linear memory table of a Wasm module.
+    pub struct LinearMemoryId;
 }
 
 impl Default for LinearMemoryId {
@@ -96,18 +78,13 @@ impl Default for LinearMemoryId {
     /// Operations that do not include a linear memory ID implicitely refer
     /// to the linear memory identified by the `0` ID.
     fn default() -> Self {
-        Self(0)
+        Self::from_u32(0)
     }
 }
 
-/// An index into the table section of a Wasm module.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TableId(pub(super) usize);
-
-impl Identifier for TableId {
-    fn get(self) -> usize {
-        self.0
-    }
+define_id_type! {
+    /// An index into the table section of a Wasm module.
+    pub struct TableId;
 }
 
 impl Default for TableId {
@@ -116,6 +93,6 @@ impl Default for TableId {
     /// Operations that do not include a table ID implicitely refer
     /// to the table identified by the `0` ID.
     fn default() -> Self {
-        Self(0)
+        Self::from_u32(0)
     }
 }

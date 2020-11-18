@@ -50,13 +50,13 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
 
             WasmOperator::Call { function_index } => {
                 CallOp {
-                    id: FunctionId(function_index as usize),
+                    id: FunctionId::from_u32(function_index),
                 }
                 .into()
             }
             WasmOperator::CallIndirect { index, table_index } => {
                 CallIndirectOp {
-                    table_id: TableId(table_index as usize),
+                    table_id: TableId::from_u32(table_index),
                     fn_sig_id: FunctionSigId::from_u32(index),
                 }
                 .into()
@@ -86,13 +86,13 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
 
             WasmOperator::GlobalGet { global_index } => {
                 GlobalGetOp {
-                    id: GlobalVariableId(global_index as usize),
+                    id: GlobalVariableId::from_u32(global_index),
                 }
                 .into()
             }
             WasmOperator::GlobalSet { global_index } => {
                 GlobalSetOp {
-                    id: GlobalVariableId(global_index as usize),
+                    id: GlobalVariableId::from_u32(global_index),
                 }
                 .into()
             }
@@ -310,10 +310,10 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
             WasmOperator::I64Rotr => RotRightOp::new(IntType::I64).into(),
 
             WasmOperator::MemoryGrow { mem, mem_byte: _ } => {
-                MemoryGrowOp::new(LinearMemoryId(mem as usize)).into()
+                MemoryGrowOp::new(LinearMemoryId::from_u32(mem)).into()
             }
             WasmOperator::MemorySize { mem, mem_byte: _ } => {
-                MemorySizeOp::new(LinearMemoryId(mem as usize)).into()
+                MemorySizeOp::new(LinearMemoryId::from_u32(mem)).into()
             }
 
             WasmOperator::I32WrapI64 => {

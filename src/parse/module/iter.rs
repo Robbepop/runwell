@@ -62,11 +62,11 @@ impl<'a> InternalFnIter<'a> {
         &self,
         internal_id: usize,
     ) -> (Function<'a>, &'a FunctionBody) {
-        let fn_id = FunctionId(
+        let fn_id = FunctionId::from_u32(
             // We are given an internal index and have to convert that
             // into a normal index before we use it to index into the
             // function signatures.
-            internal_id + self.module.len_imported(ImportExportKind::Function),
+            internal_id as u32 + self.module.len_imported(ImportExportKind::Function) as u32,
         );
         let fn_sig = self.module.get_signature(self.fn_sigs[internal_id]);
         let function = Function::new(fn_id, fn_sig);
@@ -147,11 +147,11 @@ impl<'a> InternalGlobalIter<'a> {
         &self,
         internal_id: usize,
     ) -> (GlobalVariable, &'a Initializer) {
-        let global_id = GlobalVariableId(
+        let global_id = GlobalVariableId::from_u32(
             // We are given an internal index and have to convert that
             // into a normal index before we use it to index into the
             // function signatures.
-            internal_id + self.module.len_imported(ImportExportKind::Function),
+            internal_id as u32 + self.module.len_imported(ImportExportKind::Function) as u32,
         );
         let global_decl = self.global_decls[internal_id];
         let global = GlobalVariable::new(global_id, global_decl);
