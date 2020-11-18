@@ -273,28 +273,28 @@ fn parse_imports(
             ImportSectionEntryType::Function(fn_sig_id) => {
                 module.push_imported_fn(
                     module_name,
-                    field_name.unwrap_or(""),
+                    field_name.unwrap_or_default(),
                     FunctionSigId::from_u32(fn_sig_id),
                 )?
             }
             ImportSectionEntryType::Table(table_type) => {
                 module.push_imported_table(
                     module_name,
-                    field_name.unwrap_or(""),
+                    field_name.unwrap_or_default(),
                     table_type,
                 )?;
             }
             ImportSectionEntryType::Memory(memory_type) => {
                 module.push_imported_linear_memory(
                     module_name,
-                    field_name.unwrap_or(""),
+                    field_name.unwrap_or_default(),
                     memory_type,
                 )?;
             }
             ImportSectionEntryType::Global(global_type) => {
                 module.push_imported_global(
                     module_name,
-                    field_name.unwrap_or(""),
+                    field_name.unwrap_or_default(),
                     global_type.into(),
                 )?;
             }
@@ -313,6 +313,7 @@ fn parse_function_signatures(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.function_section(&reader)?;
+    let _count = reader.get_count();
     for fn_sig in reader.into_iter() {
         let fn_sig_id = fn_sig?;
         module.push_internal_fn(FunctionSigId::from_u32(fn_sig_id))
