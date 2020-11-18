@@ -314,7 +314,8 @@ fn parse_function_signatures(
 ) -> Result<(), ParseError> {
     validator.function_section(&reader)?;
     for fn_sig in reader.into_iter() {
-        module.push_internal_fn(FunctionSigId(fn_sig? as usize))
+        let fn_sig_id = fn_sig?;
+        module.push_internal_fn(FunctionSigId(fn_sig_id as usize))
     }
     Ok(())
 }
