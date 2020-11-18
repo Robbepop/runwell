@@ -40,7 +40,7 @@ pub struct ModuleBuilder {
     /// Count of expected data elements.
     expected_data_elems: Option<usize>,
     /// Amount reserved function signatures.
-    total_signatures: Option<usize>,
+    expected_signatures: Option<usize>,
 }
 
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
@@ -116,7 +116,7 @@ impl<'a> ModuleBuilder {
             module,
             expected_fn_bodies: None,
             expected_data_elems: None,
-            total_signatures: None,
+            expected_signatures: None,
         }
     }
 
@@ -125,7 +125,7 @@ impl<'a> ModuleBuilder {
         &mut self,
         total_count: usize,
     ) -> Result<(), BuildError> {
-        if let Some(previous) = self.total_signatures {
+        if let Some(previous) = self.expected_signatures {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::Type,
                 reserved: total_count,
@@ -133,7 +133,7 @@ impl<'a> ModuleBuilder {
             })
         }
         self.module.signatures.reserve(total_count);
-        self.total_signatures = Some(total_count);
+        self.expected_signatures = Some(total_count);
         Ok(())
     }
 
@@ -142,7 +142,7 @@ impl<'a> ModuleBuilder {
         &mut self,
         sig: FunctionSig,
     ) -> Result<(), BuildError> {
-        match self.total_signatures {
+        match self.expected_signatures {
             Some(total) => {
                 let actual = self.module.signatures.len();
                 if total - actual == 0 {
