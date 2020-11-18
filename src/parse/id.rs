@@ -20,35 +20,44 @@ pub trait Identifier: Copy {
     fn get(self) -> usize;
 }
 
-/// An index into the function signature table of a Wasm module.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct FunctionSigId {
-    index: NonZeroU32,
-}
-
-impl FunctionSigId {
-    /// Creates a new function signature ID from the given `u32`.
-    ///
-    /// # Panics
-    ///
-    /// If the given `u32` is equal to `u32::MAX`.
-    pub fn from_u32(index: u32) -> Self {
-        Self {
-            index: NonZeroU32::new(index.wrapping_add(1))
-                .expect("encountered invalid u32::MAX value"),
+macro_rules! define_id_type {
+    ( $( #[$attr:meta] )* pub struct $name:ident ; ) => {
+        /// An index into the function signature table of a Wasm module.
+        $( #[ $attr ] )*
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+        pub struct $name {
+            index: NonZeroU32,
         }
-    }
 
-    /// Returns the underlying raw `u32` representation.
-    pub fn into_u32(self) -> u32 {
-        self.index.get().wrapping_sub(1)
-    }
+        impl $name {
+            /// Creates a new instance from the given `u32`.
+            ///
+            /// # Panics
+            ///
+            /// If the given `u32` is equal to `u32::MAX`.
+            pub fn from_u32(index: u32) -> Self {
+                Self {
+                    index: NonZeroU32::new(index.wrapping_add(1))
+                        .expect("encountered invalid u32::MAX value"),
+                }
+            }
+
+            /// Returns the underlying raw `u32` representation.
+            pub fn into_u32(self) -> u32 {
+                self.index.get().wrapping_sub(1)
+            }
+        }
+
+        impl Identifier for $name {
+            fn get(self) -> usize {
+                self.into_u32() as usize
+            }
+        }
+    };
 }
-
-impl Identifier for FunctionSigId {
-    fn get(self) -> usize {
-        self.into_u32() as usize
-    }
+define_id_type! {
+    /// An index into the function signature table of a Wasm module.
+    pub struct FunctionSigId;
 }
 
 /// An index into the internal global variable table of a Wasm module.
