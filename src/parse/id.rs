@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use core::num::NonZeroU32;
+
 /// A typed identifier used to index into a table of entities.
 pub trait Identifier: Copy {
     /// Returns the underlying `usize` of the identifier.
@@ -20,11 +22,32 @@ pub trait Identifier: Copy {
 
 /// An index into the function signature table of a Wasm module.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct FunctionSigId(pub(super) usize);
+pub struct FunctionSigId {
+    index: NonZeroU32,
+}
+
+impl FunctionSigId {
+    /// Creates a new function signature ID from the given `u32`.
+    ///
+    /// # Panics
+    ///
+    /// If the given `u32` is equal to `u32::MAX`.
+    pub fn from_u32(index: u32) -> Self {
+        Self {
+            index: NonZeroU32::new(index.wrapping_add(1))
+                .expect("encountered invalid u32::MAX value"),
+        }
+    }
+
+    /// Returns the underlying raw `u32` representation.
+    pub fn into_u32(self) -> u32 {
+        self.index.get().wrapping_sub(1)
+    }
+}
 
 impl Identifier for FunctionSigId {
     fn get(self) -> usize {
-        self.0
+        self.into_u32() as usize
     }
 }
 

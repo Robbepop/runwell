@@ -274,7 +274,7 @@ fn parse_imports(
                 module.push_imported_fn(
                     module_name,
                     field_name.unwrap_or(""),
-                    FunctionSigId(fn_sig_id as usize),
+                    FunctionSigId::from_u32(fn_sig_id),
                 )?
             }
             ImportSectionEntryType::Table(table_type) => {
@@ -315,7 +315,7 @@ fn parse_function_signatures(
     validator.function_section(&reader)?;
     for fn_sig in reader.into_iter() {
         let fn_sig_id = fn_sig?;
-        module.push_internal_fn(FunctionSigId(fn_sig_id as usize))
+        module.push_internal_fn(FunctionSigId::from_u32(fn_sig_id))
     }
     Ok(())
 }
