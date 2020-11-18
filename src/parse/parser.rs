@@ -251,6 +251,14 @@ fn parse_types(
     Ok(())
 }
 
+/// Validates the Wasm `imports` section and feeds its contents into the `module`.
+///
+/// The imports in the `module` are going to be separated for each kind.
+///
+/// # Errors
+///
+/// - If the `reader` yields an invalid Wasm type section.
+/// - If the `reader` yields unsupported module import definitions.
 fn parse_imports(
     reader: ImportSectionReader,
     module: &mut ModuleBuilder,
