@@ -226,10 +226,13 @@ fn parse_types(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.type_section(&reader)?;
+    let count = reader.get_count();
+    module.reserve_fn_signatures(count as usize)?;
     for type_def in reader.into_iter() {
         match type_def? {
             wasmparser::TypeDef::Func(func_type) => {
-                module.push_fn_signature(func_type.try_into()?);
+                let fn_sig = func_type.try_into()?;
+                module.register_fn_signature(fn_sig)?;
             }
             wasmparser::TypeDef::Instance(_) => {
                 return Err(ParseError::UnsupportedInstanceDefinition)
@@ -435,7 +438,8 @@ mod tests {
     #[test]
     fn parse_incrementer() {
         let wasm = include_bytes!("../../incrementer.wasm");
-        let module = parse(&mut &wasm[..], &mut Vec::new()).expect("invalid Wasm byte code");
+        let module = parse(&mut &wasm[..], &mut Vec::new())
+            .expect("invalid Wasm byte code");
         for (fn_sig, fn_body) in module.iter_internal_fns().skip(165).take(1) {
             println!("{}{}", fn_sig, fn_body);
         }

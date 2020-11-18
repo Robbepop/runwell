@@ -39,24 +39,74 @@ pub struct ModuleBuilder {
     expected_fn_bodies: Option<usize>,
     /// Count of expected data elements.
     expected_data_elems: Option<usize>,
+    /// Amount reserved function signatures.
+    total_signatures: Option<usize>,
+}
+
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+pub enum WasmSection {
+    Types,
+    Imports,
+    Exports,
+    Elements,
+    Globals,
+    DataCount,
+    FnBodiesStart,
+    FnBodies,
+    StartFn,
+    Data,
+}
+
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+pub enum WasmSectionEntry {
+    Type,
+    Import,
+    Export,
+    Element,
+    Global,
+    FnBody,
+    Data,
 }
 
 #[derive(Debug, Display, PartialEq, Eq)]
 pub enum BuildError {
-    #[display(fmt = "encountered duplicate code start section")]
-    DuplicateCodeStartSection,
-    #[display(fmt = "missing code start section")]
-    MissingCodeStartSection,
-    #[display(fmt = "encountered fewer function bodies than expected")]
-    TooFewFnBodies,
-    #[display(fmt = "encountered more function bodies than expected")]
-    TooManyFnBodies,
-    #[display(fmt = "encountered duplicate data count section")]
-    DuplicateDataCountSection,
-    #[display(fmt = "encountered fewer data elements than expected")]
-    TooFewDataElements,
-    #[display(fmt = "encountered more data elements than expected")]
-    TooManyDataElements,
+    #[display(fmt = "encountered unexpected duplicate section: {}", self.section)]
+    DuplicateSection { section: WasmSection },
+    #[display(fmt = "encountered missing section: {}", self.section)]
+    MissingSection { section: WasmSection },
+    #[display(
+        fmt = "registered fewer entries than expected for {}. expected: {}, actual: {}",
+        entry,
+        expected,
+        actual,
+    )]
+    MissingElements {
+        entry: WasmSectionEntry,
+        expected: usize,
+        actual: usize,
+    },
+    #[display(
+        fmt = "registered more entries than reserved (= {}) for: {}",
+        reserved,
+        entry
+    )]
+    TooManyElements {
+        entry: WasmSectionEntry,
+        reserved: usize,
+    },
+    #[display(
+        fmt = "duplicate reservation of {} section entries for section {}. previous reservation: {}",
+        reserved,
+        entry,
+        previous
+    )]
+    DuplicateReservation {
+        entry: WasmSectionEntry,
+        reserved: usize,
+        previous: usize,
+    },
+    #[display(fmt = "missing reservation for section {}", entry)]
+    MissingReservation { entry: WasmSectionEntry },
 }
 
 impl<'a> ModuleBuilder {
@@ -66,12 +116,50 @@ impl<'a> ModuleBuilder {
             module,
             expected_fn_bodies: None,
             expected_data_elems: None,
+            total_signatures: None,
         }
     }
 
+    /// Reserves an amount of total expected function signatures to be registered.
+    pub fn reserve_fn_signatures(
+        &mut self,
+        total_count: usize,
+    ) -> Result<(), BuildError> {
+        if let Some(previous) = self.total_signatures {
+            return Err(BuildError::DuplicateReservation {
+                entry: WasmSectionEntry::Type,
+                reserved: total_count,
+                previous,
+            })
+        }
+        self.module.signatures.reserve(total_count);
+        self.total_signatures = Some(total_count);
+        Ok(())
+    }
+
     /// Pushes the signature to the Wasm module.
-    pub fn push_fn_signature(&mut self, sig: FunctionSig) {
-        self.module.signatures.push(sig);
+    pub fn register_fn_signature(
+        &mut self,
+        sig: FunctionSig,
+    ) -> Result<(), BuildError> {
+        match self.total_signatures {
+            Some(total) => {
+                let actual = self.module.signatures.len();
+                if total - actual == 0 {
+                    return Err(BuildError::TooManyElements {
+                        entry: WasmSectionEntry::Type,
+                        reserved: total,
+                    })
+                }
+                self.module.signatures.push(sig);
+            }
+            None => {
+                return Err(BuildError::MissingReservation {
+                    entry: WasmSectionEntry::Type,
+                })
+            }
+        }
+        Ok(())
     }
 
     /// Pushes a new imported function to the Wasm module.
@@ -190,7 +278,11 @@ impl<'a> ModuleBuilder {
                 self.module.fn_bodies.reserve(count);
                 self.expected_fn_bodies = Some(count);
             }
-            Some(_) => return Err(BuildError::DuplicateCodeStartSection),
+            Some(_) => {
+                return Err(BuildError::DuplicateSection {
+                    section: WasmSection::FnBodiesStart,
+                })
+            }
         }
         Ok(())
     }
@@ -201,8 +293,17 @@ impl<'a> ModuleBuilder {
         fn_body: FunctionBody,
     ) -> Result<(), BuildError> {
         match self.expected_fn_bodies.as_mut() {
-            Some(0) => return Err(BuildError::TooManyFnBodies),
-            None => return Err(BuildError::MissingCodeStartSection),
+            Some(0) => {
+                return Err(BuildError::TooManyElements {
+                    entry: WasmSectionEntry::FnBody,
+                    reserved: 0,
+                })
+            }
+            None => {
+                return Err(BuildError::MissingSection {
+                    section: WasmSection::FnBodiesStart,
+                })
+            }
             Some(value) => {
                 *value -= 1;
                 self.module.fn_bodies.push(fn_body);
@@ -233,7 +334,11 @@ impl<'a> ModuleBuilder {
                 self.module.fn_bodies.reserve(count);
                 self.expected_fn_bodies = Some(count);
             }
-            Some(_) => return Err(BuildError::DuplicateDataCountSection),
+            Some(_) => {
+                return Err(BuildError::DuplicateSection {
+                    section: WasmSection::DataCount,
+                })
+            }
         }
         Ok(())
     }
@@ -241,7 +346,12 @@ impl<'a> ModuleBuilder {
     /// Pushes a new data definition to the Wasm module.
     pub fn push_data(&mut self, data: Data) -> Result<(), BuildError> {
         match self.expected_data_elems.as_mut() {
-            Some(0) => return Err(BuildError::TooManyDataElements),
+            Some(0) => {
+                return Err(BuildError::TooManyElements {
+                    entry: WasmSectionEntry::Data,
+                    reserved: 0,
+                })
+            }
             None => (),
             Some(value) => {
                 *value -= 1;
@@ -255,12 +365,20 @@ impl<'a> ModuleBuilder {
     pub fn finalize(self) -> Result<Module, BuildError> {
         if let Some(remaining) = self.expected_data_elems {
             if remaining != 0 {
-                return Err(BuildError::TooFewDataElements)
+                return Err(BuildError::MissingElements {
+                    entry: WasmSectionEntry::Data,
+                    expected: remaining,
+                    actual: self.module.data.len(),
+                })
             }
         }
         if let Some(remaining) = self.expected_fn_bodies {
             if remaining != 0 {
-                return Err(BuildError::TooFewFnBodies)
+                return Err(BuildError::MissingElements {
+                    entry: WasmSectionEntry::FnBody,
+                    expected: remaining,
+                    actual: self.module.fn_bodies.len(),
+                })
             }
         }
         Ok(self.module)
