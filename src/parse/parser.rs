@@ -220,6 +220,12 @@ fn process_payload<'a>(
     Ok(false)
 }
 
+/// Validates the Wasm `type` section and feeds its contents into the `module`.
+///
+/// # Errors
+///
+/// - If the `reader` yields an invalid Wasm type section.
+/// - If the `reader` yields unsupported module or instance definitions.
 fn parse_types(
     reader: TypeSectionReader,
     module: &mut ModuleBuilder,
