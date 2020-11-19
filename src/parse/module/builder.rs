@@ -390,12 +390,12 @@ impl<'a> ModuleBuilder {
     /// Reserves space for `count` expected data elements.
     pub fn reserve_data_elements(
         &mut self,
-        count: usize,
+        total_count: usize,
     ) -> Result<(), BuildError> {
         match self.expected_data_elems {
             None => {
-                self.module.data.reserve(count);
-                self.expected_data_elems = Some(count);
+                self.module.data.reserve(total_count);
+                self.expected_data_elems = Some(total_count);
             }
             Some(_) => {
                 return Err(BuildError::DuplicateSection {
@@ -408,19 +408,23 @@ impl<'a> ModuleBuilder {
 
     /// Pushes a new data definition to the Wasm module.
     pub fn push_data(&mut self, data: Data) -> Result<(), BuildError> {
-        match self.expected_data_elems.as_mut() {
-            Some(0) => {
-                return Err(BuildError::TooManyElements {
-                    entry: WasmSectionEntry::Data,
-                    reserved: 0,
-                })
+        match self.expected_data_elems {
+            Some(total) => {
+                let actual = self.module.data.len();
+                if total - actual == 0 {
+                    return Err(BuildError::TooManyElements {
+                        entry: WasmSectionEntry::Data,
+                        reserved: total,
+                    })
+                }
+                self.module.data.push(data);
             }
-            None => (),
-            Some(value) => {
-                *value -= 1;
+            None => {
+                // The `DataCount` section has been introduced with the
+                // bulk-memory Wasm extension and is only optional.
+                // Therefore we do not return an error for this case.
             }
         }
-        self.module.data.push(data);
         Ok(())
     }
 
