@@ -20,8 +20,8 @@ use crate::parse::{
     GlobalVariable,
     GlobalVariableDecl,
     GlobalVariableId,
+    GlobalInitExpr,
     ImportExportKind,
-    Initializer,
     Module,
 };
 
@@ -117,7 +117,7 @@ pub struct InternalGlobalIter<'a> {
     /// The slice over global variable declarations.
     global_decls: &'a [GlobalVariableDecl],
     /// The slice over global variable initializer expressions.
-    global_initializers: &'a [Initializer],
+    global_initializers: &'a [GlobalInitExpr],
     /// Current start.
     start: usize,
     /// Current end.
@@ -146,7 +146,7 @@ impl<'a> InternalGlobalIter<'a> {
     fn query_for(
         &self,
         internal_id: usize,
-    ) -> (GlobalVariable, &'a Initializer) {
+    ) -> (GlobalVariable, &'a GlobalInitExpr) {
         let global_id = GlobalVariableId::from_u32(
             // We are given an internal index and have to convert that
             // into a normal index before we use it to index into the
@@ -161,7 +161,7 @@ impl<'a> InternalGlobalIter<'a> {
 }
 
 impl<'a> Iterator for InternalGlobalIter<'a> {
-    type Item = (GlobalVariable, &'a Initializer);
+    type Item = (GlobalVariable, &'a GlobalInitExpr);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.start == self.end {

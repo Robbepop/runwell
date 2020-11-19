@@ -21,6 +21,7 @@ use crate::parse::{
     FunctionSig,
     FunctionSigId,
     GlobalVariableDecl,
+    GlobalInitExpr,
     Initializer,
     Module,
     ParseError,
@@ -495,7 +496,7 @@ impl<'a> ModuleBuilder {
 
     /// Pushes a new internal global variable initializer expression
     /// to the Wasm module.
-    pub fn push_global_initializer(&mut self, initializer: Initializer) {
+    pub fn push_global_initializer(&mut self, initializer: GlobalInitExpr) {
         self.module.globals_initializers.push(initializer)
     }
 

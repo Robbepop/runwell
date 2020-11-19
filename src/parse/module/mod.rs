@@ -33,6 +33,7 @@ use crate::parse::{
     GlobalVariable,
     GlobalVariableDecl,
     GlobalVariableId,
+    GlobalInitExpr,
     Identifier,
     Initializer,
     LinearMemoryId,
@@ -69,7 +70,7 @@ pub struct Module {
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody>,
     /// Internal global definitions.
-    globals_initializers: Vec<Initializer>,
+    globals_initializers: Vec<GlobalInitExpr>,
     /// Internal table initializers.
     table_initializers: Vec<Initializer>,
     /// Generic data of the Wasm module.
@@ -155,7 +156,7 @@ impl<'a> Module {
     pub fn get_global_initializer(
         &self,
         id: GlobalVariableId,
-    ) -> Option<&Initializer> {
+    ) -> Option<&GlobalInitExpr> {
         id.get()
             .checked_sub(self.globals.len_imported())
             .map(|internal_id| &self.globals_initializers[internal_id])

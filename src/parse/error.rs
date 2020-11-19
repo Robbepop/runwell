@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::parse::{
+    initializer::GlobalInitError,
+    module::BuildError,
+    ReadError,
+};
 use derive_more::{Display, From};
 use thiserror::Error;
-use crate::parse::ReadError;
-use crate::parse::module::BuildError;
 
 /// An error that can be encountered upon parsing a Wasm module.
 #[derive(Debug, Display, From)]
 #[cfg_attr(feature = "std", derive(Error))]
 pub enum ParseError {
+    /// An error upon parsing a global initializer expression.
+    GlobalInit(GlobalInitError),
     /// An error while reading from the input.
     Read(ReadError),
     /// An error while building up the Wasm module.

@@ -42,6 +42,7 @@ pub use self::{
         TableId,
     },
     initializer::Initializer,
+    initializer::GlobalInitExpr,
     module::{
         Element,
         ElementItemsIter,

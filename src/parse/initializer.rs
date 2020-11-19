@@ -1,4 +1,4 @@
-// Copyright 2019 Robin Freyler
+// Copyright 2020 Robin Freyler
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,99 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{Operator, ParseError};
+use crate::parse::{id::GlobalVariableId, ParseError};
+use core::convert::TryFrom;
+use derive_more::Display;
+use wasmparser::Operator;
+
+/// An error that can occure upon parsing a global initializer expression.
+#[derive(Debug, Display, PartialEq, Eq)]
+pub enum GlobalInitError {
+    /// Encountered a generic unsupported operator.
+    #[display(fmt = "encountered an unsupported Wasm operator")]
+    UnsupportedOperator,
+    /// Encountered an unsupported `f32` or `f64` type operator.
+    #[display(fmt = "encountered an unsupported f32 or f64 type operator")]
+    UnsupportedFloats,
+    /// Encountered an unsupported `V128` type operator.
+    #[display(fmt = "encountered an unsupported V128 type operator")]
+    UnsupportedV128,
+    /// Encountered an unsupported reference type operator.
+    #[display(fmt = "encountered an unsupported reference type operator")]
+    UnsupportedRefType,
+    /// Encountered a malformatted initializer expression.
+    #[display(fmt = "encountered a malformatted initializer expression")]
+    InvalidExpression,
+}
+
+#[derive(Debug, Display)]
+pub enum GlobalInitExpr {
+    #[display(fmt = "i32.const {}", _0)]
+    I32Const(i32),
+    #[display(fmt = "i64.const {}", _0)]
+    I64Const(i64),
+    #[display(fmt = "global.get {}", "_0.into_u32()")]
+    GetGlobal(GlobalVariableId),
+}
+
+impl<'a> TryFrom<wasmparser::InitExpr<'a>> for GlobalInitExpr {
+    type Error = ParseError;
+
+    fn try_from(
+        init_expr: wasmparser::InitExpr<'a>,
+    ) -> Result<Self, Self::Error> {
+        let mut init_expr_reader = init_expr.get_binary_reader();
+        let initializer = match init_expr_reader.read_operator()? {
+            Operator::I32Const { value } => GlobalInitExpr::I32Const(value),
+            Operator::I64Const { value } => GlobalInitExpr::I64Const(value),
+            Operator::GlobalGet { global_index } => {
+                GlobalInitExpr::GetGlobal(GlobalVariableId::from_u32(
+                    global_index,
+                ))
+            }
+            Operator::F32Const { .. } | Operator::F64Const { .. } => {
+                return Err(GlobalInitError::UnsupportedFloats.into())
+            }
+            Operator::V128Const { .. } => {
+                return Err(GlobalInitError::UnsupportedV128.into())
+            }
+            Operator::RefNull { .. } | Operator::RefFunc { .. } => {
+                return Err(GlobalInitError::UnsupportedRefType.into())
+            }
+            ref _unsupported => {
+                return Err(GlobalInitError::UnsupportedOperator.into())
+            }
+        };
+        if !matches!(init_expr_reader.read_operator()?, Operator::End) {
+            return Err(GlobalInitError::InvalidExpression.into())
+        }
+        Ok(initializer)
+    }
+}
+
+#[test]
+fn display_works() {
+    assert_eq!(GlobalInitExpr::I32Const(1).to_string(), "i32.const 1");
+    assert_eq!(GlobalInitExpr::I32Const(-1).to_string(), "i32.const -1");
+    assert_eq!(GlobalInitExpr::I64Const(1).to_string(), "i64.const 1");
+    assert_eq!(GlobalInitExpr::I64Const(-1).to_string(), "i64.const -1");
+}
 
 /// A Wasm initializer expression.
 #[derive(Debug)]
 pub struct Initializer {
     /// The operators of the initializer expression.
-    ops: Vec<Operator>,
+    ops: Vec<crate::parse::Operator>,
 }
 
 impl Initializer {
     /// Returns the operations of the initializer routine.
-    pub fn ops(&self) -> &[Operator] {
+    pub fn ops(&self) -> &[crate::parse::Operator] {
         &self.ops
     }
 }
 
-impl<'a> core::convert::TryFrom<wasmparser::InitExpr<'a>> for Initializer {
+impl<'a> TryFrom<wasmparser::InitExpr<'a>> for Initializer {
     type Error = ParseError;
 
     fn try_from(
@@ -38,7 +114,7 @@ impl<'a> core::convert::TryFrom<wasmparser::InitExpr<'a>> for Initializer {
             ops: init_expr
                 .get_operators_reader()
                 .into_iter()
-                .map(|op| Operator::try_from(op?))
+                .map(|op| crate::parse::Operator::try_from(op?))
                 .collect::<Result<Vec<_>, _>>()?,
         })
     }
