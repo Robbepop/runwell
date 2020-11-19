@@ -152,47 +152,47 @@ fn process_payload<'a>(
             validator.version(num, &range)?;
         }
         Payload::TypeSection(section_reader) => {
-            parse_types(section_reader, module, validator)?;
+            parse_type_section(section_reader, module, validator)?;
         }
         Payload::ImportSection(section_reader) => {
-            parse_imports(section_reader, module, validator)?;
+            parse_import_section(section_reader, module, validator)?;
         }
         Payload::FunctionSection(section_reader) => {
-            parse_function_signatures(section_reader, module, validator)?;
+            parse_function_section(section_reader, module, validator)?;
         }
         Payload::TableSection(section_reader) => {
-            parse_tables(section_reader, module, validator)?;
+            parse_table_section(section_reader, module, validator)?;
         }
         Payload::MemorySection(section_reader) => {
-            parse_linear_memories(section_reader, module, validator)?;
+            parse_linear_memory_section(section_reader, module, validator)?;
         }
         Payload::GlobalSection(section_reader) => {
-            parse_globals(section_reader, module, validator)?;
+            parse_globals_section(section_reader, module, validator)?;
         }
         Payload::ExportSection(section_reader) => {
-            parse_exports(section_reader, module, validator)?;
+            parse_export_section(section_reader, module, validator)?;
         }
         Payload::StartSection { func, range } => {
-            parse_start(func, range, module, validator)?;
+            parse_start_fn(func, range, module, validator)?;
         }
         Payload::ElementSection(section_reader) => {
-            parse_element(section_reader, module, validator)?;
+            parse_element_section(section_reader, module, validator)?;
         }
         Payload::CodeSectionStart {
             count,
             range,
             size: _,
         } => {
-            parse_code_start(count, range, module, validator)?;
+            parse_code_start_section(count, range, module, validator)?;
         }
         Payload::CodeSectionEntry(body) => {
-            parse_fn_body(body, module, validator)?;
+            parse_code_section(body, module, validator)?;
         }
         Payload::DataCountSection { count, range } => {
-            parse_data_count(count, range, module, validator)?;
+            parse_data_count_section(count, range, module, validator)?;
         }
         Payload::DataSection(section_reader) => {
-            parse_data(section_reader, module, validator)?;
+            parse_data_section(section_reader, module, validator)?;
         }
 
         Payload::AliasSection(_)
@@ -225,7 +225,7 @@ fn process_payload<'a>(
 ///
 /// - If the `reader` yields an invalid Wasm type section.
 /// - If the `reader` yields unsupported module or instance definitions.
-fn parse_types(
+fn parse_type_section(
     reader: TypeSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -258,7 +258,7 @@ fn parse_types(
 ///
 /// - If the `reader` yields an invalid Wasm type section.
 /// - If the `reader` yields unsupported module import definitions.
-fn parse_imports(
+fn parse_import_section(
     reader: ImportSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -306,7 +306,7 @@ fn parse_imports(
     Ok(())
 }
 
-fn parse_function_signatures(
+fn parse_function_section(
     reader: FunctionSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -321,7 +321,7 @@ fn parse_function_signatures(
     Ok(())
 }
 
-fn parse_tables(
+fn parse_table_section(
     reader: TableSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -333,7 +333,7 @@ fn parse_tables(
     Ok(())
 }
 
-fn parse_linear_memories(
+fn parse_linear_memory_section(
     reader: MemorySectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -345,7 +345,7 @@ fn parse_linear_memories(
     Ok(())
 }
 
-fn parse_globals(
+fn parse_globals_section(
     reader: GlobalSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -359,7 +359,7 @@ fn parse_globals(
     Ok(())
 }
 
-fn parse_exports(
+fn parse_export_section(
     reader: ExportSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -371,7 +371,7 @@ fn parse_exports(
     Ok(())
 }
 
-fn parse_start(
+fn parse_start_fn(
     start_fn_id: u32,
     range: WasmRange,
     module: &mut ModuleBuilder,
@@ -382,7 +382,7 @@ fn parse_start(
     Ok(())
 }
 
-fn parse_element(
+fn parse_element_section(
     reader: ElementSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -394,7 +394,7 @@ fn parse_element(
     Ok(())
 }
 
-fn parse_code_start(
+fn parse_code_start_section(
     count: u32,
     range: WasmRange,
     module: &mut ModuleBuilder,
@@ -405,7 +405,7 @@ fn parse_code_start(
     Ok(())
 }
 
-fn parse_fn_body(
+fn parse_code_section(
     body: wasmparser::FunctionBody,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
@@ -423,7 +423,7 @@ fn parse_fn_body(
     Ok(())
 }
 
-fn parse_data_count(
+fn parse_data_count_section(
     count: u32,
     range: WasmRange,
     module: &mut ModuleBuilder,
@@ -434,7 +434,7 @@ fn parse_data_count(
     Ok(())
 }
 
-fn parse_data(
+fn parse_data_section(
     reader: DataSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
