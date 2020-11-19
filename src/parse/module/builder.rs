@@ -44,6 +44,8 @@ pub struct ModuleBuilder {
     expected_signatures: Option<usize>,
     /// Count reserved function definitions.
     expected_fn_defs: Option<usize>,
+    /// Count reserved tables.
+    expected_tables: Option<usize>,
 }
 
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
@@ -65,6 +67,7 @@ pub enum WasmSectionEntry {
     Type,
     FnSigs,
     Import,
+    Table,
     Export,
     Element,
     Global,
@@ -122,6 +125,7 @@ impl<'a> ModuleBuilder {
             expected_data_elems: None,
             expected_signatures: None,
             expected_fn_defs: None,
+            expected_tables: None,
         }
     }
 
@@ -211,7 +215,7 @@ impl<'a> ModuleBuilder {
                 let actual = self.module.fn_sigs.len_internal();
                 if total - actual == 0 {
                     return Err(BuildError::TooManyElements {
-                        entry: WasmSectionEntry::Type,
+                        entry: WasmSectionEntry::FnSigs,
                         reserved: total,
                     })
                 }
@@ -219,7 +223,7 @@ impl<'a> ModuleBuilder {
             }
             None => {
                 return Err(BuildError::MissingReservation {
-                    entry: WasmSectionEntry::Type,
+                    entry: WasmSectionEntry::FnSigs,
                 })
             }
         }
@@ -287,6 +291,23 @@ impl<'a> ModuleBuilder {
         self.module
             .tables
             .push_imported(module_name, field_name, table)
+    }
+
+    /// Reserves an amount of total expected table definitions to be registered.
+    pub fn reserve_tables(
+        &mut self,
+        total_count: usize,
+    ) -> Result<(), BuildError> {
+        if let Some(previous) = self.expected_tables {
+            return Err(BuildError::DuplicateReservation {
+                entry: WasmSectionEntry::Table,
+                reserved: total_count,
+                previous,
+            })
+        }
+        self.module.tables.reserve(total_count);
+        self.expected_tables = Some(total_count);
+        Ok(())
     }
 
     /// Pushes a new internal linear memory to the Wasm module.

@@ -327,6 +327,8 @@ fn parse_table_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.table_section(&reader)?;
+    let total_count = reader.get_count() as usize;
+    module.reserve_tables(total_count)?;
     for table_type in reader.into_iter() {
         module.push_internal_table(table_type?)
     }
