@@ -363,6 +363,8 @@ fn parse_globals_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.global_section(&reader)?;
+    let total_count = reader.get_count() as usize;
+    module.reserve_globals(total_count)?;
     for global_type in reader {
         let global_type = global_type?;
         module.push_internal_global(global_type.ty.into());

@@ -50,6 +50,8 @@ pub struct ModuleBuilder {
     expected_elements: Option<usize>,
     /// Count reserved linear memories.
     expected_linear_memories: Option<usize>,
+    /// Count reserved global variables.
+    expected_globals: Option<usize>,
 }
 
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
@@ -133,6 +135,7 @@ impl<'a> ModuleBuilder {
             expected_tables: None,
             expected_elements: None,
             expected_linear_memories: None,
+            expected_globals: None,
         }
     }
 
@@ -473,6 +476,23 @@ impl<'a> ModuleBuilder {
         Ok(())
     }
 
+    /// Reserves space for `count` expected global variables.
+    pub fn reserve_globals(&mut self, total_count: usize) -> Result<(), BuildError> {
+        match self.expected_globals {
+            None => {
+                self.module.globals.reserve(total_count);
+                self.module.globals_initializers.reserve(total_count);
+                self.expected_globals = Some(total_count);
+            }
+            Some(_) => {
+                return Err(BuildError::DuplicateSection {
+                    section: WasmSection::Globals,
+                })
+            }
+        }
+        Ok(())
+    }
+
     /// Pushes a new internal global variable initializer expression
     /// to the Wasm module.
     pub fn push_global_initializer(&mut self, initializer: Initializer) {
@@ -583,6 +603,16 @@ impl<'a> ModuleBuilder {
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::LinearMemory,
+                    expected,
+                    actual,
+                })
+            }
+        }
+        if let Some(expected) = self.expected_globals {
+            let actual = self.module.globals.len_internal();
+            if actual != expected {
+                return Err(BuildError::MissingElements {
+                    entry: WasmSectionEntry::Global,
                     expected,
                     actual,
                 })
