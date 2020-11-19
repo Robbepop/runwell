@@ -57,6 +57,16 @@ impl<T, I> ImportedOrInternal<T, I> {
         }
     }
 
+    /// Reserves the given number of additional elements.
+    ///
+    /// # Example
+    ///
+    /// For function signatures this is used for the internal
+    /// function definition signatures.
+    pub fn reserve(&mut self, additional: usize) {
+        self.entities.reserve(additional);
+    }
+
     /// Returns the number of imported and internal entities.
     pub fn len(&self) -> usize {
         self.entities.len()

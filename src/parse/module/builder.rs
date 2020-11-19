@@ -39,8 +39,10 @@ pub struct ModuleBuilder {
     expected_fn_bodies: Option<usize>,
     /// Count of expected data elements.
     expected_data_elems: Option<usize>,
-    /// Amount reserved function signatures.
+    /// Count reserved function signatures.
     expected_signatures: Option<usize>,
+    /// Count reserved function definitions.
+    expected_fn_defs: Option<usize>,
 }
 
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
@@ -60,6 +62,7 @@ pub enum WasmSection {
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
 pub enum WasmSectionEntry {
     Type,
+    FnSigs,
     Import,
     Export,
     Element,
@@ -78,7 +81,7 @@ pub enum BuildError {
         fmt = "registered fewer entries than expected for {}. expected: {}, actual: {}",
         entry,
         expected,
-        actual,
+        actual
     )]
     MissingElements {
         entry: WasmSectionEntry,
@@ -117,6 +120,7 @@ impl<'a> ModuleBuilder {
             expected_fn_bodies: None,
             expected_data_elems: None,
             expected_signatures: None,
+            expected_fn_defs: None,
         }
     }
 
@@ -179,9 +183,46 @@ impl<'a> ModuleBuilder {
             .push_imported(module_name, field_name, fn_sig_id)
     }
 
-    /// Pushes a new internal function to the Wasm module.
-    pub fn push_internal_fn(&mut self, fn_sig_id: FunctionSigId) {
-        self.module.fn_sigs.push_internal(fn_sig_id)
+    /// Reserves an amount of total expected function definitions to be registered.
+    pub fn reserve_fn_defs(
+        &mut self,
+        total_count: usize,
+    ) -> Result<(), BuildError> {
+        if let Some(previous) = self.expected_fn_defs {
+            return Err(BuildError::DuplicateReservation {
+                entry: WasmSectionEntry::FnSigs,
+                reserved: total_count,
+                previous,
+            })
+        }
+        self.module.fn_sigs.reserve(total_count);
+        self.expected_fn_defs = Some(total_count);
+        Ok(())
+    }
+
+    /// Pushes a new function definition to the Wasm module.
+    pub fn push_fn_def(
+        &mut self,
+        fn_sig_id: FunctionSigId,
+    ) -> Result<(), BuildError> {
+        match self.expected_fn_defs {
+            Some(total) => {
+                let actual = self.module.fn_sigs.len_internal();
+                if total - actual == 0 {
+                    return Err(BuildError::TooManyElements {
+                        entry: WasmSectionEntry::Type,
+                        reserved: total,
+                    })
+                }
+                self.module.fn_sigs.push_internal(fn_sig_id);
+            }
+            None => {
+                return Err(BuildError::MissingReservation {
+                    entry: WasmSectionEntry::Type,
+                })
+            }
+        }
+        Ok(())
     }
 
     /// Pushes a new imported global variable to the Wasm module.

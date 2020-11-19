@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::FunctionBody;
 use crate::parse::{
     module::Data,
     FunctionId,
@@ -40,8 +41,6 @@ use wasmparser::{
     TypeSectionReader,
     Validator,
 };
-
-use super::FunctionBody;
 
 /// Errors returned by [`Read::read`].
 #[derive(Debug, Display)]
@@ -232,8 +231,8 @@ fn parse_types(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.type_section(&reader)?;
-    let count = reader.get_count();
-    module.reserve_fn_signatures(count as usize)?;
+    let count = reader.get_count() as usize;
+    module.reserve_fn_signatures(count)?;
     for type_def in reader.into_iter() {
         match type_def? {
             wasmparser::TypeDef::Func(func_type) => {
@@ -313,10 +312,11 @@ fn parse_function_signatures(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.function_section(&reader)?;
-    let _count = reader.get_count();
+    let total_count = reader.get_count() as usize;
+    module.reserve_fn_defs(total_count)?;
     for fn_sig in reader.into_iter() {
         let fn_sig_id = fn_sig?;
-        module.push_internal_fn(FunctionSigId::from_u32(fn_sig_id))
+        module.push_fn_def(FunctionSigId::from_u32(fn_sig_id))?;
     }
     Ok(())
 }
