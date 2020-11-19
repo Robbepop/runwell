@@ -398,9 +398,9 @@ impl<'a> ModuleBuilder {
                 self.expected_data_elems = Some(total_count);
             }
             Some(_) => {
-                return Err(BuildError::DuplicateSection {
-                    section: WasmSection::DataCount,
-                })
+                // The `DataCount` section has been introduced with the
+                // bulk-memory Wasm extension and is only optional.
+                // Therefore we do not return an error for this case.
             }
         }
         Ok(())
@@ -420,9 +420,9 @@ impl<'a> ModuleBuilder {
                 self.module.data.push(data);
             }
             None => {
-                // The `DataCount` section has been introduced with the
-                // bulk-memory Wasm extension and is only optional.
-                // Therefore we do not return an error for this case.
+                return Err(BuildError::MissingReservation {
+                    entry: WasmSectionEntry::Data,
+                })
             }
         }
         Ok(())

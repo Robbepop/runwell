@@ -442,6 +442,8 @@ fn parse_data_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.data_section(&reader)?;
+    let total_count = reader.get_count() as usize;
+    module.reserve_data_elements(total_count)?;
     for data in reader.into_iter() {
         let data = data?;
         module.push_data(Data::from(data))?;
