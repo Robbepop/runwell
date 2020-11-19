@@ -405,21 +405,43 @@ impl<'a> ModuleBuilder {
 
     /// Finalizes building of the Wasm module.
     pub fn finalize(self) -> Result<Module, BuildError> {
-        if let Some(remaining) = self.expected_data_elems {
-            if remaining != 0 {
+        if let Some(expected) = self.expected_data_elems {
+            let actual = self.module.data.len();
+            if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::Data,
-                    expected: remaining,
-                    actual: self.module.data.len(),
+                    expected,
+                    actual,
                 })
             }
         }
-        if let Some(remaining) = self.expected_fn_bodies {
-            if remaining != 0 {
+        if let Some(expected) = self.expected_tables {
+            let actual = self.module.tables.len_internal();
+            if actual != expected {
+                return Err(BuildError::MissingElements {
+                    entry: WasmSectionEntry::Table,
+                    expected,
+                    actual,
+                })
+            }
+        }
+        if let Some(expected) = self.expected_fn_defs {
+            let actual = self.module.fn_sigs.len_internal();
+            if actual != expected {
+                return Err(BuildError::MissingElements {
+                    entry: WasmSectionEntry::FnSigs,
+                    expected,
+                    actual,
+                })
+            }
+        }
+        if let Some(expected) = self.expected_fn_bodies {
+            let actual = self.module.fn_bodies.len();
+            if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::FnBody,
-                    expected: remaining,
-                    actual: self.module.fn_bodies.len(),
+                    expected,
+                    actual,
                 })
             }
         }
