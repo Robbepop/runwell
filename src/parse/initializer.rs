@@ -89,33 +89,3 @@ fn display_works() {
     assert_eq!(GlobalInitExpr::I64Const(1).to_string(), "i64.const 1");
     assert_eq!(GlobalInitExpr::I64Const(-1).to_string(), "i64.const -1");
 }
-
-/// A Wasm initializer expression.
-#[derive(Debug)]
-pub struct Initializer {
-    /// The operators of the initializer expression.
-    ops: Vec<crate::parse::Operator>,
-}
-
-impl Initializer {
-    /// Returns the operations of the initializer routine.
-    pub fn ops(&self) -> &[crate::parse::Operator] {
-        &self.ops
-    }
-}
-
-impl<'a> TryFrom<wasmparser::InitExpr<'a>> for Initializer {
-    type Error = ParseError;
-
-    fn try_from(
-        init_expr: wasmparser::InitExpr<'a>,
-    ) -> Result<Self, Self::Error> {
-        Ok(Self {
-            ops: init_expr
-                .get_operators_reader()
-                .into_iter()
-                .map(|op| crate::parse::Operator::try_from(op?))
-                .collect::<Result<Vec<_>, _>>()?,
-        })
-    }
-}

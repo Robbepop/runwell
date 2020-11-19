@@ -41,7 +41,6 @@ pub use self::{
         LinearMemoryId,
         TableId,
     },
-    initializer::Initializer,
     initializer::GlobalInitExpr,
     module::{
         Element,

@@ -35,7 +35,6 @@ use crate::parse::{
     GlobalVariableId,
     GlobalInitExpr,
     Identifier,
-    Initializer,
     LinearMemoryId,
     TableId,
 };
@@ -72,7 +71,7 @@ pub struct Module {
     /// Internal global definitions.
     globals_initializers: Vec<GlobalInitExpr>,
     /// Internal table initializers.
-    table_initializers: Vec<Initializer>,
+    table_initializers: Vec<GlobalInitExpr>,
     /// Generic data of the Wasm module.
     ///
     /// # Note

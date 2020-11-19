@@ -22,7 +22,6 @@ use crate::parse::{
     FunctionSigId,
     GlobalVariableDecl,
     GlobalInitExpr,
-    Initializer,
     Module,
     ParseError,
 };
@@ -502,7 +501,7 @@ impl<'a> ModuleBuilder {
 
     /// Pushes a new internal table initializer expression
     /// to the Wasm module.
-    pub fn push_table_initializer(&mut self, initializer: Initializer) {
+    pub fn push_table_initializer(&mut self, initializer: GlobalInitExpr) {
         self.module.table_initializers.push(initializer)
     }
 

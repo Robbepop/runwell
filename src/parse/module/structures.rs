@@ -16,7 +16,7 @@ use crate::parse::{
     Function,
     FunctionId,
     GlobalVariableId,
-    Initializer,
+    GlobalInitExpr,
     LinearMemoryId,
     Module,
     ParseError,
@@ -92,7 +92,7 @@ pub struct Element {
     /// The referred to table index.
     table_id: TableId,
     /// The offset within the table for the initialized elements.
-    offset: Initializer,
+    offset: GlobalInitExpr,
     /// The function signatures for the initialized table elements.
     items: Box<[FunctionId]>,
 }
@@ -114,7 +114,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
                 init_expr,
             } => {
                 let table_id = TableId::from_u32(table_index);
-                let offset = Initializer::try_from(init_expr)?;
+                let offset = GlobalInitExpr::try_from(init_expr)?;
                 let items = {
                     let mut reader = element.items.get_items_reader()?;
                     let mut items = Vec::new();
@@ -150,7 +150,7 @@ impl Element {
     }
 
     /// Returns the offset initializer expression.
-    pub fn offset(&self) -> &Initializer {
+    pub fn offset(&self) -> &GlobalInitExpr {
         &self.offset
     }
 
