@@ -314,8 +314,25 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new internal linear memory to the Wasm module.
-    pub fn push_internal_table(&mut self, table: TableType) {
-        self.module.tables.push_internal(table)
+    pub fn push_internal_table(&mut self, table: TableType) -> Result<(), BuildError> {
+        match self.expected_tables {
+            Some(total) => {
+                let actual = self.module.tables.len_internal();
+                if total - actual == 0 {
+                    return Err(BuildError::TooManyElements {
+                        entry: WasmSectionEntry::Table,
+                        reserved: total,
+                    })
+                }
+                self.module.tables.push_internal(table);
+            }
+            None => {
+                return Err(BuildError::MissingReservation {
+                    entry: WasmSectionEntry::Table,
+                })
+            }
+        }
+        Ok(())
     }
 
     /// Pushes a new export to the Wasm module.
