@@ -348,8 +348,11 @@ fn parse_linear_memory_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.memory_section(&reader)?;
+    let total_count = reader.get_count() as usize;
+    module.reserve_linear_memories(total_count)?;
     for memory_type in reader {
-        module.push_internal_linear_memory(memory_type?)
+        let memory_type = memory_type?;
+        module.push_internal_linear_memory(memory_type)?;
     }
     Ok(())
 }

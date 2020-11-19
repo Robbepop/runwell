@@ -48,6 +48,8 @@ pub struct ModuleBuilder {
     expected_tables: Option<usize>,
     /// Count reserved elements.
     expected_elements: Option<usize>,
+    /// Count reserved linear memories.
+    expected_linear_memories: Option<usize>,
 }
 
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
@@ -72,6 +74,7 @@ pub enum WasmSectionEntry {
     Table,
     Export,
     Element,
+    LinearMemory,
     Global,
     FnBody,
     Data,
@@ -129,6 +132,7 @@ impl<'a> ModuleBuilder {
             expected_fn_defs: None,
             expected_tables: None,
             expected_elements: None,
+            expected_linear_memories: None,
         }
     }
 
@@ -274,9 +278,46 @@ impl<'a> ModuleBuilder {
         )
     }
 
+    /// Reserves an amount of total expected linear memory definitions to be registered.
+    pub fn reserve_linear_memories(
+        &mut self,
+        total_count: usize,
+    ) -> Result<(), BuildError> {
+        if let Some(previous) = self.expected_linear_memories {
+            return Err(BuildError::DuplicateReservation {
+                entry: WasmSectionEntry::LinearMemory,
+                reserved: total_count,
+                previous,
+            })
+        }
+        self.module.linear_memories.reserve(total_count);
+        self.expected_linear_memories = Some(total_count);
+        Ok(())
+    }
+
     /// Pushes a new internal linear memory to the Wasm module.
-    pub fn push_internal_linear_memory(&mut self, memory: MemoryType) {
-        self.module.linear_memories.push_internal(memory)
+    pub fn push_internal_linear_memory(
+        &mut self,
+        memory: MemoryType,
+    ) -> Result<(), BuildError> {
+        match self.expected_linear_memories {
+            Some(total) => {
+                let actual = self.module.linear_memories.len_internal();
+                if total - actual == 0 {
+                    return Err(BuildError::TooManyElements {
+                        entry: WasmSectionEntry::LinearMemory,
+                        reserved: total,
+                    })
+                }
+                self.module.linear_memories.push_internal(memory);
+            }
+            None => {
+                return Err(BuildError::MissingReservation {
+                    entry: WasmSectionEntry::LinearMemory,
+                })
+            }
+        }
+        Ok(())
     }
 
     /// Pushes a new imported table to the Wasm module.
@@ -314,7 +355,10 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new internal linear memory to the Wasm module.
-    pub fn push_internal_table(&mut self, table: TableType) -> Result<(), BuildError> {
+    pub fn push_internal_table(
+        &mut self,
+        table: TableType,
+    ) -> Result<(), BuildError> {
         match self.expected_tables {
             Some(total) => {
                 let actual = self.module.tables.len_internal();
@@ -347,7 +391,10 @@ impl<'a> ModuleBuilder {
     }
 
     /// Reserves an amount of total expected element definitions to be registered.
-    pub fn reserve_elements(&mut self, total_count: usize) -> Result<(), BuildError> {
+    pub fn reserve_elements(
+        &mut self,
+        total_count: usize,
+    ) -> Result<(), BuildError> {
         if let Some(previous) = self.expected_elements {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::Element,
@@ -526,6 +573,16 @@ impl<'a> ModuleBuilder {
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::Element,
+                    expected,
+                    actual,
+                })
+            }
+        }
+        if let Some(expected) = self.expected_linear_memories {
+            let actual = self.module.linear_memories.len_internal();
+            if actual != expected {
+                return Err(BuildError::MissingElements {
+                    entry: WasmSectionEntry::LinearMemory,
                     expected,
                     actual,
                 })
