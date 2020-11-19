@@ -32,6 +32,7 @@ use wasmparser::{MemoryType, TableType};
 ///
 /// Allows to mutate a module through some dedicated interfaces.
 /// Used by the internal Wasm parser.
+#[derive(Debug)]
 pub struct ModuleBuilder {
     /// The Wasm module that is being build.
     module: Module,
