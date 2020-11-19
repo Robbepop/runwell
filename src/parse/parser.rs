@@ -233,7 +233,7 @@ fn parse_type_section(
     validator.type_section(&reader)?;
     let count = reader.get_count() as usize;
     module.reserve_fn_signatures(count)?;
-    for type_def in reader.into_iter() {
+    for type_def in reader {
         match type_def? {
             wasmparser::TypeDef::Func(func_type) => {
                 let fn_sig = func_type.try_into()?;
@@ -264,7 +264,7 @@ fn parse_import_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.import_section(&reader)?;
-    for import in reader.into_iter() {
+    for import in reader {
         let import = import?;
         let module_name = import.module;
         let field_name = import.field;
@@ -314,7 +314,7 @@ fn parse_function_section(
     validator.function_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_fn_defs(total_count)?;
-    for fn_sig in reader.into_iter() {
+    for fn_sig in reader {
         let fn_sig_id = fn_sig?;
         module.push_fn_def(FunctionSigId::from_u32(fn_sig_id))?;
     }
@@ -329,7 +329,7 @@ fn parse_table_section(
     validator.table_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_tables(total_count)?;
-    for table_type in reader.into_iter() {
+    for table_type in reader {
         module.push_internal_table(table_type?)
     }
     Ok(())
@@ -341,7 +341,7 @@ fn parse_linear_memory_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.memory_section(&reader)?;
-    for memory_type in reader.into_iter() {
+    for memory_type in reader {
         module.push_internal_linear_memory(memory_type?)
     }
     Ok(())
@@ -353,7 +353,7 @@ fn parse_globals_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.global_section(&reader)?;
-    for global_type in reader.into_iter() {
+    for global_type in reader {
         let global_type = global_type?;
         module.push_internal_global(global_type.ty.into());
         module.push_global_initializer(global_type.init_expr.try_into()?);
@@ -367,7 +367,7 @@ fn parse_export_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.export_section(&reader)?;
-    for export in reader.into_iter() {
+    for export in reader {
         module.push_export(export?.into());
     }
     Ok(())
@@ -390,7 +390,7 @@ fn parse_element_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.element_section(&reader)?;
-    for element in reader.into_iter() {
+    for element in reader {
         module.push_element(element?.try_into()?)
     }
     Ok(())
@@ -444,7 +444,7 @@ fn parse_data_section(
     validator.data_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_data_elements(total_count)?;
-    for data in reader.into_iter() {
+    for data in reader {
         let data = data?;
         module.push_data(Data::from(data))?;
     }
