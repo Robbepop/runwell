@@ -313,12 +313,12 @@ impl<'a> ModuleBuilder {
     /// Reserves space for `count` expected function bodies.
     pub fn reserve_fn_bodies(
         &mut self,
-        count: usize,
+        total_count: usize,
     ) -> Result<(), BuildError> {
         match self.expected_fn_bodies {
             None => {
-                self.module.fn_bodies.reserve(count);
-                self.expected_fn_bodies = Some(count);
+                self.module.fn_bodies.reserve(total_count);
+                self.expected_fn_bodies = Some(total_count);
             }
             Some(_) => {
                 return Err(BuildError::DuplicateSection {
@@ -334,21 +334,21 @@ impl<'a> ModuleBuilder {
         &mut self,
         fn_body: FunctionBody,
     ) -> Result<(), BuildError> {
-        match self.expected_fn_bodies.as_mut() {
-            Some(0) => {
-                return Err(BuildError::TooManyElements {
-                    entry: WasmSectionEntry::FnBody,
-                    reserved: 0,
-                })
+        match self.expected_fn_bodies {
+            Some(total) => {
+                let actual = self.module.fn_bodies.len();
+                if total - actual == 0 {
+                    return Err(BuildError::TooManyElements {
+                        entry: WasmSectionEntry::FnBody,
+                        reserved: total,
+                    })
+                }
+                self.module.fn_bodies.push(fn_body);
             }
             None => {
-                return Err(BuildError::MissingSection {
-                    section: WasmSection::FnBodiesStart,
+                return Err(BuildError::MissingReservation {
+                    entry: WasmSectionEntry::FnBody,
                 })
-            }
-            Some(value) => {
-                *value -= 1;
-                self.module.fn_bodies.push(fn_body);
             }
         }
         Ok(())
