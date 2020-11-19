@@ -46,6 +46,8 @@ pub struct ModuleBuilder {
     expected_fn_defs: Option<usize>,
     /// Count reserved tables.
     expected_tables: Option<usize>,
+    /// Count reserved elements.
+    expected_elements: Option<usize>,
 }
 
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
@@ -126,6 +128,7 @@ impl<'a> ModuleBuilder {
             expected_signatures: None,
             expected_fn_defs: None,
             expected_tables: None,
+            expected_elements: None,
         }
     }
 
@@ -326,9 +329,40 @@ impl<'a> ModuleBuilder {
         self.module.start_fn = Some(id);
     }
 
+    /// Reserves an amount of total expected element definitions to be registered.
+    pub fn reserve_elements(&mut self, total_count: usize) -> Result<(), BuildError> {
+        if let Some(previous) = self.expected_elements {
+            return Err(BuildError::DuplicateReservation {
+                entry: WasmSectionEntry::Element,
+                reserved: total_count,
+                previous,
+            })
+        }
+        self.module.elements.reserve(total_count);
+        self.expected_elements = Some(total_count);
+        Ok(())
+    }
+
     /// Pushes a new element of the element section to the Wasm module.
-    pub fn push_element(&mut self, element: Element) {
-        self.module.elements.push(element)
+    pub fn push_element(&mut self, element: Element) -> Result<(), BuildError> {
+        match self.expected_elements {
+            Some(total) => {
+                let actual = self.module.elements.len();
+                if total - actual == 0 {
+                    return Err(BuildError::TooManyElements {
+                        entry: WasmSectionEntry::Element,
+                        reserved: total,
+                    })
+                }
+                self.module.elements.push(element);
+            }
+            None => {
+                return Err(BuildError::MissingReservation {
+                    entry: WasmSectionEntry::Element,
+                })
+            }
+        }
+        Ok(())
     }
 
     /// Reserves space for `count` expected function bodies.
@@ -465,6 +499,16 @@ impl<'a> ModuleBuilder {
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::FnBody,
+                    expected,
+                    actual,
+                })
+            }
+        }
+        if let Some(expected) = self.expected_elements {
+            let actual = self.module.elements.len();
+            if actual != expected {
+                return Err(BuildError::MissingElements {
+                    entry: WasmSectionEntry::Element,
                     expected,
                     actual,
                 })

@@ -390,8 +390,11 @@ fn parse_element_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.element_section(&reader)?;
+    let total_count = reader.get_count() as usize;
+    module.reserve_elements(total_count)?;
     for element in reader {
-        module.push_element(element?.try_into()?)
+        let element = element?.try_into()?;
+        module.push_element(element)?;
     }
     Ok(())
 }
