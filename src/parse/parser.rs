@@ -202,6 +202,9 @@ fn process_payload(
         | Payload::ModuleCodeSectionEntry { .. } => {
             return Err(ParseError::UnsupportedModuleDefinition)
         }
+        Payload::EventSection(_) => {
+            return Err(ParseError::UnsupportedEventDefinition)
+        }
 
         Payload::CustomSection {
             name: _,
@@ -300,6 +303,9 @@ fn parse_import_section(
             ImportSectionEntryType::Module(_)
             | ImportSectionEntryType::Instance(_) => {
                 return Err(ParseError::UnsupportedModuleDefinition)
+            }
+            ImportSectionEntryType::Event(_) => {
+                return Err(ParseError::UnsupportedEventDefinition)
             }
         }
     }

@@ -35,6 +35,8 @@ pub enum ParseError {
     UnsupportedModuleDefinition,
     #[display(fmt = "encountered unsupported instance definition")]
     UnsupportedInstanceDefinition,
+    #[display(fmt = "encountered unsupported event definition")]
+    UnsupportedEventDefinition,
     /// Encountered upon unmatching function declarations and definitions.
     #[display(fmt = "unmatching fn declarations and definitions")]
     UnmatchingFnDeclToDef,

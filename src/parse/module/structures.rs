@@ -69,6 +69,9 @@ impl<'a> From<wasmparser::Export<'a>> for Export {
                 }
                 ExternalKind::Memory => ExportKind::Memory(LinearMemoryId::from_u32(id)),
                 ExternalKind::Table => ExportKind::Table(TableId::from_u32(id)),
+                ExternalKind::Event => {
+                    unimplemented!("event exports are not supported by the Runwell JIT")
+                }
                 ExternalKind::Module => {
                     unimplemented!("module exports are not supported by the Runwell JIT")
                 }
