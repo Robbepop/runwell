@@ -142,7 +142,7 @@ where
 /// Validates the payload and feeds it into the module.
 ///
 /// Returns `true` if payload is the end section.
-fn process_payload<'a>(
+fn process_payload(
     payload: Payload,
     module: &mut ModuleBuilder,
     validator: &mut Validator,

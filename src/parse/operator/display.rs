@@ -144,7 +144,7 @@ impl Display for LoadOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self.conversion {
             LoadConversion::NoConversion { ty } => {
-                write!(f, "{}.load {}", ty, MemoryImmediate::from(self.memarg))
+                write!(f, "{}.load {}", ty, self.memarg)
             }
             LoadConversion::SignExt {
                 result_ty,
@@ -155,7 +155,7 @@ impl Display for LoadOp {
                     "{}.load{}_s {}",
                     result_ty,
                     source_ty.width() * 8,
-                    MemoryImmediate::from(self.memarg)
+                    self.memarg,
                 )
             }
             LoadConversion::ZeroExt {
@@ -167,7 +167,7 @@ impl Display for LoadOp {
                     "{}.load{}_u {}",
                     result_ty,
                     source_ty.width() * 8,
-                    MemoryImmediate::from(self.memarg)
+                    self.memarg,
                 )
             }
         }

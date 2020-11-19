@@ -67,15 +67,15 @@ impl TryFrom<wasmparser::FuncType> for FunctionSig {
     fn try_from(func_ty: wasmparser::FuncType) -> Result<Self, Self::Error> {
         let inputs = func_ty
             .params
-            .into_iter()
+            .iter()
             .cloned()
-            .map(|ty| Type::try_from(ty))
+            .map(Type::try_from)
             .collect::<Result<Vec<_>, _>>()?;
         let outputs = func_ty
             .returns
-            .into_iter()
+            .iter()
             .cloned()
-            .map(|ty| Type::try_from(ty))
+            .map(Type::try_from)
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self::new(inputs, outputs))
     }
@@ -188,11 +188,11 @@ mod display_impls {
             use crate::parse::Identifier as _;
             write!(f, "\nfunction {}: ", self.id().get())?;
             f.debug_list()
-                .entries(self.sig().inputs().into_iter())
+                .entries(self.sig().inputs().iter())
                 .finish()?;
             write!(f, " => ")?;
             f.debug_list()
-                .entries(self.sig().outputs().into_iter())
+                .entries(self.sig().outputs().iter())
                 .finish()?;
             Ok(())
         }
