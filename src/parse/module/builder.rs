@@ -373,8 +373,8 @@ impl<'a> ModuleBuilder {
     ) -> Result<(), BuildError> {
         match self.expected_data_elems {
             None => {
-                self.module.fn_bodies.reserve(count);
-                self.expected_fn_bodies = Some(count);
+                self.module.data.reserve(count);
+                self.expected_data_elems = Some(count);
             }
             Some(_) => {
                 return Err(BuildError::DuplicateSection {
