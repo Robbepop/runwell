@@ -100,7 +100,7 @@ impl<'a> From<wasmparser::Export<'a>> for Export {
 
 /// An element of the element section of a Wasm module.
 #[derive(Debug)]
-pub struct Element {
+pub struct OldElement {
     /// The referred to table index.
     table_id: TableId,
     /// The offset within the table for the initialized elements.
@@ -109,15 +109,13 @@ pub struct Element {
     items: Box<[FunctionId]>,
 }
 
-impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
+impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for OldElement {
     type Error = ParseError;
 
     fn try_from(element: wasmparser::Element<'a>) -> Result<Self, Self::Error> {
         use wasmparser::ElementKind;
         match element.kind {
-            ElementKind::Passive => {
-                Err(ParseError::UnsupportedPassiveElement)
-            }
+            ElementKind::Passive => Err(ParseError::UnsupportedPassiveElement),
             ElementKind::Declared => {
                 Err(ParseError::UnsupportedDeclaredElement)
             }
@@ -145,7 +143,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
                 // TODO: Replace above code with iterator based version after
                 //       https://github.com/bytecodealliance/wasmparser/issues/167
                 //       has been implemented, merged and released.
-                Ok(Element {
+                Ok(OldElement {
                     table_id,
                     offset,
                     items,
@@ -155,7 +153,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element {
     }
 }
 
-impl Element {
+impl OldElement {
     /// Returns the table index.
     pub fn table_id(&self) -> TableId {
         self.table_id
@@ -182,7 +180,7 @@ pub struct ElementItemsIter<'a> {
 
 impl<'a> ElementItemsIter<'a> {
     /// Creates a new element items iterator.
-    fn new(element: &'a Element, module: &'a Module) -> Self {
+    fn new(element: &'a OldElement, module: &'a Module) -> Self {
         Self {
             module,
             items: element.items.iter(),

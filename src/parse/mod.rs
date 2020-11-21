@@ -43,7 +43,7 @@ pub use self::{
     },
     initializer::GlobalInitExpr,
     module::{
-        Element,
+        OldElement,
         ElementItemsIter,
         Export,
         ExportKind,

@@ -21,7 +21,7 @@ pub use self::{
     builder::{BuildError, ModuleBuilder},
     data::Data,
     iter::{InternalFnIter, InternalGlobalIter},
-    structures::{Element, ElementItemsIter, Export, ExportKind},
+    structures::{OldElement, ElementItemsIter, Export, ExportKind},
 };
 use crate::parse::{
     utils::ImportedOrInternal,
@@ -65,7 +65,7 @@ pub struct Module {
     /// otherwise it is a library.
     start_fn: Option<FunctionId>,
     /// Elements from the Wasm module.
-    elements: Vec<Element>,
+    elements: Vec<OldElement>,
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody>,
     /// Internal global definitions.
@@ -218,7 +218,7 @@ impl<'a> Module {
     }
 
     /// Returns an iterator over the elements of the Wasm module.
-    pub fn iter_elements(&self) -> core::slice::Iter<Element> {
+    pub fn iter_elements(&self) -> core::slice::Iter<OldElement> {
         self.elements.iter()
     }
 

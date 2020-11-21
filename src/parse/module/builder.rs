@@ -14,7 +14,7 @@
 
 use crate::parse::{
     module::Data,
-    Element,
+    OldElement,
     Export,
     FunctionBody,
     FunctionId,
