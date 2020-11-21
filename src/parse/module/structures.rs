@@ -15,8 +15,8 @@
 use crate::parse::{
     Function,
     FunctionId,
-    GlobalVariableId,
     GlobalInitExpr,
+    GlobalVariableId,
     LinearMemoryId,
     Module,
     ParseError,
@@ -63,23 +63,35 @@ impl<'a> From<wasmparser::Export<'a>> for Export {
         Self {
             field: wasm_export.field.to_string(),
             kind: match wasm_export.kind {
-                ExternalKind::Function => ExportKind::Function(FunctionId::from_u32(id)),
+                ExternalKind::Function => {
+                    ExportKind::Function(FunctionId::from_u32(id))
+                }
                 ExternalKind::Global => {
                     ExportKind::Global(GlobalVariableId::from_u32(id))
                 }
-                ExternalKind::Memory => ExportKind::Memory(LinearMemoryId::from_u32(id)),
+                ExternalKind::Memory => {
+                    ExportKind::Memory(LinearMemoryId::from_u32(id))
+                }
                 ExternalKind::Table => ExportKind::Table(TableId::from_u32(id)),
                 ExternalKind::Event => {
-                    unimplemented!("event exports are not supported by the Runwell JIT")
+                    unimplemented!(
+                        "event exports are not supported by the Runwell JIT"
+                    )
                 }
                 ExternalKind::Module => {
-                    unimplemented!("module exports are not supported by the Runwell JIT")
+                    unimplemented!(
+                        "module exports are not supported by the Runwell JIT"
+                    )
                 }
                 ExternalKind::Instance => {
-                    unimplemented!("instance exports are not supported by the Runwell JIT")
+                    unimplemented!(
+                        "instance exports are not supported by the Runwell JIT"
+                    )
                 }
                 ExternalKind::Type => {
-                    unimplemented!("type exports are not supported by the Runwell JIT")
+                    unimplemented!(
+                        "type exports are not supported by the Runwell JIT"
+                    )
                 }
             },
         }

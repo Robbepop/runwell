@@ -187,7 +187,7 @@ impl<'a> ModuleBuilder {
     ///
     /// Errors if an imported function is pushed after an internal
     /// function has already been pushed to the same Wasm module.
-    pub fn push_imported_fn(
+    pub fn import_fn_declaration(
         &mut self,
         module_name: &'a str,
         field_name: &'a str,
@@ -199,7 +199,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Reserves an amount of total expected function definitions to be registered.
-    pub fn reserve_fn_defs(
+    pub fn reserve_fn_decls(
         &mut self,
         total_count: usize,
     ) -> Result<(), BuildError> {
@@ -215,8 +215,10 @@ impl<'a> ModuleBuilder {
         Ok(())
     }
 
-    /// Pushes a new function definition to the Wasm module.
-    pub fn push_fn_def(
+    /// Declares a new function with its signature.
+    ///
+    /// Every function declaration requires a definition later on in the parsing process.
+    pub fn declare_fn(
         &mut self,
         fn_sig_id: FunctionSigId,
     ) -> Result<(), BuildError> {
@@ -246,7 +248,7 @@ impl<'a> ModuleBuilder {
     ///
     /// Errors if an imported global variable is pushed after an internal
     /// global variable has already been pushed to the same Wasm module.
-    pub fn push_imported_global(
+    pub fn import_global_variable(
         &mut self,
         module_name: &'a str,
         field_name: &'a str,
@@ -258,7 +260,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new internal global variable to the Wasm module.
-    pub fn push_internal_global(&mut self, global: GlobalVariableDecl) {
+    pub fn declare_global_variable(&mut self, global: GlobalVariableDecl) {
         self.module.globals.push_internal(global)
     }
 
@@ -268,7 +270,7 @@ impl<'a> ModuleBuilder {
     ///
     /// Errors if an imported linear memory is pushed after an internal
     /// linear memory has already been pushed to the same Wasm module.
-    pub fn push_imported_linear_memory(
+    pub fn import_linear_memory(
         &mut self,
         module_name: &'a str,
         field_name: &'a str,
@@ -299,7 +301,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new internal linear memory to the Wasm module.
-    pub fn push_internal_linear_memory(
+    pub fn declare_linear_memory(
         &mut self,
         memory: MemoryType,
     ) -> Result<(), BuildError> {
@@ -329,7 +331,7 @@ impl<'a> ModuleBuilder {
     ///
     /// Errors if an imported table is pushed after an internal
     /// table has already been pushed to the same Wasm module.
-    pub fn push_imported_table(
+    pub fn import_table(
         &mut self,
         module_name: &'a str,
         field_name: &'a str,
@@ -358,7 +360,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new internal linear memory to the Wasm module.
-    pub fn push_internal_table(
+    pub fn declare_table(
         &mut self,
         table: TableType,
     ) -> Result<(), BuildError> {
@@ -383,7 +385,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new export to the Wasm module.
-    pub fn push_export(&mut self, export: Export) {
+    pub fn register_export(&mut self, export: Export) {
         self.module.exports.push(export)
     }
 
@@ -411,7 +413,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new element of the element section to the Wasm module.
-    pub fn push_element(&mut self, element: Element) -> Result<(), BuildError> {
+    pub fn define_element(&mut self, element: OldElement) -> Result<(), BuildError> {
         match self.expected_elements {
             Some(total) => {
                 let actual = self.module.elements.len();
@@ -433,7 +435,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Reserves space for `count` expected function bodies.
-    pub fn reserve_fn_bodies(
+    pub fn reserve_fn_defs(
         &mut self,
         total_count: usize,
     ) -> Result<(), BuildError> {
@@ -452,7 +454,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new function body of an internal function to the Wasm module.
-    pub fn push_fn_body(
+    pub fn define_fn(
         &mut self,
         fn_body: FunctionBody,
     ) -> Result<(), BuildError> {
@@ -477,7 +479,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Reserves space for `count` expected global variables.
-    pub fn reserve_globals(&mut self, total_count: usize) -> Result<(), BuildError> {
+    pub fn reserve_global_variables(&mut self, total_count: usize) -> Result<(), BuildError> {
         match self.expected_globals {
             None => {
                 self.module.globals.reserve(total_count);
@@ -495,13 +497,13 @@ impl<'a> ModuleBuilder {
 
     /// Pushes a new internal global variable initializer expression
     /// to the Wasm module.
-    pub fn push_global_initializer(&mut self, initializer: GlobalInitExpr) {
+    pub fn define_global_variable(&mut self, initializer: GlobalInitExpr) {
         self.module.globals_initializers.push(initializer)
     }
 
     /// Pushes a new internal table initializer expression
     /// to the Wasm module.
-    pub fn push_table_initializer(&mut self, initializer: GlobalInitExpr) {
+    pub fn define_table(&mut self, initializer: GlobalInitExpr) {
         self.module.table_initializers.push(initializer)
     }
 
@@ -525,7 +527,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new data definition to the Wasm module.
-    pub fn push_data(&mut self, data: Data) -> Result<(), BuildError> {
+    pub fn define_data(&mut self, data: Data) -> Result<(), BuildError> {
         match self.expected_data_elems {
             Some(total) => {
                 let actual = self.module.data.len();

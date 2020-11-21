@@ -273,28 +273,28 @@ fn parse_import_section(
         let field_name = import.field;
         match import.ty {
             ImportSectionEntryType::Function(fn_sig_id) => {
-                module.push_imported_fn(
+                module.import_fn_declaration(
                     module_name,
                     field_name.unwrap_or_default(),
                     FunctionSigId::from_u32(fn_sig_id),
                 )?
             }
             ImportSectionEntryType::Table(table_type) => {
-                module.push_imported_table(
+                module.import_table(
                     module_name,
                     field_name.unwrap_or_default(),
                     table_type,
                 )?;
             }
             ImportSectionEntryType::Memory(memory_type) => {
-                module.push_imported_linear_memory(
+                module.import_linear_memory(
                     module_name,
                     field_name.unwrap_or_default(),
                     memory_type,
                 )?;
             }
             ImportSectionEntryType::Global(global_type) => {
-                module.push_imported_global(
+                module.import_global_variable(
                     module_name,
                     field_name.unwrap_or_default(),
                     global_type.into(),
@@ -319,10 +319,10 @@ fn parse_function_section(
 ) -> Result<(), ParseError> {
     validator.function_section(&reader)?;
     let total_count = reader.get_count() as usize;
-    module.reserve_fn_defs(total_count)?;
+    module.reserve_fn_decls(total_count)?;
     for fn_sig in reader {
         let fn_sig_id = fn_sig?;
-        module.push_fn_def(FunctionSigId::from_u32(fn_sig_id))?;
+        module.declare_fn(FunctionSigId::from_u32(fn_sig_id))?;
     }
     Ok(())
 }
@@ -337,7 +337,7 @@ fn parse_table_section(
     module.reserve_tables(total_count)?;
     for table_type in reader {
         let table_type = table_type?;
-        module.push_internal_table(table_type)?;
+        module.declare_table(table_type)?;
     }
     Ok(())
 }
@@ -352,7 +352,7 @@ fn parse_linear_memory_section(
     module.reserve_linear_memories(total_count)?;
     for memory_type in reader {
         let memory_type = memory_type?;
-        module.push_internal_linear_memory(memory_type)?;
+        module.declare_linear_memory(memory_type)?;
     }
     Ok(())
 }
@@ -364,11 +364,13 @@ fn parse_globals_section(
 ) -> Result<(), ParseError> {
     validator.global_section(&reader)?;
     let total_count = reader.get_count() as usize;
-    module.reserve_globals(total_count)?;
-    for global_type in reader {
-        let global_type = global_type?;
-        module.push_internal_global(global_type.ty.into());
-        module.push_global_initializer(global_type.init_expr.try_into()?);
+    module.reserve_global_variables(total_count)?;
+    for global in reader {
+        let global = global?;
+        let global_type = global.ty.into();
+        let global_init = global.init_expr.try_into()?;
+        module.declare_global_variable(global_type);
+        module.define_global_variable(global_init);
     }
     Ok(())
 }
@@ -380,7 +382,7 @@ fn parse_export_section(
 ) -> Result<(), ParseError> {
     validator.export_section(&reader)?;
     for export in reader {
-        module.push_export(export?.into());
+        module.register_export(export?.into());
     }
     Ok(())
 }
@@ -406,7 +408,7 @@ fn parse_element_section(
     module.reserve_elements(total_count)?;
     for element in reader {
         let element = element?.try_into()?;
-        module.push_element(element)?;
+        module.define_element(element)?;
     }
     Ok(())
 }
@@ -418,7 +420,7 @@ fn parse_code_start_section(
     validator: &mut Validator,
 ) -> Result<(), ParseError> {
     validator.code_section_start(count, &range)?;
-    module.reserve_fn_bodies(count as usize)?;
+    module.reserve_fn_defs(count as usize)?;
     Ok(())
 }
 
@@ -436,7 +438,7 @@ fn parse_code_section(
         fn_validator.op(pos, &op)?;
     }
     let fn_body = FunctionBody::try_from(body)?;
-    module.push_fn_body(fn_body)?;
+    module.define_fn(fn_body)?;
     Ok(())
 }
 
@@ -461,7 +463,7 @@ fn parse_data_section(
     module.reserve_data_elements(total_count)?;
     for data in reader {
         let data = data?;
-        module.push_data(Data::from(data))?;
+        module.define_data(Data::from(data))?;
     }
     Ok(())
 }
