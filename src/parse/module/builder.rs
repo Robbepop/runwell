@@ -36,14 +36,14 @@ use wasmparser::{MemoryType, TableType};
 pub struct ModuleBuilder {
     /// The Wasm module that is being build.
     module: Module,
-    /// Count of expected function bodies.
-    expected_fn_bodies: Option<usize>,
     /// Count of expected data elements.
     expected_data_elems: Option<usize>,
     /// Count reserved function signatures.
-    expected_signatures: Option<usize>,
+    expected_types: Option<usize>,
     /// Count reserved function definitions.
     expected_fn_defs: Option<usize>,
+    /// Count of expected function bodies.
+    expected_fn_bodies: Option<usize>,
     /// Count reserved tables.
     expected_tables: Option<usize>,
     /// Count reserved elements.
@@ -130,7 +130,7 @@ impl<'a> ModuleBuilder {
             module,
             expected_fn_bodies: None,
             expected_data_elems: None,
-            expected_signatures: None,
+            expected_types: None,
             expected_fn_defs: None,
             expected_tables: None,
             expected_elements: None,
@@ -140,11 +140,11 @@ impl<'a> ModuleBuilder {
     }
 
     /// Reserves an amount of total expected function signatures to be registered.
-    pub fn reserve_fn_signatures(
+    pub fn reserve_types(
         &mut self,
         total_count: usize,
     ) -> Result<(), BuildError> {
-        if let Some(previous) = self.expected_signatures {
+        if let Some(previous) = self.expected_types {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::Type,
                 reserved: total_count,
@@ -152,16 +152,16 @@ impl<'a> ModuleBuilder {
             })
         }
         self.module.signatures.reserve(total_count);
-        self.expected_signatures = Some(total_count);
+        self.expected_types = Some(total_count);
         Ok(())
     }
 
     /// Pushes the signature to the Wasm module.
-    pub fn register_fn_signature(
+    pub fn register_type(
         &mut self,
         sig: FunctionSig,
     ) -> Result<(), BuildError> {
-        match self.expected_signatures {
+        match self.expected_types {
             Some(total) => {
                 let actual = self.module.signatures.len();
                 if total - actual == 0 {

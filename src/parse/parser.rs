@@ -235,12 +235,12 @@ fn parse_type_section(
 ) -> Result<(), ParseError> {
     validator.type_section(&reader)?;
     let count = reader.get_count() as usize;
-    module.reserve_fn_signatures(count)?;
+    module.reserve_types(count)?;
     for type_def in reader {
         match type_def? {
             wasmparser::TypeDef::Func(func_type) => {
                 let fn_sig = func_type.try_into()?;
-                module.register_fn_signature(fn_sig)?;
+                module.register_type(fn_sig)?;
             }
             wasmparser::TypeDef::Instance(_) => {
                 return Err(ParseError::UnsupportedInstanceDefinition)
