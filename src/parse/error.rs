@@ -66,6 +66,8 @@ pub enum ParseError {
     /// Unsupported element kind (Null).
     #[display(fmt = "encountered unsupported null element kind")]
     UnsupportedElementKind,
+    #[display(fmt = "encountered invalid or unsupported element item")]
+    InvalidElementItem,
     /// Encountered unsupported Wasm operator.
     #[display(fmt = "encountered unsupported Wasm operator: {}", self.0)]
     // We only store the string representation of the unsupported operator

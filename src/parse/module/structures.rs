@@ -22,7 +22,7 @@ use crate::parse::{
     ParseError,
     TableId,
 };
-use wasmparser::ExternalKind;
+use wasmparser::{ElementItems, ElementItemsReader, ExternalKind};
 
 /// An export definition of a Wasm module.
 #[derive(Debug)]
@@ -94,6 +94,126 @@ impl<'a> From<wasmparser::Export<'a>> for Export {
                     )
                 }
             },
+        }
+    }
+}
+
+/// An element of the element section of a Wasm module.
+pub struct Element<'a> {
+    /// The referred to table index.
+    pub table_id: TableId,
+    /// The offset within the table for the initialized elements.
+    pub offset: GlobalInitExpr,
+    /// The function signatures for the initialized table elements.
+    items: ElementItems<'a>,
+}
+
+pub struct ElementsIter<'a> {
+    /// The amount of remaining items that this iterator will yield.
+    remaining: usize,
+    /// The underlying iterator from the `wasmparser` crate.
+    items: ElementItemsReader<'a>,
+}
+
+impl<'a> From<wasmparser::ElementItemsReader<'a>> for ElementsIter<'a> {
+    fn from(items: wasmparser::ElementItemsReader<'a>) -> Self {
+        Self {
+            remaining: items.get_count() as usize,
+            items,
+        }
+    }
+}
+
+impl<'a> core::iter::Iterator for ElementsIter<'a> {
+    type Item = Result<FunctionId, ParseError>;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None
+        }
+        match self.items.read() {
+            Ok(element_item) => {
+                match element_item {
+                    wasmparser::ElementItem::Func(func_id) => {
+                        let func_id = FunctionId::from_u32(func_id);
+                        self.remaining -= 1;
+                        return Some(Ok(func_id))
+                    }
+                    wasmparser::ElementItem::Null(_) => {
+                        return Some(Err(ParseError::InvalidElementItem))
+                    }
+                }
+            }
+            Err(_error) => {
+                // TODO: Implement better error reporting here.
+                return Some(Err(ParseError::InvalidElementItem))
+            }
+        }
+    }
+}
+
+impl<'a> core::iter::ExactSizeIterator for ElementsIter<'a> {}
+impl<'a> core::iter::FusedIterator for ElementsIter<'a> {}
+
+impl<'a> core::fmt::Debug for Element<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Element")
+            .field("table_id", &self.table_id)
+            .field("offset", &self.offset)
+            .field(
+                "items",
+                &self
+                    .items()
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|_| core::fmt::Error)?,
+            )
+            .finish()
+    }
+}
+
+impl<'a> Element<'a> {
+    fn items(&self) -> ElementsIter<'a> {
+        let reader = self
+            .items
+            .get_items_reader()
+            .expect("encountered unexpected invalid items reader");
+        ElementsIter::from(reader)
+    }
+}
+
+impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
+    type Error = ParseError;
+
+    fn try_from(element: wasmparser::Element<'a>) -> Result<Self, Self::Error> {
+        use wasmparser::ElementKind;
+        match element.kind {
+            ElementKind::Passive => Err(ParseError::UnsupportedPassiveElement),
+            ElementKind::Declared => {
+                Err(ParseError::UnsupportedDeclaredElement)
+            }
+            ElementKind::Active {
+                table_index,
+                init_expr,
+            } => {
+                let table_id = TableId::from_u32(table_index);
+                let offset = GlobalInitExpr::try_from(init_expr)?;
+                let items = element.items;
+                // With this upfront check we can drop the same check in [`Element2::items`] and
+                // instead directly panic if this condition is violated there which simplifies
+                // the overall API.
+                let _ = items
+                    .get_items_reader()
+                    .map_err(|_| ParseError::InvalidElementItem)?;
+                Ok(Self {
+                    table_id,
+                    offset,
+                    items,
+                })
+            }
         }
     }
 }
