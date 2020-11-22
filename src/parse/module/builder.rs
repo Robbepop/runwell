@@ -14,14 +14,15 @@
 
 use crate::parse::{
     module::Data,
-    OldElement,
+    Element,
     Export,
     FunctionBody,
     FunctionId,
     FunctionSig,
     FunctionSigId,
-    GlobalVariableDecl,
     GlobalInitExpr,
+    GlobalVariableDecl,
+    GlobalVariableId,
     Module,
     ParseError,
 };
@@ -48,6 +49,8 @@ pub struct ModuleBuilder {
     expected_tables: Option<usize>,
     /// Count reserved elements.
     expected_elements: Option<usize>,
+    /// Count remaining expected element definitions.
+    remaining_elements: usize,
     /// Count reserved linear memories.
     expected_linear_memories: Option<usize>,
     /// Count reserved global variables.
@@ -84,6 +87,8 @@ pub enum WasmSectionEntry {
 
 #[derive(Debug, Display, PartialEq, Eq)]
 pub enum BuildError {
+    #[display(fmt = "unable to resolve table element offset value")]
+    CouldNotResolveTableElementOffset,
     #[display(fmt = "encountered unexpected duplicate section: {}", self.section)]
     DuplicateSection { section: WasmSection },
     #[display(fmt = "encountered missing section: {}", self.section)]
@@ -134,6 +139,7 @@ impl<'a> ModuleBuilder {
             expected_fn_defs: None,
             expected_tables: None,
             expected_elements: None,
+            remaining_elements: 0,
             expected_linear_memories: None,
             expected_globals: None,
         }
@@ -346,15 +352,16 @@ impl<'a> ModuleBuilder {
     pub fn reserve_tables(
         &mut self,
         total_count: usize,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         if let Some(previous) = self.expected_tables {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::Table,
                 reserved: total_count,
                 previous,
-            })
+            })?
         }
         self.module.tables.reserve(total_count);
+        self.module.elements.reserve_total_tables(total_count)?;
         self.expected_tables = Some(total_count);
         Ok(())
     }
@@ -407,28 +414,73 @@ impl<'a> ModuleBuilder {
                 previous,
             })
         }
-        self.module.elements.reserve(total_count);
         self.expected_elements = Some(total_count);
+        self.remaining_elements = total_count;
         Ok(())
     }
 
+    /// Resolves the value of the given global variable.
+    ///
+    /// This resolves chains of global variable references if any.
+    /// Returns `None` if the global variable currently has no defined value.
+    fn resolve_global_variable(
+        &self,
+        id: GlobalVariableId,
+    ) -> Option<GlobalInitExpr> {
+        match self.module.get_global_initializer(id)? {
+            value @ GlobalInitExpr::I32Const(_)
+            | value @ GlobalInitExpr::I64Const(_) => Some(value.clone()),
+            GlobalInitExpr::GetGlobal(id) => self.resolve_global_variable(*id),
+        }
+    }
+
     /// Pushes a new element of the element section to the Wasm module.
-    pub fn define_element(&mut self, element: OldElement) -> Result<(), BuildError> {
+    pub fn define_element(
+        &mut self,
+        element: Element,
+    ) -> Result<(), ParseError> {
+        let table_id = element.table_id;
         match self.expected_elements {
             Some(total) => {
-                let actual = self.module.elements.len();
+                let actual = total - self.remaining_elements;
+                self.remaining_elements -= 1;
                 if total - actual == 0 {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::Element,
                         reserved: total,
-                    })
+                    })?
                 }
-                self.module.elements.push(element);
+                let offset = match element.offset {
+                    GlobalInitExpr::I32Const(value) => Ok(value as usize),
+                    GlobalInitExpr::I64Const(value) => Ok(value as usize),
+                    GlobalInitExpr::GetGlobal(id) => {
+                        // Recursively fetch value of global variable if any.
+                        let resolved = self.resolve_global_variable(id).ok_or(
+                            BuildError::CouldNotResolveTableElementOffset,
+                        )?;
+                        match resolved {
+                            GlobalInitExpr::I32Const(value) => {
+                                Ok(value as usize)
+                            }
+                            GlobalInitExpr::I64Const(value) => {
+                                Ok(value as usize)
+                            }
+                            GlobalInitExpr::GetGlobal(_) => Err(
+                                BuildError::CouldNotResolveTableElementOffset,
+                            ),
+                        }
+                    }
+                }?;
+                for (n, item) in element.items().enumerate() {
+                    let func_ref = item.map_err(|_| ParseError::InvalidElementItem)?;
+                    let index = offset + n;
+                    self.module.elements.table_mut(table_id).set_func_ref(index, func_ref)?;
+                }
             }
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::Element,
-                })
+                })?
             }
         }
         Ok(())
@@ -479,7 +531,10 @@ impl<'a> ModuleBuilder {
     }
 
     /// Reserves space for `count` expected global variables.
-    pub fn reserve_global_variables(&mut self, total_count: usize) -> Result<(), BuildError> {
+    pub fn reserve_global_variables(
+        &mut self,
+        total_count: usize,
+    ) -> Result<(), BuildError> {
         match self.expected_globals {
             None => {
                 self.module.globals.reserve(total_count);
@@ -591,7 +646,7 @@ impl<'a> ModuleBuilder {
             }
         }
         if let Some(expected) = self.expected_elements {
-            let actual = self.module.elements.len();
+            let actual = expected - self.remaining_elements;
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::Element,

@@ -37,7 +37,7 @@ pub enum GlobalInitError {
     InvalidExpression,
 }
 
-#[derive(Debug, Display)]
+#[derive(Debug, Display, Clone)]
 pub enum GlobalInitExpr {
     #[display(fmt = "i32.const {}", _0)]
     I32Const(i32),

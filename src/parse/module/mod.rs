@@ -16,12 +16,14 @@ mod builder;
 mod data;
 mod iter;
 mod structures;
+mod table;
 
 pub use self::{
     builder::{BuildError, ModuleBuilder},
     data::Data,
     iter::{InternalFnIter, InternalGlobalIter},
-    structures::{OldElement, ElementItemsIter, Export, ExportKind},
+    structures::{Export, ExportKind},
+    table::{Tables, Element, ElementsIter, TableElements},
 };
 use crate::parse::{
     utils::ImportedOrInternal,
@@ -64,8 +66,8 @@ pub struct Module {
     /// If this is `Some` the Wasm module is an executable,
     /// otherwise it is a library.
     start_fn: Option<FunctionId>,
-    /// Elements from the Wasm module.
-    elements: Vec<OldElement>,
+    /// Elements from the Wasm module for each table.
+    elements: Tables,
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody>,
     /// Internal global definitions.
@@ -218,8 +220,9 @@ impl<'a> Module {
     }
 
     /// Returns an iterator over the elements of the Wasm module.
-    pub fn iter_elements(&self) -> core::slice::Iter<OldElement> {
-        self.elements.iter()
+    pub fn iter_elements(&self) -> core::slice::Iter<Element> {
+        // self.elements.iter()
+        todo!()
     }
 
     /// Returns the start function of the Wasm module if any.
@@ -239,7 +242,7 @@ impl<'a> Module {
             tables: ImportedOrInternal::new(),
             exports: Vec::new(),
             start_fn: None,
-            elements: Vec::new(),
+            elements: Tables::default(),
             fn_bodies: Vec::new(),
             globals_initializers: Vec::new(),
             table_initializers: Vec::new(),

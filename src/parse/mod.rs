@@ -43,8 +43,8 @@ pub use self::{
     },
     initializer::GlobalInitExpr,
     module::{
-        OldElement,
-        ElementItemsIter,
+        Element,
+        ElementsIter,
         Export,
         ExportKind,
         ImportExportKind,
