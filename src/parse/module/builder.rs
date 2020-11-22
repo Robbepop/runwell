@@ -556,12 +556,6 @@ impl<'a> ModuleBuilder {
         self.module.globals_initializers.push(initializer)
     }
 
-    /// Pushes a new internal table initializer expression
-    /// to the Wasm module.
-    pub fn define_table(&mut self, initializer: GlobalInitExpr) {
-        self.module.table_initializers.push(initializer)
-    }
-
     /// Reserves space for `count` expected data elements.
     pub fn reserve_data_elements(
         &mut self,

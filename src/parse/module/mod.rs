@@ -72,8 +72,6 @@ pub struct Module {
     fn_bodies: Vec<FunctionBody>,
     /// Internal global definitions.
     globals_initializers: Vec<GlobalInitExpr>,
-    /// Internal table initializers.
-    table_initializers: Vec<GlobalInitExpr>,
     /// Generic data of the Wasm module.
     ///
     /// # Note
@@ -245,7 +243,6 @@ impl<'a> Module {
             elements: Tables::default(),
             fn_bodies: Vec::new(),
             globals_initializers: Vec::new(),
-            table_initializers: Vec::new(),
             data: Vec::new(),
         }
     }
