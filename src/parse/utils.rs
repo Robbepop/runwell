@@ -25,19 +25,37 @@ pub struct ImportedOrInternal<T, I> {
     len_imported: usize,
     /// Imported entities followed by internal ones.
     entities: Vec<T>,
-    /// Namespace of imported entities.
-    namespaces: Vec<Namespace>,
+    /// Import names of imported entities.
+    namespaces: Vec<ImportName>,
     /// Marker to trick Rust into `I` being used.
     id_marker: PhantomData<fn() -> I>,
 }
 
-/// The namespace of an imported entity.
+/// A module and field name for an imported entity.
 #[derive(Debug)]
-pub struct Namespace {
-    /// The imported module name.
+pub struct ImportName {
     module_name: String,
-    /// The imported field name.
     field_name: String,
+}
+
+impl ImportName {
+    /// Creates a new import name from the given module and field names.
+    pub fn new(module_name: &str, field_name: &str) -> Self {
+        Self {
+            module_name: module_name.to_string(),
+            field_name: field_name.to_string(),
+        }
+    }
+
+    /// Returns the module name of the import.
+    pub fn module_name(&self) -> &str {
+        &self.module_name
+    }
+
+    /// Returns the field name of the import.
+    pub fn field_name(&self) -> &str {
+        &self.field_name
+    }
 }
 
 impl<T, I> Default for ImportedOrInternal<T, I> {
@@ -134,10 +152,8 @@ impl<'a, T, I> ImportedOrInternal<T, I> {
             return Err(ParseError::ImportedEntityAfterInternal)
         }
         self.entities.push(entity);
-        self.namespaces.push(Namespace {
-            module_name: module_name.to_string(),
-            field_name: field_name.to_string(),
-        });
+        self.namespaces
+            .push(ImportName::new(module_name, field_name));
         self.len_imported += 1;
         Ok(())
     }
