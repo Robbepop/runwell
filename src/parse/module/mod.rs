@@ -48,7 +48,7 @@ use wasmparser::{MemoryType, TableType};
 #[derive(Debug)]
 pub struct Module {
     /// Function signature table.
-    signatures: Vec<FunctionSig>,
+    types: Vec<FunctionSig>,
     /// Imported and internal function signatures.
     fn_sigs: ImportedOrInternal<FunctionSigId, FunctionId>,
     /// Imported and internal global variables.
@@ -120,7 +120,7 @@ impl<'a> Module {
 
     /// Returns the function signature identified by `id`.
     fn get_signature(&self, id: FunctionSigId) -> &FunctionSig {
-        &self.signatures[id.get()]
+        &self.types[id.get()]
     }
 
     /// Returns the function identified by `id`.
@@ -233,7 +233,7 @@ impl<'a> Module {
     /// Creates a new empty Wasm module.
     fn new() -> Self {
         Self {
-            signatures: Vec::new(),
+            types: Vec::new(),
             fn_sigs: ImportedOrInternal::new(),
             globals: ImportedOrInternal::new(),
             linear_memories: ImportedOrInternal::new(),
