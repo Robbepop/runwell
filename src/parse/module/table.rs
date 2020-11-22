@@ -121,7 +121,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
                 let table_id = TableId::from_u32(table_index);
                 let offset = GlobalInitExpr::try_from(init_expr)?;
                 let items = element.items;
-                // With this upfront check we can drop the same check in [`Element2::items`] and
+                // With this upfront check we can drop the same check in [`Element::items`] and
                 // instead directly panic if this condition is violated there which simplifies
                 // the overall API.
                 let _ = items
@@ -137,8 +137,12 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
     }
 }
 
+/// The elements of all declared tables.
 #[derive(Debug, Default)]
 pub struct Tables {
+    /// One entry per declared table.
+    ///
+    /// Stores all the elements of the table.
     tables: Vec<TableElements>,
 }
 
