@@ -12,45 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionId, Operator, ParseError};
+use crate::parse::{FunctionId, Operator, ParseError, Type};
 use core::convert::TryFrom;
 use derive_more::From;
-
-/// A `runwell` type.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Type {
-    /// The 32-bit `i32` integer type.
-    I32,
-    /// The 64-bit `i64` integer type.
-    I64,
-}
-
-impl core::fmt::Display for Type {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        match self {
-            Type::I32 => write!(f, "i32"),
-            Type::I64 => write!(f, "i64"),
-        }
-    }
-}
-
-impl TryFrom<wasmparser::Type> for Type {
-    type Error = ParseError;
-
-    fn try_from(ty: wasmparser::Type) -> Result<Self, Self::Error> {
-        let result = match ty {
-            wasmparser::Type::I32 => Type::I32,
-            wasmparser::Type::I64 => Type::I64,
-            unsupported => {
-                return Err(ParseError::UnsupportedType(format!(
-                    "{:?}",
-                    unsupported
-                )))
-            }
-        };
-        Ok(result)
-    }
-}
 
 /// A function signature.
 #[derive(Debug)]

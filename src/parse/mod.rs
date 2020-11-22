@@ -25,13 +25,15 @@ mod initializer;
 mod module;
 pub mod operator;
 mod parser;
+mod primitive;
 mod utils;
 
 use self::module::ModuleBuilder;
 #[doc(inline)]
 pub use self::{
     error::ParseError,
-    function::{Function, FunctionBody, FunctionSig, Type},
+    primitive::{Type, Value},
+    function::{Function, FunctionBody, FunctionSig},
     global_variable::{GlobalVariable, GlobalVariableDecl},
     id::{
         FunctionId,
