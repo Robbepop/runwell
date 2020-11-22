@@ -23,7 +23,7 @@ pub use self::{
     data::Data,
     iter::{InternalFnIter, InternalGlobalIter},
     structures::{Export, ExportKind},
-    table::{Tables, Element, ElementsIter, TableElements},
+    table::{Element, ElementsIter, TableElements, Tables},
 };
 use crate::parse::{
     utils::ImportedOrInternal,
@@ -32,10 +32,10 @@ use crate::parse::{
     FunctionId,
     FunctionSig,
     FunctionSigId,
+    GlobalInitExpr,
     GlobalVariable,
     GlobalVariableDecl,
     GlobalVariableId,
-    GlobalInitExpr,
     Identifier,
     LinearMemoryId,
     TableId,
