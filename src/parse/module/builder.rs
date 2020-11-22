@@ -157,7 +157,7 @@ impl<'a> ModuleBuilder {
                 previous,
             })
         }
-        self.module.signatures.reserve(total_count);
+        self.module.types.reserve(total_count);
         self.expected_types = Some(total_count);
         Ok(())
     }
@@ -169,14 +169,14 @@ impl<'a> ModuleBuilder {
     ) -> Result<(), BuildError> {
         match self.expected_types {
             Some(total) => {
-                let actual = self.module.signatures.len();
+                let actual = self.module.types.len();
                 if total - actual == 0 {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::Type,
                         reserved: total,
                     })
                 }
-                self.module.signatures.push(sig);
+                self.module.types.push(sig);
             }
             None => {
                 return Err(BuildError::MissingReservation {
