@@ -40,6 +40,7 @@ pub use self::{
         FunctionSigId,
         GlobalVariableId,
         Identifier,
+        Index32,
         LinearMemoryId,
         TableId,
     },

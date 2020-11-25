@@ -20,6 +20,14 @@ pub trait Identifier: Copy {
     fn get(self) -> usize;
 }
 
+/// An index in the 2^32 space.
+pub trait Index32: Copy {
+    /// Converts the raw `u32` index into `Self`:
+    fn from_u32(index: u32) -> Self;
+    /// Converts the index to the underlying `u32` representation.
+    fn into_u32(self) -> u32;
+}
+
 macro_rules! define_id_type {
     ( $( #[$attr:meta] )* pub struct $name:ident ; ) => {
         /// An index into the function signature table of a Wasm module.
@@ -45,6 +53,16 @@ macro_rules! define_id_type {
             /// Returns the underlying raw `u32` representation.
             pub fn into_u32(self) -> u32 {
                 self.index.get().wrapping_sub(1)
+            }
+        }
+
+        impl Index32 for $name {
+            fn from_u32(index: u32) -> Self {
+                <$name>::from_u32(index)
+            }
+
+            fn into_u32(self) -> u32 {
+                <$name>::into_u32(self)
             }
         }
 
