@@ -32,7 +32,6 @@ use self::module::ModuleBuilder;
 #[doc(inline)]
 pub use self::{
     error::ParseError,
-    primitive::{Type, Value},
     function::{Function, FunctionBody, FunctionSig},
     global_variable::{GlobalVariable, GlobalVariableDecl},
     id::{
@@ -61,9 +60,6 @@ pub use self::{
         MemoryImmediate,
         Operator,
     },
-    parser::{
-        Read,
-        ReadError,
-        parse,
-    }
+    parser::{parse, Read, ReadError},
+    primitive::{Type, Value},
 };
