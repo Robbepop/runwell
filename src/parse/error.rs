@@ -16,6 +16,7 @@ use crate::parse::{
     initializer::GlobalInitError,
     module::BuildError,
     ReadError,
+    module::ModuleError,
 };
 use derive_more::{Display, From};
 use thiserror::Error;
@@ -24,6 +25,8 @@ use thiserror::Error;
 #[derive(Debug, Display, From)]
 #[cfg_attr(feature = "std", derive(Error))]
 pub enum ParseError {
+    /// An error upon building up data structures for the module.
+    Module(ModuleError),
     /// An error upon parsing a global initializer expression.
     GlobalInit(GlobalInitError),
     /// An error while reading from the input.
