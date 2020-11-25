@@ -26,6 +26,7 @@ pub use self::{
         DefinedEntity,
         DefinedEntityMut,
         Entity,
+        EntityIter,
         EntityMut,
         ImportName,
         ImportedEntity,
@@ -33,7 +34,7 @@ pub use self::{
         ImportedOrDefined,
         ModuleError,
     },
-    iter::{InternalFnIter, InternalGlobalIter},
+    iter::InternalFnIter,
     structures::{Export, ExportKind},
     table::{Element, ElementsIter, TableElements, Tables},
 };
@@ -45,7 +46,6 @@ use crate::parse::{
     FunctionSig,
     FunctionSigId,
     GlobalInitExpr,
-    GlobalVariable,
     GlobalVariableDecl,
     GlobalVariableId,
     Identifier,
@@ -53,6 +53,10 @@ use crate::parse::{
     TableId,
 };
 use wasmparser::{MemoryType, TableType};
+
+/// An iterator yielding global variables.
+pub type GlobalVariableIter<'a> =
+    EntityIter<'a, GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>;
 
 /// A parsed and validated WebAssembly (Wasm) module.
 ///
@@ -64,7 +68,8 @@ pub struct Module {
     /// Imported and internal function signatures.
     fn_sigs: ImportedOrInternal<FunctionSigId, FunctionId>,
     /// Imported and internal global variables.
-    globals: ImportedOrInternal<GlobalVariableDecl, GlobalVariableId>,
+    globals:
+        ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>,
     /// Imported and internal linear memory sections.
     linear_memories: ImportedOrInternal<MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
@@ -122,7 +127,7 @@ impl<'a> Module {
     pub fn len_internal(&self, kind: ImportExportKind) -> usize {
         match kind {
             ImportExportKind::Function => self.fn_sigs.len_internal(),
-            ImportExportKind::Global => self.globals.len_internal(),
+            ImportExportKind::Global => self.globals.len_defined(),
             ImportExportKind::Table => self.tables.len_internal(),
             ImportExportKind::LinearMemory => {
                 self.linear_memories.len_internal()
@@ -156,9 +161,13 @@ impl<'a> Module {
     }
 
     /// Returns the global variable identified by `id`.
-    pub fn get_global(&self, id: GlobalVariableId) -> GlobalVariable {
-        let decl = self.globals[id];
-        GlobalVariable::new(id, decl)
+    pub fn get_global(
+        &self,
+        id: GlobalVariableId,
+    ) -> Entity<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr> {
+        self.globals
+            .get(id)
+            .expect("encountered unexpected invalid global variable ID")
     }
 
     /// Returns the global variable initializer expression identified by `id`.
@@ -220,8 +229,10 @@ impl<'a> Module {
 
     /// Returns an iterator over all internal global variables and their
     /// initializer expressions.
-    pub fn iter_internal_globals(&self) -> InternalGlobalIter {
-        InternalGlobalIter::new(self)
+    pub fn iter_internal_globals(&self) -> GlobalVariableIter {
+        self.globals.iter().expect(
+            "encountered unexpected error upon iterating global variables",
+        )
     }
 
     /// Returns an iterator over the exports of the Wasm module.
@@ -247,7 +258,7 @@ impl<'a> Module {
         Self {
             types: Vec::new(),
             fn_sigs: ImportedOrInternal::new(),
-            globals: ImportedOrInternal::new(),
+            globals: ImportedOrDefined::default(),
             linear_memories: ImportedOrInternal::new(),
             tables: ImportedOrInternal::new(),
             exports: Vec::new(),

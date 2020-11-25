@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::ImportName;
 use crate::parse::{
     module::Data,
     Element,
@@ -262,12 +263,8 @@ impl<'a> ModuleBuilder {
     ) -> Result<(), ParseError> {
         self.module
             .globals
-            .push_imported(module_name, field_name, global)
-    }
-
-    /// Pushes a new internal global variable to the Wasm module.
-    pub fn declare_global_variable(&mut self, global: GlobalVariableDecl) {
-        self.module.globals.push_internal(global)
+            .push_imported(ImportName::new(module_name, field_name), global)?;
+        Ok(())
     }
 
     /// Pushes a new imported linear memory to the Wasm module.
@@ -472,9 +469,13 @@ impl<'a> ModuleBuilder {
                     }
                 }?;
                 for (n, item) in element.items().enumerate() {
-                    let func_ref = item.map_err(|_| ParseError::InvalidElementItem)?;
+                    let func_ref =
+                        item.map_err(|_| ParseError::InvalidElementItem)?;
                     let index = offset + n;
-                    self.module.elements.table_mut(table_id).set_func_ref(index, func_ref)?;
+                    self.module
+                        .elements
+                        .table_mut(table_id)
+                        .set_func_ref(index, func_ref)?;
                 }
             }
             None => {
@@ -534,26 +535,29 @@ impl<'a> ModuleBuilder {
     pub fn reserve_global_variables(
         &mut self,
         total_count: usize,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         match self.expected_globals {
             None => {
-                self.module.globals.reserve(total_count);
-                self.module.globals_initializers.reserve(total_count);
+                self.module.globals.reserve_definitions(total_count)?;
                 self.expected_globals = Some(total_count);
             }
             Some(_) => {
                 return Err(BuildError::DuplicateSection {
                     section: WasmSection::Globals,
                 })
+                .map_err(Into::into)
             }
         }
         Ok(())
     }
 
-    /// Pushes a new internal global variable initializer expression
-    /// to the Wasm module.
-    pub fn define_global_variable(&mut self, initializer: GlobalInitExpr) {
-        self.module.globals_initializers.push(initializer)
+    /// Defines yet another global variable, returning its unique ID.
+    pub fn define_global_variable(
+        &mut self,
+        decl: GlobalVariableDecl,
+        init_value: GlobalInitExpr,
+    ) -> Result<GlobalVariableId, ParseError> {
+        self.module.globals.push_defined(decl, init_value)
     }
 
     /// Reserves space for `count` expected data elements.
@@ -660,7 +664,7 @@ impl<'a> ModuleBuilder {
             }
         }
         if let Some(expected) = self.expected_globals {
-            let actual = self.module.globals.len_internal();
+            let actual = self.module.globals.len_defined();
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::Global,

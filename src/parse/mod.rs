@@ -51,7 +51,6 @@ pub use self::{
         ExportKind,
         ImportExportKind,
         InternalFnIter,
-        InternalGlobalIter,
         Module,
     },
     operator::{

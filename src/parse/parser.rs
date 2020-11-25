@@ -369,8 +369,7 @@ fn parse_globals_section(
         let global = global?;
         let global_type = global.ty.into();
         let global_init = global.init_expr.try_into()?;
-        module.declare_global_variable(global_type);
-        module.define_global_variable(global_init);
+        module.define_global_variable(global_type, global_init)?;
     }
     Ok(())
 }
