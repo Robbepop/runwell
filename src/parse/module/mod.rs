@@ -14,6 +14,7 @@
 
 mod builder;
 mod data;
+mod definitions;
 mod iter;
 mod structures;
 mod table;
@@ -21,6 +22,17 @@ mod table;
 pub use self::{
     builder::{BuildError, ModuleBuilder},
     data::Data,
+    definitions::{
+        DefinedEntity,
+        DefinedEntityMut,
+        Entity,
+        EntityMut,
+        ImportName,
+        ImportedEntity,
+        ImportedEntityMut,
+        ImportedOrDefined,
+        ModuleError,
+    },
     iter::{InternalFnIter, InternalGlobalIter},
     structures::{Export, ExportKind},
     table::{Element, ElementsIter, TableElements, Tables},
