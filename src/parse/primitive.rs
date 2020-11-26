@@ -27,8 +27,8 @@ pub enum Type {
 impl core::fmt::Display for Type {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
-            Type::I32 => write!(f, "i32"),
-            Type::I64 => write!(f, "i64"),
+            Self::I32 => write!(f, "i32"),
+            Self::I64 => write!(f, "i64"),
         }
     }
 }
@@ -58,4 +58,13 @@ impl TryFrom<wasmparser::Type> for Type {
 pub enum Value {
     I32(i32),
     I64(i64),
+}
+
+impl core::fmt::Display for Value {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            Self::I32(value) => write!(f, "i32.const {}", value),
+            Self::I64(value) => write!(f, "i64.const {}", value),
+        }
+    }
 }
