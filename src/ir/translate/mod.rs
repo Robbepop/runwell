@@ -183,20 +183,20 @@ impl<'a> FunctionTranslator<'a> {
             srcs.push(self.binding_gen.gen());
         }
         // Initialize function parameter stack frame placeholders.
-        for ty in sig.inputs() {
-            let binding = self.push_op(LocalOp::single(ty.clone()), ty.clone());
-            locals.push(LocalBindingEntry::new(binding, ty.clone()));
+        for &ty in sig.inputs() {
+            let binding = self.push_op(LocalOp::single(ty), ty);
+            locals.push(LocalBindingEntry::new(binding, ty));
         }
         // Initialize function local variable bindings.
         for (n, ty) in body.locals() {
             core::iter::repeat(ty)
                 .take(*n)
-                .for_each(|ty| self.push_local_binding(ty.clone()));
+                .for_each(|ty| self.push_local_binding(*ty));
         }
         // Store function parameters into their respective stack frame.
         for (local, src) in locals.iter().zip(srcs.iter()) {
             self.push_unbinded_op(StoreOp::store_local(
-                local.ty.clone(),
+                local.ty,
                 local.binding,
                 *src,
             ));
@@ -225,7 +225,7 @@ impl<'a> FunctionTranslator<'a> {
     /// Does not push the binding to the emulation stack.
     /// This is mainly used to initialize locals and function parameters.
     pub fn push_local_binding(&mut self, ty: Type) {
-        let binding = self.push_op(LocalOp::single(ty.clone()), ty.clone());
+        let binding = self.push_op(LocalOp::single(ty), ty);
         self.locals.push(LocalBindingEntry::new(binding, ty));
     }
 

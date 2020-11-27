@@ -94,7 +94,7 @@ impl TranslateOperator for parse::operator::LocalGetOp {
         let entry = translator.get_local_binding(self.id).clone();
         // translator.stack_push(entry.binding, entry.ty);
         translator.push_op(
-            LoadOp::load_local(entry.ty.clone(), entry.binding),
+            LoadOp::load_local(entry.ty, entry.binding),
             entry.ty,
         );
     }
@@ -135,7 +135,7 @@ impl TranslateOperator for parse::operator::LocalSetOp {
 
 impl TranslateOperator for parse::operator::LocalTeeOp {
     fn translate_operator(&self, translator: &mut FunctionTranslator) {
-        let (popped_bind, popped_ty) = translator.stack_last().clone();
+        let (popped_bind, popped_ty) = *translator.stack_last();
         push_store_local(translator, self.id, popped_bind, popped_ty);
     }
 }
