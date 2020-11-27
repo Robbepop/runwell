@@ -40,13 +40,17 @@ pub enum ConstValue {
 
 impl From<i32> for ConstOp {
     fn from(val: i32) -> Self {
-        Self { val: ConstValue::I32(val) }
+        Self {
+            val: ConstValue::I32(val),
+        }
     }
 }
 
 impl From<i64> for ConstOp {
     fn from(val: i64) -> Self {
-        Self { val: ConstValue::I64(val) }
+        Self {
+            val: ConstValue::I64(val),
+        }
     }
 }
 

@@ -24,5 +24,5 @@ pub use self::{
     error::IrError,
     function::Function,
     operator::{CallParam, Operator, TerminalOp},
-    utils::{Binding, BlockId, BindingGen},
+    utils::{Binding, BindingGen, BlockId},
 };

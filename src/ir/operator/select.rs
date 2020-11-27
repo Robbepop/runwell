@@ -43,7 +43,17 @@ pub struct SelectOp {
 
 impl SelectOp {
     /// Creates a new select operation.
-    pub fn new(cond: Binding, ty: Type, true_val: Binding, false_val: Binding) -> Self {
-        Self { cond, ty, true_val, false_val }
+    pub fn new(
+        cond: Binding,
+        ty: Type,
+        true_val: Binding,
+        false_val: Binding,
+    ) -> Self {
+        Self {
+            cond,
+            ty,
+            true_val,
+            false_val,
+        }
     }
 }

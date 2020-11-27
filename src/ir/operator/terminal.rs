@@ -30,7 +30,8 @@ use derive_more::From;
 /// A basic block requires a terminal instruction at its last operation.
 #[derive(From, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TerminalOp {
-    #[from(ignore)] Unreachable,
+    #[from(ignore)]
+    Unreachable,
     Return(ReturnOp),
     Branch(BranchOp),
     Ite(IteOp),

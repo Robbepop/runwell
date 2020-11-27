@@ -35,7 +35,7 @@ pub use self::{
     convert::{SignExtendOp, TruncateOp, ZeroExtendOp},
     destination::DestinationId,
     int::{GenericBinaryIntOp, GenericUnaryIntOp, IntOp},
-    load_store::{LocalOp, LoadOp, StoreOp},
+    load_store::{LoadOp, LocalOp, StoreOp},
     memory::{MemoryGrowOp, MemorySizeOp},
     phi::{PhiOp, PhiOpOrigin},
     select::SelectOp,
