@@ -359,7 +359,7 @@ impl<'a> ModuleBuilder {
                 entry: WasmSectionEntry::Table,
                 reserved: total_count,
                 previous,
-            })?
+            }).map_err(Into::into)
         }
         self.module.tables.reserve_definitions(total_count)?;
         self.expected_tables = Some(total_count);
@@ -453,7 +453,7 @@ impl<'a> ModuleBuilder {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::Element,
                         reserved: total,
-                    })?
+                    }).map_err(Into::into)
                 }
                 let offset = match element.offset {
                     GlobalInitExpr::I32Const(value) => Ok(value as usize),
@@ -493,7 +493,7 @@ impl<'a> ModuleBuilder {
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::Element,
-                })?
+                }).map_err(Into::into)
             }
         }
         Ok(())

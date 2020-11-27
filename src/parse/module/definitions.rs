@@ -169,7 +169,7 @@ where
     ///
     /// Returns either an [`ImportedEntity`] or a [`DefinedEntity`].
     /// Returns `None` if the ID is out of bounds.
-    pub fn get<'a>(&'a self, id: Id) -> Option<Entity<'a, Id, Decl, Def>> {
+    pub fn get(&self, id: Id) -> Option<Entity<Id, Decl, Def>> {
         let id_size = id.into_u32() as usize;
         if id_size >= self.len() {
             return None
@@ -196,10 +196,10 @@ where
     /// Returns the imported entity associated with the given ID if any.
     ///
     /// Returns `None` if the ID refers to a defined entity.
-    pub fn get_imported<'a>(
-        &'a self,
+    pub fn get_imported(
+        &self,
         id: Id,
-    ) -> Option<ImportedEntity<'a, Id, Decl>> {
+    ) -> Option<ImportedEntity<Id, Decl>> {
         if let Entity::Imported(imported_entity) = self.get(id)? {
             return Some(imported_entity)
         }
@@ -209,10 +209,10 @@ where
     /// Returns the defined entity associated with the given ID if any.
     ///
     /// Returns `None` if the ID refers to an imported entity.
-    pub fn get_defined<'a>(
-        &'a self,
+    pub fn get_defined(
+        &self,
         id: Id,
-    ) -> Option<DefinedEntity<'a, Id, Decl, Def>> {
+    ) -> Option<DefinedEntity<Id, Decl, Def>> {
         if let Entity::Defined(defined_entity) = self.get(id)? {
             return Some(defined_entity)
         }
@@ -223,10 +223,10 @@ where
     ///
     /// Returns either an [`ImportedEntity`] or a [`DefinedEntity`].
     /// Returns `None` if the ID is out of bounds.
-    pub fn get_mut<'a>(
-        &'a mut self,
+    pub fn get_mut(
+        &mut self,
         id: Id,
-    ) -> Option<EntityMut<'a, Id, Decl, Def>> {
+    ) -> Option<EntityMut<Id, Decl, Def>> {
         let id_size = id.into_u32() as usize;
         if id_size >= self.len() {
             return None
@@ -253,10 +253,10 @@ where
     /// Returns a mutable reference to the imported entity associated with the given ID if any.
     ///
     /// Returns `None` if the ID refers to a defined entity.
-    pub fn get_imported_mut<'a>(
-        &'a mut self,
+    pub fn get_imported_mut(
+        &mut self,
         id: Id,
-    ) -> Option<ImportedEntityMut<'a, Id, Decl>> {
+    ) -> Option<ImportedEntityMut<Id, Decl>> {
         if let EntityMut::Imported(imported_entity) = self.get_mut(id)? {
             return Some(imported_entity)
         }
@@ -266,10 +266,10 @@ where
     /// Returns a mutable reference to the defined entity associated with the given ID if any.
     ///
     /// Returns `None` if the ID refers to an imported entity.
-    pub fn get_defined_mut<'a>(
-        &'a mut self,
+    pub fn get_defined_mut(
+        &mut self,
         id: Id,
-    ) -> Option<DefinedEntityMut<'a, Id, Decl, Def>> {
+    ) -> Option<DefinedEntityMut<Id, Decl, Def>> {
         if let EntityMut::Defined(defined_entity) = self.get_mut(id)? {
             return Some(defined_entity)
         }

@@ -82,16 +82,16 @@ impl<'a> Iterator for ElementItemsIter<'a> {
                     wasmparser::ElementItem::Func(func_id) => {
                         let func_id = FunctionId::from_u32(func_id);
                         self.remaining -= 1;
-                        return Some(Ok(func_id))
+                        Some(Ok(func_id))
                     }
                     wasmparser::ElementItem::Null(_) => {
-                        return Some(Err(ParseError::InvalidElementItem))
+                        Some(Err(ParseError::InvalidElementItem))
                     }
                 }
             }
             Err(_error) => {
                 // TODO: Implement better error reporting here.
-                return Some(Err(ParseError::InvalidElementItem))
+                Some(Err(ParseError::InvalidElementItem))
             }
         }
     }
