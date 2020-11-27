@@ -230,9 +230,8 @@ impl<'a> Module {
         InternalFnIter::new(self)
     }
 
-    /// Returns an iterator over all internal global variables and their
-    /// initializer expressions.
-    pub fn iter_internal_globals(&self) -> GlobalVariableIter {
+    /// Returns an iterator over all imported or defined global variables.
+    pub fn iter_globals(&self) -> GlobalVariableIter {
         self.globals.iter().expect(
             "encountered unexpected error upon iterating global variables",
         )
