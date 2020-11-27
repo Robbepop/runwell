@@ -16,6 +16,7 @@ mod basicblock;
 mod error;
 mod function;
 pub mod operator;
+mod translate;
 mod utils;
 
 #[doc(inline)]
@@ -24,5 +25,6 @@ pub use self::{
     error::IrError,
     function::Function,
     operator::{CallParam, Operator, TerminalOp},
+    translate::FunctionTranslator,
     utils::{Binding, BindingGen, BlockId},
 };

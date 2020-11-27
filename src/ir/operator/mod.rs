@@ -80,5 +80,53 @@ pub enum Operator {
     Terminal(TerminalOp),
 }
 
+/// A binded operator.
+///
+/// # Examples
+///
+/// ```no_compile
+/// %1 <- i32.const 5
+/// %2 <- i32.add %1 %1
+/// %3 <- call 42 params [%1, %2]
+/// ```
+pub struct BindedOperator {
+    /// The unique operator binding.
+    dst: Binding,
+    /// The underlying binded operator.
+    op: Operator,
+}
+
+impl BindedOperator {
+    /// Creates a new binded operator.
+    pub fn new(dst: Binding, op: Operator) -> Self {
+        Self { dst, op }
     }
+
+    /// Returns the value ID of the binded operator.
+    pub fn binding(&self) -> Binding {
+        self.dst
+    }
+
+    /// Returns a shared reference to the underlying operator.
+    pub fn operator(&self) -> &Operator {
+        &self.op
+    }
+
+    /// Returns an exclusive reference to the underlying operator.
+    pub fn operator_mut(&mut self) -> &mut Operator {
+        &mut self.op
+    }
+}
+
+/// An SSA instruction.
+#[derive(From)]
+pub enum Instruction {
+    /// Any binded operator.
+    Binded(BindedOperator),
+    /// A linear memory store operator.
+    Store(StoreOp),
+    /// A memory grow operator.
+    MemoryGrow(MemoryGrowOp),
+    /// Any terminal operator.
+    Terminal(TerminalOp),
 }
