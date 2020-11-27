@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{table::TableDecl, ImportName, TableElements};
+use super::{table::TableDecl, ImportName, TableItems};
 use crate::parse::{
     module::Data,
     Element,
@@ -384,7 +384,7 @@ impl<'a> ModuleBuilder {
                 let table_decl = TableDecl::try_from(table)?;
                 self.module
                     .tables
-                    .push_defined(table_decl, TableElements::default())?;
+                    .push_defined(table_decl, TableItems::default())?;
             }
             None => {
                 return Err(BuildError::MissingReservation {

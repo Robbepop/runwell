@@ -36,7 +36,7 @@ pub use self::{
     },
     iter::InternalFnIter,
     structures::{Export, ExportKind},
-    table::{Element, ElementItemsIter, TableDecl, TableElements},
+    table::{Element, ElementItemsIter, TableDecl, TableItems},
 };
 use crate::parse::{
     utils::ImportedOrInternal,
@@ -73,7 +73,7 @@ pub struct Module {
     /// Imported and internal linear memory sections.
     linear_memories: ImportedOrInternal<MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
-    tables: ImportedOrDefined<TableId, TableDecl, TableElements>,
+    tables: ImportedOrDefined<TableId, TableDecl, TableItems>,
     /// Export definitions.
     exports: Vec<Export>,
     /// Optional start function.
@@ -219,7 +219,7 @@ impl<'a> Module {
     pub fn get_table(
         &self,
         id: TableId,
-    ) -> Entity<TableId, TableDecl, TableElements> {
+    ) -> Entity<TableId, TableDecl, TableItems> {
         self.tables
             .get(id)
             .expect("encountered unexpected invalid table ID")

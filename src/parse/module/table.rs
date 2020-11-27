@@ -165,11 +165,11 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
 /// This is a mapping from an index to a function reference.
 /// Value types besides function references are not yet supported.
 #[derive(Debug, Default)]
-pub struct TableElements {
+pub struct TableItems {
     items: HashMap<usize, FunctionId>,
 }
 
-impl TableElements {
+impl TableItems {
     /// Pushes the given element items to the table elements.
     ///
     /// This might overwrite previous element items with the same indices.
@@ -192,7 +192,7 @@ impl TableElements {
     }
 
     /// Returns the function reference at the given index if any.
-    pub fn func_ref(&self, index: usize) -> Option<FunctionId> {
+    pub fn get(&self, index: usize) -> Option<FunctionId> {
         self.items.get(&index).copied()
     }
 }
