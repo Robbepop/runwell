@@ -74,6 +74,7 @@ pub struct Module {
     linear_memories: ImportedOrInternal<MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
     tables: ImportedOrInternal<TableType, TableId>,
+    tables2: ImportedOrDefined<TableId, TableDecl, TableElements>,
     /// Export definitions.
     exports: Vec<Export>,
     /// Optional start function.
@@ -261,6 +262,7 @@ impl<'a> Module {
             globals: ImportedOrDefined::default(),
             linear_memories: ImportedOrInternal::new(),
             tables: ImportedOrInternal::new(),
+            tables2: ImportedOrDefined::default(),
             exports: Vec::new(),
             start_fn: None,
             elements: Tables::default(),

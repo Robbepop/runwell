@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::ImportName;
+use std::convert::TryFrom;
+
+use super::{table::TableDecl, ImportName, TableElements};
 use crate::parse::{
     module::Data,
     Element,
@@ -342,7 +344,13 @@ impl<'a> ModuleBuilder {
     ) -> Result<(), ParseError> {
         self.module
             .tables
-            .push_imported(module_name, field_name, table)
+            .push_imported(module_name, field_name, table)?;
+        let table_decl = TableDecl::try_from(table)?;
+        self.module.tables2.push_imported(
+            ImportName::new(module_name, field_name),
+            table_decl,
+        )?;
+        Ok(())
     }
 
     /// Reserves an amount of total expected table definitions to be registered.
@@ -358,16 +366,14 @@ impl<'a> ModuleBuilder {
             })?
         }
         self.module.tables.reserve(total_count);
+        self.module.tables2.reserve_definitions(total_count)?;
         self.module.elements.reserve_total_tables(total_count)?;
         self.expected_tables = Some(total_count);
         Ok(())
     }
 
     /// Pushes a new internal linear memory to the Wasm module.
-    pub fn declare_table(
-        &mut self,
-        table: TableType,
-    ) -> Result<(), BuildError> {
+    pub fn declare_table(&mut self, table: TableType) -> Result<(), ParseError> {
         match self.expected_tables {
             Some(total) => {
                 let actual = self.module.tables.len_internal();
@@ -376,13 +382,19 @@ impl<'a> ModuleBuilder {
                         entry: WasmSectionEntry::Table,
                         reserved: total,
                     })
+                    .map_err(Into::into)
                 }
+                let table_decl = TableDecl::try_from(table)?;
+                self.module
+                    .tables2
+                    .push_defined(table_decl, TableElements::default())?;
                 self.module.tables.push_internal(table);
             }
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::Table,
                 })
+                .map_err(Into::into)
             }
         }
         Ok(())
@@ -468,6 +480,19 @@ impl<'a> ModuleBuilder {
                         }
                     }
                 }?;
+                let table = self
+                    .module
+                    .tables2
+                    .get_mut(table_id)
+                    .expect("encountered unexpected invalid table ID")
+                    .filter_map_defined()
+                    .expect("encountered unexpected non-defined table");
+                table.def.set_items(
+                    offset,
+                    element.items().map(|item| {
+                        item.expect("encountered invalid element item")
+                    }),
+                )?;
                 for (n, item) in element.items().enumerate() {
                     let func_ref =
                         item.map_err(|_| ParseError::InvalidElementItem)?;
