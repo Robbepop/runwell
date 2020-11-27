@@ -36,7 +36,7 @@ pub use self::{
     },
     iter::InternalFnIter,
     structures::{Export, ExportKind},
-    table::{Element, ElementItemsIter, TableElements, Tables, TableDecl},
+    table::{Element, ElementItemsIter, TableDecl, TableElements, Tables},
 };
 use crate::parse::{
     utils::ImportedOrInternal,
@@ -52,7 +52,7 @@ use crate::parse::{
     LinearMemoryId,
     TableId,
 };
-use wasmparser::{MemoryType, TableType};
+use wasmparser::MemoryType;
 
 /// An iterator yielding global variables.
 pub type GlobalVariableIter<'a> =
@@ -73,8 +73,7 @@ pub struct Module {
     /// Imported and internal linear memory sections.
     linear_memories: ImportedOrInternal<MemoryType, LinearMemoryId>,
     /// Imported and internal tables.
-    tables: ImportedOrInternal<TableType, TableId>,
-    tables2: ImportedOrDefined<TableId, TableDecl, TableElements>,
+    tables: ImportedOrDefined<TableId, TableDecl, TableElements>,
     /// Export definitions.
     exports: Vec<Export>,
     /// Optional start function.
@@ -84,8 +83,6 @@ pub struct Module {
     /// If this is `Some` the Wasm module is an executable,
     /// otherwise it is a library.
     start_fn: Option<FunctionId>,
-    /// Elements from the Wasm module for each table.
-    elements: Tables,
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody>,
     /// Internal global definitions.
@@ -129,7 +126,7 @@ impl<'a> Module {
         match kind {
             ImportExportKind::Function => self.fn_sigs.len_internal(),
             ImportExportKind::Global => self.globals.len_defined(),
-            ImportExportKind::Table => self.tables.len_internal(),
+            ImportExportKind::Table => self.tables.len_defined(),
             ImportExportKind::LinearMemory => {
                 self.linear_memories.len_internal()
             }
@@ -219,8 +216,13 @@ impl<'a> Module {
     /// # let module: runwell::parse::Module = unimplemented!();
     /// let table = module.get_table(Default::default());
     /// ```
-    pub fn get_table(&self, id: TableId) -> &TableType {
-        &self.tables[id]
+    pub fn get_table(
+        &self,
+        id: TableId,
+    ) -> Entity<TableId, TableDecl, TableElements> {
+        self.tables
+            .get(id)
+            .expect("encountered unexpected invalid table ID")
     }
 
     /// Returns an iterator over all internal functions and their bodies.
@@ -261,11 +263,9 @@ impl<'a> Module {
             fn_sigs: ImportedOrInternal::new(),
             globals: ImportedOrDefined::default(),
             linear_memories: ImportedOrInternal::new(),
-            tables: ImportedOrInternal::new(),
-            tables2: ImportedOrDefined::default(),
+            tables: ImportedOrDefined::default(),
             exports: Vec::new(),
             start_fn: None,
-            elements: Tables::default(),
             fn_bodies: Vec::new(),
             globals_initializers: Vec::new(),
             data: Vec::new(),

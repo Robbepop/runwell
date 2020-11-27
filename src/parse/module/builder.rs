@@ -342,11 +342,8 @@ impl<'a> ModuleBuilder {
         field_name: &'a str,
         table: TableType,
     ) -> Result<(), ParseError> {
-        self.module
-            .tables
-            .push_imported(module_name, field_name, table)?;
         let table_decl = TableDecl::try_from(table)?;
-        self.module.tables2.push_imported(
+        self.module.tables.push_imported(
             ImportName::new(module_name, field_name),
             table_decl,
         )?;
@@ -365,9 +362,7 @@ impl<'a> ModuleBuilder {
                 previous,
             })?
         }
-        self.module.tables.reserve(total_count);
-        self.module.tables2.reserve_definitions(total_count)?;
-        self.module.elements.reserve_total_tables(total_count)?;
+        self.module.tables.reserve_definitions(total_count)?;
         self.expected_tables = Some(total_count);
         Ok(())
     }
@@ -376,7 +371,7 @@ impl<'a> ModuleBuilder {
     pub fn declare_table(&mut self, table: TableType) -> Result<(), ParseError> {
         match self.expected_tables {
             Some(total) => {
-                let actual = self.module.tables.len_internal();
+                let actual = self.module.tables.len_defined();
                 if total - actual == 0 {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::Table,
@@ -386,9 +381,8 @@ impl<'a> ModuleBuilder {
                 }
                 let table_decl = TableDecl::try_from(table)?;
                 self.module
-                    .tables2
+                    .tables
                     .push_defined(table_decl, TableElements::default())?;
-                self.module.tables.push_internal(table);
             }
             None => {
                 return Err(BuildError::MissingReservation {
@@ -482,7 +476,7 @@ impl<'a> ModuleBuilder {
                 }?;
                 let table = self
                     .module
-                    .tables2
+                    .tables
                     .get_mut(table_id)
                     .expect("encountered unexpected invalid table ID")
                     .filter_map_defined()
@@ -493,15 +487,6 @@ impl<'a> ModuleBuilder {
                         item.expect("encountered invalid element item")
                     }),
                 )?;
-                for (n, item) in element.items().enumerate() {
-                    let func_ref =
-                        item.map_err(|_| ParseError::InvalidElementItem)?;
-                    let index = offset + n;
-                    self.module
-                        .elements
-                        .table_mut(table_id)
-                        .set_func_ref(index, func_ref)?;
-                }
             }
             None => {
                 return Err(BuildError::MissingReservation {
@@ -639,7 +624,7 @@ impl<'a> ModuleBuilder {
             }
         }
         if let Some(expected) = self.expected_tables {
-            let actual = self.module.tables.len_internal();
+            let actual = self.module.tables.len_defined();
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::Table,
