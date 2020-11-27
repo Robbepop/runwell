@@ -23,7 +23,7 @@ use crate::{
 /// They contain the ordered list of operations that they perform wholefully
 /// upon being executed and are guaranteed to have an ending terminal operation
 /// at the end.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct BasicBlock {
     /// The non-empty ordered list of operations
     /// with a terminal operation at the end.

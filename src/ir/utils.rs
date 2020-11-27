@@ -38,7 +38,7 @@ impl Identifier for Binding {
 }
 
 /// Generates new unique binding.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct BindingGen {
     /// The current value identifier.
     current: usize,
