@@ -36,7 +36,7 @@ pub use self::{
     },
     iter::InternalFnIter,
     structures::{Export, ExportKind},
-    table::{Element, ElementItemsIter, TableDecl, TableElements, Tables},
+    table::{Element, ElementItemsIter, TableDecl, TableElements},
 };
 use crate::parse::{
     utils::ImportedOrInternal,

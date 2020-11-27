@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{builder::WasmSectionEntry, BuildError};
 use crate::parse::{FunctionId, GlobalInitExpr, ParseError, TableId};
-use std::{convert::TryFrom, collections::{hash_map::Entry, HashMap}};
+use std::{collections::HashMap, convert::TryFrom};
 use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 
 /// A Wasm table declaration.
@@ -26,14 +25,16 @@ pub struct TableDecl {
 impl TryFrom<wasmparser::TableType> for TableDecl {
     type Error = ParseError;
 
-    fn try_from(table_type: wasmparser::TableType) -> Result<Self, Self::Error> {
+    fn try_from(
+        table_type: wasmparser::TableType,
+    ) -> Result<Self, Self::Error> {
         match table_type.element_type {
             wasmparser::Type::FuncRef => (),
-            _unsupported => {
-                return Err(ParseError::UnsupportedElementKind)
-            }
+            _unsupported => return Err(ParseError::UnsupportedElementKind),
         }
-        Ok(Self { limits: table_type.limits })
+        Ok(Self {
+            limits: table_type.limits,
+        })
     }
 }
 
@@ -169,6 +170,13 @@ pub struct TableElements {
 }
 
 impl TableElements {
+    /// Pushes the given element items to the table elements.
+    ///
+    /// This might overwrite previous element items with the same indices.
+    ///
+    /// # Errors
+    ///
+    /// If there are invalid table element items.
     pub fn set_items<I>(
         &mut self,
         offset: usize,
@@ -183,96 +191,8 @@ impl TableElements {
         Ok(())
     }
 
-    /// Pushes another element to the table at the given index.
-    ///
-    /// # Errors
-    ///
-    /// If the table already stores an element for the same index.
-    pub fn set_func_ref(
-        &mut self,
-        index: usize,
-        func_ref: FunctionId,
-    ) -> Result<(), ParseError> {
-        match self.items.entry(index) {
-            Entry::Occupied(_occupied) => {
-                return Err(ParseError::InvalidElementItem)
-            }
-            Entry::Vacant(vacant) => {
-                vacant.insert(func_ref);
-                Ok(())
-            }
-        }
-    }
-
     /// Returns the function reference at the given index if any.
     pub fn func_ref(&self, index: usize) -> Option<FunctionId> {
         self.items.get(&index).copied()
-    }
-}
-
-/// The elements of all declared tables.
-#[derive(Debug, Default)]
-pub struct Tables {
-    /// One entry per declared table.
-    ///
-    /// Stores all the elements of the table.
-    tables: Vec<TableElements>,
-}
-
-impl Tables {
-    /// Sets the number of table definitions to the given value.
-    ///
-    /// # Errors
-    ///
-    /// If a reservation for a total number of tables has already happened.
-    pub fn reserve_total_tables(
-        &mut self,
-        count_total: usize,
-    ) -> Result<(), ParseError> {
-        if !self.tables.is_empty() {
-            return Err(ParseError::Build(BuildError::DuplicateReservation {
-                entry: WasmSectionEntry::Table,
-                reserved: count_total,
-                previous: self.tables.len(),
-            }))
-        }
-        self.tables.resize_with(count_total, Default::default);
-        Ok(())
-    }
-
-    /// Ensures that the given table ID is valid.
-    ///
-    /// # Panics
-    ///
-    /// If the given table ID is out of bounds.
-    fn ensure_valid_table_id(&self, id: TableId) -> usize {
-        let id = id.into_u32() as usize;
-        let len_tables = self.tables.len();
-        assert!(
-            id < len_tables,
-            "encountered unexpected out of bounds table ID: {}, len tables: {}",
-            id,
-            len_tables
-        );
-        id
-    }
-
-    /// Returns the elements of the table given the table ID.
-    ///
-    /// # Panics
-    ///
-    /// If the table ID is invalid.
-    pub fn table(&self, id: TableId) -> &TableElements {
-        &self.tables[self.ensure_valid_table_id(id)]
-    }
-
-    /// Returns a mutable reference to the elements of the table given the table ID.
-    ///
-    /// # Panics
-    ///
-    /// If the table ID is invalid.
-    pub fn table_mut(&mut self, id: TableId) -> &mut TableElements {
-        let id = self.ensure_valid_table_id(id);
-        &mut self.tables[id]
     }
 }
