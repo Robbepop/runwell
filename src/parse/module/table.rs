@@ -14,10 +14,30 @@
 
 use super::{builder::WasmSectionEntry, BuildError};
 use crate::parse::{FunctionId, GlobalInitExpr, ParseError, TableId};
-use std::collections::{hash_map::Entry, HashMap};
-use wasmparser::{ElementItems, ElementItemsReader};
+use std::{convert::TryFrom, collections::{hash_map::Entry, HashMap}};
+use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 
-/// An element of the element section of a Wasm module.
+/// A Wasm table declaration.
+#[derive(Debug)]
+pub struct TableDecl {
+    limits: ResizableLimits,
+}
+
+impl TryFrom<wasmparser::TableType> for TableDecl {
+    type Error = ParseError;
+
+    fn try_from(table_type: wasmparser::TableType) -> Result<Self, Self::Error> {
+        match table_type.element_type {
+            wasmparser::Type::FuncRef => (),
+            _unsupported => {
+                return Err(ParseError::UnsupportedElementKind)
+            }
+        }
+        Ok(Self { limits: table_type.limits })
+    }
+}
+
+/// A parsed and validated element from the element section of a Wasm module.
 pub struct Element<'a> {
     /// The referred to table index.
     pub table_id: TableId,
@@ -27,15 +47,16 @@ pub struct Element<'a> {
     items: ElementItems<'a>,
 }
 
-pub struct ElementsIter<'a> {
+/// An iterator yielding all the element items within an element segment.
+pub struct ElementItemsIter<'a> {
     /// The amount of remaining items that this iterator will yield.
     remaining: usize,
     /// The underlying iterator from the `wasmparser` crate.
     items: ElementItemsReader<'a>,
 }
 
-impl<'a> From<wasmparser::ElementItemsReader<'a>> for ElementsIter<'a> {
-    fn from(items: wasmparser::ElementItemsReader<'a>) -> Self {
+impl<'a> From<ElementItemsReader<'a>> for ElementItemsIter<'a> {
+    fn from(items: ElementItemsReader<'a>) -> Self {
         Self {
             remaining: items.get_count() as usize,
             items,
@@ -43,7 +64,7 @@ impl<'a> From<wasmparser::ElementItemsReader<'a>> for ElementsIter<'a> {
     }
 }
 
-impl<'a> core::iter::Iterator for ElementsIter<'a> {
+impl<'a> Iterator for ElementItemsIter<'a> {
     type Item = Result<FunctionId, ParseError>;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -75,8 +96,8 @@ impl<'a> core::iter::Iterator for ElementsIter<'a> {
     }
 }
 
-impl<'a> core::iter::ExactSizeIterator for ElementsIter<'a> {}
-impl<'a> core::iter::FusedIterator for ElementsIter<'a> {}
+impl<'a> core::iter::ExactSizeIterator for ElementItemsIter<'a> {}
+impl<'a> core::iter::FusedIterator for ElementItemsIter<'a> {}
 
 impl<'a> core::fmt::Debug for Element<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -95,12 +116,13 @@ impl<'a> core::fmt::Debug for Element<'a> {
 }
 
 impl<'a> Element<'a> {
-    pub fn items(&self) -> ElementsIter<'a> {
+    /// Returns an iterator yielding all the elements of this element segment.
+    pub fn items(&self) -> ElementItemsIter<'a> {
         let reader = self
             .items
             .get_items_reader()
             .expect("encountered unexpected invalid items reader");
-        ElementsIter::from(reader)
+        ElementItemsIter::from(reader)
     }
 }
 
@@ -134,6 +156,57 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
                 })
             }
         }
+    }
+}
+
+/// The elements with which a Wasm table has been initialized.
+///
+/// This is a mapping from an index to a function reference.
+/// Value types besides function references are not yet supported.
+#[derive(Debug, Default)]
+pub struct TableElements {
+    items: HashMap<usize, FunctionId>,
+}
+
+impl TableElements {
+    pub fn set_items<I>(
+        &mut self,
+        offset: usize,
+        items: I,
+    ) -> Result<(), ParseError>
+    where
+        I: IntoIterator<Item = FunctionId>,
+    {
+        for (index, item) in items.into_iter().enumerate() {
+            self.items.insert(offset + index, item);
+        }
+        Ok(())
+    }
+
+    /// Pushes another element to the table at the given index.
+    ///
+    /// # Errors
+    ///
+    /// If the table already stores an element for the same index.
+    pub fn set_func_ref(
+        &mut self,
+        index: usize,
+        func_ref: FunctionId,
+    ) -> Result<(), ParseError> {
+        match self.items.entry(index) {
+            Entry::Occupied(_occupied) => {
+                return Err(ParseError::InvalidElementItem)
+            }
+            Entry::Vacant(vacant) => {
+                vacant.insert(func_ref);
+                Ok(())
+            }
+        }
+    }
+
+    /// Returns the function reference at the given index if any.
+    pub fn func_ref(&self, index: usize) -> Option<FunctionId> {
+        self.items.get(&index).copied()
     }
 }
 
@@ -201,42 +274,5 @@ impl Tables {
     pub fn table_mut(&mut self, id: TableId) -> &mut TableElements {
         let id = self.ensure_valid_table_id(id);
         &mut self.tables[id]
-    }
-}
-
-/// The elements with which a Wasm table has been initialized.
-///
-/// This is a mapping from an index to a function reference.
-/// Value types besides function references are not yet supported.
-#[derive(Debug, Default)]
-pub struct TableElements {
-    elements: HashMap<usize, FunctionId>,
-}
-
-impl TableElements {
-    /// Pushes another element to the table at the given index.
-    ///
-    /// # Errors
-    ///
-    /// If the table already stores an element for the same index.
-    pub fn set_func_ref(
-        &mut self,
-        index: usize,
-        func_ref: FunctionId,
-    ) -> Result<(), ParseError> {
-        match self.elements.entry(index) {
-            Entry::Occupied(_occupied) => {
-                return Err(ParseError::InvalidElementItem)
-            }
-            Entry::Vacant(vacant) => {
-                vacant.insert(func_ref);
-                Ok(())
-            }
-        }
-    }
-
-    /// Returns the function reference at the given index if any.
-    pub fn func_ref(&self, index: usize) -> Option<FunctionId> {
-        self.elements.get(&index).copied()
     }
 }

@@ -46,7 +46,7 @@ pub use self::{
     initializer::GlobalInitExpr,
     module::{
         Element,
-        ElementsIter,
+        ElementItemsIter,
         Export,
         ExportKind,
         ImportExportKind,
