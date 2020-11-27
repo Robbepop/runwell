@@ -243,12 +243,6 @@ impl<'a> Module {
         self.exports.iter()
     }
 
-    /// Returns an iterator over the elements of the Wasm module.
-    pub fn iter_elements(&self) -> core::slice::Iter<Element> {
-        // self.elements.iter()
-        todo!()
-    }
-
     /// Returns the start function of the Wasm module if any.
     pub fn start_fn(&self) -> Option<Function> {
         self.start_fn.map(|fn_id| self.get_fn(fn_id))
