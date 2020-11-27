@@ -433,11 +433,8 @@ impl<'a> ModuleBuilder {
         &self,
         id: GlobalVariableId,
     ) -> Option<GlobalInitExpr> {
-        match self.module.get_global_initializer(id)? {
-            value @ GlobalInitExpr::I32Const(_)
-            | value @ GlobalInitExpr::I64Const(_) => Some(value.clone()),
-            GlobalInitExpr::GetGlobal(id) => self.resolve_global_variable(*id),
-        }
+        let global = self.module.globals.get_defined(id)?;
+        Some(global.def.clone())
     }
 
     /// Pushes a new element of the element section to the Wasm module.

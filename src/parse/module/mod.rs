@@ -85,8 +85,6 @@ pub struct Module {
     start_fn: Option<FunctionId>,
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody>,
-    /// Internal global definitions.
-    globals_initializers: Vec<GlobalInitExpr>,
     /// Generic data of the Wasm module.
     ///
     /// # Note
@@ -166,18 +164,6 @@ impl<'a> Module {
         self.globals
             .get(id)
             .expect("encountered unexpected invalid global variable ID")
-    }
-
-    /// Returns the global variable initializer expression identified by `id`.
-    ///
-    /// Returns `None` if the identified global variable is imported.
-    pub fn get_global_initializer(
-        &self,
-        id: GlobalVariableId,
-    ) -> Option<&GlobalInitExpr> {
-        id.get()
-            .checked_sub(self.globals.len_imported())
-            .map(|internal_id| &self.globals_initializers[internal_id])
     }
 
     /// Returns the linear memory identified by `id`.
@@ -260,7 +246,6 @@ impl<'a> Module {
             exports: Vec::new(),
             start_fn: None,
             fn_bodies: Vec::new(),
-            globals_initializers: Vec::new(),
             data: Vec::new(),
         }
     }
