@@ -93,10 +93,8 @@ impl TranslateOperator for parse::operator::LocalGetOp {
     fn translate_operator(&self, translator: &mut FunctionTranslator) {
         let entry = translator.get_local_binding(self.id).clone();
         // translator.stack_push(entry.binding, entry.ty);
-        translator.push_op(
-            LoadOp::load_local(entry.ty, entry.binding),
-            entry.ty,
-        );
+        translator
+            .push_op(LoadOp::load_local(entry.ty, entry.binding), entry.ty);
     }
 }
 
