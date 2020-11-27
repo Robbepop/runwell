@@ -677,7 +677,9 @@ impl<'a, Id, Decl, Def> EntityMut<'a, Id, Decl, Def> {
     /// Returns `Some` entity if the entity is defined.
     ///
     /// Returns `None` in case the entity is imported.
-    pub fn filter_map_defined(self) -> Option<DefinedEntityMut<'a, Id, Decl, Def>> {
+    pub fn filter_map_defined(
+        self,
+    ) -> Option<DefinedEntityMut<'a, Id, Decl, Def>> {
         if let Self::Defined(defined_entity) = self {
             return Some(defined_entity)
         }

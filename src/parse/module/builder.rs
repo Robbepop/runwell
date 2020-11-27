@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::convert::TryFrom;
-
 use super::{table::TableDecl, ImportName, TableElements};
 use crate::parse::{
     module::Data,
@@ -30,6 +28,7 @@ use crate::parse::{
     ParseError,
 };
 use derive_more::Display;
+use std::convert::TryFrom;
 use wasmparser::{MemoryType, TableType};
 
 /// A builder interface for a Wasm module.
@@ -368,7 +367,10 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new internal linear memory to the Wasm module.
-    pub fn declare_table(&mut self, table: TableType) -> Result<(), ParseError> {
+    pub fn declare_table(
+        &mut self,
+        table: TableType,
+    ) -> Result<(), ParseError> {
         match self.expected_tables {
             Some(total) => {
                 let actual = self.module.tables.len_defined();

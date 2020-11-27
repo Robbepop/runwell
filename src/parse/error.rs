@@ -14,9 +14,8 @@
 
 use crate::parse::{
     initializer::GlobalInitError,
-    module::BuildError,
+    module::{BuildError, ModuleError},
     ReadError,
-    module::ModuleError,
 };
 use derive_more::{Display, From};
 use thiserror::Error;

@@ -40,7 +40,10 @@ impl<'a> From<wasmparser::DataKind<'a>> for DataKind {
     fn from(kind: wasmparser::DataKind<'a>) -> Self {
         match kind {
             wasmparser::DataKind::Passive => Self::Passive,
-            wasmparser::DataKind::Active { memory_index, init_expr } => {
+            wasmparser::DataKind::Active {
+                memory_index,
+                init_expr,
+            } => {
                 Self::Active {
                     memory_index,
                     init_expr: interpret_init_expr(init_expr),

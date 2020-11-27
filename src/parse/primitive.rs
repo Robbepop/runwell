@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::convert::TryFrom;
 use crate::parse::ParseError;
+use core::convert::TryFrom;
 
 /// An `i32` or `i64` type.
 ///
