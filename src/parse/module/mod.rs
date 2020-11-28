@@ -16,6 +16,7 @@ mod builder;
 mod data;
 mod definitions;
 mod iter;
+mod linear_memory;
 mod structures;
 mod table;
 
@@ -35,6 +36,12 @@ pub use self::{
         ModuleError,
     },
     iter::InternalFnIter,
+    linear_memory::{
+        Data,
+        LinearMemoryContents,
+        LinearMemoryDecl,
+        MemoryError,
+    },
     structures::{Export, ExportKind},
     table::{Element, ElementItemsIter, TableDecl, TableItems},
 };
@@ -72,6 +79,11 @@ pub struct Module {
         ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>,
     /// Imported and internal linear memory sections.
     linear_memories: ImportedOrInternal<MemoryType, LinearMemoryId>,
+    linear_memories2: ImportedOrDefined<
+        LinearMemoryId,
+        LinearMemoryDecl,
+        LinearMemoryContents,
+    >,
     /// Imported and internal tables.
     tables: ImportedOrDefined<TableId, TableDecl, TableItems>,
     /// Export definitions.
@@ -242,6 +254,7 @@ impl<'a> Module {
             fn_sigs: ImportedOrInternal::new(),
             globals: ImportedOrDefined::default(),
             linear_memories: ImportedOrInternal::new(),
+            linear_memories2: ImportedOrDefined::default(),
             tables: ImportedOrDefined::default(),
             exports: Vec::new(),
             start_fn: None,
