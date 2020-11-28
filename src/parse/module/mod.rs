@@ -15,6 +15,7 @@
 mod builder;
 mod data;
 mod definitions;
+mod eval_context;
 mod iter;
 mod linear_memory;
 mod structures;
@@ -35,6 +36,7 @@ pub use self::{
         ImportedOrDefined,
         ModuleError,
     },
+    eval_context::{EvaluationContext, EvaluationError},
     iter::InternalFnIter,
     linear_memory::{
         Data,
@@ -45,7 +47,6 @@ pub use self::{
     structures::{Export, ExportKind},
     table::{Element, ElementItemsIter, TableDecl, TableItems},
 };
-use super::ParseError;
 use crate::parse::{
     utils::ImportedOrInternal,
     Function,
@@ -60,86 +61,10 @@ use crate::parse::{
     LinearMemoryId,
     TableId,
 };
-use derive_more::Display;
-use std::collections::BTreeSet;
 
 /// An iterator yielding global variables.
 pub type GlobalVariableIter<'a> =
     EntityIter<'a, GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>;
-
-/// An evaluation context for initializer expressions.
-#[derive(Debug)]
-pub struct EvaluationContext<'a> {
-    globals: &'a ImportedOrDefined<
-        GlobalVariableId,
-        GlobalVariableDecl,
-        GlobalInitExpr,
-    >,
-    resolving: BTreeSet<GlobalVariableId>,
-}
-
-pub type Globals =
-    ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>;
-
-impl<'a> From<&'a Globals> for EvaluationContext<'a> {
-    fn from(globals: &'a Globals) -> Self {
-        Self {
-            globals,
-            resolving: Default::default(),
-        }
-    }
-}
-
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum EvaluationError {
-    InvalidConstInstruction,
-    UnknownGlobalVariableId,
-    ResolveCycle,
-}
-
-impl<'a> EvaluationContext<'a> {
-    /// Internal implementation to resolve a global initializer expression using the context.
-    fn eval_const_i32_impl(
-        &mut self,
-        expr: &GlobalInitExpr,
-    ) -> Result<i32, ParseError> {
-        match expr {
-            GlobalInitExpr::I32Const(value) => Ok(*value),
-            GlobalInitExpr::I64Const(_value) => {
-                Err(EvaluationError::InvalidConstInstruction)
-                    .map_err(Into::into)
-            }
-            GlobalInitExpr::GetGlobal(id) => {
-                if self.resolving.insert(*id) {
-                    return Err(EvaluationError::ResolveCycle)
-                        .map_err(Into::into)
-                }
-                let resolved_expr = self
-                    .globals
-                    .get_defined(*id)
-                    .ok_or_else(|| {
-                        ParseError::Evaluation(
-                            EvaluationError::UnknownGlobalVariableId,
-                        )
-                    })?
-                    .def;
-                let result = self.eval_const_i32_impl(resolved_expr)?;
-                self.resolving.remove(id);
-                Ok(result)
-            }
-        }
-    }
-
-    /// Evaluates the given initializer expression as constant `i32`.
-    pub fn eval_const_i32(
-        &mut self,
-        expr: &GlobalInitExpr,
-    ) -> Result<i32, ParseError> {
-        self.resolving.clear();
-        let result = self.eval_const_i32_impl(expr)?;
-        Ok(result)
-    }
-}
 
 /// A parsed and validated WebAssembly (Wasm) module.
 ///
