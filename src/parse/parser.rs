@@ -14,7 +14,7 @@
 
 use super::FunctionBody;
 use crate::parse::{
-    module::Data,
+    module::OldData,
     FunctionId,
     FunctionSigId,
     Module,
@@ -462,7 +462,7 @@ fn parse_data_section(
     module.reserve_data_elements(total_count)?;
     for data in reader {
         let data = data?;
-        module.define_data(Data::from(data))?;
+        module.define_data(OldData::from(data))?;
     }
     Ok(())
 }

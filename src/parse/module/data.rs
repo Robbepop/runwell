@@ -13,30 +13,30 @@
 // limitations under the License.
 
 #[derive(Debug, Clone)]
-pub struct Data {
-    pub kind: DataKind,
+pub struct OldData {
+    pub kind: OldDataKind,
     pub data: Vec<u8>,
 }
 
 #[derive(Debug, Clone)]
-pub enum DataKind {
+pub enum OldDataKind {
     Passive,
     Active {
         memory_index: u32,
-        init_expr: ConstValue,
+        init_expr: OldConstValue,
     },
 }
 
-impl<'a> From<wasmparser::Data<'a>> for Data {
+impl<'a> From<wasmparser::Data<'a>> for OldData {
     fn from(data: wasmparser::Data<'a>) -> Self {
         Self {
-            kind: DataKind::from(data.kind),
+            kind: OldDataKind::from(data.kind),
             data: data.data.to_vec(),
         }
     }
 }
 
-impl<'a> From<wasmparser::DataKind<'a>> for DataKind {
+impl<'a> From<wasmparser::DataKind<'a>> for OldDataKind {
     fn from(kind: wasmparser::DataKind<'a>) -> Self {
         match kind {
             wasmparser::DataKind::Passive => Self::Passive,
@@ -54,11 +54,11 @@ impl<'a> From<wasmparser::DataKind<'a>> for DataKind {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum ConstValue {
+pub enum OldConstValue {
     I32(i32),
     I64(i64),
 }
 
-fn interpret_init_expr(_init_expr: wasmparser::InitExpr<'_>) -> ConstValue {
-    ConstValue::I32(0)
+fn interpret_init_expr(_init_expr: wasmparser::InitExpr<'_>) -> OldConstValue {
+    OldConstValue::I32(0)
 }

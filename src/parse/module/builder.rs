@@ -14,7 +14,7 @@
 
 use super::{table::TableDecl, ImportName, TableItems};
 use crate::parse::{
-    module::Data,
+    module::OldData,
     Element,
     Export,
     FunctionBody,
@@ -592,7 +592,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new data definition to the Wasm module.
-    pub fn define_data(&mut self, data: Data) -> Result<(), BuildError> {
+    pub fn define_data(&mut self, data: OldData) -> Result<(), BuildError> {
         match self.expected_data_elems {
             Some(total) => {
                 let actual = self.module.data.len();

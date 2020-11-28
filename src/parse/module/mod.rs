@@ -21,7 +21,7 @@ mod table;
 
 pub use self::{
     builder::{BuildError, ModuleBuilder},
-    data::Data,
+    data::OldData,
     definitions::{
         DefinedEntity,
         DefinedEntityMut,
@@ -90,7 +90,7 @@ pub struct Module {
     /// # Note
     ///
     /// Used to initialize the linear memory section.
-    data: Vec<Data>,
+    data: Vec<OldData>,
 }
 
 /// The kind of an entity that can be imported or defined internally.
