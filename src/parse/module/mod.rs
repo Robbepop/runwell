@@ -45,6 +45,7 @@ pub use self::{
     structures::{Export, ExportKind},
     table::{Element, ElementItemsIter, TableDecl, TableItems},
 };
+use super::ParseError;
 use crate::parse::{
     utils::ImportedOrInternal,
     Function,
@@ -59,11 +60,86 @@ use crate::parse::{
     LinearMemoryId,
     TableId,
 };
-use wasmparser::MemoryType;
+use derive_more::Display;
+use std::collections::BTreeSet;
 
 /// An iterator yielding global variables.
 pub type GlobalVariableIter<'a> =
     EntityIter<'a, GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>;
+
+/// An evaluation context for initializer expressions.
+#[derive(Debug)]
+pub struct EvaluationContext<'a> {
+    globals: &'a ImportedOrDefined<
+        GlobalVariableId,
+        GlobalVariableDecl,
+        GlobalInitExpr,
+    >,
+    resolving: BTreeSet<GlobalVariableId>,
+}
+
+pub type Globals =
+    ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>;
+
+impl<'a> From<&'a Globals> for EvaluationContext<'a> {
+    fn from(globals: &'a Globals) -> Self {
+        Self {
+            globals,
+            resolving: Default::default(),
+        }
+    }
+}
+
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum EvaluationError {
+    InvalidConstInstruction,
+    UnknownGlobalVariableId,
+    ResolveCycle,
+}
+
+impl<'a> EvaluationContext<'a> {
+    /// Internal implementation to resolve a global initializer expression using the context.
+    fn eval_const_i32_impl(
+        &mut self,
+        expr: &GlobalInitExpr,
+    ) -> Result<i32, ParseError> {
+        match expr {
+            GlobalInitExpr::I32Const(value) => Ok(*value),
+            GlobalInitExpr::I64Const(_value) => {
+                Err(EvaluationError::InvalidConstInstruction)
+                    .map_err(Into::into)
+            }
+            GlobalInitExpr::GetGlobal(id) => {
+                if self.resolving.insert(*id) {
+                    return Err(EvaluationError::ResolveCycle)
+                        .map_err(Into::into)
+                }
+                let resolved_expr = self
+                    .globals
+                    .get_defined(*id)
+                    .ok_or_else(|| {
+                        ParseError::Evaluation(
+                            EvaluationError::UnknownGlobalVariableId,
+                        )
+                    })?
+                    .def;
+                let result = self.eval_const_i32_impl(resolved_expr)?;
+                self.resolving.remove(id);
+                Ok(result)
+            }
+        }
+    }
+
+    /// Evaluates the given initializer expression as constant `i32`.
+    pub fn eval_const_i32(
+        &mut self,
+        expr: &GlobalInitExpr,
+    ) -> Result<i32, ParseError> {
+        self.resolving.clear();
+        let result = self.eval_const_i32_impl(expr)?;
+        Ok(result)
+    }
+}
 
 /// A parsed and validated WebAssembly (Wasm) module.
 ///
@@ -78,12 +154,7 @@ pub struct Module {
     globals:
         ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>,
     /// Imported and internal linear memory sections.
-    linear_memories: ImportedOrInternal<MemoryType, LinearMemoryId>,
-    linear_memories2: ImportedOrDefined<
-        LinearMemoryId,
-        LinearMemoryDecl,
-        LinearMemoryContents,
-    >,
+    linear_memories: ImportedOrDefined<LinearMemoryId, LinearMemoryDecl, ()>,
     /// Imported and internal tables.
     tables: ImportedOrDefined<TableId, TableDecl, TableItems>,
     /// Export definitions.
@@ -97,12 +168,6 @@ pub struct Module {
     start_fn: Option<FunctionId>,
     /// Internal function bodies.
     fn_bodies: Vec<FunctionBody>,
-    /// Generic data of the Wasm module.
-    ///
-    /// # Note
-    ///
-    /// Used to initialize the linear memory section.
-    data: Vec<OldData>,
 }
 
 /// The kind of an entity that can be imported or defined internally.
@@ -138,7 +203,7 @@ impl<'a> Module {
             ImportExportKind::Global => self.globals.len_defined(),
             ImportExportKind::Table => self.tables.len_defined(),
             ImportExportKind::LinearMemory => {
-                self.linear_memories.len_internal()
+                self.linear_memories.len_defined()
             }
         }
     }
@@ -194,8 +259,11 @@ impl<'a> Module {
     /// # let module: runwell::parse::Module = unimplemented!();
     /// let mem = module.get_linear_memory(Default::default());
     /// ```
-    pub fn get_linear_memory(&self, id: LinearMemoryId) -> &MemoryType {
-        &self.linear_memories[id]
+    pub fn get_linear_memory(&self, id: LinearMemoryId) -> &LinearMemoryDecl {
+        self.linear_memories
+            .get(id)
+            .expect("encountered unexpected invalid linear memory ID")
+            .decl()
     }
 
     /// Returns the table identified by `id`.
@@ -253,13 +321,11 @@ impl<'a> Module {
             types: Vec::new(),
             fn_sigs: ImportedOrInternal::new(),
             globals: ImportedOrDefined::default(),
-            linear_memories: ImportedOrInternal::new(),
-            linear_memories2: ImportedOrDefined::default(),
+            linear_memories: ImportedOrDefined::default(),
             tables: ImportedOrDefined::default(),
             exports: Vec::new(),
             start_fn: None,
             fn_bodies: Vec::new(),
-            data: Vec::new(),
         }
     }
 

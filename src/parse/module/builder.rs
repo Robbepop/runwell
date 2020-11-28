@@ -12,9 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{table::TableDecl, ImportName, TableItems};
+use super::{
+    linear_memory::{Data, LinearMemoryDecl},
+    table::TableDecl,
+    EvaluationContext,
+    ImportName,
+    TableItems,
+};
 use crate::parse::{
-    module::OldData,
     Element,
     Export,
     FunctionBody,
@@ -51,8 +56,10 @@ pub struct ModuleBuilder {
     expected_tables: Option<usize>,
     /// Count reserved elements.
     expected_elements: Option<usize>,
-    /// Count remaining expected element definitions.
+    /// Count remaining expected element segments.
     remaining_elements: usize,
+    /// Count remaining expected data segments.
+    remaining_data: usize,
     /// Count reserved linear memories.
     expected_linear_memories: Option<usize>,
     /// Count reserved global variables.
@@ -142,6 +149,7 @@ impl<'a> ModuleBuilder {
             expected_tables: None,
             expected_elements: None,
             remaining_elements: 0,
+            remaining_data: 0,
             expected_linear_memories: None,
             expected_globals: None,
         }
@@ -280,26 +288,30 @@ impl<'a> ModuleBuilder {
         field_name: &'a str,
         memory: MemoryType,
     ) -> Result<(), ParseError> {
+        let memory_decl = LinearMemoryDecl::try_from(memory)?;
         self.module.linear_memories.push_imported(
-            module_name,
-            field_name,
-            memory,
-        )
+            ImportName::new(module_name, field_name),
+            memory_decl,
+        )?;
+        Ok(())
     }
 
     /// Reserves an amount of total expected linear memory definitions to be registered.
     pub fn reserve_linear_memories(
         &mut self,
         total_count: usize,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         if let Some(previous) = self.expected_linear_memories {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::LinearMemory,
                 reserved: total_count,
                 previous,
             })
+            .map_err(Into::into)
         }
-        self.module.linear_memories.reserve(total_count);
+        self.module
+            .linear_memories
+            .reserve_definitions(total_count)?;
         self.expected_linear_memories = Some(total_count);
         Ok(())
     }
@@ -308,22 +320,27 @@ impl<'a> ModuleBuilder {
     pub fn declare_linear_memory(
         &mut self,
         memory: MemoryType,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         match self.expected_linear_memories {
             Some(total) => {
-                let actual = self.module.linear_memories.len_internal();
+                let actual = self.module.linear_memories.len_defined();
                 if total - actual == 0 {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::LinearMemory,
                         reserved: total,
                     })
+                    .map_err(Into::into)
                 }
-                self.module.linear_memories.push_internal(memory);
+                let memory_decl = LinearMemoryDecl::try_from(memory)?;
+                self.module
+                    .linear_memories
+                    .push_defined(memory_decl, Default::default())?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::LinearMemory,
                 })
+                .map_err(Into::into)
             }
         }
         Ok(())
@@ -454,27 +471,8 @@ impl<'a> ModuleBuilder {
                     })
                     .map_err(Into::into)
                 }
-                let offset = match element.offset {
-                    GlobalInitExpr::I32Const(value) => Ok(value as usize),
-                    GlobalInitExpr::I64Const(value) => Ok(value as usize),
-                    GlobalInitExpr::GetGlobal(id) => {
-                        // Recursively fetch value of global variable if any.
-                        let resolved = self.resolve_global_variable(id).ok_or(
-                            BuildError::CouldNotResolveTableElementOffset,
-                        )?;
-                        match resolved {
-                            GlobalInitExpr::I32Const(value) => {
-                                Ok(value as usize)
-                            }
-                            GlobalInitExpr::I64Const(value) => {
-                                Ok(value as usize)
-                            }
-                            GlobalInitExpr::GetGlobal(_) => Err(
-                                BuildError::CouldNotResolveTableElementOffset,
-                            ),
-                        }
-                    }
-                }?;
+                let mut context = EvaluationContext::from(&self.module.globals);
+                let offset = context.eval_const_i32(&element.offset)? as usize;
                 let table = self
                     .module
                     .tables
@@ -576,11 +574,12 @@ impl<'a> ModuleBuilder {
     pub fn reserve_data_elements(
         &mut self,
         total_count: usize,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         match self.expected_data_elems {
             None => {
-                self.module.data.reserve(total_count);
+                self.module.linear_memories.reserve_definitions(total_count)?;
                 self.expected_data_elems = Some(total_count);
+                self.remaining_data = total_count;
             }
             Some(_) => {
                 // The `DataCount` section has been introduced with the
@@ -592,22 +591,36 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new data definition to the Wasm module.
-    pub fn define_data(&mut self, data: OldData) -> Result<(), BuildError> {
+    pub fn define_data(&mut self, data: Data) -> Result<(), ParseError> {
         match self.expected_data_elems {
             Some(total) => {
-                let actual = self.module.data.len();
+                let actual = total - self.remaining_data;
+                self.remaining_data -= 1;
                 if total - actual == 0 {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::Data,
                         reserved: total,
                     })
+                    .map_err(Into::into)
                 }
-                self.module.data.push(data);
+                let id = data.id();
+                let mut context = EvaluationContext::from(&self.module.globals);
+                let offset = context.eval_const_i32(&data.offset())? as u32;
+                let init = data.init();
+                self
+                    .module
+                    .linear_memories
+                    .get_mut(id)
+                    .expect("encountered unexpected invalid linear memory ID")
+                    .decl()
+                    .contents()
+                    .init_region(offset, init)?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::Data,
                 })
+                .map_err(Into::into)
             }
         }
         Ok(())
@@ -616,7 +629,7 @@ impl<'a> ModuleBuilder {
     /// Finalizes building of the Wasm module.
     pub fn finalize(self) -> Result<Module, BuildError> {
         if let Some(expected) = self.expected_data_elems {
-            let actual = self.module.data.len();
+            let actual = expected - self.remaining_data;
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::Data,
@@ -666,7 +679,7 @@ impl<'a> ModuleBuilder {
             }
         }
         if let Some(expected) = self.expected_linear_memories {
-            let actual = self.module.linear_memories.len_internal();
+            let actual = self.module.linear_memories.len_defined();
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::LinearMemory,

@@ -34,6 +34,23 @@ pub struct Data<'a> {
     init: &'a [u8],
 }
 
+impl<'a> Data<'a> {
+    /// Returns the linear memory ID of the data segment.
+    pub fn id(&self) -> LinearMemoryId {
+        self.id
+    }
+
+    /// Returns the expression denoting the offset for the data segment.
+    pub fn offset(&self) -> &GlobalInitExpr {
+        &self.offset
+    }
+
+    /// Returns the bytes to initialize the linear memory.
+    pub fn init(&self) -> &'a [u8] {
+        &self.init
+    }
+}
+
 impl<'a> TryFrom<wasmparser::Data<'a>> for Data<'a> {
     type Error = ParseError;
 
@@ -63,6 +80,7 @@ impl<'a> TryFrom<wasmparser::Data<'a>> for Data<'a> {
 pub struct LinearMemoryDecl {
     limits: ResizableLimits,
     shared: bool,
+    contents: LinearMemoryContents,
 }
 
 impl LinearMemoryDecl {
@@ -75,6 +93,11 @@ impl LinearMemoryDecl {
     pub fn maximum_size(&self) -> Option<u32> {
         self.limits.maximum
     }
+
+    /// Returns a mutable reference to the linear memory contents.
+    pub fn contents(&mut self) -> &mut LinearMemoryContents {
+        &mut self.contents
+    }
 }
 
 impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
@@ -85,7 +108,7 @@ impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
     ) -> Result<Self, Self::Error> {
         match memory_type {
             wasmparser::MemoryType::M32 { limits, shared } => {
-                Ok(Self { limits, shared })
+                Ok(Self { limits, shared, contents: LinearMemoryContents::default() })
             }
             wasmparser::MemoryType::M64 { .. } => {
                 Err(MemoryError::Unsupported64BitLinearMemory).map_err(Into::into)
