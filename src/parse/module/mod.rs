@@ -13,7 +13,6 @@
 // limitations under the License.
 
 mod builder;
-mod data;
 mod definitions;
 mod eval_context;
 mod iter;
@@ -23,7 +22,6 @@ mod table;
 
 pub use self::{
     builder::{BuildError, ModuleBuilder},
-    data::OldData,
     definitions::{
         DefinedEntity,
         DefinedEntityMut,
