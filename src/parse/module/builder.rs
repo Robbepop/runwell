@@ -18,10 +18,11 @@ use super::{
     EvaluationContext,
     ImportName,
     TableItems,
+    ExportItem,
+    Export,
 };
 use crate::parse::{
     Element,
-    Export,
     FunctionBody,
     FunctionId,
     FunctionSig,
@@ -414,9 +415,15 @@ impl<'a> ModuleBuilder {
         Ok(())
     }
 
-    /// Pushes a new export to the Wasm module.
-    pub fn register_export(&mut self, export: Export) {
-        self.module.exports.push(export)
+    /// Declares a new exported item.
+    pub fn declare_export(&mut self, export: ExportItem) {
+        let field = export.field();
+        match export.item() {
+            Export::Function(id) => self.module.exports.export_function(field, id),
+            Export::Table(id) => self.module.exports.export_table(field, id),
+            Export::Memory(id) => self.module.exports.export_memory(field, id),
+            Export::Global(id) => self.module.exports.export_global(field, id),
+        }
     }
 
     /// Sets the start function to the given function ID.

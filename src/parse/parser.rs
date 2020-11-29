@@ -20,6 +20,7 @@ use crate::parse::{
     Module,
     ModuleBuilder,
     ParseError,
+    module::ExportItem,
 };
 use core::convert::TryInto as _;
 use derive_more::Display;
@@ -381,7 +382,9 @@ fn parse_export_section(
 ) -> Result<(), ParseError> {
     validator.export_section(&reader)?;
     for export in reader {
-        module.register_export(export?.into());
+        let export = export?;
+        let export = ExportItem::try_from(export)?;
+        module.declare_export(export);
     }
     Ok(())
 }

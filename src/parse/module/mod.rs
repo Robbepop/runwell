@@ -17,8 +17,8 @@ mod definitions;
 mod eval_context;
 mod iter;
 mod linear_memory;
-mod structures;
 mod table;
+mod export;
 
 pub use self::{
     builder::{BuildError, ModuleBuilder},
@@ -42,9 +42,10 @@ pub use self::{
         LinearMemoryDecl,
         MemoryError,
     },
-    structures::{Export, ExportKind},
     table::{Element, ElementItemsIter, TableDecl, TableItems},
+    export::{Export, ExportError, ExportItem, ExportKind, Exports},
 };
+
 use crate::parse::{
     utils::ImportedOrInternal,
     Function,
@@ -81,7 +82,7 @@ pub struct Module {
     /// Imported and internal tables.
     tables: ImportedOrDefined<TableId, TableDecl, TableItems>,
     /// Export definitions.
-    exports: Vec<Export>,
+    exports: Exports,
     /// Optional start function.
     ///
     /// # Note
@@ -226,11 +227,6 @@ impl<'a> Module {
         )
     }
 
-    /// Returns an iterator over the exports of the Wasm module.
-    pub fn iter_exports(&self) -> core::slice::Iter<Export> {
-        self.exports.iter()
-    }
-
     /// Returns the start function of the Wasm module if any.
     pub fn start_fn(&self) -> Option<Function> {
         self.start_fn.map(|fn_id| self.get_fn(fn_id))
@@ -246,7 +242,7 @@ impl<'a> Module {
             globals: ImportedOrDefined::default(),
             linear_memories: ImportedOrDefined::default(),
             tables: ImportedOrDefined::default(),
-            exports: Vec::new(),
+            exports: Exports::default(),
             start_fn: None,
             fn_bodies: Vec::new(),
         }

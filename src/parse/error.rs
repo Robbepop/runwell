@@ -14,7 +14,7 @@
 
 use crate::parse::{
     initializer::GlobalInitError,
-    module::{BuildError, ModuleError, MemoryError, EvaluationError},
+    module::{BuildError, ModuleError, MemoryError, EvaluationError, ExportError},
     ReadError,
 };
 use derive_more::{Display, From};
@@ -24,6 +24,8 @@ use thiserror::Error;
 #[derive(Debug, Display, From)]
 #[cfg_attr(feature = "std", derive(Error))]
 pub enum ParseError {
+    /// An error that might occure upon exporting items.
+    Export(ExportError),
     /// An error upon building up data structures for the module.
     Module(ModuleError),
     /// An error upon evaluating initializer expressions.
