@@ -16,10 +16,9 @@ use super::{
     linear_memory::{Data, LinearMemoryDecl},
     table::TableDecl,
     EvaluationContext,
-    ImportName,
-    TableItems,
-    ExportItem,
     Export,
+    ExportItem,
+    ImportName,
 };
 use crate::parse::{
     Element,
@@ -403,7 +402,7 @@ impl<'a> ModuleBuilder {
                 let table_decl = TableDecl::try_from(table)?;
                 self.module
                     .tables
-                    .push_defined(table_decl, TableItems::default())?;
+                    .push_defined(table_decl, ())?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
@@ -419,7 +418,9 @@ impl<'a> ModuleBuilder {
     pub fn declare_export(&mut self, export: ExportItem) {
         let field = export.field();
         match export.item() {
-            Export::Function(id) => self.module.exports.export_function(field, id),
+            Export::Function(id) => {
+                self.module.exports.export_function(field, id)
+            }
             Export::Table(id) => self.module.exports.export_table(field, id),
             Export::Memory(id) => self.module.exports.export_memory(field, id),
             Export::Global(id) => self.module.exports.export_global(field, id),
@@ -480,19 +481,18 @@ impl<'a> ModuleBuilder {
                 }
                 let mut context = EvaluationContext::from(&self.module.globals);
                 let offset = context.eval_const_i32(&element.offset)? as usize;
-                let table = self
-                    .module
+                self.module
                     .tables
                     .get_mut(table_id)
                     .expect("encountered unexpected invalid table ID")
-                    .filter_map_defined()
-                    .expect("encountered unexpected non-defined table");
-                table.def.set_items(
-                    offset,
-                    element.items().map(|item| {
-                        item.expect("encountered invalid element item")
-                    }),
-                )?;
+                    .decl()
+                    .items_mut()
+                    .set_items(
+                        offset,
+                        element.items().map(|item| {
+                            item.expect("encountered invalid element item")
+                        }),
+                    )?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
@@ -584,7 +584,9 @@ impl<'a> ModuleBuilder {
     ) -> Result<(), ParseError> {
         match self.expected_data_elems {
             None => {
-                self.module.linear_memories.reserve_definitions(total_count)?;
+                self.module
+                    .linear_memories
+                    .reserve_definitions(total_count)?;
                 self.expected_data_elems = Some(total_count);
                 self.remaining_data = total_count;
             }
@@ -614,8 +616,7 @@ impl<'a> ModuleBuilder {
                 let mut context = EvaluationContext::from(&self.module.globals);
                 let offset = context.eval_const_i32(&data.offset())? as u32;
                 let init = data.init();
-                self
-                    .module
+                self.module
                     .linear_memories
                     .get_mut(id)
                     .expect("encountered unexpected invalid linear memory ID")

@@ -20,6 +20,14 @@ use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 #[derive(Debug)]
 pub struct TableDecl {
     limits: ResizableLimits,
+    items: TableItems,
+}
+
+impl TableDecl {
+    /// Returns a mutable reference to the items with which the table is initialized.
+    pub fn items_mut(&mut self) -> &mut TableItems {
+        &mut self.items
+    }
 }
 
 impl TryFrom<wasmparser::TableType> for TableDecl {
@@ -34,6 +42,7 @@ impl TryFrom<wasmparser::TableType> for TableDecl {
         }
         Ok(Self {
             limits: table_type.limits,
+            items: TableItems::default(),
         })
     }
 }

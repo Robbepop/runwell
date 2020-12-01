@@ -80,7 +80,7 @@ pub struct Module {
     /// Imported and internal linear memory sections.
     linear_memories: ImportedOrDefined<LinearMemoryId, LinearMemoryDecl, ()>,
     /// Imported and internal tables.
-    tables: ImportedOrDefined<TableId, TableDecl, TableItems>,
+    tables: ImportedOrDefined<TableId, TableDecl, ()>,
     /// Export definitions.
     exports: Exports,
     /// Optional start function.
@@ -209,7 +209,7 @@ impl<'a> Module {
     pub fn get_table(
         &self,
         id: TableId,
-    ) -> Entity<TableId, TableDecl, TableItems> {
+    ) -> Entity<TableId, TableDecl, ()> {
         self.tables
             .get(id)
             .expect("encountered unexpected invalid table ID")
