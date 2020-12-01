@@ -108,30 +108,6 @@ pub enum ImportExportKind {
 }
 
 impl<'a> Module {
-    /// Returns the number of imported items from the given kind.
-    pub fn len_imported(&self, kind: ImportExportKind) -> usize {
-        match kind {
-            ImportExportKind::Function => self.fn_sigs.len_imported(),
-            ImportExportKind::Global => self.globals.len_imported(),
-            ImportExportKind::Table => self.tables.len_imported(),
-            ImportExportKind::LinearMemory => {
-                self.linear_memories.len_imported()
-            }
-        }
-    }
-
-    /// Returns the number of internal items from the given kind.
-    pub fn len_internal(&self, kind: ImportExportKind) -> usize {
-        match kind {
-            ImportExportKind::Function => self.fn_sigs.len_internal(),
-            ImportExportKind::Global => self.globals.len_defined(),
-            ImportExportKind::Table => self.tables.len_defined(),
-            ImportExportKind::LinearMemory => {
-                self.linear_memories.len_defined()
-            }
-        }
-    }
-
     /// Returns the function signature identified by `id`.
     fn get_signature(&self, id: FunctionSigId) -> &FunctionSig {
         &self.types[id.get()]

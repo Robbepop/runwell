@@ -17,7 +17,6 @@ use crate::parse::{
     FunctionBody,
     FunctionId,
     FunctionSigId,
-    ImportExportKind,
     Module,
 };
 
@@ -63,7 +62,7 @@ impl<'a> InternalFnIter<'a> {
             // into a normal index before we use it to index into the
             // function signatures.
             internal_id as u32
-                + self.module.len_imported(ImportExportKind::Function) as u32,
+                + self.module.fn_sigs.len_imported() as u32,
         );
         let fn_sig = self.module.get_signature(self.fn_sigs[internal_id]);
         let function = Function::new(fn_id, fn_sig);
