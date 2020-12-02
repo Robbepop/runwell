@@ -70,6 +70,12 @@ pub type GlobalVariableIter<'a> =
 /// A parsed and validated WebAssembly (Wasm) module.
 ///
 /// Use the [`parse`][`crate::parse::parse`] function in order to retrieve an instance of this type.
+///
+/// # Note
+///
+/// This virtual Wasm module representation supports only the subset of WebAssembly that is important
+/// for the Runwell JIT compiler. It organizes its definitions in arrays and allows to translate
+/// Wasm function bodies concurrently.
 #[derive(Debug)]
 pub struct Module {
     /// Function signature table.
