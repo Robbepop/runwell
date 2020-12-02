@@ -95,19 +95,6 @@ pub struct Module {
     fn_bodies: Vec<FunctionBody>,
 }
 
-/// The kind of an entity that can be imported or defined internally.
-#[derive(Debug, Copy, Clone)]
-pub enum ImportExportKind {
-    /// A function.
-    Function,
-    /// A global variable.
-    Global,
-    /// A table.
-    Table,
-    /// A linear memory.
-    LinearMemory,
-}
-
 impl<'a> Module {
     /// Returns the function identified by `id`.
     pub fn get_fn(&self, id: FunctionId) -> Function {
