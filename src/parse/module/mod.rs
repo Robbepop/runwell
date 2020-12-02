@@ -109,11 +109,6 @@ pub enum ImportExportKind {
 }
 
 impl<'a> Module {
-    /// Returns the function signature identified by `id`.
-    fn get_signature(&self, id: FunctionSigId) -> &FunctionSig {
-        &self.types[id.get()]
-    }
-
     /// Returns the function identified by `id`.
     pub fn get_fn(&self, id: FunctionId) -> Function {
         let fn_sig = self.types.get(self.fn_sigs[id]);
