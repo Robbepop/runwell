@@ -26,7 +26,6 @@ mod module;
 pub mod operator;
 mod parser;
 mod primitive;
-mod utils;
 
 use self::module::ModuleBuilder;
 #[doc(inline)]
