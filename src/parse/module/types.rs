@@ -38,10 +38,12 @@ pub enum TypesError {
 /// A function signature.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FunctionSig {
-    /// The input types of the function.
-    inputs: Box<[Type]>,
-    /// The output types of the function.
-    outputs: Box<[Type]>,
+    /// The amount of inputs.
+    len_inputs: usize,
+    /// All input types followed by all output types.
+    ///
+    /// The `len_inputs` field denotes the cut.
+    inputs_outputs: Box<[Type]>,
 }
 
 impl TryFrom<wasmparser::FuncType> for FunctionSig {
@@ -71,20 +73,24 @@ impl FunctionSig {
         I: IntoIterator<Item = Type>,
         O: IntoIterator<Item = Type>,
     {
+        let mut inputs_outputs = Vec::new();
+        inputs_outputs.extend(inputs.into_iter());
+        let len_inputs = inputs_outputs.len();
+        inputs_outputs.extend(outputs.into_iter());
         Self {
-            inputs: inputs.into_iter().collect::<Vec<_>>().into_boxed_slice(),
-            outputs: outputs.into_iter().collect::<Vec<_>>().into_boxed_slice(),
+            len_inputs,
+            inputs_outputs: inputs_outputs.into_boxed_slice(),
         }
     }
 
     /// Returns a slice over the input types of `self`.
     pub fn inputs(&self) -> &[Type] {
-        &self.inputs
+        &self.inputs_outputs[..self.len_inputs]
     }
 
     /// Returns a slice over the output types of `self`.
     pub fn outputs(&self) -> &[Type] {
-        &self.outputs
+        &self.inputs_outputs[self.len_inputs..]
     }
 }
 
