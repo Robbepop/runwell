@@ -79,17 +79,29 @@ pub type GlobalVariableIter<'a> =
 #[derive(Debug)]
 pub struct Module {
     /// Function signature table.
+    ///
+    /// Represents the Wasm `type` section.
     types: Types,
     /// Imported and internal function signatures.
+    ///
+    /// Represents both the Wasm `function` and `code` sections.
     fn_sigs: ImportedOrDefined<FunctionId, FunctionSigId, ()>,
     /// Imported and internal global variables.
+    ///
+    /// Represents the Wasm `global` section.
     globals:
         ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>,
     /// Imported and internal linear memory sections.
+    ///
+    /// Represents both the Wasm `memory` and `data` sections.
     linear_memories: ImportedOrDefined<LinearMemoryId, LinearMemoryDecl, ()>,
     /// Imported and internal tables.
+    ///
+    /// Represents both the Wasm `table` and `data` element.
     tables: ImportedOrDefined<TableId, TableDecl, ()>,
     /// Export definitions.
+    ///
+    /// Represents the Wasm `export` section.
     exports: Exports,
     /// Optional start function.
     ///
@@ -99,6 +111,9 @@ pub struct Module {
     /// otherwise it is a library.
     start_fn: Option<FunctionId>,
     /// Internal function bodies.
+    ///
+    /// Old and to-be-phased-out function bodies storage.
+    /// We are going to move this into `fn_sigs` and obviously therefore rename `fn_sigs`.
     fn_bodies: Vec<FunctionBody>,
 }
 
