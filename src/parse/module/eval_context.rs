@@ -72,11 +72,9 @@ impl<'a> EvaluationContext<'a> {
                 let resolved_expr = self
                     .globals
                     .get_defined(*id)
-                    .ok_or_else(|| {
-                        ParseError::Evaluation(
-                            EvaluationError::UnknownGlobalVariableId,
-                        )
-                    })?
+                    .ok_or(ParseError::Evaluation(
+                        EvaluationError::UnknownGlobalVariableId,
+                    ))?
                     .def;
                 let result = self.eval_const_i32_impl(resolved_expr)?;
                 self.resolving.remove(id);

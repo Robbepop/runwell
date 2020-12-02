@@ -69,7 +69,7 @@ impl<'a> TryFrom<wasmparser::Data<'a>> for Data<'a> {
                 })
             }
             wasmparser::DataKind::Passive => {
-                return Err(ParseError::UnsupportedPassiveElement)
+                Err(ParseError::UnsupportedPassiveElement)
             }
         }
     }
