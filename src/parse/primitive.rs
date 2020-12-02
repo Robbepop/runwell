@@ -18,7 +18,7 @@ use core::convert::TryFrom;
 /// An `i32` or `i64` type.
 ///
 /// These are currently the only supported type by the Runwell JIT compiler.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Type {
     I32,
     I64,

@@ -15,10 +15,11 @@
 mod builder;
 mod definitions;
 mod eval_context;
+mod export;
 mod iter;
 mod linear_memory;
 mod table;
-mod export;
+mod types;
 
 pub use self::{
     builder::{BuildError, ModuleBuilder},
@@ -35,6 +36,7 @@ pub use self::{
         ModuleError,
     },
     eval_context::{EvaluationContext, EvaluationError},
+    export::{Export, ExportError, ExportItem, ExportKind, Exports},
     iter::InternalFnIter,
     linear_memory::{
         Data,
@@ -43,7 +45,7 @@ pub use self::{
         MemoryError,
     },
     table::{Element, ElementItemsIter, TableDecl, TableItems},
-    export::{Export, ExportError, ExportItem, ExportKind, Exports},
+    types::{Types, TypesError, FunctionSig},
 };
 
 use crate::parse::{
@@ -51,7 +53,6 @@ use crate::parse::{
     Function,
     FunctionBody,
     FunctionId,
-    FunctionSig,
     FunctionSigId,
     GlobalInitExpr,
     GlobalVariableDecl,
@@ -71,7 +72,7 @@ pub type GlobalVariableIter<'a> =
 #[derive(Debug)]
 pub struct Module {
     /// Function signature table.
-    types: Vec<FunctionSig>,
+    types: Types,
     /// Imported and internal function signatures.
     fn_sigs: ImportedOrInternal<FunctionSigId, FunctionId>,
     /// Imported and internal global variables.
@@ -115,7 +116,7 @@ impl<'a> Module {
 
     /// Returns the function identified by `id`.
     pub fn get_fn(&self, id: FunctionId) -> Function {
-        let fn_sig = self.get_signature(self.fn_sigs[id]);
+        let fn_sig = self.types.get(self.fn_sigs[id]);
         Function::new(id, fn_sig)
     }
 
@@ -182,10 +183,7 @@ impl<'a> Module {
     /// # let module: runwell::parse::Module = unimplemented!();
     /// let table = module.get_table(Default::default());
     /// ```
-    pub fn get_table(
-        &self,
-        id: TableId,
-    ) -> Entity<TableId, TableDecl, ()> {
+    pub fn get_table(&self, id: TableId) -> Entity<TableId, TableDecl, ()> {
         self.tables
             .get(id)
             .expect("encountered unexpected invalid table ID")
@@ -213,7 +211,7 @@ impl<'a> Module {
     /// Creates a new empty Wasm module.
     fn new() -> Self {
         Self {
-            types: Vec::new(),
+            types: Types::default(),
             fn_sigs: ImportedOrInternal::new(),
             globals: ImportedOrDefined::default(),
             linear_memories: ImportedOrDefined::default(),

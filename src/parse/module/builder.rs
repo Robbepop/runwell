@@ -159,15 +159,15 @@ impl<'a> ModuleBuilder {
     pub fn reserve_types(
         &mut self,
         total_count: usize,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         if let Some(previous) = self.expected_types {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::Type,
                 reserved: total_count,
                 previous,
-            })
+            }).map_err(Into::into)
         }
-        self.module.types.reserve(total_count);
+        self.module.types.reserve(total_count as u32)?;
         self.expected_types = Some(total_count);
         Ok(())
     }
@@ -176,7 +176,7 @@ impl<'a> ModuleBuilder {
     pub fn register_type(
         &mut self,
         sig: FunctionSig,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         match self.expected_types {
             Some(total) => {
                 let actual = self.module.types.len();
@@ -184,14 +184,14 @@ impl<'a> ModuleBuilder {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::Type,
                         reserved: total,
-                    })
+                    }).map_err(Into::into)
                 }
-                self.module.types.push(sig);
+                self.module.types.push(sig)?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::Type,
-                })
+                }).map_err(Into::into)
             }
         }
         Ok(())

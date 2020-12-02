@@ -64,7 +64,7 @@ impl<'a> InternalFnIter<'a> {
             internal_id as u32
                 + self.module.fn_sigs.len_imported() as u32,
         );
-        let fn_sig = self.module.get_signature(self.fn_sigs[internal_id]);
+        let fn_sig = self.module.types.get(self.fn_sigs[internal_id]);
         let function = Function::new(fn_id, fn_sig);
         let fn_body = &self.module.fn_bodies[internal_id];
         (function, fn_body)

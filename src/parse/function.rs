@@ -13,63 +13,10 @@
 // limitations under the License.
 
 use crate::parse::{FunctionId, Operator, ParseError, Type};
-use core::convert::TryFrom;
+use crate::parse::module::FunctionSig;
 use derive_more::From;
 
-/// A function signature.
-#[derive(Debug)]
-pub struct FunctionSig {
-    /// The input types of the function.
-    inputs: Box<[Type]>,
-    /// The output types of the function.
-    outputs: Box<[Type]>,
-}
-
-impl TryFrom<wasmparser::FuncType> for FunctionSig {
-    type Error = ParseError;
-
-    fn try_from(func_ty: wasmparser::FuncType) -> Result<Self, Self::Error> {
-        let inputs = func_ty
-            .params
-            .iter()
-            .cloned()
-            .map(Type::try_from)
-            .collect::<Result<Vec<_>, _>>()?;
-        let outputs = func_ty
-            .returns
-            .iter()
-            .cloned()
-            .map(Type::try_from)
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self::new(inputs, outputs))
-    }
-}
-
-impl FunctionSig {
-    /// Creates a new function signature.
-    pub fn new<I, O>(inputs: I, outputs: O) -> Self
-    where
-        I: IntoIterator<Item = Type>,
-        O: IntoIterator<Item = Type>,
-    {
-        Self {
-            inputs: inputs.into_iter().collect::<Vec<_>>().into_boxed_slice(),
-            outputs: outputs.into_iter().collect::<Vec<_>>().into_boxed_slice(),
-        }
-    }
-
-    /// Returns a slice over the input types of `self`.
-    pub fn inputs(&self) -> &[Type] {
-        &self.inputs
-    }
-
-    /// Returns a slice over the output types of `self`.
-    pub fn outputs(&self) -> &[Type] {
-        &self.outputs
-    }
-}
-
-/// A function.
+/// A Wasm function signature and its unique ID.
 #[derive(Debug)]
 pub struct Function<'a> {
     /// The function index.
