@@ -212,24 +212,27 @@ impl<'a> ModuleBuilder {
         field_name: &'a str,
         fn_sig_id: FunctionSigId,
     ) -> Result<(), ParseError> {
-        self.module
-            .fn_sigs
-            .push_imported(module_name, field_name, fn_sig_id)
+        self.module.fn_sigs.push_imported(
+            ImportName::new(module_name, field_name),
+            fn_sig_id,
+        )?;
+        Ok(())
     }
 
     /// Reserves an amount of total expected function definitions to be registered.
     pub fn reserve_fn_decls(
         &mut self,
         total_count: usize,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         if let Some(previous) = self.expected_fn_defs {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::FnSigs,
                 reserved: total_count,
                 previous,
             })
+            .map_err(Into::into)
         }
-        self.module.fn_sigs.reserve(total_count);
+        self.module.fn_sigs.reserve_definitions(total_count)?;
         self.expected_fn_defs = Some(total_count);
         Ok(())
     }
@@ -240,22 +243,24 @@ impl<'a> ModuleBuilder {
     pub fn declare_fn(
         &mut self,
         fn_sig_id: FunctionSigId,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), ParseError> {
         match self.expected_fn_defs {
             Some(total) => {
-                let actual = self.module.fn_sigs.len_internal();
+                let actual = self.module.fn_sigs.len_defined();
                 if total - actual == 0 {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::FnSigs,
                         reserved: total,
                     })
+                    .map_err(Into::into)
                 }
-                self.module.fn_sigs.push_internal(fn_sig_id);
+                self.module.fn_sigs.push_defined(fn_sig_id, ())?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::FnSigs,
                 })
+                .map_err(Into::into)
             }
         }
         Ok(())
@@ -658,7 +663,7 @@ impl<'a> ModuleBuilder {
             }
         }
         if let Some(expected) = self.expected_fn_defs {
-            let actual = self.module.fn_sigs.len_internal();
+            let actual = self.module.fn_sigs.len_defined();
             if actual != expected {
                 return Err(BuildError::MissingElements {
                     entry: WasmSectionEntry::FnSigs,

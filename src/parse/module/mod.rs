@@ -26,6 +26,7 @@ pub use self::{
     definitions::{
         DefinedEntity,
         DefinedEntityMut,
+        DefinedEntityIter,
         Entity,
         EntityIter,
         EntityMut,
@@ -33,6 +34,7 @@ pub use self::{
         ImportedEntity,
         ImportedEntityMut,
         ImportedOrDefined,
+        ImportedEntityIter,
         ModuleError,
     },
     eval_context::{EvaluationContext, EvaluationError},
@@ -49,7 +51,6 @@ pub use self::{
 };
 
 use crate::parse::{
-    utils::ImportedOrInternal,
     Function,
     FunctionBody,
     FunctionId,
@@ -74,7 +75,7 @@ pub struct Module {
     /// Function signature table.
     types: Types,
     /// Imported and internal function signatures.
-    fn_sigs: ImportedOrInternal<FunctionSigId, FunctionId>,
+    fn_sigs: ImportedOrDefined<FunctionId, FunctionSigId, ()>,
     /// Imported and internal global variables.
     globals:
         ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>,
@@ -98,7 +99,13 @@ pub struct Module {
 impl<'a> Module {
     /// Returns the function identified by `id`.
     pub fn get_fn(&self, id: FunctionId) -> Function {
-        let fn_sig = self.types.get(self.fn_sigs[id]);
+        let fn_sig_id = self
+            .fn_sigs
+            .get(id)
+            .expect("encountered unexpected invalid function ID")
+            .decl()
+            .clone();
+        let fn_sig = self.types.get(fn_sig_id);
         Function::new(id, fn_sig)
     }
 
@@ -194,7 +201,7 @@ impl<'a> Module {
     fn new() -> Self {
         Self {
             types: Types::default(),
-            fn_sigs: ImportedOrInternal::new(),
+            fn_sigs: ImportedOrDefined::default(),
             globals: ImportedOrDefined::default(),
             linear_memories: ImportedOrDefined::default(),
             tables: ImportedOrDefined::default(),

@@ -12,27 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::DefinedEntityIter;
 use crate::parse::{Function, FunctionBody, FunctionId, FunctionSigId, Module};
+use core::{iter::DoubleEndedIterator, slice::Iter as SliceIter};
+
+type FnSigsIter<'a> = DefinedEntityIter<'a, FunctionId, FunctionSigId, ()>;
 
 /// Iterator over the internal functions of a Wasm module.
 pub struct InternalFnIter<'a> {
     /// The underlying Wasm module.
     module: &'a Module,
     /// The slice over function signatures.
-    fn_sigs: &'a [FunctionSigId],
+    fn_sigs: FnSigsIter<'a>,
     /// The slice over function bodies.
-    fn_bodies: &'a [FunctionBody],
-    /// Current start.
+    fn_bodies: SliceIter<'a, FunctionBody>,
+    /// Index incremented with `next`.
     start: usize,
-    /// Current end.
+    /// Index decremented with `next_back`.
     end: usize,
 }
 
 impl<'a> InternalFnIter<'a> {
     /// Creates a new internal function iterator for the given Wasm module.
     pub(super) fn new(module: &'a Module) -> Self {
-        let fn_sigs = module.fn_sigs.internal_entities_slice();
-        let fn_bodies = &module.fn_bodies[..];
+        let fn_sigs = module
+            .fn_sigs
+            .iter_defined()
+            .expect("encountered unexpected invalid function signature table");
+        let fn_bodies = module.fn_bodies.iter();
         // We should assume that both of these slices are the same
         // but to be extra defensive we want to also assert it.
         assert_eq!(fn_sigs.len(), fn_bodies.len());
@@ -46,21 +53,14 @@ impl<'a> InternalFnIter<'a> {
         }
     }
 
-    /// Queries the yielded pair for the given internal index.
-    fn query_for(
-        &self,
-        internal_id: usize,
-    ) -> (Function<'a>, &'a FunctionBody) {
-        let fn_id = FunctionId::from_u32(
+    /// Returns the current function ID.
+    fn current_id(&self, raw_index: usize) -> FunctionId {
+        FunctionId::from_u32(
             // We are given an internal index and have to convert that
             // into a normal index before we use it to index into the
             // function signatures.
-            internal_id as u32 + self.module.fn_sigs.len_imported() as u32,
-        );
-        let fn_sig = self.module.types.get(self.fn_sigs[internal_id]);
-        let function = Function::new(fn_id, fn_sig);
-        let fn_body = &self.module.fn_bodies[internal_id];
-        (function, fn_body)
+            raw_index as u32 + self.module.fn_sigs.len_imported() as u32,
+        )
     }
 }
 
@@ -72,9 +72,12 @@ impl<'a> Iterator for InternalFnIter<'a> {
             return None
         }
         let start = self.start;
-        let res = self.query_for(start);
+        let id = self.current_id(start);
+        let fn_sig_id = self.fn_sigs.next()?.decl;
+        let fn_body = self.fn_bodies.next()?;
+        let fn_sig = self.module.types.get(*fn_sig_id);
         self.start += 1;
-        Some(res)
+        Some((Function::new(id, fn_sig), fn_body))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -83,15 +86,17 @@ impl<'a> Iterator for InternalFnIter<'a> {
     }
 }
 
-impl<'a> core::iter::DoubleEndedIterator for InternalFnIter<'a> {
+impl<'a> DoubleEndedIterator for InternalFnIter<'a> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             return None
         }
-        let end = self.end;
-        let res = self.query_for(end);
         self.end -= 1;
-        Some(res)
+        let id = self.current_id(self.end);
+        let fn_sig_id = self.fn_sigs.next_back()?.decl;
+        let fn_body = self.fn_bodies.next_back()?;
+        let fn_sig = self.module.types.get(*fn_sig_id);
+        Some((Function::new(id, fn_sig), fn_body))
     }
 }
 

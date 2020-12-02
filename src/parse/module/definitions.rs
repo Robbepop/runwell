@@ -507,7 +507,7 @@ impl<'a, Id, Decl, Def> DefinedEntityIter<'a, Id, Decl, Def> {
     pub fn new(decls: &'a [Decl], defs: &'a [Def]) -> Self {
         let len_decls = decls.len();
         let len_defs = defs.len();
-        assert_ne!(
+        assert_eq!(
             len_decls, len_defs,
             "encountered mismatch in length of declarations and definitions"
         );
