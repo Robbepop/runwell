@@ -45,7 +45,7 @@ pub use self::{
         MemoryError,
     },
     table::{Element, ElementItemsIter, TableDecl, TableItems},
-    types::{Types, TypesError, FunctionSig},
+    types::{FunctionSig, Types, TypesError},
 };
 
 use crate::parse::{

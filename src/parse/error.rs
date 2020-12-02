@@ -14,7 +14,14 @@
 
 use crate::parse::{
     initializer::GlobalInitError,
-    module::{BuildError, ModuleError, MemoryError, EvaluationError, ExportError, TypesError},
+    module::{
+        BuildError,
+        EvaluationError,
+        ExportError,
+        MemoryError,
+        ModuleError,
+        TypesError,
+    },
     ReadError,
 };
 use derive_more::{Display, From};

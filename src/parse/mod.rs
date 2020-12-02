@@ -33,7 +33,6 @@ use self::module::ModuleBuilder;
 pub use self::{
     error::ParseError,
     function::{Function, FunctionBody},
-    module::FunctionSig,
     global_variable::{GlobalVariable, GlobalVariableDecl},
     id::{
         FunctionId,
@@ -45,6 +44,7 @@ pub use self::{
         TableId,
     },
     initializer::GlobalInitExpr,
+    module::FunctionSig,
     module::{
         Element,
         ElementItemsIter,

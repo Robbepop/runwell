@@ -14,13 +14,15 @@
 
 use crate::parse::{GlobalInitExpr, LinearMemoryId, ParseError};
 use core::convert::TryFrom;
-use wasmparser::ResizableLimits;
 use derive_more::Display;
+use wasmparser::ResizableLimits;
 
 /// An error that can occure upon interacting with Wasm linear memory.
 #[derive(Debug, Display, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MemoryError {
-    #[display(fmt = "encountered an unsupported 64-bit linear memory declaration")]
+    #[display(
+        fmt = "encountered an unsupported 64-bit linear memory declaration"
+    )]
     Unsupported64BitLinearMemory,
     #[display(fmt = "encountered a linear memory out of bounds access")]
     MemoryAccessOutOfBounds,
@@ -108,10 +110,15 @@ impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
     ) -> Result<Self, Self::Error> {
         match memory_type {
             wasmparser::MemoryType::M32 { limits, shared } => {
-                Ok(Self { limits, shared, contents: LinearMemoryContents::default() })
+                Ok(Self {
+                    limits,
+                    shared,
+                    contents: LinearMemoryContents::default(),
+                })
             }
             wasmparser::MemoryType::M64 { .. } => {
-                Err(MemoryError::Unsupported64BitLinearMemory).map_err(Into::into)
+                Err(MemoryError::Unsupported64BitLinearMemory)
+                    .map_err(Into::into)
             }
         }
     }
@@ -161,7 +168,11 @@ impl LinearMemoryContents {
     ///
     /// Reads an amount of bytes equal to the length of the `buffer` and returns
     /// an error if this is not possible.
-    pub fn read(&self, offset: u32, buffer: &mut [u8]) -> Result<(), ParseError> {
+    pub fn read(
+        &self,
+        offset: u32,
+        buffer: &mut [u8],
+    ) -> Result<(), ParseError> {
         let offset = offset as usize;
         let len = buffer.len();
         let req_len = offset + len;

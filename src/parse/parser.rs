@@ -14,13 +14,12 @@
 
 use super::FunctionBody;
 use crate::parse::{
-    module::Data,
+    module::{Data, ExportItem},
     FunctionId,
     FunctionSigId,
     Module,
     ModuleBuilder,
     ParseError,
-    module::ExportItem,
 };
 use core::convert::TryInto as _;
 use derive_more::Display;

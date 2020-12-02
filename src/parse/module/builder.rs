@@ -165,7 +165,8 @@ impl<'a> ModuleBuilder {
                 entry: WasmSectionEntry::Type,
                 reserved: total_count,
                 previous,
-            }).map_err(Into::into)
+            })
+            .map_err(Into::into)
         }
         self.module.types.reserve(total_count as u32)?;
         self.expected_types = Some(total_count);
@@ -184,14 +185,16 @@ impl<'a> ModuleBuilder {
                     return Err(BuildError::TooManyElements {
                         entry: WasmSectionEntry::Type,
                         reserved: total,
-                    }).map_err(Into::into)
+                    })
+                    .map_err(Into::into)
                 }
                 self.module.types.push(sig)?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
                     entry: WasmSectionEntry::Type,
-                }).map_err(Into::into)
+                })
+                .map_err(Into::into)
             }
         }
         Ok(())
@@ -400,9 +403,7 @@ impl<'a> ModuleBuilder {
                     .map_err(Into::into)
                 }
                 let table_decl = TableDecl::try_from(table)?;
-                self.module
-                    .tables
-                    .push_defined(table_decl, ())?;
+                self.module.tables.push_defined(table_decl, ())?;
             }
             None => {
                 return Err(BuildError::MissingReservation {

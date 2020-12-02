@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::parse::{FunctionSigId, ParseError, Type};
-use derive_more::Display;
 use core::convert::TryFrom;
+use derive_more::Display;
 
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TypesError {

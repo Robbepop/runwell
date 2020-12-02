@@ -12,13 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{
-    Function,
-    FunctionBody,
-    FunctionId,
-    FunctionSigId,
-    Module,
-};
+use crate::parse::{Function, FunctionBody, FunctionId, FunctionSigId, Module};
 
 /// Iterator over the internal functions of a Wasm module.
 pub struct InternalFnIter<'a> {
@@ -61,8 +55,7 @@ impl<'a> InternalFnIter<'a> {
             // We are given an internal index and have to convert that
             // into a normal index before we use it to index into the
             // function signatures.
-            internal_id as u32
-                + self.module.fn_sigs.len_imported() as u32,
+            internal_id as u32 + self.module.fn_sigs.len_imported() as u32,
         );
         let fn_sig = self.module.types.get(self.fn_sigs[internal_id]);
         let function = Function::new(fn_id, fn_sig);

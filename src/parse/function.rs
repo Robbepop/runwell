@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionId, Operator, ParseError, Type};
-use crate::parse::module::FunctionSig;
+use crate::parse::{
+    module::FunctionSig,
+    FunctionId,
+    Operator,
+    ParseError,
+    Type,
+};
 use derive_more::From;
 
 /// A Wasm function signature and its unique ID.

@@ -13,8 +13,7 @@
 // limitations under the License.
 
 use crate::parse::{FunctionId, GlobalVariableId, LinearMemoryId, TableId};
-use core::convert::TryFrom;
-use core::slice::Iter as SliceIter;
+use core::{convert::TryFrom, slice::Iter as SliceIter};
 use derive_more::Display;
 
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -146,7 +145,10 @@ pub struct Exported<Id> {
 impl<Id> Exported<Id> {
     /// Creates a new exported items with the field name and unique ID.
     fn new(field: &str, id: Id) -> Self {
-        Self { field: field.to_string(), id }
+        Self {
+            field: field.to_string(),
+            id,
+        }
     }
 }
 
