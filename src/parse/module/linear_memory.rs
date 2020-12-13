@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{GlobalInitExpr, LinearMemoryId, ComilerError};
+use crate::parse::{ComilerError, GlobalInitExpr, LinearMemoryId};
 use core::convert::TryFrom;
 use derive_more::Display;
 use wasmparser::ResizableLimits;

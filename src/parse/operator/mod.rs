@@ -24,17 +24,6 @@ mod convert;
 mod display;
 mod utils;
 
-use crate::parse::{
-    FunctionId,
-    FunctionSigId,
-    GlobalVariableId,
-    LinearMemoryId,
-    ComilerError,
-    TableId,
-};
-use derive_more::From;
-use wasmparser::TypeOrFuncType;
-
 pub use self::utils::{
     ExtIntType,
     IntType,
@@ -42,6 +31,16 @@ pub use self::utils::{
     LocalVariableIdGen,
     MemoryImmediate,
 };
+use crate::parse::{
+    ComilerError,
+    FunctionId,
+    FunctionSigId,
+    GlobalVariableId,
+    LinearMemoryId,
+    TableId,
+};
+use derive_more::From;
+use wasmparser::TypeOrFuncType;
 
 /// A Wasm block operator.
 #[derive(Debug)]
@@ -427,7 +426,10 @@ impl TruncateOp {
     /// # Errors
     ///
     /// If the operation would truncate the source type to a bigger width.
-    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ComilerError> {
+    fn new(
+        result_ty: IntType,
+        source_ty: IntType,
+    ) -> Result<Self, ComilerError> {
         if !source_ty.is_truncatable_to(result_ty.into()) {
             return Err(ComilerError::TruncationToBiggerInt)
         }
@@ -453,7 +455,10 @@ impl ZeroExtendOp {
     /// # Errors
     ///
     /// If the operation would extend the source type to a smaller width.
-    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ComilerError> {
+    fn new(
+        result_ty: IntType,
+        source_ty: IntType,
+    ) -> Result<Self, ComilerError> {
         if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
             return Err(ComilerError::ExtensionToSmallerInt)
         }
@@ -479,7 +484,10 @@ impl SignExtendOp {
     /// # Errors
     ///
     /// If the operation would extend the source type to a smaller width.
-    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ComilerError> {
+    fn new(
+        result_ty: IntType,
+        source_ty: IntType,
+    ) -> Result<Self, ComilerError> {
         if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
             return Err(ComilerError::ExtensionToSmallerInt)
         }

@@ -25,16 +25,16 @@ pub use self::{
     builder::{BuildError, ModuleBuilder},
     definitions::{
         DefinedEntity,
-        DefinedEntityMut,
         DefinedEntityIter,
+        DefinedEntityMut,
         Entity,
         EntityIter,
         EntityMut,
         ImportName,
         ImportedEntity,
+        ImportedEntityIter,
         ImportedEntityMut,
         ImportedOrDefined,
-        ImportedEntityIter,
         ModuleError,
     },
     eval_context::{EvaluationContext, EvaluationError},
@@ -47,9 +47,8 @@ pub use self::{
         MemoryError,
     },
     table::{Element, ElementItemsIter, TableDecl, TableItems},
-    types::{FunctionSig, Types, TypesError},
+    types::{FunctionSig, Types, TypesError, UnsupportedTypeDef},
 };
-
 use crate::parse::{
     Function,
     FunctionBody,

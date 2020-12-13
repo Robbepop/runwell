@@ -14,10 +14,10 @@
 
 use super::definitions::ImportedOrDefined;
 use crate::parse::{
+    ComilerError,
     GlobalInitExpr,
     GlobalVariableDecl,
     GlobalVariableId,
-    ComilerError,
 };
 use derive_more::Display;
 use std::collections::BTreeSet;

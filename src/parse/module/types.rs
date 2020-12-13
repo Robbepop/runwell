@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionSigId, ComilerError, Type};
+use crate::parse::{ComilerError, FunctionSigId, Type};
 use core::convert::TryFrom;
 use derive_more::Display;
 
@@ -23,7 +23,10 @@ pub enum TypesError {
         total_count,
         previous
     )]
-    DuplicateReserved { total_count: u32, previous: u32 },
+    DuplicateReserved {
+        total_count: u32,
+        previous: u32,
+    },
     #[display(
         fmt = "tried to register another type when the Wasm types table did not expect any further items. reserved: {}, last item = {:?}",
         reserved,

@@ -1,8 +1,7 @@
 max_width = 80 # changed
 hard_tabs = false
 tab_spaces = 4
-newline_style = "Auto"
-use_small_heuristics = "Default"
+newline_style = "Native"
 indent_style = "Block"
 wrap_comments = false
 format_code_in_doc_comments = false
@@ -19,6 +18,7 @@ fn_single_line = false
 where_single_line = false
 imports_indent = "Block"
 imports_layout = "HorizontalVertical" # changed
+# group_imports = "StdExternalCrate" # changed
 merge_imports = true # changed
 reorder_imports = true
 reorder_modules = true

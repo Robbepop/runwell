@@ -14,9 +14,9 @@
 
 use crate::parse::{
     module::FunctionSig,
+    ComilerError,
     FunctionId,
     Operator,
-    ComilerError,
     Type,
 };
 use derive_more::From;
@@ -96,8 +96,9 @@ impl FunctionBody {
 }
 
 mod display_impls {
-    use super::*;
     use core::fmt::{Display, Formatter, Result};
+
+    use super::*;
 
     impl Display for Function<'_> {
         fn fmt(&self, f: &mut Formatter) -> Result {

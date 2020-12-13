@@ -44,13 +44,7 @@ pub use self::{
     },
     initializer::GlobalInitExpr,
     module::FunctionSig,
-    module::{
-        Element,
-        ElementItemsIter,
-        ExportKind,
-        InternalFnIter,
-        Module,
-    },
+    module::{Element, ElementItemsIter, ExportKind, InternalFnIter, Module},
     operator::{
         LocalVariableId,
         LocalVariableIdGen,

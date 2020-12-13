@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionId, GlobalInitExpr, ComilerError, TableId};
+use crate::parse::{ComilerError, FunctionId, GlobalInitExpr, TableId};
 use std::{collections::HashMap, convert::TryFrom};
 use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 
@@ -142,7 +142,9 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
     fn try_from(element: wasmparser::Element<'a>) -> Result<Self, Self::Error> {
         use wasmparser::ElementKind;
         match element.kind {
-            ElementKind::Passive => Err(ComilerError::UnsupportedPassiveElement),
+            ElementKind::Passive => {
+                Err(ComilerError::UnsupportedPassiveElement)
+            }
             ElementKind::Declared => {
                 Err(ComilerError::UnsupportedDeclaredElement)
             }

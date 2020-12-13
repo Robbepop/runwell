@@ -21,6 +21,7 @@ use super::{
     ImportName,
 };
 use crate::parse::{
+    ComilerError,
     Element,
     FunctionBody,
     FunctionId,
@@ -30,7 +31,6 @@ use crate::parse::{
     GlobalVariableDecl,
     GlobalVariableId,
     Module,
-    ComilerError,
 };
 use derive_more::Display;
 use std::convert::TryFrom;

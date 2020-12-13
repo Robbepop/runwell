@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{Index32, ComilerError};
+use crate::parse::{ComilerError, Index32};
 use core::{iter::FusedIterator, marker::PhantomData};
 use derive_more::Display;
 

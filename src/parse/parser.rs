@@ -15,11 +15,11 @@
 use super::FunctionBody;
 use crate::parse::{
     module::{Data, ExportItem},
+    ComilerError,
     FunctionId,
     FunctionSigId,
     Module,
     ModuleBuilder,
-    ParseError,
 };
 use core::convert::TryInto as _;
 use derive_more::Display;
@@ -96,7 +96,10 @@ impl<'a> Read for &'a [u8] {
     }
 }
 
-pub fn parse<R>(mut reader: R, buf: &mut Vec<u8>) -> Result<Module, ComilerError>
+pub fn parse<R>(
+    mut reader: R,
+    buf: &mut Vec<u8>,
+) -> Result<Module, ComilerError>
 where
     R: Read,
 {
