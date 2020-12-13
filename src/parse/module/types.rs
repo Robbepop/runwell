@@ -36,6 +36,17 @@ pub enum TypesError {
         reserved: u32,
         last_item: FunctionSig,
     },
+    Unsupported(UnsupportedTypeDef),
+}
+
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnsupportedTypeDef {
+    #[display(fmt = "encountered an unsupported Wasm module type definition")]
+    Module,
+    #[display(
+        fmt = "encountered an unsupported Wasm instance type definition"
+    )]
+    Instance,
 }
 
 /// A function signature.

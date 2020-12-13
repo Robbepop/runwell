@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::FunctionBody;
+use super::{
+    error::{ImportError, UnsupportedWasmSection},
+    module::{TypesError, UnsupportedTypeDef},
+    FunctionBody,
+};
 use crate::parse::{
     module::{Data, ExportItem},
     ComilerError,
@@ -203,22 +207,34 @@ fn process_payload(
         | Payload::ModuleSection(_)
         | Payload::ModuleCodeSectionStart { .. }
         | Payload::ModuleCodeSectionEntry { .. } => {
-            return Err(ParseError::UnsupportedModuleDefinition)
+            return Err(ComilerError::UnsupportedWasmSection(
+                UnsupportedWasmSection::Module,
+            ))
         }
         Payload::EventSection(_) => {
-            return Err(ParseError::UnsupportedEventDefinition)
+            return Err(ComilerError::UnsupportedWasmSection(
+                UnsupportedWasmSection::Event,
+            ))
         }
 
         Payload::CustomSection {
             name: _,
             data_offset: _,
             data: _,
-        } => { /* ... */ }
+        } => {
+            return Err(ComilerError::UnsupportedWasmSection(
+                UnsupportedWasmSection::Custom,
+            ))
+        }
         Payload::UnknownSection {
             id: _,
             contents: _,
             range: _,
-        } => { /* ... */ }
+        } => {
+            return Err(ComilerError::UnsupportedWasmSection(
+                UnsupportedWasmSection::Unknown,
+            ))
+        }
 
         Payload::End => return Ok(true),
     }
@@ -246,10 +262,14 @@ fn parse_type_section(
                 module.register_type(fn_sig)?;
             }
             wasmparser::TypeDef::Instance(_) => {
-                return Err(ParseError::UnsupportedInstanceDefinition)
+                return Err(ComilerError::Types(TypesError::Unsupported(
+                    UnsupportedTypeDef::Instance,
+                )))
             }
             wasmparser::TypeDef::Module(_) => {
-                return Err(ParseError::UnsupportedModuleDefinition)
+                return Err(ComilerError::Types(TypesError::Unsupported(
+                    UnsupportedTypeDef::Module,
+                )))
             }
         }
     }
@@ -305,10 +325,14 @@ fn parse_import_section(
             }
             ImportSectionEntryType::Module(_)
             | ImportSectionEntryType::Instance(_) => {
-                return Err(ParseError::UnsupportedModuleDefinition)
+                return Err(ComilerError::Import(
+                    ImportError::UnsupportedModuleImport,
+                ))
             }
             ImportSectionEntryType::Event(_) => {
-                return Err(ParseError::UnsupportedEventDefinition)
+                return Err(ComilerError::Import(
+                    ImportError::UnsupportedEventImport,
+                ))
             }
         }
     }

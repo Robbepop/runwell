@@ -27,6 +27,30 @@ use crate::parse::{
 use derive_more::{Display, From};
 use thiserror::Error;
 
+#[derive(Debug, Display)]
+pub enum UnsupportedWasmSection {
+    #[display(fmt = "encountered unsupported Wasm module section")]
+    Module,
+    #[display(fmt = "encountered unsupported Wasm instance section")]
+    Instance,
+    #[display(fmt = "encountered unsupported Wasm alias section")]
+    Alias,
+    #[display(fmt = "encountered unsupported Wasm event section")]
+    Event,
+    #[display(fmt = "encountered unsupported Wasm custom section")]
+    Custom,
+    #[display(fmt = "encountered unsupported unknown Wasm section")]
+    Unknown,
+}
+
+#[derive(Debug, Display)]
+pub enum ImportError {
+    #[display(fmt = "encountered unsupported Wasm module import")]
+    UnsupportedModuleImport,
+    #[display(fmt = "encountered unsupported Wasm event import")]
+    UnsupportedEventImport,
+}
+
 /// An error that can be encountered upon parsing a Wasm module.
 #[derive(Debug, Display, From)]
 #[cfg_attr(feature = "std", derive(Error))]
@@ -35,6 +59,7 @@ pub enum ComilerError {
     Types(TypesError),
     /// An error that might occure upon exporting items.
     Export(ExportError),
+    Import(ImportError),
     /// An error upon building up data structures for the module.
     Module(ModuleError),
     /// An error upon evaluating initializer expressions.
@@ -50,15 +75,7 @@ pub enum ComilerError {
     /// An error encountered in the underlying parser.
     #[display(fmt = "encountered parser error")]
     Parser(wasmparser::BinaryReaderError),
-    /// Encountered upon encountering a module section in the input.
-    #[display(fmt = "encountered unsupported module section")]
-    UnsupportedModuleSection,
-    #[display(fmt = "encountered unsupported module definition")]
-    UnsupportedModuleDefinition,
-    #[display(fmt = "encountered unsupported instance definition")]
-    UnsupportedInstanceDefinition,
-    #[display(fmt = "encountered unsupported event definition")]
-    UnsupportedEventDefinition,
+    UnsupportedWasmSection(UnsupportedWasmSection),
     /// Encountered upon unmatching function declarations and definitions.
     #[display(fmt = "unmatching fn declarations and definitions")]
     UnmatchingFnDeclToDef,
