@@ -30,7 +30,7 @@ use crate::parse::{
     GlobalVariableDecl,
     GlobalVariableId,
     Module,
-    ParseError,
+    ComilerError,
 };
 use derive_more::Display;
 use std::convert::TryFrom;
@@ -159,7 +159,7 @@ impl<'a> ModuleBuilder {
     pub fn reserve_types(
         &mut self,
         total_count: usize,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         if let Some(previous) = self.expected_types {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::Type,
@@ -177,7 +177,7 @@ impl<'a> ModuleBuilder {
     pub fn register_type(
         &mut self,
         sig: FunctionSig,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         match self.expected_types {
             Some(total) => {
                 let actual = self.module.types.len();
@@ -211,7 +211,7 @@ impl<'a> ModuleBuilder {
         module_name: &'a str,
         field_name: &'a str,
         fn_sig_id: FunctionSigId,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         self.module.fn_sigs.push_imported(
             ImportName::new(module_name, field_name),
             fn_sig_id,
@@ -223,7 +223,7 @@ impl<'a> ModuleBuilder {
     pub fn reserve_fn_decls(
         &mut self,
         total_count: usize,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         if let Some(previous) = self.expected_fn_defs {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::FnSigs,
@@ -243,7 +243,7 @@ impl<'a> ModuleBuilder {
     pub fn declare_fn(
         &mut self,
         fn_sig_id: FunctionSigId,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         match self.expected_fn_defs {
             Some(total) => {
                 let actual = self.module.fn_sigs.len_defined();
@@ -277,7 +277,7 @@ impl<'a> ModuleBuilder {
         module_name: &'a str,
         field_name: &'a str,
         global: GlobalVariableDecl,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         self.module
             .globals
             .push_imported(ImportName::new(module_name, field_name), global)?;
@@ -295,7 +295,7 @@ impl<'a> ModuleBuilder {
         module_name: &'a str,
         field_name: &'a str,
         memory: MemoryType,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         let memory_decl = LinearMemoryDecl::try_from(memory)?;
         self.module.linear_memories.push_imported(
             ImportName::new(module_name, field_name),
@@ -308,7 +308,7 @@ impl<'a> ModuleBuilder {
     pub fn reserve_linear_memories(
         &mut self,
         total_count: usize,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         if let Some(previous) = self.expected_linear_memories {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::LinearMemory,
@@ -328,7 +328,7 @@ impl<'a> ModuleBuilder {
     pub fn declare_linear_memory(
         &mut self,
         memory: MemoryType,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         match self.expected_linear_memories {
             Some(total) => {
                 let actual = self.module.linear_memories.len_defined();
@@ -365,7 +365,7 @@ impl<'a> ModuleBuilder {
         module_name: &'a str,
         field_name: &'a str,
         table: TableType,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         let table_decl = TableDecl::try_from(table)?;
         self.module.tables.push_imported(
             ImportName::new(module_name, field_name),
@@ -378,7 +378,7 @@ impl<'a> ModuleBuilder {
     pub fn reserve_tables(
         &mut self,
         total_count: usize,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         if let Some(previous) = self.expected_tables {
             return Err(BuildError::DuplicateReservation {
                 entry: WasmSectionEntry::Table,
@@ -396,7 +396,7 @@ impl<'a> ModuleBuilder {
     pub fn declare_table(
         &mut self,
         table: TableType,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         match self.expected_tables {
             Some(total) => {
                 let actual = self.module.tables.len_defined();
@@ -472,7 +472,7 @@ impl<'a> ModuleBuilder {
     pub fn define_element(
         &mut self,
         element: Element,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         let table_id = element.table_id;
         match self.expected_elements {
             Some(total) => {
@@ -558,7 +558,7 @@ impl<'a> ModuleBuilder {
     pub fn reserve_global_variables(
         &mut self,
         total_count: usize,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         match self.expected_globals {
             None => {
                 self.module.globals.reserve_definitions(total_count)?;
@@ -579,7 +579,7 @@ impl<'a> ModuleBuilder {
         &mut self,
         decl: GlobalVariableDecl,
         init_value: GlobalInitExpr,
-    ) -> Result<GlobalVariableId, ParseError> {
+    ) -> Result<GlobalVariableId, ComilerError> {
         self.module.globals.push_defined(decl, init_value)
     }
 
@@ -587,7 +587,7 @@ impl<'a> ModuleBuilder {
     pub fn reserve_data_elements(
         &mut self,
         total_count: usize,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         match self.expected_data_elems {
             None => {
                 self.module
@@ -606,7 +606,7 @@ impl<'a> ModuleBuilder {
     }
 
     /// Pushes a new data definition to the Wasm module.
-    pub fn define_data(&mut self, data: Data) -> Result<(), ParseError> {
+    pub fn define_data(&mut self, data: Data) -> Result<(), ComilerError> {
         match self.expected_data_elems {
             Some(total) => {
                 let actual = total - self.remaining_data;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionId, GlobalInitExpr, ParseError, TableId};
+use crate::parse::{FunctionId, GlobalInitExpr, ComilerError, TableId};
 use std::{collections::HashMap, convert::TryFrom};
 use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 
@@ -31,14 +31,14 @@ impl TableDecl {
 }
 
 impl TryFrom<wasmparser::TableType> for TableDecl {
-    type Error = ParseError;
+    type Error = ComilerError;
 
     fn try_from(
         table_type: wasmparser::TableType,
     ) -> Result<Self, Self::Error> {
         match table_type.element_type {
             wasmparser::Type::FuncRef => (),
-            _unsupported => return Err(ParseError::UnsupportedElementKind),
+            _unsupported => return Err(ComilerError::UnsupportedElementKind),
         }
         Ok(Self {
             limits: table_type.limits,
@@ -75,7 +75,7 @@ impl<'a> From<ElementItemsReader<'a>> for ElementItemsIter<'a> {
 }
 
 impl<'a> Iterator for ElementItemsIter<'a> {
-    type Item = Result<FunctionId, ParseError>;
+    type Item = Result<FunctionId, ComilerError>;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.remaining, Some(self.remaining))
@@ -94,13 +94,13 @@ impl<'a> Iterator for ElementItemsIter<'a> {
                         Some(Ok(func_id))
                     }
                     wasmparser::ElementItem::Null(_) => {
-                        Some(Err(ParseError::InvalidElementItem))
+                        Some(Err(ComilerError::InvalidElementItem))
                     }
                 }
             }
             Err(_error) => {
                 // TODO: Implement better error reporting here.
-                Some(Err(ParseError::InvalidElementItem))
+                Some(Err(ComilerError::InvalidElementItem))
             }
         }
     }
@@ -137,14 +137,14 @@ impl<'a> Element<'a> {
 }
 
 impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
-    type Error = ParseError;
+    type Error = ComilerError;
 
     fn try_from(element: wasmparser::Element<'a>) -> Result<Self, Self::Error> {
         use wasmparser::ElementKind;
         match element.kind {
-            ElementKind::Passive => Err(ParseError::UnsupportedPassiveElement),
+            ElementKind::Passive => Err(ComilerError::UnsupportedPassiveElement),
             ElementKind::Declared => {
-                Err(ParseError::UnsupportedDeclaredElement)
+                Err(ComilerError::UnsupportedDeclaredElement)
             }
             ElementKind::Active {
                 table_index,
@@ -158,7 +158,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
                 // the overall API.
                 let _ = items
                     .get_items_reader()
-                    .map_err(|_| ParseError::InvalidElementItem)?;
+                    .map_err(|_| ComilerError::InvalidElementItem)?;
                 Ok(Self {
                     table_id,
                     offset,
@@ -190,7 +190,7 @@ impl TableItems {
         &mut self,
         offset: usize,
         items: I,
-    ) -> Result<(), ParseError>
+    ) -> Result<(), ComilerError>
     where
         I: IntoIterator<Item = FunctionId>,
     {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionSigId, ParseError, Type};
+use crate::parse::{FunctionSigId, ComilerError, Type};
 use core::convert::TryFrom;
 use derive_more::Display;
 
@@ -47,7 +47,7 @@ pub struct FunctionSig {
 }
 
 impl TryFrom<wasmparser::FuncType> for FunctionSig {
-    type Error = ParseError;
+    type Error = ComilerError;
 
     fn try_from(func_ty: wasmparser::FuncType) -> Result<Self, Self::Error> {
         let inputs = func_ty
@@ -108,7 +108,7 @@ impl Types {
     /// # Errors
     ///
     /// If there already has been a reservation before.
-    pub fn reserve(&mut self, total_count: u32) -> Result<(), ParseError> {
+    pub fn reserve(&mut self, total_count: u32) -> Result<(), ComilerError> {
         let capacity = self.types.capacity();
         if capacity > 0 {
             return Err(TypesError::DuplicateReserved {

@@ -29,7 +29,7 @@ use crate::parse::{
     FunctionSigId,
     GlobalVariableId,
     LinearMemoryId,
-    ParseError,
+    ComilerError,
     TableId,
 };
 use derive_more::From;
@@ -174,9 +174,9 @@ impl LoadOp {
         memarg: MemoryImmediate,
         result_ty: IntType,
         source_ty: ExtIntType,
-    ) -> Result<Self, ParseError> {
+    ) -> Result<Self, ComilerError> {
         if !source_ty.is_extendable_to(result_ty) {
-            return Err(ParseError::ExtensionToSmallerInt)
+            return Err(ComilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             memarg,
@@ -197,9 +197,9 @@ impl LoadOp {
         memarg: MemoryImmediate,
         result_ty: IntType,
         source_ty: ExtIntType,
-    ) -> Result<Self, ParseError> {
+    ) -> Result<Self, ComilerError> {
         if !source_ty.is_extendable_to(result_ty) {
-            return Err(ParseError::ExtensionToSmallerInt)
+            return Err(ComilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             memarg,
@@ -279,9 +279,9 @@ impl StoreOp {
         memarg: MemoryImmediate,
         src_ty: IntType,
         dst_ty: ExtIntType,
-    ) -> Result<Self, ParseError> {
+    ) -> Result<Self, ComilerError> {
         if !src_ty.is_truncatable_to(dst_ty) {
-            return Err(ParseError::TruncationToBiggerInt)
+            return Err(ComilerError::TruncationToBiggerInt)
         }
         Ok(Self {
             memarg,
@@ -427,9 +427,9 @@ impl TruncateOp {
     /// # Errors
     ///
     /// If the operation would truncate the source type to a bigger width.
-    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
+    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ComilerError> {
         if !source_ty.is_truncatable_to(result_ty.into()) {
-            return Err(ParseError::TruncationToBiggerInt)
+            return Err(ComilerError::TruncationToBiggerInt)
         }
         Ok(Self {
             result_ty,
@@ -453,9 +453,9 @@ impl ZeroExtendOp {
     /// # Errors
     ///
     /// If the operation would extend the source type to a smaller width.
-    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
+    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ComilerError> {
         if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
-            return Err(ParseError::ExtensionToSmallerInt)
+            return Err(ComilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             result_ty,
@@ -479,9 +479,9 @@ impl SignExtendOp {
     /// # Errors
     ///
     /// If the operation would extend the source type to a smaller width.
-    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ParseError> {
+    fn new(result_ty: IntType, source_ty: IntType) -> Result<Self, ComilerError> {
         if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
-            return Err(ParseError::ExtensionToSmallerInt)
+            return Err(ComilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             result_ty,

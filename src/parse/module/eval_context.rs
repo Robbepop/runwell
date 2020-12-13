@@ -17,7 +17,7 @@ use crate::parse::{
     GlobalInitExpr,
     GlobalVariableDecl,
     GlobalVariableId,
-    ParseError,
+    ComilerError,
 };
 use derive_more::Display;
 use std::collections::BTreeSet;
@@ -57,7 +57,7 @@ impl<'a> EvaluationContext<'a> {
     fn eval_const_i32_impl(
         &mut self,
         expr: &GlobalInitExpr,
-    ) -> Result<i32, ParseError> {
+    ) -> Result<i32, ComilerError> {
         match expr {
             GlobalInitExpr::I32Const(value) => Ok(*value),
             GlobalInitExpr::I64Const(_value) => {
@@ -72,7 +72,7 @@ impl<'a> EvaluationContext<'a> {
                 let resolved_expr = self
                     .globals
                     .get_defined(*id)
-                    .ok_or(ParseError::Evaluation(
+                    .ok_or(ComilerError::Evaluation(
                         EvaluationError::UnknownGlobalVariableId,
                     ))?
                     .def;
@@ -87,7 +87,7 @@ impl<'a> EvaluationContext<'a> {
     pub fn eval_const_i32(
         &mut self,
         expr: &GlobalInitExpr,
-    ) -> Result<i32, ParseError> {
+    ) -> Result<i32, ComilerError> {
         self.resolving.clear();
         let result = self.eval_const_i32_impl(expr)?;
         Ok(result)

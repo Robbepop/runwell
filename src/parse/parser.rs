@@ -96,7 +96,7 @@ impl<'a> Read for &'a [u8] {
     }
 }
 
-pub fn parse<R>(mut reader: R, buf: &mut Vec<u8>) -> Result<Module, ParseError>
+pub fn parse<R>(mut reader: R, buf: &mut Vec<u8>) -> Result<Module, ComilerError>
 where
     R: Read,
 {
@@ -146,7 +146,7 @@ fn process_payload(
     payload: Payload,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<bool, ParseError> {
+) -> Result<bool, ComilerError> {
     match payload {
         Payload::Version { num, range } => {
             validator.version(num, &range)?;
@@ -232,7 +232,7 @@ fn parse_type_section(
     reader: TypeSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.type_section(&reader)?;
     let count = reader.get_count() as usize;
     module.reserve_types(count)?;
@@ -265,7 +265,7 @@ fn parse_import_section(
     reader: ImportSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.import_section(&reader)?;
     for import in reader {
         let import = import?;
@@ -316,7 +316,7 @@ fn parse_function_section(
     reader: FunctionSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.function_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_fn_decls(total_count)?;
@@ -331,7 +331,7 @@ fn parse_table_section(
     reader: TableSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.table_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_tables(total_count)?;
@@ -346,7 +346,7 @@ fn parse_linear_memory_section(
     reader: MemorySectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.memory_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_linear_memories(total_count)?;
@@ -361,7 +361,7 @@ fn parse_globals_section(
     reader: GlobalSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.global_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_global_variables(total_count)?;
@@ -378,7 +378,7 @@ fn parse_export_section(
     reader: ExportSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.export_section(&reader)?;
     for export in reader {
         let export = export?;
@@ -393,7 +393,7 @@ fn parse_start_fn(
     range: WasmRange,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.start_section(start_fn_id, &range)?;
     module.set_start_fn(FunctionId::from_u32(start_fn_id));
     Ok(())
@@ -403,7 +403,7 @@ fn parse_element_section(
     reader: ElementSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.element_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_elements(total_count)?;
@@ -419,7 +419,7 @@ fn parse_code_start_section(
     range: WasmRange,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.code_section_start(count, &range)?;
     module.reserve_fn_defs(count as usize)?;
     Ok(())
@@ -429,7 +429,7 @@ fn parse_code_section(
     body: wasmparser::FunctionBody,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     let mut fn_validator = validator.code_section_entry()?;
     let mut reader = body.get_binary_reader();
     fn_validator.read_locals(&mut reader)?;
@@ -448,7 +448,7 @@ fn parse_data_count_section(
     range: WasmRange,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.data_count_section(count, &range)?;
     module.reserve_data_elements(count as usize)?;
     Ok(())
@@ -458,7 +458,7 @@ fn parse_data_section(
     reader: DataSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ParseError> {
+) -> Result<(), ComilerError> {
     validator.data_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_data_elements(total_count)?;

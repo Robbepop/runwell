@@ -30,7 +30,7 @@ use thiserror::Error;
 /// An error that can be encountered upon parsing a Wasm module.
 #[derive(Debug, Display, From)]
 #[cfg_attr(feature = "std", derive(Error))]
-pub enum ParseError {
+pub enum ComilerError {
     /// An error that occured upon operating with the Wasm type table.
     Types(TypesError),
     /// An error that might occure upon exporting items.

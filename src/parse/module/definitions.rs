@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{Index32, ParseError};
+use crate::parse::{Index32, ComilerError};
 use core::{iter::FusedIterator, marker::PhantomData};
 use derive_more::Display;
 
@@ -107,7 +107,7 @@ impl<Id, Decl, Def> ImportedOrDefined<Id, Decl, Def> {
     pub fn reserve_definitions(
         &mut self,
         additional: usize,
-    ) -> Result<(), ParseError> {
+    ) -> Result<(), ComilerError> {
         if let Some(_expected_definitions) = self.expected_definitions {
             return Err(ModuleError::DuplicateReservedDefinitions)
                 .map_err(Into::into)
@@ -136,7 +136,7 @@ where
         &mut self,
         declaration: Decl,
         definition: Def,
-    ) -> Result<Id, ParseError> {
+    ) -> Result<Id, ComilerError> {
         if let Some(expected_definitions) = self.expected_definitions {
             if self.definitions.len() == expected_definitions {
                 return Err(ModuleError::TooManyDefinitions).map_err(Into::into)
@@ -157,7 +157,7 @@ where
         &mut self,
         name: ImportName,
         declaration: Decl,
-    ) -> Result<Id, ParseError> {
+    ) -> Result<Id, ComilerError> {
         if self.has_definitions() {
             return Err(ModuleError::PushImportAfterDefinitions)
                 .map_err(Into::into)
@@ -298,7 +298,7 @@ where
     /// # Errors
     ///
     /// If there are missing definitions for declared entities.
-    pub fn iter(&self) -> Result<EntityIter<Id, Decl, Def>, ParseError> {
+    pub fn iter(&self) -> Result<EntityIter<Id, Decl, Def>, ComilerError> {
         let imported = self.iter_imported()?;
         let defined = self.iter_defined()?;
         Ok(EntityIter { imported, defined })
@@ -311,7 +311,7 @@ where
     /// If there are missing definitions for declared entities.
     pub fn iter_imported(
         &self,
-    ) -> Result<ImportedEntityIter<Id, Decl>, ParseError> {
+    ) -> Result<ImportedEntityIter<Id, Decl>, ComilerError> {
         if self.is_missing_definitions() {
             return Err(ModuleError::MissingDefinitions).map_err(Into::into)
         }
@@ -330,7 +330,7 @@ where
     /// If there are missing definitions for declared entities.
     pub fn iter_defined(
         &self,
-    ) -> Result<DefinedEntityIter<Id, Decl, Def>, ParseError> {
+    ) -> Result<DefinedEntityIter<Id, Decl, Def>, ComilerError> {
         if self.is_missing_definitions() {
             return Err(ModuleError::MissingDefinitions).map_err(Into::into)
         }

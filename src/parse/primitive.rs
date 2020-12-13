@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::ParseError;
+use crate::parse::ComilerError;
 use core::convert::TryFrom;
 
 /// An `i32` or `i64` type.
@@ -34,14 +34,14 @@ impl core::fmt::Display for Type {
 }
 
 impl TryFrom<wasmparser::Type> for Type {
-    type Error = ParseError;
+    type Error = ComilerError;
 
     fn try_from(ty: wasmparser::Type) -> Result<Self, Self::Error> {
         let result = match ty {
             wasmparser::Type::I32 => Type::I32,
             wasmparser::Type::I64 => Type::I64,
             unsupported => {
-                return Err(ParseError::UnsupportedType(format!(
+                return Err(ComilerError::UnsupportedType(format!(
                     "{:?}",
                     unsupported
                 )))
