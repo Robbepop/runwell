@@ -51,6 +51,17 @@ pub enum ImportError {
     UnsupportedEventImport,
 }
 
+impl ImportError {
+    /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
+    pub fn is_unsupported_error(&self) -> bool {
+        match self {
+            Self::UnsupportedModuleImport | Self::UnsupportedEventImport => {
+                true
+            }
+        }
+    }
+}
+
 /// An error that can be encountered upon parsing a Wasm module.
 #[derive(Debug, Display, From)]
 #[cfg_attr(feature = "std", derive(Error))]
@@ -134,6 +145,11 @@ impl CompilerError {
             | Self::UnsupportedOperator(_)
             | Self::UnsupportedNullElementItem
             | Self::UnsupportedType(_) => true,
+            Self::Types(error) => error.is_unsupported_error(),
+            Self::Import(error) => error.is_unsupported_error(),
+            Self::Export(error) => error.is_unsupported_error(),
+            Self::Memory(error) => error.is_unsupported_error(),
+            Self::GlobalInit(error) => error.is_unsupported_error(),
             _ => false,
         }
     }

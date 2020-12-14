@@ -37,6 +37,19 @@ pub enum GlobalInitError {
     InvalidExpression,
 }
 
+impl GlobalInitError {
+    /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
+    pub fn is_unsupported_error(&self) -> bool {
+        match self {
+            Self::UnsupportedOperator
+            | Self::UnsupportedFloats
+            | Self::UnsupportedV128
+            | Self::UnsupportedRefType => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, Display, Clone)]
 pub enum GlobalInitExpr {
     #[display(fmt = "i32.const {}", _0)]

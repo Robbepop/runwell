@@ -28,6 +28,16 @@ pub enum MemoryError {
     MemoryAccessOutOfBounds,
 }
 
+impl MemoryError {
+    /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
+    pub fn is_unsupported_error(&self) -> bool {
+        match self {
+            Self::Unsupported64BitLinearMemory => true,
+            _ => false,
+        }
+    }
+}
+
 /// A data segment coming from the Wasm parser.
 #[derive(Debug, Clone)]
 pub struct Data<'a> {

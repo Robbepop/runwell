@@ -22,6 +22,13 @@ pub enum ExportError {
     UnsupportedExportKind { kind: UnsupportedExportKind },
 }
 
+impl ExportError {
+    /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
+    pub fn is_unsupported_error(&self) -> bool {
+        true
+    }
+}
+
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UnsupportedExportKind {
     Event,

@@ -39,6 +39,16 @@ pub enum TypesError {
     Unsupported(UnsupportedTypeDef),
 }
 
+impl TypesError {
+    /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
+    pub fn is_unsupported_error(&self) -> bool {
+        match self {
+            Self::Unsupported(_) => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UnsupportedTypeDef {
     #[display(fmt = "encountered an unsupported Wasm module type definition")]
