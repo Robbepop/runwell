@@ -14,7 +14,7 @@
 
 use super::primitive::UnsupportedWasmType;
 use crate::parse::{
-    initializer::GlobalInitError,
+    initializer::InitializerExprError,
     module::{
         BuildError,
         EvaluationError,
@@ -79,7 +79,7 @@ pub enum CompilerError {
     /// An error upon interacting with linear memory.
     Memory(MemoryError),
     /// An error upon parsing a global initializer expression.
-    GlobalInit(GlobalInitError),
+    GlobalInit(InitializerExprError),
     /// An error while reading from the input.
     Read(ReadError),
     /// An error while building up the Wasm module.
