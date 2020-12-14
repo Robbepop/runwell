@@ -14,6 +14,7 @@
 
 use core::convert::TryFrom;
 use derive_more::{Display, Error, From};
+use wasmparser::{Ieee32, Ieee64};
 
 #[derive(Debug, Display, Error, PartialEq, Eq, Hash)]
 #[display(fmt = "encountered unsupported Wasm type: {:?}", unsupported)]
@@ -62,10 +63,32 @@ pub enum Value {
     I32(i32),
     #[display(fmt = "i64.const {}", _0)]
     I64(i64),
-    #[display(fmt = "f32.const {}", _0)]
-    F32(f32),
-    #[display(fmt = "f64.const {}", _0)]
-    F64(f64),
+    F32(F32),
+    F64(F64),
+}
+
+impl From<f32> for Value {
+    fn from(value: f32) -> Self {
+        Value::F32(F32::from(value))
+    }
+}
+
+impl From<f64> for Value {
+    fn from(value: f64) -> Self {
+        Value::F64(F64::from(value))
+    }
+}
+
+impl From<Ieee32> for Value {
+    fn from(value: Ieee32) -> Self {
+        Self::F32(F32::from(value))
+    }
+}
+
+impl From<Ieee64> for Value {
+    fn from(value: Ieee64) -> Self {
+        Self::F64(F64::from(value))
+    }
 }
 
 impl Value {
@@ -77,6 +100,42 @@ impl Value {
             Self::F32(_) => Type::F32,
             Self::F64(_) => Type::F64,
         }
+    }
+}
+
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[display(fmt = "f32.const {}", "f32::from_le_bytes(bits.to_le_bytes())")]
+pub struct F32 {
+    bits: u32,
+}
+
+impl From<f32> for F32 {
+    fn from(value: f32) -> Self {
+        Self { bits: u32::from_le_bytes(value.to_le_bytes()) }
+    }
+}
+
+impl From<Ieee32> for F32 {
+    fn from(value: Ieee32) -> Self {
+        Self { bits: value.bits() }
+    }
+}
+
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[display(fmt = "f64.const {}", "f64::from_le_bytes(bits.to_le_bytes())")]
+pub struct F64 {
+    bits: u64,
+}
+
+impl From<f64> for F64 {
+    fn from(value: f64) -> Self {
+        Self { bits: u64::from_le_bytes(value.to_le_bytes()) }
+    }
+}
+
+impl From<Ieee64> for F64 {
+    fn from(value: Ieee64) -> Self {
+        Self { bits: value.bits() }
     }
 }
 
@@ -98,9 +157,9 @@ mod tests {
         assert_eq!(Value::I32(-1).to_string(), "i32.const -1");
         assert_eq!(Value::I64(1).to_string(), "i64.const 1");
         assert_eq!(Value::I64(-1).to_string(), "i64.const -1");
-        assert_eq!(Value::F32(1.2).to_string(), "f32.const 1.2");
-        assert_eq!(Value::F32(-1.2).to_string(), "f32.const -1.2");
-        assert_eq!(Value::F64(1.2).to_string(), "f64.const 1.2");
-        assert_eq!(Value::F64(-1.2).to_string(), "f64.const -1.2");
+        assert_eq!(Value::from(F32::from(1.2)).to_string(), "f32.const 1.2");
+        assert_eq!(Value::from(F32::from(-1.2)).to_string(), "f32.const -1.2");
+        assert_eq!(Value::from(F64::from(1.2)).to_string(), "f64.const 1.2");
+        assert_eq!(Value::from(F64::from(-1.2)).to_string(), "f64.const -1.2");
     }
 }
