@@ -1,4 +1,5 @@
 use anyhow::Result;
+use runwell::parse::CompilerError;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -101,24 +102,49 @@ fn parse_works() {
     let mut len_unsupported = 0;
     let mut len_failed = 0;
     let mut len_passed = 0;
+    let mut local_test = 0;
+    let mut last_path = PathBuf::default();
     for (n, input) in inputs.iter().enumerate() {
-        println!("testing Wasm module #{} at {:?}", n, input.path);
+        if input.path != last_path {
+            local_test = 0;
+            last_path = input.path.clone();
+        } else {
+            local_test += 1;
+        }
+        if input.path.starts_with("testsuite/proposals") {
+            // We do not take into account any proposal specific tests.
+            continue
+        }
+        print!(
+            "  test {:4}: {}/{}: ",
+            n,
+            input.path.file_stem().unwrap().to_str().unwrap(),
+            local_test
+        );
         let result = runwell::parse::parse(&mut &input.wasm[..], &mut buffer);
         match result {
             Ok(_) => {
+                println!("ok");
                 len_passed += 1;
             }
             Err(error) => {
                 if error.is_unsupported_error() {
+                    println!("unsupported {:?}", error);
                     len_unsupported += 1;
                 } else {
+                    println!("FAILED {:?}", error);
                     len_failed += 1;
                 }
             }
         }
     }
-    println!("# tests passed: {}", len_passed);
-    println!("# tests unsupported: {}", len_unsupported);
-    println!("# tests failed: {}", len_failed);
+    println!(
+        "\n\
+        # tests passed:      {:4}\n\
+        # tests failed:      {:4}\n\
+        # tests unsupported: {:4}\n\
+    ",
+        len_passed, len_failed, len_unsupported
+    );
     assert_eq!(len_failed, 0);
 }
