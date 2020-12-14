@@ -495,9 +495,10 @@ impl<'a> ModuleBuilder {
                     .items_mut()
                     .set_items(
                         offset,
-                        element.items().map(|item| {
-                            item.expect("encountered invalid element item")
-                        }),
+                        element
+                            .items()
+                            .collect::<Result<Vec<_>, _>>()?
+                            .into_iter(),
                     )?;
             }
             None => {
