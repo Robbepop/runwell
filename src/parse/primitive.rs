@@ -79,3 +79,28 @@ impl Value {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn type_display_works() {
+        assert_eq!(Type::I32.to_string(), "i32");
+        assert_eq!(Type::I64.to_string(), "i64");
+        assert_eq!(Type::F32.to_string(), "f32");
+        assert_eq!(Type::F64.to_string(), "f64");
+    }
+
+    #[test]
+    fn value_display_works() {
+        assert_eq!(Value::I32(1).to_string(), "i32.const 1");
+        assert_eq!(Value::I32(-1).to_string(), "i32.const -1");
+        assert_eq!(Value::I64(1).to_string(), "i64.const 1");
+        assert_eq!(Value::I64(-1).to_string(), "i64.const -1");
+        assert_eq!(Value::F32(1.2).to_string(), "f32.const 1.2");
+        assert_eq!(Value::F32(-1.2).to_string(), "f32.const -1.2");
+        assert_eq!(Value::F64(1.2).to_string(), "f64.const 1.2");
+        assert_eq!(Value::F64(-1.2).to_string(), "f64.const -1.2");
+    }
+}
