@@ -19,7 +19,7 @@ use wasmparser::Operator;
 
 /// An error that can occure upon parsing a global initializer expression.
 #[derive(Debug, Display, PartialEq, Eq)]
-pub enum GlobalInitError {
+pub enum InitializerExprError {
     /// Encountered a generic unsupported operator.
     #[display(fmt = "encountered an unsupported Wasm operator")]
     UnsupportedOperator,
@@ -37,7 +37,7 @@ pub enum GlobalInitError {
     InvalidExpression,
 }
 
-impl GlobalInitError {
+impl InitializerExprError {
     /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
     pub fn is_unsupported_error(&self) -> bool {
         match self {
@@ -60,7 +60,7 @@ pub enum GlobalInitExpr {
     GetGlobal(GlobalVariableId),
 }
 
-impl<'a> TryFrom<wasmparser::InitExpr<'a>> for GlobalInitExpr {
+impl<'a> TryFrom<wasmparser::InitExpr<'a>> for InitializerExpr {
     type Error = CompilerError;
 
     fn try_from(
@@ -79,17 +79,17 @@ impl<'a> TryFrom<wasmparser::InitExpr<'a>> for GlobalInitExpr {
                 return Err(GlobalInitError::UnsupportedFloats.into())
             }
             Operator::V128Const { .. } => {
-                return Err(GlobalInitError::UnsupportedV128.into())
+                return Err(InitializerExprError::UnsupportedV128.into())
             }
             Operator::RefNull { .. } | Operator::RefFunc { .. } => {
-                return Err(GlobalInitError::UnsupportedRefType.into())
+                return Err(InitializerExprError::UnsupportedRefType.into())
             }
             ref _unsupported => {
-                return Err(GlobalInitError::UnsupportedOperator.into())
+                return Err(InitializerExprError::UnsupportedOperator.into())
             }
         };
         if !matches!(init_expr_reader.read_operator()?, Operator::End) {
-            return Err(GlobalInitError::InvalidExpression.into())
+            return Err(InitializerExprError::InvalidExpression.into())
         }
         Ok(initializer)
     }

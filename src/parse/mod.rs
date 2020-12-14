@@ -42,7 +42,7 @@ pub use self::{
         LinearMemoryId,
         TableId,
     },
-    initializer::GlobalInitExpr,
+    initializer::InitializerExpr,
     module::FunctionSig,
     module::{Element, ElementItemsIter, ExportKind, InternalFnIter, Module},
     operator::{

@@ -54,17 +54,17 @@ use crate::parse::{
     FunctionBody,
     FunctionId,
     FunctionSigId,
-    GlobalInitExpr,
     GlobalVariableDecl,
     GlobalVariableId,
     Identifier,
+    InitializerExpr,
     LinearMemoryId,
     TableId,
 };
 
 /// An iterator yielding global variables.
 pub type GlobalVariableIter<'a> =
-    EntityIter<'a, GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>;
+    EntityIter<'a, GlobalVariableId, GlobalVariableDecl, InitializerExpr>;
 
 /// A parsed and validated WebAssembly (Wasm) module.
 ///
@@ -96,8 +96,11 @@ pub struct Module {
     ///
     /// Represents the Wasm `global` section.
     /// Also holds information about imported global variables.
-    globals:
-        ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>,
+    globals: ImportedOrDefined<
+        GlobalVariableId,
+        GlobalVariableDecl,
+        InitializerExpr,
+    >,
     /// Imported and internal linear memory sections.
     ///
     /// # Note
@@ -165,7 +168,7 @@ impl<'a> Module {
     pub fn get_global(
         &self,
         id: GlobalVariableId,
-    ) -> Entity<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr> {
+    ) -> Entity<GlobalVariableId, GlobalVariableDecl, InitializerExpr> {
         self.globals
             .get(id)
             .expect("encountered unexpected invalid global variable ID")

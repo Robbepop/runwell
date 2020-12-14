@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{CompilerError, FunctionId, GlobalInitExpr, TableId};
+use crate::parse::{CompilerError, FunctionId, InitializerExpr, TableId};
 use std::{collections::HashMap, convert::TryFrom};
 use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 
@@ -52,7 +52,7 @@ pub struct Element<'a> {
     /// The referred to table index.
     pub table_id: TableId,
     /// The offset within the table for the initialized elements.
-    pub offset: GlobalInitExpr,
+    pub offset: InitializerExpr,
     /// The function signatures for the initialized table elements.
     items: ElementItems<'a>,
 }
@@ -150,7 +150,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
                 init_expr,
             } => {
                 let table_id = TableId::from_u32(table_index);
-                let offset = GlobalInitExpr::try_from(init_expr)?;
+                let offset = InitializerExpr::try_from(init_expr)?;
                 let items = element.items;
                 // With this upfront check we can drop the same check in [`Element::items`] and
                 // instead directly panic if this condition is violated there which simplifies

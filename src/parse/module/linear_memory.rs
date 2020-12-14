@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{CompilerError, GlobalInitExpr, LinearMemoryId};
+use crate::parse::{CompilerError, InitializerExpr, LinearMemoryId};
 use core::convert::TryFrom;
 use derive_more::Display;
 use wasmparser::ResizableLimits;
@@ -42,7 +42,7 @@ impl MemoryError {
 #[derive(Debug, Clone)]
 pub struct Data<'a> {
     id: LinearMemoryId,
-    offset: GlobalInitExpr,
+    offset: InitializerExpr,
     init: &'a [u8],
 }
 
@@ -53,7 +53,7 @@ impl<'a> Data<'a> {
     }
 
     /// Returns the expression denoting the offset for the data segment.
-    pub fn offset(&self) -> &GlobalInitExpr {
+    pub fn offset(&self) -> &InitializerExpr {
         &self.offset
     }
 
@@ -73,7 +73,7 @@ impl<'a> TryFrom<wasmparser::Data<'a>> for Data<'a> {
                 init_expr,
             } => {
                 let id = LinearMemoryId::from_u32(memory_index);
-                let offset = GlobalInitExpr::try_from(init_expr)?;
+                let offset = InitializerExpr::try_from(init_expr)?;
                 Ok(Self {
                     id,
                     offset,

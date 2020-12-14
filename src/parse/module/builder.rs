@@ -27,9 +27,9 @@ use crate::parse::{
     FunctionId,
     FunctionSig,
     FunctionSigId,
-    GlobalInitExpr,
     GlobalVariableDecl,
     GlobalVariableId,
+    InitializerExpr,
     Module,
 };
 use derive_more::Display;
@@ -463,7 +463,7 @@ impl<'a> ModuleBuilder {
     fn resolve_global_variable(
         &self,
         id: GlobalVariableId,
-    ) -> Option<GlobalInitExpr> {
+    ) -> Option<InitializerExpr> {
         let global = self.module.globals.get_defined(id)?;
         Some(global.def.clone())
     }
@@ -579,7 +579,7 @@ impl<'a> ModuleBuilder {
     pub fn define_global_variable(
         &mut self,
         decl: GlobalVariableDecl,
-        init_value: GlobalInitExpr,
+        init_value: InitializerExpr,
     ) -> Result<GlobalVariableId, CompilerError> {
         self.module.globals.push_defined(decl, init_value)
     }

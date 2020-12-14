@@ -13,12 +13,7 @@
 // limitations under the License.
 
 use super::definitions::ImportedOrDefined;
-use crate::parse::{
-    CompilerError,
-    GlobalInitExpr,
-    GlobalVariableDecl,
-    GlobalVariableId,
-};
+use crate::parse::{CompilerError, GlobalVariableDecl, GlobalVariableId, InitializerExpr, Value};
 use derive_more::Display;
 use std::collections::BTreeSet;
 
@@ -28,13 +23,13 @@ pub struct EvaluationContext<'a> {
     globals: &'a ImportedOrDefined<
         GlobalVariableId,
         GlobalVariableDecl,
-        GlobalInitExpr,
+        InitializerExpr,
     >,
     resolving: BTreeSet<GlobalVariableId>,
 }
 
 pub type Globals =
-    ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, GlobalInitExpr>;
+    ImportedOrDefined<GlobalVariableId, GlobalVariableDecl, InitializerExpr>;
 
 impl<'a> From<&'a Globals> for EvaluationContext<'a> {
     fn from(globals: &'a Globals) -> Self {
@@ -56,7 +51,7 @@ impl<'a> EvaluationContext<'a> {
     /// Internal implementation to resolve a global initializer expression using the context.
     fn eval_const_i32_impl(
         &mut self,
-        expr: &GlobalInitExpr,
+        expr: &InitializerExpr,
     ) -> Result<i32, CompilerError> {
         match expr {
             GlobalInitExpr::I32Const(value) => Ok(*value),
@@ -64,7 +59,7 @@ impl<'a> EvaluationContext<'a> {
                 Err(EvaluationError::InvalidConstInstruction)
                     .map_err(Into::into)
             }
-            GlobalInitExpr::GetGlobal(id) => {
+            InitializerExpr::GetGlobal(id) => {
                 if self.resolving.insert(*id) {
                     return Err(EvaluationError::ResolveCycle)
                         .map_err(Into::into)
@@ -86,7 +81,7 @@ impl<'a> EvaluationContext<'a> {
     /// Evaluates the given initializer expression as constant `i32`.
     pub fn eval_const_i32(
         &mut self,
-        expr: &GlobalInitExpr,
+        expr: &InitializerExpr,
     ) -> Result<i32, CompilerError> {
         self.resolving.clear();
         let result = self.eval_const_i32_impl(expr)?;
