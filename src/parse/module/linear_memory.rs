@@ -139,15 +139,15 @@ impl LinearMemoryContents {
     /// Consecutive calls to `init_region` might overwrite past initializations.
     pub fn init_region(
         &mut self,
-        offset: u32,
+        start: u32,
         bytes: &[u8],
-    ) -> Result<(), ComilerError> {
-        let offset = offset as usize;
-        let req_len = offset + bytes.len();
-        if self.contents.len() < req_len {
-            self.contents.resize(req_len, 0u8);
+    ) -> Result<(), CompilerError> {
+        let start = start as usize;
+        let end = start + bytes.len();
+        if self.contents.len() < end {
+            self.contents.resize(end, 0u8);
         }
-        self.contents[offset as usize..].copy_from_slice(bytes);
+        self.contents[start..end].copy_from_slice(bytes);
         Ok(())
     }
 
