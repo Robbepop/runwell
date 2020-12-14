@@ -19,5 +19,5 @@ use derive_more::{Display, From};
 #[derive(Display, From)]
 pub enum IrError {
     /// A parsing error.
-    Parse(parse::ComilerError),
+    Parse(parse::CompilerError),
 }

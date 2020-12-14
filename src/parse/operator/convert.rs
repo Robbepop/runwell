@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{operator::*, ComilerError, LinearMemoryId, Operator};
+use crate::parse::{operator::*, CompilerError, LinearMemoryId, Operator};
 use core::convert::TryFrom;
 
 impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(op: wasmparser::Operator<'a>) -> Result<Self, Self::Error> {
         use wasmparser::Operator as WasmOperator;
@@ -327,7 +327,7 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
             }
 
             unsupported => {
-                return Err(ComilerError::UnsupportedOperator(format!(
+                return Err(CompilerError::UnsupportedOperator(format!(
                     "{:?}",
                     unsupported
                 )))
@@ -338,7 +338,7 @@ impl<'a> TryFrom<wasmparser::Operator<'a>> for Operator {
 }
 
 impl<'a> TryFrom<wasmparser::BrTable<'a>> for BrTableOp {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(table: wasmparser::BrTable<'a>) -> Result<Self, Self::Error> {
         let len_targets = table.len();

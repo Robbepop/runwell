@@ -14,7 +14,7 @@
 
 use crate::parse::{
     module::FunctionSig,
-    ComilerError,
+    CompilerError,
     FunctionId,
     Operator,
     Type,
@@ -57,7 +57,7 @@ pub struct FunctionBody {
 }
 
 impl<'a> core::convert::TryFrom<wasmparser::FunctionBody<'a>> for FunctionBody {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(
         function_body: wasmparser::FunctionBody<'a>,
@@ -71,7 +71,7 @@ impl<'a> core::convert::TryFrom<wasmparser::FunctionBody<'a>> for FunctionBody {
                     Err(err) => Err(err.into()),
                 }
             })
-            .collect::<Result<Vec<_>, ComilerError>>()?
+            .collect::<Result<Vec<_>, CompilerError>>()?
             .into_boxed_slice();
         let ops = function_body
             .get_operators_reader()?

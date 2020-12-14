@@ -30,7 +30,7 @@ mod primitive;
 use self::module::ModuleBuilder;
 #[doc(inline)]
 pub use self::{
-    error::ComilerError,
+    error::CompilerError,
     function::{Function, FunctionBody},
     global_variable::{GlobalVariable, GlobalVariableDecl},
     id::{

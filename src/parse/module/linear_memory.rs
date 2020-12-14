@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{ComilerError, GlobalInitExpr, LinearMemoryId};
+use crate::parse::{CompilerError, GlobalInitExpr, LinearMemoryId};
 use core::convert::TryFrom;
 use derive_more::Display;
 use wasmparser::ResizableLimits;
@@ -54,7 +54,7 @@ impl<'a> Data<'a> {
 }
 
 impl<'a> TryFrom<wasmparser::Data<'a>> for Data<'a> {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(value: wasmparser::Data<'a>) -> Result<Self, Self::Error> {
         match value.kind {
@@ -71,7 +71,7 @@ impl<'a> TryFrom<wasmparser::Data<'a>> for Data<'a> {
                 })
             }
             wasmparser::DataKind::Passive => {
-                Err(ComilerError::UnsupportedPassiveElement)
+                Err(CompilerError::UnsupportedPassiveElement)
             }
         }
     }
@@ -103,7 +103,7 @@ impl LinearMemoryDecl {
 }
 
 impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(
         memory_type: wasmparser::MemoryType,
@@ -172,7 +172,7 @@ impl LinearMemoryContents {
         &self,
         offset: u32,
         buffer: &mut [u8],
-    ) -> Result<(), ComilerError> {
+    ) -> Result<(), CompilerError> {
         let offset = offset as usize;
         let len = buffer.len();
         let req_len = offset + len;

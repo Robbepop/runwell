@@ -32,7 +32,7 @@ pub use self::utils::{
     MemoryImmediate,
 };
 use crate::parse::{
-    ComilerError,
+    CompilerError,
     FunctionId,
     FunctionSigId,
     GlobalVariableId,
@@ -173,9 +173,9 @@ impl LoadOp {
         memarg: MemoryImmediate,
         result_ty: IntType,
         source_ty: ExtIntType,
-    ) -> Result<Self, ComilerError> {
+    ) -> Result<Self, CompilerError> {
         if !source_ty.is_extendable_to(result_ty) {
-            return Err(ComilerError::ExtensionToSmallerInt)
+            return Err(CompilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             memarg,
@@ -196,9 +196,9 @@ impl LoadOp {
         memarg: MemoryImmediate,
         result_ty: IntType,
         source_ty: ExtIntType,
-    ) -> Result<Self, ComilerError> {
+    ) -> Result<Self, CompilerError> {
         if !source_ty.is_extendable_to(result_ty) {
-            return Err(ComilerError::ExtensionToSmallerInt)
+            return Err(CompilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             memarg,
@@ -278,9 +278,9 @@ impl StoreOp {
         memarg: MemoryImmediate,
         src_ty: IntType,
         dst_ty: ExtIntType,
-    ) -> Result<Self, ComilerError> {
+    ) -> Result<Self, CompilerError> {
         if !src_ty.is_truncatable_to(dst_ty) {
-            return Err(ComilerError::TruncationToBiggerInt)
+            return Err(CompilerError::TruncationToBiggerInt)
         }
         Ok(Self {
             memarg,
@@ -429,9 +429,9 @@ impl TruncateOp {
     fn new(
         result_ty: IntType,
         source_ty: IntType,
-    ) -> Result<Self, ComilerError> {
+    ) -> Result<Self, CompilerError> {
         if !source_ty.is_truncatable_to(result_ty.into()) {
-            return Err(ComilerError::TruncationToBiggerInt)
+            return Err(CompilerError::TruncationToBiggerInt)
         }
         Ok(Self {
             result_ty,
@@ -458,9 +458,9 @@ impl ZeroExtendOp {
     fn new(
         result_ty: IntType,
         source_ty: IntType,
-    ) -> Result<Self, ComilerError> {
+    ) -> Result<Self, CompilerError> {
         if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
-            return Err(ComilerError::ExtensionToSmallerInt)
+            return Err(CompilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             result_ty,
@@ -487,9 +487,9 @@ impl SignExtendOp {
     fn new(
         result_ty: IntType,
         source_ty: IntType,
-    ) -> Result<Self, ComilerError> {
+    ) -> Result<Self, CompilerError> {
         if !ExtIntType::is_extendable_to(source_ty.into(), result_ty) {
-            return Err(ComilerError::ExtensionToSmallerInt)
+            return Err(CompilerError::ExtensionToSmallerInt)
         }
         Ok(Self {
             result_ty,

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{id::GlobalVariableId, ComilerError};
+use crate::parse::{id::GlobalVariableId, CompilerError};
 use core::convert::TryFrom;
 use derive_more::Display;
 use wasmparser::Operator;
@@ -48,7 +48,7 @@ pub enum GlobalInitExpr {
 }
 
 impl<'a> TryFrom<wasmparser::InitExpr<'a>> for GlobalInitExpr {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(
         init_expr: wasmparser::InitExpr<'a>,

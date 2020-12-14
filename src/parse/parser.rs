@@ -19,7 +19,7 @@ use super::{
 };
 use crate::parse::{
     module::{Data, ExportItem},
-    ComilerError,
+    CompilerError,
     FunctionId,
     FunctionSigId,
     Module,
@@ -103,7 +103,7 @@ impl<'a> Read for &'a [u8] {
 pub fn parse<R>(
     mut reader: R,
     buf: &mut Vec<u8>,
-) -> Result<Module, ComilerError>
+) -> Result<Module, CompilerError>
 where
     R: Read,
 {
@@ -153,7 +153,7 @@ fn process_payload(
     payload: Payload,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<bool, ComilerError> {
+) -> Result<bool, CompilerError> {
     match payload {
         Payload::Version { num, range } => {
             validator.version(num, &range)?;
@@ -207,12 +207,12 @@ fn process_payload(
         | Payload::ModuleSection(_)
         | Payload::ModuleCodeSectionStart { .. }
         | Payload::ModuleCodeSectionEntry { .. } => {
-            return Err(ComilerError::UnsupportedWasmSection(
+            return Err(CompilerError::UnsupportedWasmSection(
                 UnsupportedWasmSection::Module,
             ))
         }
         Payload::EventSection(_) => {
-            return Err(ComilerError::UnsupportedWasmSection(
+            return Err(CompilerError::UnsupportedWasmSection(
                 UnsupportedWasmSection::Event,
             ))
         }
@@ -221,17 +221,13 @@ fn process_payload(
             name: _,
             data_offset: _,
             data: _,
-        } => {
-            return Err(ComilerError::UnsupportedWasmSection(
-                UnsupportedWasmSection::Custom,
-            ))
-        }
+        } => { /* ignore custom section */ }
         Payload::UnknownSection {
             id: _,
             contents: _,
             range: _,
         } => {
-            return Err(ComilerError::UnsupportedWasmSection(
+            return Err(CompilerError::UnsupportedWasmSection(
                 UnsupportedWasmSection::Unknown,
             ))
         }
@@ -251,7 +247,7 @@ fn parse_type_section(
     reader: TypeSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.type_section(&reader)?;
     let count = reader.get_count() as usize;
     module.reserve_types(count)?;
@@ -262,12 +258,12 @@ fn parse_type_section(
                 module.register_type(fn_sig)?;
             }
             wasmparser::TypeDef::Instance(_) => {
-                return Err(ComilerError::Types(TypesError::Unsupported(
+                return Err(CompilerError::Types(TypesError::Unsupported(
                     UnsupportedTypeDef::Instance,
                 )))
             }
             wasmparser::TypeDef::Module(_) => {
-                return Err(ComilerError::Types(TypesError::Unsupported(
+                return Err(CompilerError::Types(TypesError::Unsupported(
                     UnsupportedTypeDef::Module,
                 )))
             }
@@ -288,7 +284,7 @@ fn parse_import_section(
     reader: ImportSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.import_section(&reader)?;
     for import in reader {
         let import = import?;
@@ -325,12 +321,12 @@ fn parse_import_section(
             }
             ImportSectionEntryType::Module(_)
             | ImportSectionEntryType::Instance(_) => {
-                return Err(ComilerError::Import(
+                return Err(CompilerError::Import(
                     ImportError::UnsupportedModuleImport,
                 ))
             }
             ImportSectionEntryType::Event(_) => {
-                return Err(ComilerError::Import(
+                return Err(CompilerError::Import(
                     ImportError::UnsupportedEventImport,
                 ))
             }
@@ -343,7 +339,7 @@ fn parse_function_section(
     reader: FunctionSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.function_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_fn_decls(total_count)?;
@@ -358,7 +354,7 @@ fn parse_table_section(
     reader: TableSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.table_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_tables(total_count)?;
@@ -373,7 +369,7 @@ fn parse_linear_memory_section(
     reader: MemorySectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.memory_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_linear_memories(total_count)?;
@@ -388,7 +384,7 @@ fn parse_globals_section(
     reader: GlobalSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.global_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_global_variables(total_count)?;
@@ -405,7 +401,7 @@ fn parse_export_section(
     reader: ExportSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.export_section(&reader)?;
     for export in reader {
         let export = export?;
@@ -420,7 +416,7 @@ fn parse_start_fn(
     range: WasmRange,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.start_section(start_fn_id, &range)?;
     module.set_start_fn(FunctionId::from_u32(start_fn_id));
     Ok(())
@@ -430,7 +426,7 @@ fn parse_element_section(
     reader: ElementSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.element_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_elements(total_count)?;
@@ -446,7 +442,7 @@ fn parse_code_start_section(
     range: WasmRange,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.code_section_start(count, &range)?;
     module.reserve_fn_defs(count as usize)?;
     Ok(())
@@ -456,7 +452,7 @@ fn parse_code_section(
     body: wasmparser::FunctionBody,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     let mut fn_validator = validator.code_section_entry()?;
     let mut reader = body.get_binary_reader();
     fn_validator.read_locals(&mut reader)?;
@@ -475,7 +471,7 @@ fn parse_data_count_section(
     range: WasmRange,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.data_count_section(count, &range)?;
     module.reserve_data_elements(count as usize)?;
     Ok(())
@@ -485,7 +481,7 @@ fn parse_data_section(
     reader: DataSectionReader,
     module: &mut ModuleBuilder,
     validator: &mut Validator,
-) -> Result<(), ComilerError> {
+) -> Result<(), CompilerError> {
     validator.data_section(&reader)?;
     let total_count = reader.get_count() as usize;
     module.reserve_data_elements(total_count)?;

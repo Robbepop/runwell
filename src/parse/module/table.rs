@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{ComilerError, FunctionId, GlobalInitExpr, TableId};
+use crate::parse::{CompilerError, FunctionId, GlobalInitExpr, TableId};
 use std::{collections::HashMap, convert::TryFrom};
 use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 
@@ -31,14 +31,14 @@ impl TableDecl {
 }
 
 impl TryFrom<wasmparser::TableType> for TableDecl {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(
         table_type: wasmparser::TableType,
     ) -> Result<Self, Self::Error> {
         match table_type.element_type {
             wasmparser::Type::FuncRef => (),
-            _unsupported => return Err(ComilerError::UnsupportedElementKind),
+            _unsupported => return Err(CompilerError::UnsupportedElementKind),
         }
         Ok(Self {
             limits: table_type.limits,
@@ -75,7 +75,7 @@ impl<'a> From<ElementItemsReader<'a>> for ElementItemsIter<'a> {
 }
 
 impl<'a> Iterator for ElementItemsIter<'a> {
-    type Item = Result<FunctionId, ComilerError>;
+    type Item = Result<FunctionId, CompilerError>;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.remaining, Some(self.remaining))
@@ -94,7 +94,7 @@ impl<'a> Iterator for ElementItemsIter<'a> {
                         Some(Ok(func_id))
                     }
                     wasmparser::ElementItem::Null(_) => {
-                        Some(Err(ComilerError::InvalidElementItem))
+                        Some(Err(CompilerError::UnsupportedNullElementItem))
                     }
                 }
             }
@@ -137,16 +137,16 @@ impl<'a> Element<'a> {
 }
 
 impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
-    type Error = ComilerError;
+    type Error = CompilerError;
 
     fn try_from(element: wasmparser::Element<'a>) -> Result<Self, Self::Error> {
         use wasmparser::ElementKind;
         match element.kind {
             ElementKind::Passive => {
-                Err(ComilerError::UnsupportedPassiveElement)
+                Err(CompilerError::UnsupportedPassiveElement)
             }
             ElementKind::Declared => {
-                Err(ComilerError::UnsupportedDeclaredElement)
+                Err(CompilerError::UnsupportedDeclaredElement)
             }
             ElementKind::Active {
                 table_index,
@@ -192,7 +192,7 @@ impl TableItems {
         &mut self,
         offset: usize,
         items: I,
-    ) -> Result<(), ComilerError>
+    ) -> Result<(), CompilerError>
     where
         I: IntoIterator<Item = FunctionId>,
     {

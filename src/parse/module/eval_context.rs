@@ -14,7 +14,7 @@
 
 use super::definitions::ImportedOrDefined;
 use crate::parse::{
-    ComilerError,
+    CompilerError,
     GlobalInitExpr,
     GlobalVariableDecl,
     GlobalVariableId,
@@ -57,7 +57,7 @@ impl<'a> EvaluationContext<'a> {
     fn eval_const_i32_impl(
         &mut self,
         expr: &GlobalInitExpr,
-    ) -> Result<i32, ComilerError> {
+    ) -> Result<i32, CompilerError> {
         match expr {
             GlobalInitExpr::I32Const(value) => Ok(*value),
             GlobalInitExpr::I64Const(_value) => {
@@ -72,7 +72,7 @@ impl<'a> EvaluationContext<'a> {
                 let resolved_expr = self
                     .globals
                     .get_defined(*id)
-                    .ok_or(ComilerError::Evaluation(
+                    .ok_or(CompilerError::Evaluation(
                         EvaluationError::UnknownGlobalVariableId,
                     ))?
                     .def;
@@ -87,7 +87,7 @@ impl<'a> EvaluationContext<'a> {
     pub fn eval_const_i32(
         &mut self,
         expr: &GlobalInitExpr,
-    ) -> Result<i32, ComilerError> {
+    ) -> Result<i32, CompilerError> {
         self.resolving.clear();
         let result = self.eval_const_i32_impl(expr)?;
         Ok(result)
