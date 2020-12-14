@@ -1,5 +1,4 @@
 use anyhow::Result;
-use runwell::parse::CompilerError;
 use std::{
     fs,
     path::{Path, PathBuf},
