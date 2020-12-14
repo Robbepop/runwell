@@ -100,8 +100,8 @@ pub enum CompilerError {
     /// Unsupported element kind (Null).
     #[display(fmt = "encountered unsupported null element kind")]
     UnsupportedElementKind,
-    #[display(fmt = "encountered invalid or unsupported element item")]
-    InvalidElementItem,
+    #[display(fmt = "encountered unsupported null element item")]
+    UnsupportedNullElementItem,
     /// Encountered unsupported Wasm operator.
     #[display(fmt = "encountered unsupported Wasm operator: {}", self.0)]
     // We only store the string representation of the unsupported operator
@@ -120,4 +120,21 @@ pub enum CompilerError {
     #[display(fmt = "encountered unsupported Wasm type: {:?}", self.0)]
     #[from(ignore)]
     UnsupportedType(String),
+}
+
+impl CompilerError {
+    /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
+    pub fn is_unsupported_error(&self) -> bool {
+        match self {
+            Self::UnsupportedWasmSection(_)
+            | Self::MultipleMemoriesUnsupported
+            | Self::UnsupportedPassiveElement
+            | Self::UnsupportedDeclaredElement
+            | Self::UnsupportedElementKind
+            | Self::UnsupportedOperator(_)
+            | Self::UnsupportedNullElementItem
+            | Self::UnsupportedType(_) => true,
+            _ => false,
+        }
+    }
 }
