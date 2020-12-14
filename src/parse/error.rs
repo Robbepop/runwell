@@ -115,7 +115,7 @@ pub enum CompilerError {
     #[display(fmt = "encountered unsupported null element item")]
     UnsupportedNullElementItem,
     /// Encountered unsupported Wasm operator.
-    #[display(fmt = "encountered unsupported Wasm operator: {}", self.0)]
+    #[display(fmt = "encountered unsupported Wasm operator: {}", _0)]
     // We only store the string representation of the unsupported operator
     // instead of storing the real `wasmparser::Operator` that caused the
     // error because it would introduce a lifetime that we do not want at
