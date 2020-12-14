@@ -13,7 +13,13 @@
 // limitations under the License.
 
 use super::definitions::ImportedOrDefined;
-use crate::parse::{CompilerError, GlobalVariableDecl, GlobalVariableId, InitializerExpr, Value};
+use crate::parse::{
+    CompilerError,
+    GlobalVariableDecl,
+    GlobalVariableId,
+    InitializerExpr,
+    Value,
+};
 use derive_more::Display;
 use std::collections::BTreeSet;
 
@@ -54,8 +60,8 @@ impl<'a> EvaluationContext<'a> {
         expr: &InitializerExpr,
     ) -> Result<i32, CompilerError> {
         match expr {
-            GlobalInitExpr::I32Const(value) => Ok(*value),
-            GlobalInitExpr::I64Const(_value) => {
+            InitializerExpr::Const(Value::I32(value)) => Ok(*value),
+            InitializerExpr::Const(_value) => {
                 Err(EvaluationError::InvalidConstInstruction)
                     .map_err(Into::into)
             }

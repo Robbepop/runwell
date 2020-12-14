@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::{
+    primitive::{F32, F64},
+    Value,
+};
 use crate::parse::{id::GlobalVariableId, CompilerError};
 use core::convert::TryFrom;
 use derive_more::Display;
@@ -51,11 +55,8 @@ impl InitializerExprError {
 }
 
 #[derive(Debug, Display, Clone)]
-pub enum GlobalInitExpr {
-    #[display(fmt = "i32.const {}", _0)]
-    I32Const(i32),
-    #[display(fmt = "i64.const {}", _0)]
-    I64Const(i64),
+pub enum InitializerExpr {
+    Const(Value),
     #[display(fmt = "global.get {}", "_0.into_u32()")]
     GetGlobal(GlobalVariableId),
 }
@@ -68,15 +69,22 @@ impl<'a> TryFrom<wasmparser::InitExpr<'a>> for InitializerExpr {
     ) -> Result<Self, Self::Error> {
         let mut init_expr_reader = init_expr.get_binary_reader();
         let initializer = match init_expr_reader.read_operator()? {
-            Operator::I32Const { value } => GlobalInitExpr::I32Const(value),
-            Operator::I64Const { value } => GlobalInitExpr::I64Const(value),
+            Operator::I32Const { value } => {
+                InitializerExpr::Const(Value::I32(value))
+            }
+            Operator::I64Const { value } => {
+                InitializerExpr::Const(Value::I64(value))
+            }
+            Operator::F32Const { value } => {
+                InitializerExpr::Const(F32::from(value).into())
+            }
+            Operator::F64Const { value } => {
+                InitializerExpr::Const(F64::from(value).into())
+            }
             Operator::GlobalGet { global_index } => {
-                GlobalInitExpr::GetGlobal(GlobalVariableId::from_u32(
+                InitializerExpr::GetGlobal(GlobalVariableId::from_u32(
                     global_index,
                 ))
-            }
-            Operator::F32Const { .. } | Operator::F64Const { .. } => {
-                return Err(GlobalInitError::UnsupportedFloats.into())
             }
             Operator::V128Const { .. } => {
                 return Err(InitializerExprError::UnsupportedV128.into())
@@ -97,8 +105,20 @@ impl<'a> TryFrom<wasmparser::InitExpr<'a>> for InitializerExpr {
 
 #[test]
 fn display_works() {
-    assert_eq!(GlobalInitExpr::I32Const(1).to_string(), "i32.const 1");
-    assert_eq!(GlobalInitExpr::I32Const(-1).to_string(), "i32.const -1");
-    assert_eq!(GlobalInitExpr::I64Const(1).to_string(), "i64.const 1");
-    assert_eq!(GlobalInitExpr::I64Const(-1).to_string(), "i64.const -1");
+    assert_eq!(
+        InitializerExpr::Const(Value::I32(1)).to_string(),
+        "i32.const 1"
+    );
+    assert_eq!(
+        InitializerExpr::Const(Value::I32(-1)).to_string(),
+        "i32.const -1"
+    );
+    assert_eq!(
+        InitializerExpr::Const(Value::I64(1)).to_string(),
+        "i64.const 1"
+    );
+    assert_eq!(
+        InitializerExpr::Const(Value::I64(-1)).to_string(),
+        "i64.const -1"
+    );
 }
