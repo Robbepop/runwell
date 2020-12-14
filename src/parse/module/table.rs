@@ -98,10 +98,7 @@ impl<'a> Iterator for ElementItemsIter<'a> {
                     }
                 }
             }
-            Err(_error) => {
-                // TODO: Implement better error reporting here.
-                Some(Err(ComilerError::InvalidElementItem))
-            }
+            Err(error) => Some(Err(CompilerError::from(error))),
         }
     }
 }
@@ -158,9 +155,7 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
                 // With this upfront check we can drop the same check in [`Element::items`] and
                 // instead directly panic if this condition is violated there which simplifies
                 // the overall API.
-                let _ = items
-                    .get_items_reader()
-                    .map_err(|_| ComilerError::InvalidElementItem)?;
+                let _ = items.get_items_reader()?;
                 Ok(Self {
                     table_id,
                     offset,
