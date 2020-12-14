@@ -12,59 +12,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::CompilerError;
 use core::convert::TryFrom;
+use derive_more::{Display, Error, From};
 
-/// An `i32` or `i64` type.
-///
-/// These are currently the only supported type by the Runwell JIT compiler.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Type {
-    I32,
-    I64,
+#[derive(Debug, Display, Error, PartialEq, Eq, Hash)]
+#[display(fmt = "encountered unsupported Wasm type: {:?}", unsupported)]
+pub struct UnsupportedWasmType {
+    unsupported: wasmparser::Type,
 }
 
-impl core::fmt::Display for Type {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        match self {
-            Self::I32 => write!(f, "i32"),
-            Self::I64 => write!(f, "i64"),
-        }
-    }
+/// An `i32` (32-bit integer), `i64` (64-bit integer),
+/// `f32` (32-bit floating point) or `f64` (64-bit floating point) type.
+///
+/// These are currently the only supported type by the Runwell JIT compiler.
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Type {
+    #[display(fmt = "i32")]
+    I32,
+    #[display(fmt = "i64")]
+    I64,
+    #[display(fmt = "f32")]
+    F32,
+    #[display(fmt = "f64")]
+    F64,
 }
 
 impl TryFrom<wasmparser::Type> for Type {
-    type Error = CompilerError;
+    type Error = UnsupportedWasmType;
 
     fn try_from(ty: wasmparser::Type) -> Result<Self, Self::Error> {
         let result = match ty {
             wasmparser::Type::I32 => Type::I32,
             wasmparser::Type::I64 => Type::I64,
-            unsupported => {
-                return Err(CompilerError::UnsupportedType(format!(
-                    "{:?}",
-                    unsupported
-                )))
-            }
+            wasmparser::Type::F32 => Type::F32,
+            wasmparser::Type::F64 => Type::F64,
+            unsupported => return Err(UnsupportedWasmType { unsupported }),
         };
         Ok(result)
     }
 }
 
-/// An `i32` or `i64` value.
+/// An `i32` (32-bit integer), `i64` (64-bit integer),
+/// `f32` (32-bit floating point) or `f64` (64-bit floating point) value.
 ///
 /// These are currently the only supported type by the Runwell JIT compiler.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, From, Copy, Clone, PartialEq)]
 pub enum Value {
+    #[display(fmt = "i32.const {}", _0)]
     I32(i32),
+    #[display(fmt = "i64.const {}", _0)]
     I64(i64),
+    #[display(fmt = "f32.const {}", _0)]
+    F32(f32),
+    #[display(fmt = "f64.const {}", _0)]
+    F64(f64),
 }
 
-impl core::fmt::Display for Value {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl Value {
+    /// Returns the type of the value.
+    pub fn ty(&self) -> Type {
         match self {
-            Self::I32(value) => write!(f, "i32.const {}", value),
-            Self::I64(value) => write!(f, "i64.const {}", value),
+            Self::I32(_) => Type::I32,
+            Self::I64(_) => Type::I64,
+            Self::F32(_) => Type::F32,
+            Self::F64(_) => Type::F64,
         }
     }
 }

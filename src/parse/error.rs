@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::primitive::UnsupportedWasmType;
 use crate::parse::{
     initializer::GlobalInitError,
     module::{
@@ -128,9 +129,7 @@ pub enum CompilerError {
     #[display(fmt = "encountered invalid truncation Wasm operator")]
     TruncationToBiggerInt,
     /// Encountered an unsupported Wasm type.
-    #[display(fmt = "encountered unsupported Wasm type: {:?}", self.0)]
-    #[from(ignore)]
-    UnsupportedType(String),
+    UnsupportedType(UnsupportedWasmType),
 }
 
 impl CompilerError {
