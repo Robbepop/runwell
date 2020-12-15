@@ -111,7 +111,9 @@ pub struct F32 {
 
 impl From<f32> for F32 {
     fn from(value: f32) -> Self {
-        Self { bits: u32::from_le_bytes(value.to_le_bytes()) }
+        Self {
+            bits: u32::from_le_bytes(value.to_le_bytes()),
+        }
     }
 }
 
@@ -129,7 +131,9 @@ pub struct F64 {
 
 impl From<f64> for F64 {
     fn from(value: f64) -> Self {
-        Self { bits: u64::from_le_bytes(value.to_le_bytes()) }
+        Self {
+            bits: u64::from_le_bytes(value.to_le_bytes()),
+        }
     }
 }
 
