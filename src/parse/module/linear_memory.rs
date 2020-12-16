@@ -137,10 +137,10 @@ impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
 /// The contents of a Wasm linear memory.
 #[derive(Debug, Default)]
 pub struct LinearMemoryContents {
-    /// Contents of the linear memory.
+    /// Data items.
     ///
-    /// Uninitializes contents are set to 0 by default.
-    contents: Vec<u8>,
+    /// These are used to initialize the linear memory upon module instantiation.
+    items: Vec<Data2>,
 }
 
 impl LinearMemoryContents {
@@ -149,47 +149,20 @@ impl LinearMemoryContents {
     /// Consecutive calls to `init_region` might overwrite past initializations.
     pub fn init_region(
         &mut self,
-        start: u32,
+        offset: InitializerExpr,
         bytes: &[u8],
     ) -> Result<(), CompilerError> {
-        let start = start as usize;
-        let end = start + bytes.len();
-        if self.contents.len() < end {
-            self.contents.resize(end, 0u8);
-        }
-        self.contents[start..end].copy_from_slice(bytes);
+        self.items.push(Data2 {
+            offset,
+            bytes: bytes.to_vec(),
+        });
         Ok(())
     }
+}
 
-    /// Returns the requested amount of bytes at the given offset if any.
-    ///
-    /// Returns `None` if `offset + len` is out of bounds for the memory.
-    pub fn get(&self, offset: u32, len: usize) -> Option<&[u8]> {
-        let offset = offset as usize;
-        let req_len = offset + len;
-        if req_len >= self.contents.len() {
-            return None
-        }
-        let bytes = &self.contents[offset..(offset + len)];
-        Some(bytes)
-    }
-
-    /// Writes the bytes at the given `offset` into `buffer`.
-    ///
-    /// Reads an amount of bytes equal to the length of the `buffer` and returns
-    /// an error if this is not possible.
-    pub fn read(
-        &self,
-        offset: u32,
-        buffer: &mut [u8],
-    ) -> Result<(), CompilerError> {
-        let offset = offset as usize;
-        let len = buffer.len();
-        let req_len = offset + len;
-        if req_len >= self.contents.len() {
-            return Err(MemoryError::MemoryAccessOutOfBounds).map_err(Into::into)
-        }
-        buffer[..].copy_from_slice(&self.contents[offset..(offset + len)]);
-        Ok(())
-    }
+/// A data segment item with a non constant initializer expression.
+#[derive(Debug)]
+pub struct Data2 {
+    offset: InitializerExpr,
+    bytes: Vec<u8>,
 }

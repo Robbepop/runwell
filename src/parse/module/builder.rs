@@ -15,7 +15,6 @@
 use super::{
     linear_memory::{Data, LinearMemoryDecl},
     table::TableDecl,
-    EvaluationContext,
     Export,
     ExportItem,
     ImportName,
@@ -614,9 +613,8 @@ impl<'a> ModuleBuilder {
                     .map_err(Into::into)
                 }
                 let id = data.id();
-                let mut context = EvaluationContext::from(&self.module.globals);
-                let offset = context.eval_const_i32(&data.offset())? as u32;
                 let init = data.init();
+                let offset = data.offset().clone();
                 self.module
                     .linear_memories
                     .get_mut(id)
