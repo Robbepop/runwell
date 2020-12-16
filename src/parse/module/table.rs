@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::parse::{CompilerError, FunctionId, InitializerExpr, TableId};
-use std::{collections::HashMap, convert::TryFrom};
+use std::convert::TryFrom;
 use wasmparser::{ElementItems, ElementItemsReader, ResizableLimits};
 
 /// A Wasm table declaration.
@@ -172,29 +172,36 @@ impl<'a> core::convert::TryFrom<wasmparser::Element<'a>> for Element<'a> {
 /// Value types besides function references are not yet supported.
 #[derive(Debug, Default)]
 pub struct TableItems {
-    items: HashMap<usize, FunctionId>,
+    elements: Vec<Element2>,
 }
 
 impl TableItems {
-    /// Pushes the given element items to the table elements.
+    /// Pushes another element to the table.
     ///
-    /// This might overwrite previous element items with the same indices.
-    ///
-    /// # Errors
-    ///
-    /// If there are invalid table element items.
-    pub fn set_items<I>(
+    /// An element is comprised of an offset expression as well as
+    /// some element items that have their indices shifted by the
+    /// offset and are layed out consecutively in the table.
+    pub fn push_element<I>(
         &mut self,
-        offset: usize,
+        offset: InitializerExpr,
         items: I,
     ) -> Result<(), CompilerError>
     where
         I: IntoIterator<Item = FunctionId>,
     {
-        for (index, item) in items.into_iter().enumerate() {
-            self.items.insert(offset + index, item);
-        }
+        self.elements.push(Element2 {
+            offset,
+            items: items.into_iter().collect(),
+        });
         Ok(())
     }
+}
 
+/// An element from the Wasm element section assigned to a table.
+#[derive(Debug)]
+pub struct Element2 {
+    /// The offset expression of the element.
+    offset: InitializerExpr,
+    /// The items of the element.
+    items: Vec<FunctionId>,
 }

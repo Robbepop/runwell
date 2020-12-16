@@ -485,21 +485,15 @@ impl<'a> ModuleBuilder {
                     })
                     .map_err(Into::into)
                 }
-                let mut context = EvaluationContext::from(&self.module.globals);
-                let offset = context.eval_const_i32(&element.offset)? as usize;
+                let element_items =
+                    element.items().collect::<Result<Vec<_>, _>>()?.into_iter();
                 self.module
                     .tables
                     .get_mut(table_id)
                     .expect("encountered unexpected invalid table ID")
                     .decl()
                     .items_mut()
-                    .set_items(
-                        offset,
-                        element
-                            .items()
-                            .collect::<Result<Vec<_>, _>>()?
-                            .into_iter(),
-                    )?;
+                    .push_element(element.offset, element_items)?;
             }
             None => {
                 return Err(BuildError::MissingReservation {
