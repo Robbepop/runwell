@@ -61,6 +61,24 @@ pub enum InitializerExpr {
     GetGlobal(GlobalVariableId),
 }
 
+impl InitializerExpr {
+    /// Returns an `i32` value if the initializer expression
+    /// represents a constant `i32` value.
+    ///
+    /// Otherwise returns `None`.
+    ///
+    /// # Note
+    ///
+    /// This does not take into account any evaluation context or
+    /// values of global variables.
+    pub fn get_if_const_i32(&self) -> Option<i32> {
+        match self {
+            Self::Const(Value::I32(value)) => Some(*value),
+            _ => None,
+        }
+    }
+}
+
 impl<'a> TryFrom<wasmparser::InitExpr<'a>> for InitializerExpr {
     type Error = CompilerError;
 
