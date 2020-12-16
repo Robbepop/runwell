@@ -197,8 +197,4 @@ impl TableItems {
         Ok(())
     }
 
-    /// Returns the function reference at the given index if any.
-    pub fn get(&self, index: usize) -> Option<FunctionId> {
-        self.items.get(&index).copied()
-    }
 }
