@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-wasmparser = { version = "0.70", features = ["deterministic"] }
+wasmparser = { version = "0.71", features = ["deterministic"] }
 thiserror = "1"
 derive_more = "0.99.2"
 cfg-if = "1"
@@ -15,7 +15,7 @@ cfg-if = "1"
 [dev-dependencies]
 wabt = "0.10"
 anyhow = "1.0"
-wast = "29.0"
+wast = "30.0"
 wat = "1.0"
 
 [features]
