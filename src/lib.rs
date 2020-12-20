@@ -25,4 +25,4 @@ extern crate alloc;
 pub mod ir;
 mod maybe_std;
 pub mod parse;
-mod parse2;
+pub mod parse2;

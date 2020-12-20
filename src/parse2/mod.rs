@@ -52,7 +52,7 @@ pub use self::{
     memory::{Data, LinearMemory, MemoryError},
     primitive::{PrimitiveError, Type, Value, F32, F64},
     read::{Read, ReadError},
-    section::SectionError,
+    section::{SectionError, parse},
     signature::FunctionType,
     table::{Element, ElementItemsIter, Table, TableError},
 };
