@@ -30,9 +30,14 @@ use super::{
 };
 use derive_more::{Display, Error};
 
+/// An error that occured while building up the Wasm module.
 #[derive(Debug, Display, Error)]
 pub struct BuilderError {}
 
+/// Types implementing this trait can build up Wasm modules via the [`parse`][`crate::parse2::parse`] function.
+///
+/// This trait allows to decouple parsing from module building.
+/// A module built this way can be used to instantiate concrete Wasm instances for execution.
 pub trait ModuleBuilder {
     type Error: Into<ParseErrorKind>;
     type Module;

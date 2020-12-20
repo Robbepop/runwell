@@ -115,6 +115,7 @@ where
     }
 }
 
+/// Any kind of error that might occure while parsing a Wasm input binary.
 #[derive(Debug, Display, Error, From)]
 pub enum ParseErrorKind {
     Primitive(PrimitiveError),

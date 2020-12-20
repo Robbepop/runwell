@@ -16,6 +16,7 @@ use crate::parse::{FunctionId, GlobalVariableId, LinearMemoryId, TableId};
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
 
+/// An error upon parsing, validating or operating on Wasm exports.
 #[derive(Debug, Display, Error, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ExportError {
     #[display(fmt = "encountered unsupported export kind: {}", kind)]

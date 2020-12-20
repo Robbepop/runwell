@@ -113,6 +113,7 @@ impl Value {
     }
 }
 
+/// A parsed Wasm `f32` (32-bit floating point) value.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "f32.const {}", "f32::from_le_bytes(bits.to_le_bytes())")]
 pub struct F32 {
@@ -133,6 +134,7 @@ impl From<Ieee32> for F32 {
     }
 }
 
+/// A parsed Wasm `f64` (64-bit floating point) value.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "f64.const {}", "f64::from_le_bytes(bits.to_le_bytes())")]
 pub struct F64 {

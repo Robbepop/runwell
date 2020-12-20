@@ -14,6 +14,7 @@
 
 use derive_more::{Display, Error};
 
+/// An error upon parsing, validating or operating on Wasm imports.
 #[derive(Debug, Error, Display, PartialEq, Eq, Hash)]
 pub enum ImportError {
     #[display(fmt = "encountered unsupported Wasm module import")]

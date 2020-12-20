@@ -16,6 +16,7 @@ use super::{FunctionId, Index32, InitializerExpr, ParseError, TableId};
 use core::convert::TryFrom;
 use derive_more::Display;
 
+/// An error that might occure while parsing or validating tables or table elements.
 #[derive(Debug, Display, PartialEq, Eq)]
 pub enum TableError {
     #[display(fmt = "encountered invalid table element type: {:?}", _0)]
@@ -62,9 +63,9 @@ impl TryFrom<wasmparser::TableType> for Table {
 /// A parsed and validated element from the element section of a Wasm module.
 pub struct Element<'a> {
     /// The referred to table index.
-    pub table_id: TableId,
+    table_id: TableId,
     /// The offset within the table for the initialized elements.
-    pub offset: InitializerExpr,
+    offset: InitializerExpr,
     /// The function signatures for the initialized table elements.
     items: wasmparser::ElementItems<'a>,
 }
@@ -119,6 +120,16 @@ impl<'a> core::fmt::Debug for Element<'a> {
 }
 
 impl<'a> Element<'a> {
+    /// Returns the table ID of the associated table for the element.
+    pub fn table_id(&self) -> TableId {
+        self.table_id
+    }
+
+    /// Returns the offset initializer expression for the element.
+    pub fn offset(&self) -> &InitializerExpr {
+        &self.offset
+    }
+
     /// Returns an iterator yielding all the elements of this element segment.
     pub fn items(&self) -> ElementItemsIter<'a> {
         let reader = self.items.get_items_reader().expect(
