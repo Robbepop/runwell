@@ -11,18 +11,3 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "bench", feature(test))]
-#![allow(dead_code)]
-
-#[cfg(feature = "bench")]
-extern crate test;
-
-#[cfg(not(feature = "std"))]
-extern crate alloc;
-
-pub mod ir;
-mod maybe_std;
-pub mod parse;
-mod parse2;
