@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{ParseError, Type};
+use super::{FunctionId, ParseError, Type};
 use core::convert::TryFrom;
 use std::iter::FusedIterator;
 use wasmparser::{BinaryReader, FuncValidator, LocalsReader, Operator, OperatorsReader, ValidatorResources};
@@ -21,6 +21,7 @@ use wasmparser::{BinaryReader, FuncValidator, LocalsReader, Operator, OperatorsR
 ///
 /// Allows for simple and efficient access to locals and operators.
 pub struct FunctionBody<'a> {
+    id: FunctionId,
     body: wasmparser::FunctionBody<'a>,
     count_operators: u32,
 }
@@ -28,13 +29,14 @@ pub struct FunctionBody<'a> {
 impl<'a> FunctionBody<'a> {
     /// Creates a new function body if it parses and validates correctly.
     pub fn new(
+        id: FunctionId,
         validator: &mut FuncValidator<ValidatorResources>,
         body: wasmparser::FunctionBody<'a>,
     ) -> Result<Self, ParseError> {
         let mut reader = body.get_binary_reader();
         Self::validate_locals(validator, &mut reader)?;
         let count_operators = Self::validate_operators(validator, &mut reader)?;
-        Ok(Self { body, count_operators })
+        Ok(Self { id, body, count_operators })
     }
 
     /// Parses and validates the locals of the input function body and checks if their types are supported.
