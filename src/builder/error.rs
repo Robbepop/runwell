@@ -12,18 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "bench", feature(test))]
-#![allow(dead_code)]
+use derive_more::{Display, Error, From};
+use super::entity::EntityError;
 
-#[cfg(feature = "bench")]
-extern crate test;
-
-#[cfg(not(feature = "std"))]
-extern crate alloc;
-
-pub mod builder;
-pub mod ir;
-mod maybe_std;
-pub mod parse;
-pub mod parse2;
+#[derive(Debug, Display, From, Error)]
+pub enum BuildError {
+    Entity(EntityError),
+}
