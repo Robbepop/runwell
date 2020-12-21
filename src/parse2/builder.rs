@@ -44,7 +44,7 @@ pub trait ModuleBuilder {
 
     fn reserve_types(&mut self, total_count: u32) -> Result<(), Self::Error>;
 
-    fn define_type(&mut self, sig: FunctionType) -> Result<(), Self::Error>;
+    fn define_type(&mut self, function_type: FunctionType) -> Result<(), Self::Error>;
 
     fn import_global(
         &mut self,
