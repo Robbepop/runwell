@@ -14,10 +14,9 @@
 
 #![allow(unused_variables)]
 
-use crate::parse2::FunctionBody;
+use super::{BuilderError, Types};
+use crate::parse2::{FunctionBody, FunctionType};
 use derive_more::From;
-
-use super::BuilderError;
 
 /// A parsed and validated Wasm module.
 ///
@@ -29,7 +28,9 @@ pub struct Module {}
 ///
 /// Implements the [`ModuleBuilder`] trait.
 #[derive(Debug, Default)]
-pub struct ModuleBuilder {}
+pub struct ModuleBuilder {
+    types: Types,
+}
 
 impl ModuleBuilder {
     /// Returns a gate to push new type definitions to the build module upon success.
@@ -41,6 +42,7 @@ impl ModuleBuilder {
         &mut self,
         count_types: u32,
     ) -> Result<DefineType, BuilderError> {
+        self.types.reserve(count_types)?;
         Ok(self.into())
     }
 
@@ -178,8 +180,9 @@ impl<'a> DefineType<'a> {
     /// This is called once for every unique function type in the Wasm module.
     pub fn define_type(
         &mut self,
-        function_type: crate::parse2::FunctionType,
+        function_type: FunctionType,
     ) -> Result<(), BuilderError> {
+        self.builder.types.push(function_type)?;
         Ok(())
     }
 }

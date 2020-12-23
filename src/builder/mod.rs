@@ -19,6 +19,7 @@ mod impls;
 mod import;
 mod memory;
 mod table;
+mod types;
 
 pub use self::{
     entity::EntityError,
@@ -39,4 +40,5 @@ pub use self::{
     import::ImportName,
     memory::{Data, LinearMemoryData},
     table::{Element, TableElements},
+    types::{TypesError, Types},
 };

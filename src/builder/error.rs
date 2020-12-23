@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::entity::EntityError;
+use super::{entity::EntityError, TypesError};
 use derive_more::{Display, Error, From};
 
 #[derive(Debug, Display, From, Error)]
 pub enum BuilderError {
     Entity(EntityError),
+    Types(TypesError),
 }
