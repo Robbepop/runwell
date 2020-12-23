@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{FunctionId, GlobalVariableId, LinearMemoryId, TableId};
+use crate::parse2::{
+    FunctionId,
+    GlobalVariableId,
+    Index32,
+    LinearMemoryId,
+    TableId,
+};
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
 
