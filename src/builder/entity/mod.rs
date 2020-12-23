@@ -80,7 +80,7 @@ impl<Id, Shared, Internal> Default for Entities<Id, Shared, Internal> {
 impl<Id, Shared, Internal> Entities<Id, Shared, Internal> {
     /// Returns the number of imported and internal entities.
     pub fn len_entities(&self) -> usize {
-        self.internal.len()
+        self.len_imported() + self.len_internal()
     }
 
     /// Returns the number of imported entities.
@@ -90,7 +90,7 @@ impl<Id, Shared, Internal> Entities<Id, Shared, Internal> {
 
     /// Returns the number of internal entities.
     pub fn len_internal(&self) -> usize {
-        self.len_entities() - self.len_imported()
+        self.internal.len()
     }
 
     /// Returns `true` if there are imported entities.
