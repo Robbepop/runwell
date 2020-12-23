@@ -86,7 +86,7 @@ pub struct Data<'a> {
 
 impl<'a> Data<'a> {
     /// Returns the linear memory ID of the data segment.
-    pub fn id(&self) -> LinearMemoryId {
+    pub fn memory_id(&self) -> LinearMemoryId {
         self.id
     }
 
