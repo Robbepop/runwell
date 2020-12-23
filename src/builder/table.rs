@@ -49,13 +49,13 @@ impl TableElements {
         &mut self,
         offset: InitializerExpr,
         items: I,
-    ) -> Result<(), CompilerError>
+    ) -> Result<(), ParseError>
     where
-        I: IntoIterator<Item = FunctionId>,
+        I: IntoIterator<Item = Result<FunctionId, ParseError>>,
     {
         self.elements.push(Element {
             offset,
-            items: items.into_iter().collect(),
+            items: items.into_iter().collect::<Result<Vec<_>, ParseError>>()?,
         });
         Ok(())
     }
