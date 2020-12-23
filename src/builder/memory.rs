@@ -47,7 +47,7 @@ impl LinearMemoryData {
         &mut self,
         offset: InitializerExpr,
         bytes: &[u8],
-    ) -> Result<(), CompilerError> {
+    ) -> Result<(), ParseError> {
         self.items.push(Data {
             offset,
             bytes: bytes.to_vec(),
