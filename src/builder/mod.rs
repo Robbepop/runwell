@@ -24,8 +24,8 @@ mod types;
 pub use self::{
     entity::EntityError,
     error::BuilderError,
+    export::{Exported, Exports},
     impls::{
-        Module,
         DeclareExport,
         DeclareFunction,
         DeclareMemory,
@@ -33,12 +33,13 @@ pub use self::{
         DefineGlobal,
         DefineType,
         ImportEntity,
+        Module,
         ModuleBuilder,
         PushData,
         PushElement,
     },
     import::ImportName,
-    memory::{Data, LinearMemoryData},
-    table::{Element, TableElements},
-    types::{TypesError, Types},
+    memory::{Data, LinearMemory, LinearMemoryData},
+    table::{Element, Table, TableElements},
+    types::{Types, TypesError},
 };
