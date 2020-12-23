@@ -110,8 +110,9 @@ impl<Id, Shared, Internal> Entities<Id, Shared, Internal> {
     /// If a reservation has already been made.
     pub fn reserve_internals(
         &mut self,
-        additional: usize,
+        additional: u32,
     ) -> Result<(), BuilderError> {
+        let additional = additional as usize;
         if let Some(previous_reservation) = self.reserved_internals {
             return Err(EntityError::DuplicateReservedInternals {
                 previous_reservation,
