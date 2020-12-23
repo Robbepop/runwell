@@ -12,7 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{CompilerError, InitializerExpr};
+use crate::parse2::{self, ParseError, InitializerExpr};
+
+/// A parsed and validated Wasm linear memory with its data items.
+#[derive(Debug)]
+pub struct LinearMemory {
+    pub decl: parse2::LinearMemory,
+    pub data: LinearMemoryData,
+}
+
+impl From<parse2::LinearMemory> for LinearMemory {
+    fn from(memory: parse2::LinearMemory) -> Self {
+        Self {
+            decl: memory,
+            data: LinearMemoryData::default(),
+        }
+    }
+}
 
 /// The contents of a Wasm linear memory.
 #[derive(Debug, Default)]

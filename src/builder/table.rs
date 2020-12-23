@@ -12,7 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse::{CompilerError, FunctionId, InitializerExpr};
+use crate::parse2::{self, ParseError, FunctionId, InitializerExpr};
+
+/// A parsed and validated Wasm table with its table elements.
+#[derive(Debug)]
+pub struct Table {
+    pub decl: parse2::Table,
+    pub elements: TableElements,
+}
+
+impl From<parse2::Table> for Table {
+    fn from(table: parse2::Table) -> Self {
+        Self {
+            decl: table,
+            elements: TableElements::default(),
+        }
+    }
+}
 
 /// The elements with which a Wasm table has been initialized.
 ///
