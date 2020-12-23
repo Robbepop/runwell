@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod builder;
+// pub mod builder;
 mod error;
 mod export;
 mod function;
@@ -28,7 +28,7 @@ mod signature;
 mod table;
 
 pub use self::{
-    builder::{BuilderError, ModuleBuilder},
+    // builder::{BuilderError, BuildError, ModuleBuilder},
     error::{ParseError, ParseErrorKind},
     export::{Export, ExportError, ExportItem},
     function::{

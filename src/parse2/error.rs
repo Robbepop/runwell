@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::builder::BuilderError;
 use super::{
-    BuilderError,
     ExportError,
     ImportError,
     InitializerExprError,

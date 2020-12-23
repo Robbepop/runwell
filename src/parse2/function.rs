@@ -44,12 +44,13 @@ impl<'a> FunctionBody<'a> {
         validator: &mut FuncValidator<ValidatorResources>,
         reader: &mut BinaryReader,
     ) -> Result<(), ParseError> {
-        for _ in 0..reader.read_var_u32()? {
+        let count_locals = reader.read_var_u32()?;
+        for _ in 0..count_locals {
             let offset = reader.original_position();
             let count = reader.read_var_u32()?;
             let ty = reader.read_type()?;
-            Type::try_from(ty)?;
             validator.define_locals(offset, count, ty)?;
+            Type::try_from(ty)?;
         }
         Ok(())
     }
@@ -63,9 +64,9 @@ impl<'a> FunctionBody<'a> {
     ) -> Result<u32, ParseError> {
         let mut count_operators = 0;
         while !reader.eof() {
-            let pos = reader.original_position();
+            let offset = reader.original_position();
             let op = reader.read_operator()?;
-            validator.op(pos, &op)?;
+            validator.op(offset, &op)?;
             count_operators += 1;
         }
         Ok(count_operators)

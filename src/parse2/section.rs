@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use super::{
-    BuilderError,
     Data,
     Export,
     FunctionBody,
@@ -24,12 +23,11 @@ use super::{
     ImportName,
     Index32,
     LinearMemory,
-    ModuleBuilder,
     ParseError,
     Read,
-    ReadError,
     Table,
 };
+use crate::builder::{Module, ModuleBuilder};
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use std::convert::TryInto;
@@ -59,6 +57,8 @@ pub enum SectionError {
 
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum UnsupportedWasmSection {
+    #[display(fmt = "encountered unsupported Wasm data count section")]
+    DataCount,
     #[display(fmt = "encountered unsupported Wasm module section")]
     Module,
     #[display(fmt = "encountered unsupported Wasm instance section")]
@@ -79,20 +79,19 @@ pub enum UnsupportedTypeDef {
     Module,
 }
 
-pub fn parse<B, R>(
+pub fn parse<R>(
     mut reader: R,
-    buf: &mut Vec<u8>,
-) -> Result<<B as ModuleBuilder>::Module, ParseError>
+    buffer: &mut Vec<u8>,
+) -> Result<Module, ParseError>
 where
-    B: ModuleBuilder + Default,
     R: Read,
 {
     let mut parser = Parser::new(0);
     let mut eof = false;
-    let mut context = <ParseContext<B>>::default();
-    buf.clear();
+    let mut context = ParseContext::default();
+    buffer.clear();
     loop {
-        match parser.parse(&buf, eof)? {
+        match parser.parse(&buffer, eof)? {
             Chunk::NeedMoreData(hint) => {
                 assert!(!eof); // Otherwise an error would be returned by `parse`.
 
@@ -101,68 +100,52 @@ where
                 //
                 // Note that the buffer management here is not ideal,
                 // but it's compact enough to fit in an example!
-                let len = buf.len();
-                buf.extend((0..hint).map(|_| 0u8));
-                let n = reader
-                    .read(&mut buf[len..])
-                    .map_err(|_| ReadError::UnknownError)?;
-                buf.truncate(len + n);
+                let len = buffer.len();
+                buffer.extend((0..hint).map(|_| 0u8));
+                let n = reader.read(&mut buffer[len..])?;
+                buffer.truncate(len + n);
                 eof = n == 0;
                 continue
             }
             Chunk::Parsed { consumed, payload } => {
                 let end_section = context.process_payload(payload)?;
                 // Cut away the parts from the intermediate buffer that have already been parsed.
-                buf.drain(..consumed);
+                buffer.drain(..consumed);
                 if end_section {
                     break
                 }
             }
         };
     }
-    let finalized = context.builder.finish().map_err(|_| BuilderError {})?;
-    Ok(finalized)
+    let finished = context.finish()?;
+    Ok(finished)
 }
 
 /// Parsing context for the streaming parser in order to capture common shared context.
-pub struct ParseContext<B> {
+#[derive(Default)]
+pub struct ParseContext {
     /// The Wasm module builder.
-    builder: B,
+    builder: ModuleBuilder,
     /// The Wasm validator and its internal state.
     validator: Validator,
     /// The amount of parsed and validated function bodies.
     count_bodies: u32,
 }
 
-impl<B> Default for ParseContext<B>
-where
-    B: Default,
-{
-    fn default() -> Self {
-        Self {
-            builder: B::default(),
-            validator: Validator::default(),
-            count_bodies: 0,
-        }
+impl ParseContext {
+    /// Finishes building the Wasm module and returns the Wasm module built so far.
+    pub fn finish(self) -> Result<Module, ParseError> {
+        self.builder.finish().map_err(Into::into)
     }
-}
 
-impl<B> ParseContext<B>
-where
-    B: ModuleBuilder,
-{
-    fn process_payload(
+    /// Processes the given Wasm payload.
+    pub fn process_payload(
         &mut self,
         payload: Payload,
     ) -> Result<bool, ParseError> {
-        let Self {
-            builder,
-            validator,
-            count_bodies,
-        } = self;
         match payload {
             Payload::Version { num, range } => {
-                validator.version(num, &range)?;
+                self.validator.version(num, &range)?;
             }
             Payload::TypeSection(section_reader) => {
                 self.parse_type_section(section_reader)?;
@@ -196,18 +179,21 @@ where
                 range,
                 size: _,
             } => {
-                self.parse_code_start_section(count, range)?;
+                self.parse_code_section_start(count, range)?;
             }
             Payload::CodeSectionEntry(body) => {
-                self.parse_code_section(body)?;
-            }
-            Payload::DataCountSection { count, range } => {
-                self.parse_data_count_section(count, range)?;
+                self.parse_code_section_entry(body)?;
             }
             Payload::DataSection(section_reader) => {
                 self.parse_data_section(section_reader)?;
             }
 
+            Payload::DataCountSection { count: _, range: _ } => {
+                return Err(SectionError::Unsupported(
+                    UnsupportedWasmSection::DataCount,
+                ))
+                .map_err(Into::into)
+            }
             Payload::AliasSection(_)
             | Payload::InstanceSection(_)
             | Payload::ModuleSection(_)
@@ -256,12 +242,9 @@ where
         &mut self,
         reader: TypeSectionReader,
     ) -> Result<(), ParseError> {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.type_section(&reader)?;
+        self.validator.type_section(&reader)?;
         let count = reader.get_count();
-        builder.reserve_types(count)?;
+        let mut builder = self.builder.type_section(count)?;
         for type_def in reader {
             match type_def? {
                 wasmparser::TypeDef::Func(func_type) => {
@@ -297,10 +280,9 @@ where
         &mut self,
         reader: ImportSectionReader,
     ) -> Result<(), ParseError> {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.import_section(&reader)?;
+        self.validator.import_section(&reader)?;
+        let count = reader.get_count();
+        let mut builder = self.builder.import_section(count)?;
         for import in reader {
             let import = import?;
             let module_name = import.module;
@@ -349,16 +331,10 @@ where
     fn parse_function_section(
         &mut self,
         reader: FunctionSectionReader,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.function_section(&reader)?;
+    ) -> Result<(), ParseError> {
+        self.validator.function_section(&reader)?;
         let total_count = reader.get_count();
-        builder.reserve_functions(total_count)?;
+        let mut builder = self.builder.function_section(total_count)?;
         for fn_sig in reader {
             let fn_sig_id = fn_sig?;
             builder.declare_function(FunctionSigId::from_u32(fn_sig_id))?;
@@ -369,16 +345,10 @@ where
     fn parse_table_section(
         &mut self,
         reader: TableSectionReader,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.table_section(&reader)?;
+    ) -> Result<(), ParseError> {
+        self.validator.table_section(&reader)?;
         let total_count = reader.get_count();
-        builder.reserve_tables(total_count)?;
+        let mut builder = self.builder.table_section(total_count)?;
         for table_type in reader {
             let table_type = table_type?;
             builder.declare_table(Table::try_from(table_type)?)?;
@@ -389,16 +359,10 @@ where
     fn parse_linear_memory_section(
         &mut self,
         reader: MemorySectionReader,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.memory_section(&reader)?;
+    ) -> Result<(), ParseError> {
+        self.validator.memory_section(&reader)?;
         let total_count = reader.get_count();
-        builder.reserve_memories(total_count)?;
+        let mut builder = self.builder.memory_section(total_count)?;
         for memory_type in reader {
             let memory_type = memory_type?;
             builder.declare_memory(LinearMemory::try_from(memory_type)?)?;
@@ -409,16 +373,10 @@ where
     fn parse_globals_section(
         &mut self,
         reader: GlobalSectionReader,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.global_section(&reader)?;
+    ) -> Result<(), ParseError> {
+        self.validator.global_section(&reader)?;
         let total_count = reader.get_count();
-        builder.reserve_globals(total_count)?;
+        let mut builder = self.builder.global_section(total_count)?;
         for global in reader {
             let global = global?;
             let global_type = GlobalVariable::try_from(global.ty)?;
@@ -431,18 +389,14 @@ where
     fn parse_export_section(
         &mut self,
         reader: ExportSectionReader,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.export_section(&reader)?;
+    ) -> Result<(), ParseError> {
+        self.validator.export_section(&reader)?;
+        let total_count = reader.get_count();
+        let mut builder = self.builder.export_section(total_count)?;
         for export in reader {
             let export = export?;
             let export = Export::try_from(export)?;
-            builder.declare_export(export);
+            builder.declare_export(export)?;
         }
         Ok(())
     }
@@ -451,107 +405,60 @@ where
         &mut self,
         start_fn_id: u32,
         range: wasmparser::Range,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.start_section(start_fn_id, &range)?;
-        builder.set_start_fn(FunctionId::from_u32(start_fn_id));
+    ) -> Result<(), ParseError> {
+        self.validator.start_section(start_fn_id, &range)?;
+        self.builder
+            .start_function(FunctionId::from_u32(start_fn_id));
         Ok(())
     }
 
     fn parse_element_section(
         &mut self,
         reader: ElementSectionReader,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.element_section(&reader)?;
+    ) -> Result<(), ParseError> {
+        self.validator.element_section(&reader)?;
         let total_count = reader.get_count();
-        builder.reserve_elements(total_count)?;
+        let mut builder = self.builder.element_section(total_count)?;
         for element in reader {
             let element = element?.try_into()?;
-            builder.define_element(element)?;
+            builder.push_element(element)?;
         }
         Ok(())
     }
 
-    fn parse_code_start_section(
+    fn parse_code_section_start(
         &mut self,
         count: u32,
         range: wasmparser::Range,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.code_section_start(count, &range)?;
-        builder.reserve_function_bodies(count)?;
+    ) -> Result<(), ParseError> {
+        self.validator.code_section_start(count, &range)?;
+        let _fn_builder = self.builder.code_section_start(count)?;
         Ok(())
     }
 
-    fn parse_code_section(
+    fn parse_code_section_entry(
         &mut self,
-        body: wasmparser::FunctionBody,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder,
-            validator,
-            count_bodies,
-        } = self;
-        let mut fn_validator = validator.code_section_entry()?;
-        let fn_id = FunctionId::from_u32(*count_bodies);
-        let fn_body = FunctionBody::new(fn_id, &mut fn_validator, body)?;
-        builder.define_function_body(fn_body)?;
-        *count_bodies += 1;
-        Ok(())
-    }
-
-    fn parse_data_count_section(
-        &mut self,
-        count: u32,
-        range: wasmparser::Range,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.data_count_section(count, &range)?;
-        builder.reserve_datas(count)?;
+        function_body: wasmparser::FunctionBody,
+    ) -> Result<(), ParseError> {
+        let mut fn_validator = self.validator.code_section_entry()?;
+        let fn_id = FunctionId::from_u32(self.count_bodies);
+        let fn_body = FunctionBody::new(fn_id, &mut fn_validator, function_body)?;
+        self.builder.code_section_entry(fn_body)?;
+        self.count_bodies += 1;
         Ok(())
     }
 
     fn parse_data_section(
         &mut self,
         reader: DataSectionReader,
-    ) -> Result<(), ParseError>
-    where
-        B: ModuleBuilder,
-    {
-        let Self {
-            builder, validator, ..
-        } = self;
-        validator.data_section(&reader)?;
+    ) -> Result<(), ParseError> {
+        self.validator.data_section(&reader)?;
         let total_count = reader.get_count();
-        builder.reserve_datas(total_count)?;
+        let mut builder = self.builder.data_section(total_count)?;
         for data in reader {
             let data = data?;
             let data = Data::try_from(data)?;
-            builder.define_data(data)?;
+            builder.push_data(data)?;
         }
         Ok(())
     }
