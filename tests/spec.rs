@@ -147,3 +147,50 @@ fn parse_works() {
     );
     assert_eq!(len_failed, 0);
 }
+
+#[test]
+fn parse2_works() {
+    let inputs = collect_test_inputs();
+    let mut buffer = Vec::with_capacity(1000);
+    let mut len_failed = 0;
+    let mut len_passed = 0;
+    let mut local_test = 0;
+    let mut last_path = PathBuf::default();
+    for (n, input) in inputs.iter().enumerate() {
+        if input.path != last_path {
+            local_test = 0;
+            last_path = input.path.clone();
+        } else {
+            local_test += 1;
+        }
+        if input.path.starts_with("testsuite/proposals") {
+            // We do not take into account any proposal specific tests.
+            continue
+        }
+        print!(
+            "  test {:4}: {}/{}: ",
+            n,
+            input.path.file_stem().unwrap().to_str().unwrap(),
+            local_test
+        );
+        let result = runwell::parse2::parse(&mut &input.wasm[..], &mut buffer);
+        match result {
+            Ok(_) => {
+                println!("ok");
+                len_passed += 1;
+            }
+            Err(error) => {
+                println!("FAILED {:?}", error);
+                len_failed += 1;
+            }
+        }
+    }
+    println!(
+        "\n\
+        # tests passed:      {:4}\n\
+        # tests failed:      {:4}\n\
+    ",
+        len_passed, len_failed
+    );
+    assert_eq!(len_failed, 0);
+}
