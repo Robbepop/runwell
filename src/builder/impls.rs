@@ -171,6 +171,11 @@ pub struct DefineType<'a> {
 }
 
 impl<'a> DefineType<'a> {
+    /// Defines a new type definition.
+    ///
+    /// # Note
+    ///
+    /// This is called once for every unique function type in the Wasm module.
     pub fn define_type(
         &mut self,
         function_type: crate::parse2::FunctionType,
@@ -185,6 +190,16 @@ pub struct ImportEntity<'a> {
 }
 
 impl<'a> ImportEntity<'a> {
+    /// Imports a new function with the given name.
+    pub fn import_function(
+        &mut self,
+        import_name: crate::parse2::ImportName,
+        fn_sig_id: crate::parse2::FunctionSigId,
+    ) -> Result<(), BuilderError> {
+        Ok(())
+    }
+
+    /// Imports a new global variable with the given name.
     pub fn import_global(
         &mut self,
         import_name: crate::parse2::ImportName,
@@ -193,6 +208,7 @@ impl<'a> ImportEntity<'a> {
         Ok(())
     }
 
+    /// Imports a new linear memory with the given name.
     pub fn import_memory(
         &mut self,
         import_name: crate::parse2::ImportName,
@@ -201,18 +217,11 @@ impl<'a> ImportEntity<'a> {
         Ok(())
     }
 
+    /// Imports a new table with the given name.
     pub fn import_table(
         &mut self,
         import_name: crate::parse2::ImportName,
         table: crate::parse2::Table,
-    ) -> Result<(), BuilderError> {
-        Ok(())
-    }
-
-    pub fn import_function(
-        &mut self,
-        import_name: crate::parse2::ImportName,
-        fn_sig_id: crate::parse2::FunctionSigId,
     ) -> Result<(), BuilderError> {
         Ok(())
     }
@@ -224,6 +233,11 @@ pub struct DeclareFunction<'a> {
 }
 
 impl<'a> DeclareFunction<'a> {
+    /// Pushes another function declaration to the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per internal function in the built Wasm module.
     pub fn declare_function(
         &mut self,
         fn_sig_id: crate::parse2::FunctionSigId,
@@ -238,6 +252,11 @@ pub struct DeclareTable<'a> {
 }
 
 impl<'a> DeclareTable<'a> {
+    /// Pushes another table declaration to the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per internal table in the built Wasm module.
     pub fn declare_table(
         &mut self,
         table: crate::parse2::Table,
@@ -252,6 +271,11 @@ pub struct DeclareMemory<'a> {
 }
 
 impl<'a> DeclareMemory<'a> {
+    /// Pushes another linear memory declaration to the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per internal linear memory in the built Wasm module.
     pub fn declare_memory(
         &mut self,
         table: crate::parse2::LinearMemory,
@@ -266,6 +290,11 @@ pub struct DefineGlobal<'a> {
 }
 
 impl<'a> DefineGlobal<'a> {
+    /// Pushes another global variable definition to the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per internal global variable in the built Wasm module.
     pub fn define_global(
         &mut self,
         variable: crate::parse2::GlobalVariable,
@@ -281,6 +310,11 @@ pub struct DeclareExport<'a> {
 }
 
 impl<'a> DeclareExport<'a> {
+    /// Pushes another export declaration to the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per export declaration in the built Wasm module.
     pub fn declare_export(
         &mut self,
         export: crate::parse2::Export,
@@ -295,6 +329,11 @@ pub struct PushElement<'a> {
 }
 
 impl<'a> PushElement<'a> {
+    /// Pushes another element for initialization of a table of the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per element item in the built Wasm module.
     pub fn push_element(
         &mut self,
         element: crate::parse2::Element,
@@ -309,6 +348,11 @@ pub struct PushData<'a> {
 }
 
 impl<'a> PushData<'a> {
+    /// Pushes another element for initialization of a linear memory of the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per data item in the built Wasm module.
     pub fn push_data(
         &mut self,
         data: crate::parse2::Data,
@@ -323,6 +367,11 @@ pub struct DefineFunctionBody<'a> {
 }
 
 impl<'a> DefineFunctionBody<'a> {
+    /// Pushes another function body definition to the Wasm module.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called once per function body in the built Wasm module.
     pub fn define_function_body(
         &mut self,
         function_body: FunctionBody,
