@@ -32,6 +32,11 @@ pub struct Module {}
 pub struct ModuleBuilder {}
 
 impl ModuleBuilder {
+    /// Returns a gate to push new type definitions to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::import_section`].
     pub fn type_section(
         &mut self,
         count_types: u32,
@@ -39,6 +44,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new imports to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::function_section`].
     pub fn import_section(
         &mut self,
         count_imports: u32,
@@ -46,6 +56,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new function declarations to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::table_section`].
     pub fn function_section(
         &mut self,
         count_functions: u32,
@@ -53,6 +68,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new table declarations to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::memory_section`].
     pub fn table_section(
         &mut self,
         count_tables: u32,
@@ -60,6 +80,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new linear memory declarations to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::global_section`].
     pub fn memory_section(
         &mut self,
         count_memories: u32,
@@ -67,6 +92,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new global variable definition to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::export_section`].
     pub fn global_section(
         &mut self,
         count_globals: u32,
@@ -74,6 +104,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new export declarations to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::start_function`].
     pub fn export_section(
         &mut self,
         count_exports: u32,
@@ -81,8 +116,18 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Sets the start function to be executed for module instantiation.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::element_section`].
     pub fn start_function(&mut self, _id: crate::parse2::FunctionId) {}
 
+    /// Returns a gate to push new element items to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::code_section`].
     pub fn element_section(
         &mut self,
         count_elements: u32,
@@ -90,6 +135,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new function bodies to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::data_section`].
     pub fn code_section(
         &mut self,
         count_function_bodies: u32,
@@ -97,6 +147,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Returns a gate to push new data items to the build module upon success.
+    ///
+    /// # Note
+    ///
+    /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::finish`].
     pub fn data_section(
         &mut self,
         count_datas: u32,
@@ -104,6 +159,7 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
+    /// Finishes building the module by returning the built Wasm module.
     pub fn finish(self) -> Result<Module, BuilderError> {
         Ok(Module {})
     }
