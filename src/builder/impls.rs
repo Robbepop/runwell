@@ -14,8 +14,30 @@
 
 #![allow(unused_variables)]
 
-use super::{BuilderError, Types};
-use crate::parse2::{FunctionBody, FunctionType};
+use super::{
+    entity::Entities,
+    BuilderError,
+    Exports,
+    LinearMemory,
+    Table,
+    Types,
+};
+use crate::parse2::{
+    self,
+    Export,
+    ExportItem,
+    FunctionBody,
+    FunctionId,
+    FunctionType,
+    FunctionTypeId,
+    GlobalVariable,
+    GlobalVariableId,
+    ImportName,
+    InitializerExpr,
+    LinearMemoryId,
+    ParseError,
+    TableId,
+};
 use derive_more::From;
 
 /// A parsed and validated Wasm module.
@@ -24,12 +46,64 @@ use derive_more::From;
 #[derive(Debug)]
 pub struct Module {}
 
+/// The resources of a parsed and validated Wasm module.
+#[derive(Debug, Default)]
+pub struct ModuleResource {
+    /// Function signature table.
+    ///
+    /// # Note
+    ///
+    /// Represents the Wasm `type` section.
+    types: Types,
+    /// Imported and internal function signatures.
+    ///
+    /// # Note
+    ///
+    /// Represents both the Wasm `function` and `code` sections.
+    /// Also holds information about imported function declarations.
+    function_types: Entities<FunctionId, FunctionTypeId, ()>,
+    /// Imported and internal global variables.
+    ///
+    /// # Note
+    ///
+    /// Represents the Wasm `global` section.
+    /// Also holds information about imported global variables.
+    globals: Entities<GlobalVariableId, GlobalVariable, InitializerExpr>,
+    /// Imported and internal linear memory sections.
+    ///
+    /// # Note
+    ///
+    /// Represents both the Wasm `memory` and `data` sections.
+    /// Also holds information about imported linear memories.
+    memories: Entities<LinearMemoryId, LinearMemory, ()>,
+    /// Imported and internal tables.
+    ///
+    /// # Note
+    ///
+    /// Represents both the Wasm `table` and `data` element.
+    /// Also holds information about imported tables.
+    tables: Entities<TableId, Table, ()>,
+    /// Export definitions.
+    ///
+    /// # Note
+    ///
+    /// Represents the Wasm `export` section.
+    exports: Exports,
+    /// Optional start function.
+    ///
+    /// # Note
+    ///
+    /// The start function is executed before the actually executed code upon instantiating
+    /// a Wasm module if a start function has been defined.
+    start_function: Option<FunctionId>,
+}
+
 /// Builds Wasm modules from binary Wasm inputs.
 ///
 /// Implements the [`ModuleBuilder`] trait.
 #[derive(Debug, Default)]
 pub struct ModuleBuilder {
-    types: Types,
+    resources: ModuleResource,
 }
 
 impl ModuleBuilder {
@@ -42,7 +116,7 @@ impl ModuleBuilder {
         &mut self,
         count_types: u32,
     ) -> Result<DefineType, BuilderError> {
-        self.types.reserve(count_types)?;
+        self.resources.types.reserve(count_types)?;
         Ok(self.into())
     }
 
@@ -67,6 +141,9 @@ impl ModuleBuilder {
         &mut self,
         count_functions: u32,
     ) -> Result<DeclareFunction, BuilderError> {
+        self.resources
+            .function_types
+            .reserve_internals(count_functions)?;
         Ok(self.into())
     }
 
@@ -79,6 +156,7 @@ impl ModuleBuilder {
         &mut self,
         count_tables: u32,
     ) -> Result<DeclareTable, BuilderError> {
+        self.resources.tables.reserve_internals(count_tables)?;
         Ok(self.into())
     }
 
@@ -91,6 +169,7 @@ impl ModuleBuilder {
         &mut self,
         count_memories: u32,
     ) -> Result<DeclareMemory, BuilderError> {
+        self.resources.memories.reserve_internals(count_memories)?;
         Ok(self.into())
     }
 
@@ -103,6 +182,7 @@ impl ModuleBuilder {
         &mut self,
         count_globals: u32,
     ) -> Result<DefineGlobal, BuilderError> {
+        self.resources.globals.reserve_internals(count_globals)?;
         Ok(self.into())
     }
 
@@ -123,7 +203,9 @@ impl ModuleBuilder {
     /// # Note
     ///
     /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::element_section`].
-    pub fn start_function(&mut self, _id: crate::parse2::FunctionId) {}
+    pub fn start_function(&mut self, id: crate::parse2::FunctionId) {
+        self.resources.start_function = Some(id);
+    }
 
     /// Returns a gate to push new element items to the build module upon success.
     ///
@@ -182,7 +264,7 @@ impl<'a> DefineType<'a> {
         &mut self,
         function_type: FunctionType,
     ) -> Result<(), BuilderError> {
-        self.builder.types.push(function_type)?;
+        self.builder.resources.types.push(function_type)?;
         Ok(())
     }
 }
@@ -196,36 +278,52 @@ impl<'a> ImportEntity<'a> {
     /// Imports a new function with the given name.
     pub fn import_function(
         &mut self,
-        import_name: crate::parse2::ImportName,
-        fn_sig_id: crate::parse2::FunctionSigId,
+        import_name: ImportName,
+        function_type_id: FunctionTypeId,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .function_types
+            .push_imported(import_name.into(), function_type_id)?;
         Ok(())
     }
 
     /// Imports a new global variable with the given name.
     pub fn import_global(
         &mut self,
-        import_name: crate::parse2::ImportName,
-        global: crate::parse2::GlobalVariable,
+        import_name: ImportName,
+        global: GlobalVariable,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .globals
+            .push_imported(import_name.into(), global)?;
         Ok(())
     }
 
     /// Imports a new linear memory with the given name.
     pub fn import_memory(
         &mut self,
-        import_name: crate::parse2::ImportName,
-        memory: crate::parse2::LinearMemory,
+        import_name: ImportName,
+        memory: parse2::LinearMemory,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .memories
+            .push_imported(import_name.into(), memory.into())?;
         Ok(())
     }
 
     /// Imports a new table with the given name.
     pub fn import_table(
         &mut self,
-        import_name: crate::parse2::ImportName,
-        table: crate::parse2::Table,
+        import_name: ImportName,
+        table: parse2::Table,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .tables
+            .push_imported(import_name.into(), table.into())?;
         Ok(())
     }
 }
@@ -243,8 +341,12 @@ impl<'a> DeclareFunction<'a> {
     /// Guaranteed to be called once per internal function in the built Wasm module.
     pub fn declare_function(
         &mut self,
-        fn_sig_id: crate::parse2::FunctionSigId,
+        function_type_id: FunctionTypeId,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .function_types
+            .push_internal(function_type_id, ())?;
         Ok(())
     }
 }
@@ -262,8 +364,12 @@ impl<'a> DeclareTable<'a> {
     /// Guaranteed to be called once per internal table in the built Wasm module.
     pub fn declare_table(
         &mut self,
-        table: crate::parse2::Table,
+        table: parse2::Table,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .tables
+            .push_internal(table.into(), ())?;
         Ok(())
     }
 }
@@ -281,8 +387,12 @@ impl<'a> DeclareMemory<'a> {
     /// Guaranteed to be called once per internal linear memory in the built Wasm module.
     pub fn declare_memory(
         &mut self,
-        table: crate::parse2::LinearMemory,
+        memory: parse2::LinearMemory,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .memories
+            .push_internal(memory.into(), ())?;
         Ok(())
     }
 }
@@ -300,9 +410,13 @@ impl<'a> DefineGlobal<'a> {
     /// Guaranteed to be called once per internal global variable in the built Wasm module.
     pub fn define_global(
         &mut self,
-        variable: crate::parse2::GlobalVariable,
+        variable: GlobalVariable,
         init_value: crate::parse2::InitializerExpr,
     ) -> Result<(), BuilderError> {
+        self.builder
+            .resources
+            .globals
+            .push_internal(variable, init_value)?;
         Ok(())
     }
 }
@@ -320,8 +434,23 @@ impl<'a> DeclareExport<'a> {
     /// Guaranteed to be called once per export declaration in the built Wasm module.
     pub fn declare_export(
         &mut self,
-        export: crate::parse2::Export,
+        export: Export,
     ) -> Result<(), BuilderError> {
+        let field = export.field();
+        match export.item() {
+            ExportItem::Function(id) => {
+                self.builder.resources.exports.export_function(field, id);
+            }
+            ExportItem::Table(id) => {
+                self.builder.resources.exports.export_table(field, id);
+            }
+            ExportItem::Memory(id) => {
+                self.builder.resources.exports.export_memory(field, id);
+            }
+            ExportItem::Global(id) => {
+                self.builder.resources.exports.export_global(field, id);
+            }
+        }
         Ok(())
     }
 }
@@ -339,8 +468,19 @@ impl<'a> PushElement<'a> {
     /// Guaranteed to be called once per element item in the built Wasm module.
     pub fn push_element(
         &mut self,
-        element: crate::parse2::Element,
-    ) -> Result<(), BuilderError> {
+        element: parse2::Element,
+    ) -> Result<(), ParseError> {
+        let id = element.table_id();
+        let offset = element.offset().clone();
+        let items = element.items();
+        self.builder
+            .resources
+            .tables
+            .get_mut(id)
+            .expect("unexpected missing table for element")
+            .shared()
+            .elements
+            .push_element(offset, items)?;
         Ok(())
     }
 }
@@ -356,10 +496,18 @@ impl<'a> PushData<'a> {
     /// # Note
     ///
     /// Guaranteed to be called once per data item in the built Wasm module.
-    pub fn push_data(
-        &mut self,
-        data: crate::parse2::Data,
-    ) -> Result<(), BuilderError> {
+    pub fn push_data(&mut self, data: parse2::Data) -> Result<(), ParseError> {
+        let id = data.memory_id();
+        let offset = data.offset().clone();
+        let items = data.init();
+        self.builder
+            .resources
+            .memories
+            .get_mut(id)
+            .expect("unexpected missing linear memory for data item")
+            .shared()
+            .data
+            .init_region(offset, items)?;
         Ok(())
     }
 }
