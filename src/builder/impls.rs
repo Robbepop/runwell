@@ -14,153 +14,254 @@
 
 #![allow(unused_variables)]
 
-use crate::parse2::{ModuleBuilder, ParseErrorKind};
-use super::BuildError;
+use derive_more::From;
+use super::BuilderError;
+
+/// A parsed and validated Wasm module.
+///
+/// Used to create Wasm module instances for code execution.
+#[derive(Debug)]
+pub struct Module {}
 
 /// Builds Wasm modules from binary Wasm inputs.
 ///
 /// Implements the [`ModuleBuilder`] trait.
-#[derive(Debug)]
-pub struct Builder {
+#[derive(Debug, Default)]
+pub struct ModuleBuilder {}
 
-}
+impl ModuleBuilder {
+    pub fn type_section(
+        &mut self,
+        count_types: u32,
+    ) -> Result<DefineType, BuilderError> {
+        Ok(self.into())
+    }
 
-impl From<BuildError> for ParseErrorKind {
-    fn from(_error: BuildError) -> Self {
-        ParseErrorKind::Builder(crate::parse2::BuilderError {})
+    pub fn import_section(
+        &mut self,
+        count_imports: u32,
+    ) -> Result<ImportEntity, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn function_section(
+        &mut self,
+        count_functions: u32,
+    ) -> Result<DeclareFunction, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn table_section(
+        &mut self,
+        count_tables: u32,
+    ) -> Result<DeclareTable, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn memory_section(
+        &mut self,
+        count_memories: u32,
+    ) -> Result<DeclareMemory, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn global_section(
+        &mut self,
+        count_globals: u32,
+    ) -> Result<DefineGlobal, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn export_section(
+        &mut self,
+        count_exports: u32,
+    ) -> Result<DeclareExport, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn start_function(&mut self, _id: crate::parse2::FunctionId) {}
+
+    pub fn element_section(
+        &mut self,
+        count_elements: u32,
+    ) -> Result<PushElement, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn code_section_start(
+        &mut self,
+        count_function_bodies: u32,
+    ) -> Result<(), BuilderError> {
+        Ok(())
+    }
+
+    pub fn code_section_entry(
+        &mut self,
+        function_body: crate::parse2::FunctionBody,
+    ) -> Result<(), BuilderError> {
+        Ok(())
+    }
+
+    pub fn data_section(
+        &mut self,
+        count_datas: u32,
+    ) -> Result<PushData, BuilderError> {
+        Ok(self.into())
+    }
+
+    pub fn finish(self) -> Result<Module, BuilderError> {
+        Ok(Module {})
     }
 }
 
-impl ModuleBuilder for Builder {
-    type Module = ();
-    type Error = BuildError;
+#[derive(Debug, From)]
+pub struct DefineType<'a> {
+    builder: &'a mut ModuleBuilder,
+}
 
-    fn reserve_types(&mut self, total_count: u32) -> Result<(), Self::Error> {
-        todo!()
+impl<'a> DefineType<'a> {
+    pub fn define_type(
+        &mut self,
+        function_type: crate::parse2::FunctionType,
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
+}
 
-    fn define_type(&mut self, function_type: crate::parse2::FunctionType) -> Result<(), Self::Error> {
-        todo!()
-    }
+#[derive(Debug, From)]
+pub struct ImportEntity<'a> {
+    builder: &'a mut ModuleBuilder,
+}
 
-    fn import_global(
+impl<'a> ImportEntity<'a> {
+    pub fn import_global(
         &mut self,
         import_name: crate::parse2::ImportName,
         global: crate::parse2::GlobalVariable,
-    ) -> Result<(), Self::Error> {
-        todo!()
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
 
-    fn import_memory(
+    pub fn import_memory(
         &mut self,
         import_name: crate::parse2::ImportName,
         memory: crate::parse2::LinearMemory,
-    ) -> Result<(), Self::Error> {
-        todo!()
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
 
-    fn import_table(
+    pub fn import_table(
         &mut self,
         import_name: crate::parse2::ImportName,
         table: crate::parse2::Table,
-    ) -> Result<(), Self::Error> {
-        todo!()
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
 
-    fn import_function(
+    pub fn import_function(
         &mut self,
         import_name: crate::parse2::ImportName,
         fn_sig_id: crate::parse2::FunctionSigId,
-    ) -> Result<(), Self::Error> {
-        todo!()
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
+}
 
-    fn reserve_functions(
-        &mut self,
-        total_count: u32,
-    ) -> Result<(), Self::Error> {
-        todo!()
-    }
+#[derive(Debug, From)]
+pub struct DeclareFunction<'a> {
+    builder: &'a mut ModuleBuilder,
+}
 
-    fn declare_function(
+impl<'a> DeclareFunction<'a> {
+    pub fn declare_function(
         &mut self,
         fn_sig_id: crate::parse2::FunctionSigId,
-    ) -> Result<(), Self::Error> {
-        todo!()
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
+}
 
-    fn reserve_tables(&mut self, total_count: u32) -> Result<(), Self::Error> {
-        todo!()
-    }
+#[derive(Debug, From)]
+pub struct DeclareTable<'a> {
+    builder: &'a mut ModuleBuilder,
+}
 
-    fn declare_table(&mut self, table: crate::parse2::Table) -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    fn reserve_memories(&mut self, total_count: u32)
-        -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    fn declare_memory(
+impl<'a> DeclareTable<'a> {
+    pub fn declare_table(
         &mut self,
-        memory: crate::parse2::LinearMemory,
-    ) -> Result<(), Self::Error> {
-        todo!()
+        table: crate::parse2::Table,
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
+}
 
-    fn reserve_globals(&mut self, total_count: u32) -> Result<(), Self::Error> {
-        todo!()
-    }
+#[derive(Debug, From)]
+pub struct DeclareMemory<'a> {
+    builder: &'a mut ModuleBuilder,
+}
 
-    fn define_global(
+impl<'a> DeclareMemory<'a> {
+    pub fn declare_memory(
         &mut self,
-        decl: crate::parse2::GlobalVariable,
+        table: crate::parse2::LinearMemory,
+    ) -> Result<(), BuilderError> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, From)]
+pub struct DefineGlobal<'a> {
+    builder: &'a mut ModuleBuilder,
+}
+
+impl<'a> DefineGlobal<'a> {
+    pub fn define_global(
+        &mut self,
+        variable: crate::parse2::GlobalVariable,
         init_value: crate::parse2::InitializerExpr,
-    ) -> Result<crate::parse2::GlobalVariableId, Self::Error> {
-        todo!()
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
+}
 
-    fn declare_export(&mut self, export: crate::parse2::Export) {
-        todo!()
-    }
+#[derive(Debug, From)]
+pub struct DeclareExport<'a> {
+    builder: &'a mut ModuleBuilder,
+}
 
-    fn set_start_fn(&mut self, id: crate::parse2::FunctionId) {
-        todo!()
-    }
-
-    fn reserve_elements(&mut self, total_count: u32)
-        -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    fn define_element(&mut self, element: crate::parse2::Element) -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    fn reserve_function_bodies(
+impl<'a> DeclareExport<'a> {
+    pub fn declare_export(
         &mut self,
-        total_count: u32,
-    ) -> Result<(), Self::Error> {
-        todo!()
+        export: crate::parse2::Export,
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
+}
 
-    fn define_function_body(
+#[derive(Debug, From)]
+pub struct PushElement<'a> {
+    builder: &'a mut ModuleBuilder,
+}
+
+impl<'a> PushElement<'a> {
+    pub fn push_element(
         &mut self,
-        fn_body: crate::parse2::FunctionBody,
-    ) -> Result<(), Self::Error> {
-        todo!()
+        element: crate::parse2::Element,
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
+}
 
-    fn reserve_datas(&mut self, total_count: u32) -> Result<(), Self::Error> {
-        todo!()
-    }
+#[derive(Debug, From)]
+pub struct PushData<'a> {
+    builder: &'a mut ModuleBuilder,
+}
 
-    fn define_data(&mut self, data: crate::parse2::Data) -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    fn finalize(self) -> Result<Self::Module, Self::Error> {
-        todo!()
+impl<'a> PushData<'a> {
+    pub fn push_data(
+        &mut self,
+        data: crate::parse2::Data,
+    ) -> Result<(), BuilderError> {
+        Ok(())
     }
 }

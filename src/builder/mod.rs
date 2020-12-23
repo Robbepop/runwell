@@ -15,15 +15,28 @@
 pub mod entity;
 mod error;
 mod export;
+mod impls;
 mod import;
 mod memory;
 mod table;
-mod impls;
 
 pub use self::{
     entity::EntityError,
-    error::BuildError,
+    error::BuilderError,
+    impls::{
+        Module,
+        DeclareExport,
+        DeclareFunction,
+        DeclareMemory,
+        DeclareTable,
+        DefineGlobal,
+        DefineType,
+        ImportEntity,
+        ModuleBuilder,
+        PushData,
+        PushElement,
+    },
     import::ImportName,
     memory::{Data, LinearMemoryData},
-    table::{TableElements, Element},
+    table::{Element, TableElements},
 };

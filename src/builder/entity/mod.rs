@@ -35,7 +35,7 @@ pub use self::{
     },
 };
 
-use super::{BuildError, ImportName};
+use super::{BuilderError, ImportName};
 use crate::parse2::Index32;
 use core::marker::PhantomData;
 
@@ -111,7 +111,7 @@ impl<Id, Shared, Internal> Entities<Id, Shared, Internal> {
     pub fn reserve_internals(
         &mut self,
         additional: usize,
-    ) -> Result<(), BuildError> {
+    ) -> Result<(), BuilderError> {
         if let Some(previous_reservation) = self.reserved_internals {
             return Err(EntityError::DuplicateReservedInternals {
                 previous_reservation,
@@ -138,7 +138,7 @@ where
         &mut self,
         shared: Shared,
         internal: Internal,
-    ) -> Result<Id, BuildError> {
+    ) -> Result<Id, BuilderError> {
         if let Some(reserved_internals) = self.reserved_internals {
             if self.internal.len() == reserved_internals {
                 return Err(EntityError::TooManyDefinitions {
@@ -162,7 +162,7 @@ where
         &mut self,
         name: ImportName,
         shared: Shared,
-    ) -> Result<Id, BuildError> {
+    ) -> Result<Id, BuilderError> {
         if self.has_internal_entities() {
             return Err(EntityError::PushImportAfterInternals {
                 count_internal: self.len_internal(),
