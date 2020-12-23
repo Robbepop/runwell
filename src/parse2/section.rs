@@ -52,7 +52,80 @@ use wasmparser::{
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum SectionError {
     Unsupported(UnsupportedWasmSection),
+    Unexpected(UnexpectedWasmPayload),
     UnsupportedTypeDef(UnsupportedTypeDef),
+}
+
+#[derive(Debug, Display, Error, PartialEq, Eq)]
+#[display(
+    fmt = "encountered unexpected Wasm payload. encountered: {:?}, expected: {:?}",
+    encountered,
+    expected
+)]
+pub struct UnexpectedWasmPayload {
+    encountered: PayloadKind,
+    expected: Option<PayloadKind>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum PayloadKind {
+    Version,
+    TypeSection,
+    ImportSection,
+    AliasSection,
+    InstanceSection,
+    ModuleSection,
+    FunctionSection,
+    TableSection,
+    MemorySection,
+    EventSection,
+    GlobalSection,
+    ExportSection,
+    StartSection,
+    ElementSection,
+    DataCountSection,
+    DataSection,
+    CustomSection,
+    CodeSectionStart,
+    CodeSectionEntry,
+    ModuleCodeSectionStart,
+    ModuleCodeSectionEntry,
+    UnknownSection,
+    End,
+}
+
+impl From<Payload<'_>> for PayloadKind {
+    fn from(payload: Payload<'_>) -> Self {
+        match payload {
+            Payload::Version { .. } => Self::Version,
+            Payload::TypeSection(_) => Self::TypeSection,
+            Payload::ImportSection(_) => Self::ImportSection,
+            Payload::AliasSection(_) => Self::AliasSection,
+            Payload::InstanceSection(_) => Self::InstanceSection,
+            Payload::ModuleSection(_) => Self::ModuleSection,
+            Payload::FunctionSection(_) => Self::FunctionSection,
+            Payload::TableSection(_) => Self::TableSection,
+            Payload::MemorySection(_) => Self::MemorySection,
+            Payload::EventSection(_) => Self::EventSection,
+            Payload::GlobalSection(_) => Self::GlobalSection,
+            Payload::ExportSection(_) => Self::ExportSection,
+            Payload::StartSection { .. } => Self::StartSection,
+            Payload::ElementSection(_) => Self::ElementSection,
+            Payload::DataCountSection { .. } => Self::DataCountSection,
+            Payload::DataSection(_) => Self::DataSection,
+            Payload::CustomSection { .. } => Self::CustomSection,
+            Payload::CodeSectionStart { .. } => Self::CodeSectionStart,
+            Payload::CodeSectionEntry(_) => Self::CodeSectionEntry,
+            Payload::ModuleCodeSectionStart { .. } => {
+                Self::ModuleCodeSectionStart
+            }
+            Payload::ModuleCodeSectionEntry { .. } => {
+                Self::ModuleCodeSectionEntry
+            }
+            Payload::UnknownSection { .. } => Self::UnknownSection,
+            Payload::End { .. } => Self::End,
+        }
+    }
 }
 
 #[derive(Debug, Display, Error, PartialEq, Eq)]
@@ -79,6 +152,27 @@ pub enum UnsupportedTypeDef {
     Module,
 }
 
+fn pull_more_data<R>(
+    hint: u64,
+    buffer: &mut Vec<u8>,
+    reader: &mut R,
+) -> Result<bool, ParseError>
+where
+    R: Read,
+{
+    // Use the hint to preallocate more space, then read
+    // some more data into the buffer.
+    //
+    // Note that the buffer management here is not ideal,
+    // but it's compact enough to fit in an example!
+    let len = buffer.len();
+    buffer.extend((0..hint).map(|_| 0u8));
+    let read_bytes = reader.read(&mut buffer[len..])?;
+    buffer.truncate(len + read_bytes);
+    let eof = read_bytes == 0;
+    Ok(eof)
+}
+
 pub fn parse<R>(
     mut reader: R,
     buffer: &mut Vec<u8>,
@@ -94,21 +188,15 @@ where
         match parser.parse(&buffer, eof)? {
             Chunk::NeedMoreData(hint) => {
                 assert!(!eof); // Otherwise an error would be returned by `parse`.
-
-                // Use the hint to preallocate more space, then read
-                // some more data into the buffer.
-                //
-                // Note that the buffer management here is not ideal,
-                // but it's compact enough to fit in an example!
-                let len = buffer.len();
-                buffer.extend((0..hint).map(|_| 0u8));
-                let n = reader.read(&mut buffer[len..])?;
-                buffer.truncate(len + n);
-                eof = n == 0;
+                eof = pull_more_data(hint, buffer, &mut reader)?;
                 continue
             }
             Chunk::Parsed { consumed, payload } => {
-                let end_section = context.process_payload(payload)?;
+                let end_section = context.process_payload(
+                    payload,
+                    &mut parser,
+                    &mut reader,
+                )?;
                 // Cut away the parts from the intermediate buffer that have already been parsed.
                 buffer.drain(..consumed);
                 if end_section {
@@ -128,8 +216,6 @@ pub struct ParseContext {
     builder: ModuleBuilder,
     /// The Wasm validator and its internal state.
     validator: Validator,
-    /// The amount of parsed and validated function bodies.
-    count_bodies: u32,
 }
 
 impl ParseContext {
@@ -139,10 +225,15 @@ impl ParseContext {
     }
 
     /// Processes the given Wasm payload.
-    pub fn process_payload(
+    pub fn process_payload<R>(
         &mut self,
         payload: Payload,
-    ) -> Result<bool, ParseError> {
+        parser: &mut Parser,
+        reader: &mut R,
+    ) -> Result<bool, ParseError>
+    where
+        R: Read,
+    {
         match payload {
             Payload::Version { num, range } => {
                 self.validator.version(num, &range)?;
@@ -179,10 +270,15 @@ impl ParseContext {
                 range,
                 size: _,
             } => {
-                self.parse_code_section_start(count, range)?;
+                self.parse_code_section(count, range, parser, reader)?;
             }
-            Payload::CodeSectionEntry(body) => {
-                self.parse_code_section_entry(body)?;
+            Payload::CodeSectionEntry(_body) => {
+                // self.parse_code_section_entry(body)?;
+                return Err(SectionError::Unexpected(UnexpectedWasmPayload {
+                    encountered: PayloadKind::CodeSectionEntry,
+                    expected: None,
+                }))
+                .map_err(Into::into)
             }
             Payload::DataSection(section_reader) => {
                 self.parse_data_section(section_reader)?;
@@ -426,25 +522,68 @@ impl ParseContext {
         Ok(())
     }
 
-    fn parse_code_section_start(
+    fn parse_code_section<R>(
         &mut self,
-        count: u32,
+        total_count_bodies: u32,
         range: wasmparser::Range,
-    ) -> Result<(), ParseError> {
-        self.validator.code_section_start(count, &range)?;
-        let _fn_builder = self.builder.code_section_start(count)?;
-        Ok(())
-    }
-
-    fn parse_code_section_entry(
-        &mut self,
-        function_body: wasmparser::FunctionBody,
-    ) -> Result<(), ParseError> {
-        let mut fn_validator = self.validator.code_section_entry()?;
-        let fn_id = FunctionId::from_u32(self.count_bodies);
-        let fn_body = FunctionBody::new(fn_id, &mut fn_validator, function_body)?;
-        self.builder.code_section_entry(fn_body)?;
-        self.count_bodies += 1;
+        parser: &mut Parser,
+        reader: &mut R,
+    ) -> Result<(), ParseError>
+    where
+        R: Read,
+    {
+        self.validator
+            .code_section_start(total_count_bodies, &range)?;
+        let mut fn_builder = self.builder.code_section(total_count_bodies)?;
+        let mut buffer = <Vec<u8>>::new();
+        let mut eof = false;
+        let mut count_bodies = 0;
+        loop {
+            // Parse, validate and feed function body to module builder.
+            if count_bodies == total_count_bodies {
+                break
+            }
+            match parser.parse(&buffer, eof)? {
+                Chunk::NeedMoreData(hint) => {
+                    assert!(!eof); // Otherwise an error would be returned by `parse`.
+                    eof = pull_more_data(hint, &mut buffer, reader)?;
+                    continue
+                }
+                Chunk::Parsed {
+                    consumed,
+                    payload: Payload::CodeSectionEntry(function_body),
+                } => {
+                    let mut fn_validator =
+                        self.validator.code_section_entry()?;
+                    let fn_id = FunctionId::from_u32(count_bodies);
+                    let fn_body = FunctionBody::new(
+                        fn_id,
+                        &mut fn_validator,
+                        function_body,
+                    )?;
+                    fn_builder.define_function_body(fn_body)?;
+                    count_bodies += 1;
+                    // Cut away the parts from the intermediate buffer that have already been parsed.
+                    buffer.drain(..consumed);
+                }
+                Chunk::Parsed {
+                    consumed: _,
+                    payload: Payload::CustomSection { .. },
+                } => { /* ignore custom section */ }
+                Chunk::Parsed {
+                    consumed: _,
+                    payload,
+                } => {
+                    return Err(SectionError::Unexpected(
+                        UnexpectedWasmPayload {
+                            encountered: payload.into(),
+                            expected: Some(PayloadKind::CodeSectionEntry),
+                        },
+                    ))
+                    .map_err(Into::into)
+                }
+            };
+        }
         Ok(())
     }
 

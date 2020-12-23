@@ -14,7 +14,9 @@
 
 #![allow(unused_variables)]
 
+use crate::parse2::FunctionBody;
 use derive_more::From;
+
 use super::BuilderError;
 
 /// A parsed and validated Wasm module.
@@ -88,18 +90,11 @@ impl ModuleBuilder {
         Ok(self.into())
     }
 
-    pub fn code_section_start(
+    pub fn code_section(
         &mut self,
         count_function_bodies: u32,
-    ) -> Result<(), BuilderError> {
-        Ok(())
-    }
-
-    pub fn code_section_entry(
-        &mut self,
-        function_body: crate::parse2::FunctionBody,
-    ) -> Result<(), BuilderError> {
-        Ok(())
+    ) -> Result<DefineFunctionBody, BuilderError> {
+        Ok(self.into())
     }
 
     pub fn data_section(
@@ -261,6 +256,20 @@ impl<'a> PushData<'a> {
     pub fn push_data(
         &mut self,
         data: crate::parse2::Data,
+    ) -> Result<(), BuilderError> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, From)]
+pub struct DefineFunctionBody<'a> {
+    builder: &'a mut ModuleBuilder,
+}
+
+impl<'a> DefineFunctionBody<'a> {
+    pub fn define_function_body(
+        &mut self,
+        function_body: FunctionBody,
     ) -> Result<(), BuilderError> {
         Ok(())
     }
