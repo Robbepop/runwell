@@ -53,7 +53,7 @@ macro_rules! define_id_type {
 }
 define_id_type! {
     /// An index into the function signature table of a Wasm module.
-    pub struct FunctionSigId;
+    pub struct FunctionTypeId;
 }
 define_id_type! {
     /// An index into the internal global variable table of a Wasm module.

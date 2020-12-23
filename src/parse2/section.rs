@@ -17,7 +17,7 @@ use super::{
     Export,
     FunctionBody,
     FunctionId,
-    FunctionSigId,
+    FunctionTypeId,
     GlobalVariable,
     ImportError,
     ImportName,
@@ -389,7 +389,7 @@ impl ParseContext {
                 ImportSectionEntryType::Function(fn_sig_id) => {
                     builder.import_function(
                         import_name,
-                        FunctionSigId::from_u32(fn_sig_id),
+                        FunctionTypeId::from_u32(fn_sig_id),
                     )?
                 }
                 ImportSectionEntryType::Table(table_type) => {
@@ -433,7 +433,7 @@ impl ParseContext {
         let mut builder = self.builder.function_section(total_count)?;
         for fn_sig in reader {
             let fn_sig_id = fn_sig?;
-            builder.declare_function(FunctionSigId::from_u32(fn_sig_id))?;
+            builder.declare_function(FunctionTypeId::from_u32(fn_sig_id))?;
         }
         Ok(())
     }

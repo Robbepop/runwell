@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse2::{FunctionSigId, FunctionType, Index32};
+use crate::parse2::{FunctionTypeId, FunctionType, Index32};
 use derive_more::{Display, Error};
 use super::BuilderError;
 
@@ -73,12 +73,12 @@ impl Types {
     /// # Panics
     ///
     /// If the given ID is invalid for this Wasm types table.
-    pub fn get(&self, id: FunctionSigId) -> &FunctionType {
+    pub fn get(&self, id: FunctionTypeId) -> &FunctionType {
         &self.types[id.into_u32() as usize]
     }
 
     /// Returns the function signature identifier by `id` if any.
-    pub fn try_get(&self, id: FunctionSigId) -> Option<&FunctionType> {
+    pub fn try_get(&self, id: FunctionTypeId) -> Option<&FunctionType> {
         self.types.get(id.into_u32() as usize)
     }
 
@@ -92,7 +92,7 @@ impl Types {
     pub fn push(
         &mut self,
         sig: FunctionType,
-    ) -> Result<FunctionSigId, BuilderError> {
+    ) -> Result<FunctionTypeId, BuilderError> {
         let len = self.len();
         let cap = self.types.capacity();
         assert!(len < u32::MAX as usize);
@@ -103,7 +103,7 @@ impl Types {
             })
             .map_err(Into::into)
         }
-        let id = FunctionSigId::from_u32(self.len() as u32);
+        let id = FunctionTypeId::from_u32(self.len() as u32);
         self.types.push(sig);
         Ok(id)
     }

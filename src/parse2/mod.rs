@@ -42,7 +42,7 @@ pub use self::{
     import::{ImportError, ImportName},
     index::{
         FunctionId,
-        FunctionSigId,
+        FunctionTypeId,
         GlobalVariableId,
         Index32,
         LinearMemoryId,
