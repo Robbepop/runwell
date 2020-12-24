@@ -23,7 +23,6 @@ extern crate test;
 extern crate alloc;
 
 pub mod builder;
-pub mod ir;
 mod maybe_std;
 pub mod parse;
 pub mod parse2;
