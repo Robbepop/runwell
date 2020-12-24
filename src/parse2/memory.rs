@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{Index32, InitializerExpr, LinearMemoryId, ParseError};
+use crate::Index32;
+use super::{InitializerExpr, LinearMemoryId, ParseError};
 use core::convert::TryFrom;
 use derive_more::Display;
 

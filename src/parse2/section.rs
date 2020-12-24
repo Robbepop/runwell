@@ -21,13 +21,15 @@ use super::{
     GlobalVariable,
     ImportError,
     ImportName,
-    Index32,
     LinearMemory,
     ParseError,
     Read,
     Table,
 };
-use crate::builder::{Module, ModuleBuilder};
+use crate::{
+    builder::{Module, ModuleBuilder},
+    Index32,
+};
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use std::convert::TryInto;

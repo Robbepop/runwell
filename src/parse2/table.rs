@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{FunctionId, Index32, InitializerExpr, ParseError, TableId};
+use super::{FunctionId, InitializerExpr, ParseError, TableId};
+use crate::Index32;
 use core::convert::TryFrom;
 use derive_more::Display;
 

@@ -44,7 +44,6 @@ pub use self::{
         FunctionId,
         FunctionTypeId,
         GlobalVariableId,
-        Index32,
         LinearMemoryId,
         TableId,
     },

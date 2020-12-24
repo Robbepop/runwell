@@ -22,7 +22,11 @@ extern crate test;
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
+#[macro_use]
+mod index;
 pub mod builder;
 mod maybe_std;
 pub mod parse;
 pub mod parse2;
+
+pub use self::index::Index32;
