@@ -70,13 +70,33 @@ impl FpromoteInstr {
 /// # Note
 ///
 /// Truncates the given floating point number (towards zero) to cast into the integer.
-/// Interprets the integer as unsigned integer.
+/// Interprets the integer as **unsigned** integer.
+///
+/// Truncation from floating point to integer where IEEE 754-2008 would specify an invalid
+/// operator exception (e.g. when the floating point value is NaN or outside the range which
+/// rounds to an integer in range) is handled as follows:
+///
+/// If `saturating` is `false`:
+///    - A trap is produced.
+/// If `saturating` is `true`:
+///    - No trap is produced.
+///    - If the floating-point value is positive, the maximum integer value is returned.
+///    - If the floating-point value is negative, the minimum integer value is returned.
+///    - If the floating-point value is NaN, zero is returned.
+
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "convert {} -> {} unsigned, src {}", src_type, dst_type, src)]
+#[display(
+    fmt = "convert {} -> {} unsigned, src {}, saturating {}",
+    src_type,
+    dst_type,
+    src,
+    saturating
+)]
 pub struct FtoUintInstr {
     src_type: FloatType,
     dst_type: IntType,
     src: Value,
+    saturating: bool,
 }
 
 impl FtoUintInstr {
@@ -86,14 +106,18 @@ impl FtoUintInstr {
     ///
     /// The source type must have a bit width that is greater than or equal to the bit width
     /// of the destination type.
-    /// The `signed` flag tells if the conversion from float to integer shall treat the
-    /// resulting integer as signed or unsigned integer type.
-    pub fn new(src_type: FloatType, dst_type: IntType, src: Value) -> Self {
+    pub fn new(
+        src_type: FloatType,
+        dst_type: IntType,
+        src: Value,
+        saturating: bool,
+    ) -> Self {
         assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,
             dst_type,
             src,
+            saturating,
         }
     }
 }
@@ -103,13 +127,32 @@ impl FtoUintInstr {
 /// # Note
 ///
 /// Truncates the given floating point number (towards zero) to cast into the integer.
-/// Interprets the integer as signed integer.
+/// Interprets the integer as **signed** integer.
+///
+/// Truncation from floating point to integer where IEEE 754-2008 would specify an invalid
+/// operator exception (e.g. when the floating point value is NaN or outside the range which
+/// rounds to an integer in range) is handled as follows:
+///
+/// If `saturating` is `false`:
+///    - A trap is produced.
+/// If `saturating` is `true`:
+///    - No trap is produced.
+///    - If the floating-point value is positive, the maximum integer value is returned.
+///    - If the floating-point value is negative, the minimum integer value is returned.
+///    - If the floating-point value is NaN, zero is returned.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "convert {} -> {} signed, src {}", src_type, dst_type, src)]
+#[display(
+    fmt = "convert {} -> {} signed, src {}, saturating {}",
+    src_type,
+    dst_type,
+    src,
+    saturating
+)]
 pub struct FtoSintInstr {
     src_type: FloatType,
     dst_type: IntType,
     src: Value,
+    saturating: bool,
 }
 
 impl FtoSintInstr {
@@ -121,12 +164,18 @@ impl FtoSintInstr {
     /// of the destination type.
     /// The `signed` flag tells if the conversion from float to integer shall treat the
     /// resulting integer as signed or unsigned integer type.
-    pub fn new(src_type: FloatType, dst_type: IntType, src: Value) -> Self {
+    pub fn new(
+        src_type: FloatType,
+        dst_type: IntType,
+        src: Value,
+        saturating: bool,
+    ) -> Self {
         assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,
             dst_type,
             src,
+            saturating,
         }
     }
 }
