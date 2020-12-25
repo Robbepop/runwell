@@ -41,3 +41,28 @@ pub use self::{
         UnaryFloatInstr,
     },
 };
+use derive_more::{Display, From};
+
+/// An SSA floating point number instruction from the Runwell IR.
+#[derive(Debug, Display, From, PartialEq, Eq)]
+pub enum FloatInstr {
+    Abs(FabsInstr),
+    Add(FaddInstr),
+    Ceil(FceilInstr),
+    Compare(FcompareInstr),
+    Copysign(FcopysignInstr),
+    Demote(FdemoteInstr),
+    Div(FdivInstr),
+    Floor(FfloorInstr),
+    Max(FmaxInstr),
+    Min(FminInstr),
+    Mul(FmulInstr),
+    Nearest(FnearestInstr),
+    Neg(FnegInstr),
+    Promote(FpromoteInstr),
+    Sqrt(FsqrtInstr),
+    Sub(FsubInstr),
+    ToSint(FtoSintInstr),
+    ToUint(FtoUintInstr),
+    Truncate(FtruncateInstr),
+}

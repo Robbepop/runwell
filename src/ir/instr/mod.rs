@@ -37,6 +37,7 @@ pub use self::{
         FdemoteInstr,
         FdivInstr,
         FfloorInstr,
+        FloatInstr,
         FmaxInstr,
         FminInstr,
         FmulInstr,
@@ -45,6 +46,8 @@ pub use self::{
         FpromoteInstr,
         FsqrtInstr,
         FsubInstr,
+        FtoSintInstr,
+        FtoUintInstr,
         FtruncateInstr,
         UnaryFloatInstr,
     },
@@ -56,6 +59,7 @@ pub use self::{
         IcompareOp,
         IleadingZerosInstr,
         ImulInstr,
+        IntInstr,
         IorInstr,
         IpopCountInstr,
         IrotlInstr,
@@ -104,53 +108,4 @@ pub enum Instruction {
     Reinterpret(ReinterpretInstr),
     Terminal(TerminalInstr),
     Int(IntInstr),
-}
-
-/// An SSA integer instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq)]
-pub enum IntInstr {
-    Add(IaddInstr),
-    And(IandInstr),
-    Compare(IcompareInstr),
-    LeadingZeros(IleadingZerosInstr),
-    Mul(ImulInstr),
-    Or(IorInstr),
-    PopCount(IpopCountInstr),
-    Rotl(IrotlInstr),
-    Rotr(IrotrInstr),
-    Sdiv(SdivInstr),
-    Shl(ShlInstr),
-    SignExtend(SextendInstr),
-    Srem(SremInstr),
-    Sshlr(SshlrInstr),
-    Sub(IsubInstr),
-    TrailingZeros(ItrailingZerosInstr),
-    Truncate(ItruncateInstr),
-    Udiv(UdivInstr),
-    Urem(UremInstr),
-    Ushlr(UshlrInstr),
-    Xor(IxorInstr),
-    ZeroExtend(UextendInstr),
-}
-
-/// An SSA floating point number instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq)]
-pub enum FloatInstr {
-    Abs(FabsInstr),
-    Add(FaddInstr),
-    Ceil(FceilInstr),
-    Compare(FcompareInstr),
-    Copysign(FcopysignInstr),
-    Demote(FdemoteInstr),
-    Div(FdivInstr),
-    Floor(FfloorInstr),
-    Max(FmaxInstr),
-    Min(FminInstr),
-    Mul(FmulInstr),
-    Nearest(FnearestInstr),
-    Neg(FnegInstr),
-    Promote(FpromoteInstr),
-    Sqrt(FsqrtInstr),
-    Sub(FsubInstr),
-    Truncate(FtruncateInstr),
 }
