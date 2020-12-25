@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse2::{self, ParseError, InitializerExpr};
+use crate::parse2::{self, InitializerExpr, ParseError};
 
 /// A parsed and validated Wasm linear memory with its data items.
 #[derive(Debug)]

@@ -27,16 +27,12 @@ pub enum EntityError {
     },
     #[display(
         fmt = "tried to push more internal entities than reserved. reserved: {}",
-        reserved,
+        reserved
     )]
-    TooManyDefinitions {
-        reserved: usize,
-    },
+    TooManyDefinitions { reserved: usize },
     #[display(
         fmt = "tried to push an imported entity after pushing internal entities. count internal entities: {}",
-        count_internal,
+        count_internal
     )]
-    PushImportAfterInternals {
-        count_internal: usize,
-    }
+    PushImportAfterInternals { count_internal: usize },
 }

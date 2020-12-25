@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse2::{
-    FunctionId,
-    GlobalVariableId,
-    LinearMemoryId,
-    TableId,
-};
+use crate::parse2::{FunctionId, GlobalVariableId, LinearMemoryId, TableId};
 use core::slice::Iter as SliceIter;
 
 /// An exported item with its field name and unique ID.
