@@ -14,6 +14,7 @@
 
 mod call;
 mod constant;
+mod int;
 mod memory;
 mod phi;
 mod select;
@@ -22,6 +23,31 @@ mod terminal;
 pub use self::{
     call::{CallIndirectInstr, CallInstr},
     constant::ConstInstr,
+    int::{
+        AddInstr,
+        AndInstr,
+        CompareInstr,
+        CompareOp,
+        LeadingZerosInstr,
+        MulInstr,
+        OrInstr,
+        PopCountInstr,
+        RotlInstr,
+        RotrInstr,
+        SdivInstr,
+        ShlInstr,
+        SignExtendInstr,
+        SremInstr,
+        SshlrInstr,
+        SubInstr,
+        TrailingZerosInstr,
+        TruncateInstr,
+        UdivInstr,
+        UremInstr,
+        UshlrInstr,
+        XorInstr,
+        ZeroExtendInstr,
+    },
     memory::{
         Alignment,
         LoadInstr,
@@ -38,6 +64,7 @@ use derive_more::{Display, From};
 /// An SSA instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq)]
 pub enum Instruction {
+    // Generic Instructions
     Call(CallInstr),
     CallIndirect(CallIndirectInstr),
     Const(ConstInstr),
@@ -48,4 +75,28 @@ pub enum Instruction {
     Store(StoreInstr),
     Select(SelectInstr),
     Terminal(TerminalInstr),
+
+    // Integer Instructions
+    Add(AddInstr),
+    And(AndInstr),
+    Compare(CompareInstr),
+    LeadingZeros(LeadingZerosInstr),
+    Mul(MulInstr),
+    Or(OrInstr),
+    PopCount(PopCountInstr),
+    Rotl(RotlInstr),
+    Rotr(RotrInstr),
+    Sdiv(SdivInstr),
+    Shl(ShlInstr),
+    SignExtend(SignExtendInstr),
+    Srem(SremInstr),
+    Sshlr(SshlrInstr),
+    Sub(SubInstr),
+    TrailingZeros(TrailingZerosInstr),
+    Truncate(TruncateInstr),
+    Udiv(UdivInstr),
+    Urem(UremInstr),
+    Ushlr(UshlrInstr),
+    Xor(XorInstr),
+    ZeroExtend(ZeroExtendInstr),
 }
