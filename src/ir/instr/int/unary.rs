@@ -13,8 +13,7 @@
 // limitations under the License.
 
 use crate::ir::{IntType, Value};
-use core::marker::PhantomData;
-use core::fmt::Display;
+use core::{fmt::Display, marker::PhantomData};
 
 /// The base of all unary integer instructions.
 ///
@@ -34,7 +33,13 @@ where
     T: UnaryIntOperand,
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{} type {}, source {}", <T as UnaryIntOperand>::DISPLAY_REPR, self.ty, self.src)?;
+        write!(
+            f,
+            "{} type {}, source {}",
+            <T as UnaryIntOperand>::DISPLAY_REPR,
+            self.ty,
+            self.src
+        )?;
         Ok(())
     }
 }
@@ -45,7 +50,11 @@ where
 {
     /// Creates a new unary integer instruction of the given type operating on the given value.
     fn new(ty: IntType, src: Value) -> Self {
-        Self { ty, src, marker: Default::default() }
+        Self {
+            ty,
+            src,
+            marker: Default::default(),
+        }
     }
 
     /// Returns the integer type of the return value.

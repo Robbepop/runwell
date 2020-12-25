@@ -18,7 +18,6 @@ mod fconv;
 mod unary;
 
 pub use self::{
-    fconv::{DemoteInstr, PromoteInstr},
     binary::{
         BinaryFloatInstr,
         FaddInstr,
@@ -30,6 +29,7 @@ pub use self::{
         FsubInstr,
     },
     fcmp::{FloatCompareInstr, FloatCompareOp},
+    fconv::{DemoteInstr, PromoteInstr},
     unary::{
         AbsInstr,
         CeilInstr,

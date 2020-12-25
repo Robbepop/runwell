@@ -60,7 +60,12 @@ impl BranchInstr {
 
 /// Conditionally either branches to `then` or `else` branch depending on `condition`.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "ite condition {}, then {}, else {}", condition, br_then, br_else)]
+#[display(
+    fmt = "ite condition {}, then {}, else {}",
+    condition,
+    br_then,
+    br_else
+)]
 pub struct IfThenElseInstr {
     condition: Value,
     br_then: BasicBlockId,
@@ -69,8 +74,16 @@ pub struct IfThenElseInstr {
 
 impl IfThenElseInstr {
     /// Creates a new if-then-else instruction branching to either `then` or `else` depending on `condition`.
-    pub fn new(condition: Value, br_then: BasicBlockId, br_else: BasicBlockId) -> Self {
-        Self { condition, br_then, br_else }
+    pub fn new(
+        condition: Value,
+        br_then: BasicBlockId,
+        br_else: BasicBlockId,
+    ) -> Self {
+        Self {
+            condition,
+            br_then,
+            br_else,
+        }
     }
 }
 
@@ -98,7 +111,11 @@ impl BranchTableInstr {
 
 impl Display for BranchTableInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "br_table source {}, default {}, targets [", self.source, self.default)?;
+        write!(
+            f,
+            "br_table source {}, default {}, targets [",
+            self.source, self.default
+        )?;
         for target in &self.targets {
             write!(f, "{}", target)?;
         }

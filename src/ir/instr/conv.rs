@@ -36,7 +36,11 @@ impl ReinterpretInstr {
     pub fn new(src_type: Type, dst_type: Type, src: Value) -> Self {
         assert_ne!(src_type, dst_type);
         assert_eq!(src_type.bit_width(), dst_type.bit_width());
-        Self { src_type, dst_type, src }
+        Self {
+            src_type,
+            dst_type,
+            src,
+        }
     }
 
     /// Returns the source type of the reinterpret instruction.

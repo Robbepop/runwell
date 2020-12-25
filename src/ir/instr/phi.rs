@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::ir::{BasicBlockId, Value};
-use std::collections::HashMap;
 use core::fmt::Display;
+use std::collections::HashMap;
 
 /// A ϕ-instruction in the Runwell IR.
 #[derive(Debug, PartialEq, Eq)]

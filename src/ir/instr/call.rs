@@ -72,7 +72,12 @@ pub struct CallIndirectInstr {
 
 impl CallIndirectInstr {
     /// Creates a new call instruction to call the indexed function using the given parameters.
-    pub fn new<I>(table_id: TableId, func_type: FunctionTypeId, index: Value, call_params: I) -> Self
+    pub fn new<I>(
+        table_id: TableId,
+        func_type: FunctionTypeId,
+        index: Value,
+        call_params: I,
+    ) -> Self
     where
         I: IntoIterator<Item = Value>,
     {

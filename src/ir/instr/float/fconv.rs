@@ -32,7 +32,11 @@ pub struct DemoteInstr {
 impl DemoteInstr {
     /// Creates a new float demote instruction.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
-        Self { src_type, dst_type, src }
+        Self {
+            src_type,
+            dst_type,
+            src,
+        }
     }
 }
 
@@ -53,6 +57,10 @@ pub struct PromoteInstr {
 impl PromoteInstr {
     /// Creates a new float promote instruction.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
-        Self { src_type, dst_type, src }
+        Self {
+            src_type,
+            dst_type,
+            src,
+        }
     }
 }
