@@ -14,19 +14,31 @@
 
 use crate::Index32;
 
-define_id_type! {
+/// Defines a new 32-bit space optimized index type for parsing.
+macro_rules! define_index_type {
+    ( $( #[$attr:meta] )* pub struct $name:ident ; ) => {
+        define_id_type! {
+            $( #[ $attr ] )*
+            #[derive(::derive_more::Display)]
+            #[display(fmt = "{}", "self.index.get()")]
+            pub struct $name;
+        }
+    };
+}
+
+define_index_type! {
     /// An index into the function signature table of a Wasm module.
     pub struct FunctionTypeId;
 }
-define_id_type! {
+define_index_type! {
     /// An index into the internal global variable table of a Wasm module.
     pub struct GlobalVariableId;
 }
-define_id_type! {
+define_index_type! {
     /// An index into the function table of a Wasm module.
     pub struct FunctionId;
 }
-define_id_type! {
+define_index_type! {
     /// An index into the linear memory table of a Wasm module.
     pub struct LinearMemoryId;
 }
@@ -41,7 +53,7 @@ impl Default for LinearMemoryId {
     }
 }
 
-define_id_type! {
+define_index_type! {
     /// An index into the table section of a Wasm module.
     pub struct TableId;
 }

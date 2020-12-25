@@ -23,19 +23,17 @@ pub trait Index32: Copy {
 /// Defines a new 32-bit space optimized index type.
 macro_rules! define_id_type {
     ( $( #[$attr:meta] )* pub struct $name:ident ; ) => {
-        /// An index into the function signature table of a Wasm module.
         $( #[ $attr ] )*
         #[derive(
             ::core::fmt::Debug,
-            ::derive_more::Display,
             ::core::marker::Copy,
             ::core::clone::Clone,
             ::core::cmp::PartialEq,
             ::core::cmp::Eq,
             ::core::cmp::PartialOrd,
-            ::core::cmp::Ord
+            ::core::cmp::Ord,
+            ::core::hash::Hash,
         )]
-        #[display(fmt = "{}", "self.index.get()")]
         pub struct $name {
             index: ::core::num::NonZeroU32,
         }
