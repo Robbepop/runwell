@@ -29,7 +29,7 @@ pub use self::{
         FsubInstr,
     },
     fcmp::{FcompareInstr, FcompareOp},
-    fconv::{FdemoteInstr, FpromoteInstr},
+    fconv::{FdemoteInstr, FpromoteInstr, FtoUintInstr, FtoSintInstr},
     unary::{
         FabsInstr,
         FceilInstr,

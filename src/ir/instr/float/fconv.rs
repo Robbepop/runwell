@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{FloatType, Value};
+use crate::ir::{FloatType, Value, IntType};
 use derive_more::Display;
 
 /// Demotes the source float value from source float type to destination float type.
@@ -57,6 +57,90 @@ pub struct FpromoteInstr {
 impl FpromoteInstr {
     /// Creates a new float promote instruction.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
+        Self {
+            src_type,
+            dst_type,
+            src,
+        }
+    }
+}
+
+/// Instruction to convert a floating point number into an unsigned integer.
+///
+/// # Note
+///
+/// Truncates the given floating point number (towards zero) to cast into the integer.
+/// Interprets the integer as unsigned integer.
+#[derive(Debug, Display, PartialEq, Eq)]
+#[display(
+    fmt = "convert {} -> {} unsigned, src {}",
+    src_type,
+    dst_type,
+    src,
+)]
+pub struct FtoUintInstr {
+    src_type: FloatType,
+    dst_type: IntType,
+    src: Value,
+}
+
+impl FtoUintInstr {
+    /// Creates a new instruction converts from float to unsigned integer type.
+    ///
+    /// # Note
+    ///
+    /// The source type must have a bit width that is greater than or equal to the bit width
+    /// of the destination type.
+    /// The `signed` flag tells if the conversion from float to integer shall treat the
+    /// resulting integer as signed or unsigned integer type.
+    pub fn new(
+        src_type: FloatType,
+        dst_type: IntType,
+        src: Value,
+    ) -> Self {
+        assert!(src_type.bit_width() >= dst_type.bit_width());
+        Self {
+            src_type,
+            dst_type,
+            src,
+        }
+    }
+}
+
+/// Instruction to convert a floating point number into a signed integer.
+///
+/// # Note
+///
+/// Truncates the given floating point number (towards zero) to cast into the integer.
+/// Interprets the integer as signed integer.
+#[derive(Debug, Display, PartialEq, Eq)]
+#[display(
+    fmt = "convert {} -> {} signed, src {}",
+    src_type,
+    dst_type,
+    src,
+)]
+pub struct FtoSintInstr {
+    src_type: FloatType,
+    dst_type: IntType,
+    src: Value,
+}
+
+impl FtoSintInstr {
+    /// Creates a new instruction converts from float to signed integer type.
+    ///
+    /// # Note
+    ///
+    /// The source type must have a bit width that is greater than or equal to the bit width
+    /// of the destination type.
+    /// The `signed` flag tells if the conversion from float to integer shall treat the
+    /// resulting integer as signed or unsigned integer type.
+    pub fn new(
+        src_type: FloatType,
+        dst_type: IntType,
+        src: Value,
+    ) -> Self {
+        assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,
             dst_type,
