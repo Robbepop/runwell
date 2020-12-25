@@ -125,10 +125,10 @@ mod operands {
 }
 use self::operands::UnaryFloatOperand;
 
-pub type AbsInstr = UnaryFloatInstr<operands::Abs>;
-pub type NegInstr = UnaryFloatInstr<operands::Neg>;
-pub type SqrtInstr = UnaryFloatInstr<operands::Sqrt>;
-pub type CeilInstr = UnaryFloatInstr<operands::Ceil>;
-pub type FloorInstr = UnaryFloatInstr<operands::Floor>;
-pub type TruncInstr = UnaryFloatInstr<operands::Trunc>;
-pub type NearestInstr = UnaryFloatInstr<operands::Nearest>;
+pub type FabsInstr = UnaryFloatInstr<operands::Abs>;
+pub type FnegInstr = UnaryFloatInstr<operands::Neg>;
+pub type FsqrtInstr = UnaryFloatInstr<operands::Sqrt>;
+pub type FceilInstr = UnaryFloatInstr<operands::Ceil>;
+pub type FfloorInstr = UnaryFloatInstr<operands::Floor>;
+pub type FtruncInstr = UnaryFloatInstr<operands::Trunc>;
+pub type FnearestInstr = UnaryFloatInstr<operands::Nearest>;

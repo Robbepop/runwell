@@ -23,13 +23,13 @@ use derive_more::Display;
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(fmt = "demote {} -> {}, source {}", src_type, dst_type, src)]
-pub struct DemoteInstr {
+pub struct FdemoteInstr {
     src_type: FloatType,
     dst_type: FloatType,
     src: Value,
 }
 
-impl DemoteInstr {
+impl FdemoteInstr {
     /// Creates a new float demote instruction.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
         Self {
@@ -48,13 +48,13 @@ impl DemoteInstr {
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(fmt = "promote {} -> {}, source {}", src_type, dst_type, src)]
-pub struct PromoteInstr {
+pub struct FpromoteInstr {
     src_type: FloatType,
     dst_type: FloatType,
     src: Value,
 }
 
-impl PromoteInstr {
+impl FpromoteInstr {
     /// Creates a new float promote instruction.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
         Self {
