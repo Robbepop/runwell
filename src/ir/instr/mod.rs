@@ -16,6 +16,7 @@ mod call;
 mod constant;
 mod memory;
 mod phi;
+mod select;
 mod terminal;
 
 pub use self::{
@@ -29,6 +30,7 @@ pub use self::{
         StoreInstr,
     },
     phi::PhiInstr,
+    select::SelectInstr,
     terminal::TerminalInstr,
 };
 use derive_more::{Display, From};
@@ -44,5 +46,6 @@ pub enum Instruction {
     Phi(PhiInstr),
     Load(LoadInstr),
     Store(StoreInstr),
+    Select(SelectInstr),
     Terminal(TerminalInstr),
 }
