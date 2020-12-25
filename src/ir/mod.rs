@@ -23,3 +23,81 @@ pub use self::{
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
     value::Value,
 };
+
+/// All Runwell IR SSA instructions.
+pub mod instr {
+    /// The operands for some of the instructions.
+    pub mod operands {
+        #[doc(inline)]
+        pub use super::super::instruction::{FcompareOp, IcompareOp};
+    }
+    /// The base types for all the alias instruction types.
+    pub mod base {
+        #[doc(inline)]
+        pub use super::super::instruction::{
+            BinaryFloatInstr,
+            BinaryIntInstr,
+            UnaryFloatInstr,
+            UnaryIntInstr,
+        };
+    }
+    #[doc(inline)]
+    pub use super::instruction::{
+        CallIndirectInstr,
+        CallInstr,
+        ConstInstr,
+        FabsInstr,
+        FaddInstr,
+        FceilInstr,
+        FcompareInstr,
+        FcopysignInstr,
+        FdemoteInstr,
+        FdivInstr,
+        FfloorInstr,
+        FloatInstr,
+        FmaxInstr,
+        FminInstr,
+        FmulInstr,
+        FnearestInstr,
+        FnegInstr,
+        FpromoteInstr,
+        FsqrtInstr,
+        FsubInstr,
+        FtoSintInstr,
+        FtoUintInstr,
+        FtruncateInstr,
+        IaddInstr,
+        IandInstr,
+        IcompareInstr,
+        IleadingZerosInstr,
+        ImulInstr,
+        Instruction,
+        IntInstr,
+        IorInstr,
+        IpopCountInstr,
+        IrotlInstr,
+        IrotrInstr,
+        IsubInstr,
+        ItrailingZerosInstr,
+        ItruncateInstr,
+        IxorInstr,
+        LoadInstr,
+        MemoryGrowInstr,
+        MemorySizeInstr,
+        PhiInstr,
+        ReinterpretInstr,
+        SdivInstr,
+        SelectInstr,
+        SextendInstr,
+        ShiftInstr,
+        ShlInstr,
+        SremInstr,
+        SshlrInstr,
+        StoreInstr,
+        TerminalInstr,
+        UdivInstr,
+        UextendInstr,
+        UremInstr,
+        UshlrInstr,
+    };
+}
