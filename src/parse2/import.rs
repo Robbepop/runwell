@@ -33,7 +33,10 @@ pub struct ImportName<'a> {
 impl<'a> ImportName<'a> {
     /// Creates a new import name from the given module and field names.
     pub fn new(module_name: &'a str, field_name: &'a str) -> Self {
-        Self { module_name, field_name }
+        Self {
+            module_name,
+            field_name,
+        }
     }
 
     /// Returns the module name of the import.

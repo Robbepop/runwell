@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::builder::BuilderError;
 use super::{
     ExportError,
     ImportError,
@@ -23,6 +22,7 @@ use super::{
     SectionError,
     TableError,
 };
+use crate::builder::BuilderError;
 use core::fmt::Display;
 use derive_more::{Display, Error, From};
 

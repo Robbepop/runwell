@@ -28,7 +28,6 @@ mod signature;
 mod table;
 
 pub use self::{
-    // builder::{BuilderError, BuildError, ModuleBuilder},
     error::{ParseError, ParseErrorKind},
     export::{Export, ExportError, ExportItem},
     function::{

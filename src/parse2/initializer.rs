@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::Index32;
 use super::{
     primitive::{F32, F64},
     GlobalVariableId,
     ParseError,
     Value,
 };
+use crate::Index32;
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use wasmparser::Operator;

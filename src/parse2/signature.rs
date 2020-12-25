@@ -38,7 +38,9 @@ impl TryFrom<wasmparser::FuncType> for FunctionType {
             .collect::<Result<Vec<_>, _>>()
             .map_err(ParseError::from)
             .map_err(|err| {
-                err.with_context("invalid or unsupported type for function input")
+                err.with_context(
+                    "invalid or unsupported type for function input",
+                )
             })?;
         let outputs = func_ty
             .returns
@@ -48,7 +50,9 @@ impl TryFrom<wasmparser::FuncType> for FunctionType {
             .collect::<Result<Vec<_>, _>>()
             .map_err(ParseError::from)
             .map_err(|err| {
-                err.with_context("invalid or unsupported type for function output")
+                err.with_context(
+                    "invalid or unsupported type for function output",
+                )
             })?;
         Ok(Self::new(inputs, outputs))
     }

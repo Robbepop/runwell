@@ -15,7 +15,14 @@
 use super::{FunctionId, ParseError, Type};
 use core::convert::TryFrom;
 use std::iter::FusedIterator;
-use wasmparser::{BinaryReader, FuncValidator, LocalsReader, Operator, OperatorsReader, ValidatorResources};
+use wasmparser::{
+    BinaryReader,
+    FuncValidator,
+    LocalsReader,
+    Operator,
+    OperatorsReader,
+    ValidatorResources,
+};
 
 /// A parsed and validated function body in the Wasm input binary.
 ///
@@ -36,7 +43,11 @@ impl<'a> FunctionBody<'a> {
         let mut reader = body.get_binary_reader();
         Self::validate_locals(validator, &mut reader)?;
         let count_operators = Self::validate_operators(validator, &mut reader)?;
-        Ok(Self { id, body, count_operators })
+        Ok(Self {
+            id,
+            body,
+            count_operators,
+        })
     }
 
     /// Parses and validates the locals of the input function body and checks if their types are supported.
@@ -74,16 +85,28 @@ impl<'a> FunctionBody<'a> {
 
     /// Returns an iterator over all local variable entries of the function body.
     pub fn locals(&self) -> LocalsIter {
-        let locals_reader = self.body.get_locals_reader().expect("expected since enforced at the new constructor");
+        let locals_reader = self
+            .body
+            .get_locals_reader()
+            .expect("expected since enforced at the new constructor");
         let locals_count = locals_reader.get_count();
-        LocalsIter { reader: locals_reader, remaining: locals_count }
+        LocalsIter {
+            reader: locals_reader,
+            remaining: locals_count,
+        }
     }
 
     /// Returns an iterator over all operators of the function body.
     pub fn ops(&self) -> OperatorsIter {
-        let ops_reader = self.body.get_operators_reader().expect("expected since enforced at the new constructor");
+        let ops_reader = self
+            .body
+            .get_operators_reader()
+            .expect("expected since enforced at the new constructor");
         let ops_count = self.count_operators;
-        OperatorsIter { reader: ops_reader, remaining: ops_count }
+        OperatorsIter {
+            reader: ops_reader,
+            remaining: ops_count,
+        }
     }
 }
 
@@ -134,8 +157,12 @@ impl<'a> Iterator for LocalsIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let position = self.reader.original_position();
-        let (count, ty) = self.reader.read().expect("expected since enforced at the new constructor");
-        let ty = Type::try_from(ty).expect("expected since enforced at the new constructor");
+        let (count, ty) = self
+            .reader
+            .read()
+            .expect("expected since enforced at the new constructor");
+        let ty = Type::try_from(ty)
+            .expect("expected since enforced at the new constructor");
         Some((OriginalPosition(position), LocalVariableEntry { count, ty }))
     }
 }
@@ -159,7 +186,10 @@ impl<'a> Iterator for OperatorsIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let position = self.reader.original_position();
-        let operator = self.reader.read().expect("expected since enforced at the new constructor");
+        let operator = self
+            .reader
+            .read()
+            .expect("expected since enforced at the new constructor");
         Some((OriginalPosition(position), operator))
     }
 }
