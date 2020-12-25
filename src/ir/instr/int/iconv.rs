@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{IntType, Value};
+use crate::ir::{IntType, FloatType, Value};
 use derive_more::Display;
 
 /// Truncates the integer value from source type to destination type.
@@ -129,5 +129,63 @@ impl SextendInstr {
     /// Returns the destination type of the truncate instruction.
     pub fn dst_type(&self) -> &IntType {
         &self.src_type
+    }
+}
+
+/// Instruction to convert a signed integer into a floating point number.
+#[derive(Debug, Display, PartialEq, Eq)]
+#[display(
+    fmt = "convert {} signed -> {}, src {}",
+    src_type,
+    dst_type,
+    src,
+)]
+pub struct SintToFloatInstr {
+    src_type: IntType,
+    dst_type: FloatType,
+    src: Value,
+}
+
+impl SintToFloatInstr {
+    /// Creates a new instruction that converts from a signed integer to a floating point number.
+    pub fn new(
+        src_type: IntType,
+        dst_type: FloatType,
+        src: Value,
+    ) -> Self {
+        Self {
+            src_type,
+            dst_type,
+            src,
+        }
+    }
+}
+
+/// Instruction to convert an unsigned integer into a floating point number.
+#[derive(Debug, Display, PartialEq, Eq)]
+#[display(
+    fmt = "convert {} unsigned -> {}, src {}",
+    src_type,
+    dst_type,
+    src,
+)]
+pub struct UintToFloatInstr {
+    src_type: IntType,
+    dst_type: FloatType,
+    src: Value,
+}
+
+impl UintToFloatInstr {
+    /// Creates a new instruction that converts from a unsigned integer to a floating point number.
+    pub fn new(
+        src_type: IntType,
+        dst_type: FloatType,
+        src: Value,
+    ) -> Self {
+        Self {
+            src_type,
+            dst_type,
+            src,
+        }
     }
 }
