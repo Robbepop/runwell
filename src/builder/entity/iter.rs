@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::{Entity, ImportName, ImportedEntity, InternalEntity};
-use crate::parse2::Index32;
+use crate::Index32;
 use core::{iter::FusedIterator, marker::PhantomData};
 
 /// Iterator yielding all imported and defined entities in the order they were declared.

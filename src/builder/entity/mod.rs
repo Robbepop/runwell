@@ -36,7 +36,7 @@ pub use self::{
 };
 
 use super::{BuilderError, ImportName};
-use crate::parse2::Index32;
+use crate::Index32;
 use core::marker::PhantomData;
 
 /// Data structure holding entities identified by `Id`.
