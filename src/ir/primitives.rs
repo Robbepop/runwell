@@ -29,6 +29,16 @@ pub enum Type {
     Float(FloatType),
 }
 
+impl Type {
+    /// Returns the bit width of the type.
+    pub fn bit_width(&self) -> u32 {
+        match self {
+            Self::Int(int_type) => int_type.bit_width(),
+            Self::Float(float_type) => float_type.bit_width(),
+        }
+    }
+}
+
 /// Any fixed-size integer type.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
 pub enum IntType {
@@ -42,6 +52,18 @@ pub enum IntType {
     I64,
 }
 
+impl IntType {
+    /// Returns the bit width of the fixed-size integer type.
+    pub fn bit_width(&self) -> u32 {
+        match self {
+            Self::I8 => 8,
+            Self::I16 => 16,
+            Self::I32 => 32,
+            Self::I64 => 64,
+        }
+    }
+}
+
 /// Any floating point number type.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
 pub enum FloatType {
@@ -49,6 +71,16 @@ pub enum FloatType {
     F32,
     #[display(fmt = "f64")]
     F64,
+}
+
+impl FloatType {
+    /// Returns the bit width of the floating point number type.
+    pub fn bit_width(&self) -> u32 {
+        match self {
+            Self::F32 => 32,
+            Self::F64 => 64,
+        }
+    }
 }
 
 /// A Runwell constant value.
