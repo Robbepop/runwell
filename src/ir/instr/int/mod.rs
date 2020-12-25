@@ -20,20 +20,20 @@ mod unary;
 
 pub use self::{
     binary::{
+        BinaryIntInstr,
         IaddInstr,
         IandInstr,
-        BinaryIntInstr,
         ImulInstr,
         IorInstr,
+        IsubInstr,
+        IxorInstr,
         SdivInstr,
         SremInstr,
-        IsubInstr,
         UdivInstr,
         UremInstr,
-        IxorInstr,
     },
     icmp::{IcompareInstr, IcompareOp},
-    iconv::{SextendInstr, ItruncateInstr, UextendInstr},
+    iconv::{ItruncateInstr, SextendInstr, UextendInstr},
     shift::{
         IrotlInstr,
         IrotrInstr,

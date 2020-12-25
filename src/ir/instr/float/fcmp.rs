@@ -60,12 +60,7 @@ pub struct FcompareInstr {
 
 impl FcompareInstr {
     /// Creates a new comparison instruction for floating point numbers.
-    pub fn new(
-        op: FcompareOp,
-        ty: FloatType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Self {
+    pub fn new(op: FcompareOp, ty: FloatType, lhs: Value, rhs: Value) -> Self {
         Self { op, ty, lhs, rhs }
     }
 }

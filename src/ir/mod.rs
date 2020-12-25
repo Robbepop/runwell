@@ -17,9 +17,9 @@ pub mod instr;
 mod primitives;
 mod value;
 
+use self::value::ValueGen;
 pub use self::{
     bb::BasicBlockId,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
     value::Value,
 };
-use self::value::ValueGen;

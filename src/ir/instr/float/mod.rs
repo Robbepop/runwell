@@ -32,12 +32,12 @@ pub use self::{
     fconv::{FdemoteInstr, FpromoteInstr},
     unary::{
         FabsInstr,
-        FnegInstr,
-        FsqrtInstr,
         FceilInstr,
         FfloorInstr,
-        FtruncateInstr,
         FnearestInstr,
+        FnegInstr,
+        FsqrtInstr,
+        FtruncateInstr,
         UnaryFloatInstr,
     },
 };
