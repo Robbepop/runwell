@@ -19,6 +19,7 @@ mod value;
 
 use self::value::ValueGen;
 pub use self::{
+    instruction::Alignment,
     bb::BasicBlockId,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
     value::Value,
