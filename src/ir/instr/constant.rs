@@ -15,6 +15,7 @@
 use crate::ir::{Const, Type};
 use derive_more::Display;
 
+/// An instruction representing a constant value.
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(fmt = "const {}", const_value)]
 pub struct ConstInstr {
