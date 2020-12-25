@@ -22,13 +22,13 @@ use derive_more::Display;
 /// The bit width of the source type must be greater than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(fmt = "truncate {} -> {}, src {}", src_type, dst_type, src)]
-pub struct TruncateInstr {
+pub struct ItruncateInstr {
     src_type: IntType,
     dst_type: IntType,
     src: Value,
 }
 
-impl TruncateInstr {
+impl ItruncateInstr {
     /// Creates a new truncate instruction truncating src from source type to destination type.
     ///
     /// # Note
@@ -54,21 +54,21 @@ impl TruncateInstr {
     }
 }
 
-/// Zero-extends the integer value from source type to destination type.
+/// Zero-extends the unsigned integer value from source type to destination type.
 ///
 /// # Note
 ///
 /// The bit width of the source type must be less than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(fmt = "extend.zero {} -> {}, src {}", src_type, dst_type, src)]
-pub struct ZeroExtendInstr {
+pub struct UextendInstr {
     src_type: IntType,
     dst_type: IntType,
     src: Value,
 }
 
-impl ZeroExtendInstr {
-    /// Creates a new zero-extend instruction extending src from source type to destination type.
+impl UextendInstr {
+    /// Creates a new unsigned or zero-extend instruction extending src from source type to destination type.
     ///
     /// # Note
     ///
@@ -100,13 +100,13 @@ impl ZeroExtendInstr {
 /// The bit width of the source type must be less than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(fmt = "extend.sign {} -> {}, src {}", src_type, dst_type, src)]
-pub struct SignExtendInstr {
+pub struct SextendInstr {
     src_type: IntType,
     dst_type: IntType,
     src: Value,
 }
 
-impl SignExtendInstr {
+impl SextendInstr {
     /// Creates a new sign-extend instruction extending src from source type to destination type.
     ///
     /// # Note

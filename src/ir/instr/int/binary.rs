@@ -158,13 +158,13 @@ mod operands {
 }
 use self::operands::BinaryIntOperand;
 
-pub type AddInstr = BinaryIntInstr<operands::Add>;
-pub type SubInstr = BinaryIntInstr<operands::Sub>;
-pub type MulInstr = BinaryIntInstr<operands::Mul>;
+pub type IaddInstr = BinaryIntInstr<operands::Add>;
+pub type IsubInstr = BinaryIntInstr<operands::Sub>;
+pub type ImulInstr = BinaryIntInstr<operands::Mul>;
 pub type SdivInstr = BinaryIntInstr<operands::Sdiv>;
 pub type UdivInstr = BinaryIntInstr<operands::Udiv>;
 pub type SremInstr = BinaryIntInstr<operands::Srem>;
 pub type UremInstr = BinaryIntInstr<operands::Urem>;
-pub type AndInstr = BinaryIntInstr<operands::And>;
-pub type OrInstr = BinaryIntInstr<operands::Or>;
-pub type XorInstr = BinaryIntInstr<operands::Xor>;
+pub type IandInstr = BinaryIntInstr<operands::And>;
+pub type IorInstr = BinaryIntInstr<operands::Or>;
+pub type IxorInstr = BinaryIntInstr<operands::Xor>;

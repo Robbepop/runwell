@@ -107,10 +107,10 @@ mod operands {
 use self::operands::UnaryIntOperand;
 
 /// Counts the number of leading zero bits in the source integer value.
-pub type LeadingZerosInstr = UnaryIntInstr<operands::LeadingZeros>;
+pub type IleadingZerosInstr = UnaryIntInstr<operands::LeadingZeros>;
 
 /// Counts the number of trailing zero bits in the source integer value.
-pub type TrailingZerosInstr = UnaryIntInstr<operands::TrailingZeros>;
+pub type ItrailingZerosInstr = UnaryIntInstr<operands::TrailingZeros>;
 
 /// Counts the number of set `1` bits in the source integer value.
-pub type PopCountInstr = UnaryIntInstr<operands::PopCount>;
+pub type IpopCountInstr = UnaryIntInstr<operands::PopCount>;

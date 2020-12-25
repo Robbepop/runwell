@@ -152,5 +152,5 @@ use self::operands::ShiftOperand;
 pub type ShlInstr = ShiftInstr<operands::Shl>;
 pub type SshlrInstr = ShiftInstr<operands::Sshlr>;
 pub type UshlrInstr = ShiftInstr<operands::Ushlr>;
-pub type RotlInstr = ShiftInstr<operands::Rotl>;
-pub type RotrInstr = ShiftInstr<operands::Rotr>;
+pub type IrotlInstr = ShiftInstr<operands::Rotl>;
+pub type IrotrInstr = ShiftInstr<operands::Rotr>;

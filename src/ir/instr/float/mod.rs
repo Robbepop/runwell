@@ -28,7 +28,7 @@ pub use self::{
         FmulInstr,
         FsubInstr,
     },
-    fcmp::{FloatCompareInstr, FloatCompareOp},
+    fcmp::{FcompareInstr, FcompareOp},
     fconv::{FdemoteInstr, FpromoteInstr},
     unary::{
         FabsInstr,
