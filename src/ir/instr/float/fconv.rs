@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{FloatType, Value, IntType};
+use crate::ir::{FloatType, IntType, Value};
 use derive_more::Display;
 
 /// Demotes the source float value from source float type to destination float type.
@@ -72,12 +72,7 @@ impl FpromoteInstr {
 /// Truncates the given floating point number (towards zero) to cast into the integer.
 /// Interprets the integer as unsigned integer.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(
-    fmt = "convert {} -> {} unsigned, src {}",
-    src_type,
-    dst_type,
-    src,
-)]
+#[display(fmt = "convert {} -> {} unsigned, src {}", src_type, dst_type, src)]
 pub struct FtoUintInstr {
     src_type: FloatType,
     dst_type: IntType,
@@ -93,11 +88,7 @@ impl FtoUintInstr {
     /// of the destination type.
     /// The `signed` flag tells if the conversion from float to integer shall treat the
     /// resulting integer as signed or unsigned integer type.
-    pub fn new(
-        src_type: FloatType,
-        dst_type: IntType,
-        src: Value,
-    ) -> Self {
+    pub fn new(src_type: FloatType, dst_type: IntType, src: Value) -> Self {
         assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,
@@ -114,12 +105,7 @@ impl FtoUintInstr {
 /// Truncates the given floating point number (towards zero) to cast into the integer.
 /// Interprets the integer as signed integer.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(
-    fmt = "convert {} -> {} signed, src {}",
-    src_type,
-    dst_type,
-    src,
-)]
+#[display(fmt = "convert {} -> {} signed, src {}", src_type, dst_type, src)]
 pub struct FtoSintInstr {
     src_type: FloatType,
     dst_type: IntType,
@@ -135,11 +121,7 @@ impl FtoSintInstr {
     /// of the destination type.
     /// The `signed` flag tells if the conversion from float to integer shall treat the
     /// resulting integer as signed or unsigned integer type.
-    pub fn new(
-        src_type: FloatType,
-        dst_type: IntType,
-        src: Value,
-    ) -> Self {
+    pub fn new(src_type: FloatType, dst_type: IntType, src: Value) -> Self {
         assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,

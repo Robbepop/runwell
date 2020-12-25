@@ -33,7 +33,13 @@ pub use self::{
         UremInstr,
     },
     icmp::{IcompareInstr, IcompareOp},
-    iconv::{ItruncateInstr, SextendInstr, UextendInstr, SintToFloatInstr, UintToFloatInstr},
+    iconv::{
+        ItruncateInstr,
+        SextendInstr,
+        SintToFloatInstr,
+        UextendInstr,
+        UintToFloatInstr,
+    },
     shift::{
         IrotlInstr,
         IrotrInstr,
