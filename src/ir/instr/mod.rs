@@ -14,6 +14,7 @@
 
 mod call;
 mod constant;
+mod conv;
 mod float;
 mod int;
 mod memory;
@@ -24,6 +25,7 @@ mod terminal;
 pub use self::{
     call::{CallIndirectInstr, CallInstr},
     constant::ConstInstr,
+    conv::ReinterpretInstr,
     float::{
         AbsInstr,
         CeilInstr,
@@ -100,6 +102,7 @@ pub enum Instruction {
     Load(LoadInstr),
     Store(StoreInstr),
     Select(SelectInstr),
+    Reinterpret(ReinterpretInstr),
     Terminal(TerminalInstr),
 
     // Integer Instructions
