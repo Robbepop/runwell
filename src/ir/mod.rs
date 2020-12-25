@@ -13,7 +13,7 @@
 // limitations under the License.
 
 mod bb;
-pub mod instr;
+mod instruction;
 mod primitives;
 mod value;
 
