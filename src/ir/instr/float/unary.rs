@@ -116,7 +116,7 @@ mod operands {
     }
     impl_unary_float_operand! {
         /// Unary operand for rounding to nearest integer towards zero of a floating point number.
-        struct Trunc("trunc");
+        struct Truncate("trunc");
     }
     impl_unary_float_operand! {
         /// Unary operand for rounding to nearest integer, ties to even, of a floating point number.
@@ -130,5 +130,5 @@ pub type FnegInstr = UnaryFloatInstr<operands::Neg>;
 pub type FsqrtInstr = UnaryFloatInstr<operands::Sqrt>;
 pub type FceilInstr = UnaryFloatInstr<operands::Ceil>;
 pub type FfloorInstr = UnaryFloatInstr<operands::Floor>;
-pub type FtruncInstr = UnaryFloatInstr<operands::Trunc>;
+pub type FtruncateInstr = UnaryFloatInstr<operands::Truncate>;
 pub type FnearestInstr = UnaryFloatInstr<operands::Nearest>;

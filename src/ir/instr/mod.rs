@@ -45,7 +45,7 @@ pub use self::{
         FpromoteInstr,
         FsqrtInstr,
         FsubInstr,
-        FtruncInstr,
+        FtruncateInstr,
         UnaryFloatInstr,
     },
     int::{

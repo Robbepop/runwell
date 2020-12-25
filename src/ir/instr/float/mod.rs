@@ -36,7 +36,7 @@ pub use self::{
         FsqrtInstr,
         FceilInstr,
         FfloorInstr,
-        FtruncInstr,
+        FtruncateInstr,
         FnearestInstr,
         UnaryFloatInstr,
     },
