@@ -92,7 +92,6 @@ use derive_more::{Display, From};
 /// An SSA instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq)]
 pub enum Instruction {
-    // Generic Instructions
     Call(CallInstr),
     CallIndirect(CallIndirectInstr),
     Const(ConstInstr),
@@ -104,8 +103,12 @@ pub enum Instruction {
     Select(SelectInstr),
     Reinterpret(ReinterpretInstr),
     Terminal(TerminalInstr),
+    Int(IntInstr),
+}
 
-    // Integer Instructions
+/// An SSA integer instruction from the Runwell IR.
+#[derive(Debug, Display, From, PartialEq, Eq)]
+pub enum IntInstr {
     Add(IaddInstr),
     And(IandInstr),
     Compare(IcompareInstr),
@@ -128,4 +131,26 @@ pub enum Instruction {
     Ushlr(UshlrInstr),
     Xor(IxorInstr),
     ZeroExtend(UextendInstr),
+}
+
+/// An SSA floating point number instruction from the Runwell IR.
+#[derive(Debug, Display, From, PartialEq, Eq)]
+pub enum FloatInstr {
+    Abs(FabsInstr),
+    Add(FaddInstr),
+    Ceil(FceilInstr),
+    Compare(FcompareInstr),
+    Copysign(FcopysignInstr),
+    Demote(FdemoteInstr),
+    Div(FdivInstr),
+    Floor(FfloorInstr),
+    Max(FmaxInstr),
+    Min(FminInstr),
+    Mul(FmulInstr),
+    Nearest(FnearestInstr),
+    Neg(FnegInstr),
+    Promote(FpromoteInstr),
+    Sqrt(FsqrtInstr),
+    Sub(FsubInstr),
+    Truncate(FtruncateInstr),
 }
