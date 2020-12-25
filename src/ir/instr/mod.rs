@@ -26,8 +26,8 @@ pub use self::{
     int::{
         AddInstr,
         AndInstr,
-        CompareInstr,
-        CompareOp,
+        IntCompareInstr,
+        IntCompareOp,
         LeadingZerosInstr,
         MulInstr,
         OrInstr,
@@ -79,7 +79,7 @@ pub enum Instruction {
     // Integer Instructions
     Add(AddInstr),
     And(AndInstr),
-    Compare(CompareInstr),
+    Compare(IntCompareInstr),
     LeadingZeros(LeadingZerosInstr),
     Mul(MulInstr),
     Or(OrInstr),

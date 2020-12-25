@@ -18,7 +18,7 @@ use derive_more::Display;
 
 /// Compares two integers by the associated operand.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum CompareOp {
+pub enum IntCompareOp {
     /// Equals operator.
     Eq,
     /// Not equals operator.
@@ -41,7 +41,7 @@ pub enum CompareOp {
     Sgt,
 }
 
-impl Display for CompareOp {
+impl Display for IntCompareOp {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let repr = match self {
             Self::Eq => "eq",
@@ -62,16 +62,16 @@ impl Display for CompareOp {
 
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(fmt = "icmp.{} type {}, lhs {}, rhs {}", op, ty, lhs, rhs)]
-pub struct CompareInstr {
-    op: CompareOp,
+pub struct IntCompareInstr {
+    op: IntCompareOp,
     ty: IntType,
     lhs: Value,
     rhs: Value,
 }
 
-impl CompareInstr {
+impl IntCompareInstr {
     /// Creates a new integer comparison instruction.
-    pub fn new(op: CompareOp, ty: IntType, lhs: Value, rhs: Value) -> Self {
+    pub fn new(op: IntCompareOp, ty: IntType, lhs: Value, rhs: Value) -> Self {
         Self { op, ty, lhs, rhs }
     }
 }

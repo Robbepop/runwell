@@ -31,7 +31,7 @@ pub use self::{
         UremInstr,
         XorInstr,
     },
-    icmp::{CompareOp, CompareInstr},
+    icmp::{IntCompareOp, IntCompareInstr},
     iconv::{SignExtendInstr, TruncateInstr, ZeroExtendInstr},
     shift::{RotlInstr, RotrInstr, ShlInstr, SshlrInstr, UshlrInstr},
     unary::{LeadingZerosInstr, PopCountInstr, TrailingZerosInstr},
