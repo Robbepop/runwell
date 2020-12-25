@@ -26,6 +26,7 @@ pub use self::{
     int::{
         AddInstr,
         AndInstr,
+        BinaryIntInstr,
         IntCompareInstr,
         IntCompareOp,
         LeadingZerosInstr,
@@ -35,6 +36,7 @@ pub use self::{
         RotlInstr,
         RotrInstr,
         SdivInstr,
+        ShiftInstr,
         ShlInstr,
         SignExtendInstr,
         SremInstr,
@@ -43,6 +45,7 @@ pub use self::{
         TrailingZerosInstr,
         TruncateInstr,
         UdivInstr,
+        UnaryIntInstr,
         UremInstr,
         UshlrInstr,
         XorInstr,

@@ -20,6 +20,7 @@ mod unary;
 
 pub use self::{
     binary::{
+        BinaryIntInstr,
         AddInstr,
         AndInstr,
         MulInstr,
@@ -33,6 +34,6 @@ pub use self::{
     },
     icmp::{IntCompareOp, IntCompareInstr},
     iconv::{SignExtendInstr, TruncateInstr, ZeroExtendInstr},
-    shift::{RotlInstr, RotrInstr, ShlInstr, SshlrInstr, UshlrInstr},
-    unary::{LeadingZerosInstr, PopCountInstr, TrailingZerosInstr},
+    shift::{ShiftInstr, RotlInstr, RotrInstr, ShlInstr, SshlrInstr, UshlrInstr},
+    unary::{UnaryIntInstr, LeadingZerosInstr, PopCountInstr, TrailingZerosInstr},
 };
