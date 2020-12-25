@@ -22,9 +22,7 @@ pub struct EntityIter<'a, Id, Shared, Internal> {
     internal: InternalEntityIter<'a, Id, Shared, Internal>,
 }
 
-impl<'a, Id, Shared, Internal> EntityIter<'a, Id, Shared, Internal>
-where
-{
+impl<'a, Id, Shared, Internal> EntityIter<'a, Id, Shared, Internal> {
     /// Returns an iterator that only yields all imported entities.
     ///
     /// # Note
@@ -39,7 +37,9 @@ where
     /// # Note
     ///
     /// The returned iterator yields only the entities that have not already been yielded.
-    pub fn filter_internal(self) -> InternalEntityIter<'a, Id, Shared, Internal> {
+    pub fn filter_internal(
+        self,
+    ) -> InternalEntityIter<'a, Id, Shared, Internal> {
         self.internal
     }
 }

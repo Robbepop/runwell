@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse2::{FunctionTypeId, FunctionType, Index32};
-use derive_more::{Display, Error};
 use super::BuilderError;
+use crate::{
+    parse2::{FunctionType, FunctionTypeId},
+    Index32,
+};
+use derive_more::{Display, Error};
 
 #[derive(Debug, Display, Error, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TypesError {
