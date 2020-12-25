@@ -14,6 +14,7 @@
 
 mod call;
 mod constant;
+mod float;
 mod int;
 mod memory;
 mod phi;
@@ -23,6 +24,28 @@ mod terminal;
 pub use self::{
     call::{CallIndirectInstr, CallInstr},
     constant::ConstInstr,
+    float::{
+        AbsInstr,
+        CeilInstr,
+        FloatCompareInstr,
+        FloatCompareOp,
+        FloorInstr,
+        NearestInstr,
+        NegInstr,
+        SqrtInstr,
+        TruncInstr,
+        UnaryFloatInstr,
+        DemoteInstr,
+        PromoteInstr,
+        BinaryFloatInstr,
+        FaddInstr,
+        FcopysignInstr,
+        FdivInstr,
+        FmaxInstr,
+        FminInstr,
+        FmulInstr,
+        FsubInstr,
+    },
     int::{
         AddInstr,
         AndInstr,
