@@ -19,7 +19,7 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
-use crate::parse2::{F32, F64};
+use crate::parse2::{self, F32, F64};
 use derive_more::{Display, From};
 
 /// Any Runwell supported primitive type.
@@ -27,6 +27,17 @@ use derive_more::{Display, From};
 pub enum Type {
     Int(IntType),
     Float(FloatType),
+}
+
+impl From<parse2::Type> for Type {
+    fn from(ty: parse2::Type) -> Self {
+        match ty {
+            parse2::Type::I32 => Self::Int(IntType::I32),
+            parse2::Type::I64 => Self::Int(IntType::I64),
+            parse2::Type::F32 => Self::Float(FloatType::F32),
+            parse2::Type::F64 => Self::Float(FloatType::F64),
+        }
+    }
 }
 
 impl Type {
