@@ -135,6 +135,7 @@ pub struct LocalsIter<'a> {
 }
 
 /// A local variable entry consisting of the amount and type of the local variables.
+#[derive(Debug)]
 pub struct LocalVariableEntry {
     count: u32,
     ty: Type,
