@@ -83,6 +83,11 @@ impl<'a> FunctionBody<'a> {
         Ok(count_operators)
     }
 
+    /// Returns the unique ID of the function.
+    pub fn id(&self) -> FunctionId {
+        self.id
+    }
+
     /// Returns an iterator over all local variable entries of the function body.
     pub fn locals(&self) -> LocalsIter {
         let locals_reader = self
