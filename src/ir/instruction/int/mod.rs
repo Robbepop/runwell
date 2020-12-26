@@ -85,3 +85,41 @@ pub enum IntInstr {
     Xor(IxorInstr),
     ZeroExtend(UextendInstr),
 }
+
+macro_rules! impl_from_int_instr_for_instr {
+    ( $( $name:ident ),* $(,)? ) => {
+        $(
+            impl ::core::convert::From<$name> for crate::ir::instr::Instruction {
+                fn from(instr: $name) -> Self {
+                    Self::Int(crate::ir::instr::IntInstr::from(instr))
+                }
+            }
+        )*
+    };
+}
+impl_from_int_instr_for_instr! {
+    IaddInstr,
+    IandInstr,
+    IcompareInstr,
+    IleadingZerosInstr,
+    ImulInstr,
+    IorInstr,
+    IpopCountInstr,
+    IrotlInstr,
+    IrotrInstr,
+    SdivInstr,
+    ShlInstr,
+    SextendInstr,
+    SintToFloatInstr,
+    SremInstr,
+    SshlrInstr,
+    IsubInstr,
+    ItrailingZerosInstr,
+    ItruncateInstr,
+    UdivInstr,
+    UintToFloatInstr,
+    UremInstr,
+    UshlrInstr,
+    IxorInstr,
+    UextendInstr,
+}

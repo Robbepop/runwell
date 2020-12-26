@@ -66,3 +66,36 @@ pub enum FloatInstr {
     ToUint(FtoUintInstr),
     Truncate(FtruncateInstr),
 }
+
+macro_rules! impl_from_float_instr_for_instr {
+    ( $( $name:ident ),* $(,)? ) => {
+        $(
+            impl ::core::convert::From<$name> for crate::ir::instr::Instruction {
+                fn from(instr: $name) -> Self {
+                    Self::Float(crate::ir::instr::FloatInstr::from(instr))
+                }
+            }
+        )*
+    };
+}
+impl_from_float_instr_for_instr! {
+    FabsInstr,
+    FaddInstr,
+    FceilInstr,
+    FcompareInstr,
+    FcopysignInstr,
+    FdemoteInstr,
+    FdivInstr,
+    FfloorInstr,
+    FmaxInstr,
+    FminInstr,
+    FmulInstr,
+    FnearestInstr,
+    FnegInstr,
+    FpromoteInstr,
+    FsqrtInstr,
+    FsubInstr,
+    FtoSintInstr,
+    FtoUintInstr,
+    FtruncateInstr,
+}
