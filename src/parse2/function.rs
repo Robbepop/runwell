@@ -89,7 +89,7 @@ impl<'a> FunctionBody<'a> {
     }
 
     /// Returns an iterator over all local variable entries of the function body.
-    pub fn locals(&self) -> LocalsIter {
+    pub fn locals(&self) -> LocalsIter<'a> {
         let locals_reader = self
             .body
             .get_locals_reader()
@@ -102,7 +102,7 @@ impl<'a> FunctionBody<'a> {
     }
 
     /// Returns an iterator over all operators of the function body.
-    pub fn ops(&self) -> OperatorsIter {
+    pub fn ops(&self) -> OperatorsIter<'a> {
         let ops_reader = self
             .body
             .get_operators_reader()
