@@ -15,6 +15,7 @@
 mod bb;
 mod instruction;
 mod primitives;
+mod translate;
 mod value;
 
 use self::value::ValueGen;
