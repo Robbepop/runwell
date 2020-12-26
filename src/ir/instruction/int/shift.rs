@@ -149,7 +149,7 @@ mod operands {
 }
 use self::operands::ShiftOperand;
 
-pub type ShlInstr = ShiftInstr<operands::Shl>;
+pub type IshlInstr = ShiftInstr<operands::Shl>;
 pub type SshlrInstr = ShiftInstr<operands::Sshlr>;
 pub type UshlrInstr = ShiftInstr<operands::Ushlr>;
 pub type IrotlInstr = ShiftInstr<operands::Rotl>;

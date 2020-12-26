@@ -71,7 +71,7 @@ pub use self::{
         SdivInstr,
         SextendInstr,
         ShiftInstr,
-        ShlInstr,
+        IshlInstr,
         SremInstr,
         SshlrInstr,
         UdivInstr,

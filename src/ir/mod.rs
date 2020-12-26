@@ -92,7 +92,7 @@ pub mod instr {
         SelectInstr,
         SextendInstr,
         ShiftInstr,
-        ShlInstr,
+        IshlInstr,
         SremInstr,
         SshlrInstr,
         StoreInstr,
