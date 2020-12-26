@@ -125,10 +125,25 @@ mod operands {
 }
 use self::operands::UnaryFloatOperand;
 
+/// Evaluates the absolute value of the floating point number.
 pub type FabsInstr = UnaryFloatInstr<operands::Abs>;
+/// Negatives the floating point number.
 pub type FnegInstr = UnaryFloatInstr<operands::Neg>;
+/// Evaluates the square root of the floating point number.
 pub type FsqrtInstr = UnaryFloatInstr<operands::Sqrt>;
+/// Rounds to ceil for the floating point number.
 pub type FceilInstr = UnaryFloatInstr<operands::Ceil>;
+/// Rounds to floor for the floating point number.
 pub type FfloorInstr = UnaryFloatInstr<operands::Floor>;
+/// Truncates the floating point number to ne next smaller integer.
+///
+/// # Note
+///
+/// The result remains a floating point number type.
 pub type FtruncateInstr = UnaryFloatInstr<operands::Truncate>;
+/// Rounds the floating point number to the nearest integer value.
+///
+/// # Note
+///
+/// The result remains a floating point number type.
 pub type FnearestInstr = UnaryFloatInstr<operands::Nearest>;
