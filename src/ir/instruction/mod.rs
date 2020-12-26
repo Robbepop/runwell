@@ -108,4 +108,5 @@ pub enum Instruction {
     Reinterpret(ReinterpretInstr),
     Terminal(TerminalInstr),
     Int(IntInstr),
+    Float(FloatInstr),
 }
