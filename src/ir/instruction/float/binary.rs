@@ -87,35 +87,35 @@ mod operands {
         /// Binary operand for floating point number subtraction.
         struct Sub {
             commutative: false,
-            display_repr: "sub"
+            display_repr: "fsub"
         }
     }
     impl_binary_float_operand! {
         /// Binary operand for floating point number multiplication.
         struct Mul {
             commutative: true,
-            display_repr: "mul"
+            display_repr: "fmul"
         }
     }
     impl_binary_float_operand! {
         /// Binary operand for floating point number division.
         struct Div {
             commutative: false,
-            display_repr: "div"
+            display_repr: "fdiv"
         }
     }
     impl_binary_float_operand! {
         /// Binary operand for evaluating the minimum element of two floating point numbers.
         struct Min {
             commutative: true,
-            display_repr: "min"
+            display_repr: "fmin"
         }
     }
     impl_binary_float_operand! {
         /// Binary operand for evaluating the maximum element of two floating point numbers.
         struct Max {
             commutative: true,
-            display_repr: "max"
+            display_repr: "fmax"
         }
     }
     impl_binary_float_operand! {
@@ -127,7 +127,7 @@ mod operands {
         /// bits other than the sign bit from the first operand, even if either operand is a NaN or a zero.
         struct Copysign {
             commutative: false,
-            display_repr: "copysign"
+            display_repr: "fcopysign"
         }
     }
 }

@@ -107,7 +107,7 @@ mod operands {
         ///
         /// The `lhs` operand is the source and the `rhs` operand is the shift amount.
         struct Shl {
-            display_repr: "shl"
+            display_repr: "ishl"
         }
     }
 
@@ -134,7 +134,7 @@ mod operands {
         ///
         /// The `lhs` operand is the source and the `rhs` operand is the rotate amount.
         struct Rotl {
-            display_repr: "rotl"
+            display_repr: "irotl"
         }
     }
 
@@ -143,7 +143,7 @@ mod operands {
         ///
         /// The `lhs` operand is the source and the `rhs` operand is the rotate amount.
         struct Rotr {
-            display_repr: "rotr"
+            display_repr: "irotr"
         }
     }
 }

@@ -22,7 +22,7 @@ use derive_more::Display;
 /// The bit width of destination float type must be smaller than the bit width of the
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "demote {} -> {}, source {}", src_type, dst_type, src)]
+#[display(fmt = "fdemote {} -> {}, source {}", src_type, dst_type, src)]
 pub struct FdemoteInstr {
     src_type: FloatType,
     dst_type: FloatType,
@@ -47,7 +47,7 @@ impl FdemoteInstr {
 /// The bit width of destination float type must be bigger than the bit width of the
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "promote {} -> {}, source {}", src_type, dst_type, src)]
+#[display(fmt = "fpromote {} -> {}, source {}", src_type, dst_type, src)]
 pub struct FpromoteInstr {
     src_type: FloatType,
     dst_type: FloatType,
@@ -86,7 +86,7 @@ impl FpromoteInstr {
 
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(
-    fmt = "convert {} -> {} unsigned, src {}, saturating {}",
+    fmt = "fconvert {} -> {} unsigned, src {}, saturating {}",
     src_type,
     dst_type,
     src,
@@ -142,7 +142,7 @@ impl FtoUintInstr {
 ///    - If the floating-point value is NaN, zero is returned.
 #[derive(Debug, Display, PartialEq, Eq)]
 #[display(
-    fmt = "convert {} -> {} signed, src {}, saturating {}",
+    fmt = "fconvert {} -> {} signed, src {}, saturating {}",
     src_type,
     dst_type,
     src,

@@ -90,37 +90,32 @@ mod operands {
     }
 
     impl_unary_float_operand! {
-        /// Unary operand for counting the leading zeros in an integer.
-        struct LeadingZeros("leading_zeros");
-    }
-
-    impl_unary_float_operand! {
         /// Unary operand for evaluating the absolute value of a floating point number.
-        struct Abs("abs");
+        struct Abs("fabs");
     }
     impl_unary_float_operand! {
         /// Unary operand for negating value of a floating point number.
-        struct Neg("neg");
+        struct Neg("fneg");
     }
     impl_unary_float_operand! {
         /// Unary operand for evaluating the square root of a floating point number.
-        struct Sqrt("sqrt");
+        struct Sqrt("fsqrt");
     }
     impl_unary_float_operand! {
         /// Unary operand for evaluating the ceil of a floating point number.
-        struct Ceil("ceil");
+        struct Ceil("fceil");
     }
     impl_unary_float_operand! {
         /// Unary operand for evaluating the floor of a floating point number.
-        struct Floor("floor");
+        struct Floor("ffloor");
     }
     impl_unary_float_operand! {
         /// Unary operand for rounding to nearest integer towards zero of a floating point number.
-        struct Truncate("trunc");
+        struct Truncate("ftrunc");
     }
     impl_unary_float_operand! {
         /// Unary operand for rounding to nearest integer, ties to even, of a floating point number.
-        struct Nearest("nearest");
+        struct Nearest("fnearest");
     }
 }
 use self::operands::UnaryFloatOperand;

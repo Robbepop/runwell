@@ -21,7 +21,7 @@ use derive_more::Display;
 ///
 /// The bit width of the source type must be greater than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "truncate {} -> {}, src {}", src_type, dst_type, src)]
+#[display(fmt = "itruncate {} -> {}, src {}", src_type, dst_type, src)]
 pub struct ItruncateInstr {
     src_type: IntType,
     dst_type: IntType,
@@ -60,7 +60,7 @@ impl ItruncateInstr {
 ///
 /// The bit width of the source type must be less than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "extend.zero {} -> {}, src {}", src_type, dst_type, src)]
+#[display(fmt = "iextend.zero {} -> {}, src {}", src_type, dst_type, src)]
 pub struct UextendInstr {
     src_type: IntType,
     dst_type: IntType,
@@ -99,7 +99,7 @@ impl UextendInstr {
 ///
 /// The bit width of the source type must be less than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "extend.sign {} -> {}, src {}", src_type, dst_type, src)]
+#[display(fmt = "iextend.sign {} -> {}, src {}", src_type, dst_type, src)]
 pub struct SextendInstr {
     src_type: IntType,
     dst_type: IntType,
@@ -134,7 +134,7 @@ impl SextendInstr {
 
 /// Instruction to convert a signed integer into a floating point number.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "convert {} signed -> {}, src {}", src_type, dst_type, src)]
+#[display(fmt = "iconvert {} signed -> {}, src {}", src_type, dst_type, src)]
 pub struct SintToFloatInstr {
     src_type: IntType,
     dst_type: FloatType,
@@ -154,7 +154,7 @@ impl SintToFloatInstr {
 
 /// Instruction to convert an unsigned integer into a floating point number.
 #[derive(Debug, Display, PartialEq, Eq)]
-#[display(fmt = "convert {} unsigned -> {}, src {}", src_type, dst_type, src)]
+#[display(fmt = "iconvert {} unsigned -> {}, src {}", src_type, dst_type, src)]
 pub struct UintToFloatInstr {
     src_type: IntType,
     dst_type: FloatType,

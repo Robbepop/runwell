@@ -136,7 +136,7 @@ mod operands {
         /// Binary operand for bitwise integer and.
         struct And {
             commutative: true,
-            display_repr: "and"
+            display_repr: "iand"
         }
     }
 
@@ -144,7 +144,7 @@ mod operands {
         /// Binary operand for bitwise integer or.
         struct Or {
             commutative: true,
-            display_repr: "or"
+            display_repr: "ior"
         }
     }
 
@@ -152,7 +152,7 @@ mod operands {
         /// Binary operand for bitwise integer xor.
         struct Xor {
             commutative: true,
-            display_repr: "xor"
+            display_repr: "ixor"
         }
     }
 }

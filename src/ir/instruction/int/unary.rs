@@ -91,17 +91,17 @@ mod operands {
 
     impl_unary_int_operand! {
         /// Unary operand for counting the leading zeros in an integer.
-        struct LeadingZeros("leading_zeros");
+        struct LeadingZeros("ileading_zeros");
     }
 
     impl_unary_int_operand! {
         /// Unary operand for counting the trailing zeros in an integer.
-        struct TrailingZeros("trailing_zeros");
+        struct TrailingZeros("itrailing_zeros");
     }
 
     impl_unary_int_operand! {
         /// Unary operand for counting the number of `1` bits in an integer.
-        struct PopCount("popcount");
+        struct PopCount("ipopcount");
     }
 }
 use self::operands::UnaryIntOperand;
