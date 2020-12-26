@@ -133,10 +133,19 @@ mod operands {
 }
 use self::operands::BinaryFloatOperand;
 
+/// Adds two floating point numbers.
 pub type FaddInstr = BinaryFloatInstr<operands::Add>;
+/// Subtracts the left-hand side floating point number from the right-hand side.
 pub type FsubInstr = BinaryFloatInstr<operands::Sub>;
+/// Multiplies two floating point numbers.
 pub type FmulInstr = BinaryFloatInstr<operands::Mul>;
+/// Divides the right-hand side floating point number by the left-hand side.
 pub type FdivInstr = BinaryFloatInstr<operands::Div>;
+/// Evaluates the minimum of two floating point numbers.
 pub type FminInstr = BinaryFloatInstr<operands::Min>;
+/// Evaluates the maximum of two floating point numbers.
 pub type FmaxInstr = BinaryFloatInstr<operands::Max>;
+/// Takes the sign of the right-hand side floating point number
+/// and the exponent as well as the mantissa of the left-hand side
+/// floating point number and returns the result.
 pub type FcopysignInstr = BinaryFloatInstr<operands::Copysign>;
