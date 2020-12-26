@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod operator;
-
 use super::{instr::Instruction, BasicBlockId, Type, Value, ValueGen};
 use crate::{
     builder::ModuleResource,
@@ -120,6 +118,8 @@ pub struct ValueNumbering {
     instr_to_entry: HashMap<Instruction, ValueEntryId>,
     /// All value entries.
     value_entries: Vec<ValueEntry>,
+    /// The emulated Wasm stack using Runwell IR instruction instead of Wasm operators.
+    stack: Vec<Value>,
 }
 
 impl ValueNumbering {
@@ -145,6 +145,7 @@ impl ValueNumbering {
             value_gen,
             instr_to_entry: HashMap::new(),
             value_entries: Vec::new(),
+            stack: Vec::new(),
         }
     }
 }
