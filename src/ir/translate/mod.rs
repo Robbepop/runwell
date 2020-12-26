@@ -112,10 +112,10 @@ pub struct ValueNumbering {
     value_offset: u32,
     /// Generator to create new unique value IDs.
     value_gen: ValueGen,
-    /// Mapping from instruction to value entry.
+    /// Mapping from instruction and basic block to value.
     ///
     /// Used to deduplicate instructions and associate them with a unique value.
-    instr_to_entry: HashMap<Instruction, ValueEntryId>,
+    instr_to_value: HashMap<(BasicBlockId, Instruction), Value>,
     /// All value entries.
     value_entries: Vec<ValueEntry>,
     /// The emulated Wasm stack using Runwell IR instruction instead of Wasm operators.
@@ -143,16 +143,11 @@ impl ValueNumbering {
             len_values: 0,
             value_offset,
             value_gen,
-            instr_to_entry: HashMap::new(),
+            instr_to_value: HashMap::new(),
             value_entries: Vec::new(),
             stack: Vec::new(),
         }
     }
-}
-
-define_id_type! {
-    /// Unique index used to access the value entries.
-    pub struct ValueEntryId;
 }
 
 #[derive(Debug)]
