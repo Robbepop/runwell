@@ -34,6 +34,7 @@ pub use self::{
         DefineType,
         ImportEntity,
         Module,
+        ModuleResource,
         ModuleBuilder,
         PushData,
         PushElement,
