@@ -54,48 +54,48 @@ pub struct ModuleResource {
     /// # Note
     ///
     /// Represents the Wasm `type` section.
-    types: Types,
+    pub types: Types,
     /// Imported and internal function signatures.
     ///
     /// # Note
     ///
     /// Represents both the Wasm `function` and `code` sections.
     /// Also holds information about imported function declarations.
-    function_types: Entities<FunctionId, FunctionTypeId, ()>,
+    pub function_types: Entities<FunctionId, FunctionTypeId, ()>,
     /// Imported and internal global variables.
     ///
     /// # Note
     ///
     /// Represents the Wasm `global` section.
     /// Also holds information about imported global variables.
-    globals: Entities<GlobalVariableId, GlobalVariable, InitializerExpr>,
+    pub globals: Entities<GlobalVariableId, GlobalVariable, InitializerExpr>,
     /// Imported and internal linear memory sections.
     ///
     /// # Note
     ///
     /// Represents both the Wasm `memory` and `data` sections.
     /// Also holds information about imported linear memories.
-    memories: Entities<LinearMemoryId, LinearMemory, ()>,
+    pub memories: Entities<LinearMemoryId, LinearMemory, ()>,
     /// Imported and internal tables.
     ///
     /// # Note
     ///
     /// Represents both the Wasm `table` and `data` element.
     /// Also holds information about imported tables.
-    tables: Entities<TableId, Table, ()>,
+    pub tables: Entities<TableId, Table, ()>,
     /// Export definitions.
     ///
     /// # Note
     ///
     /// Represents the Wasm `export` section.
-    exports: Exports,
+    pub exports: Exports,
     /// Optional start function.
     ///
     /// # Note
     ///
     /// The start function is executed before the actually executed code upon instantiating
     /// a Wasm module if a start function has been defined.
-    start_function: Option<FunctionId>,
+    pub start_function: Option<FunctionId>,
 }
 
 /// Builds Wasm modules from binary Wasm inputs.
