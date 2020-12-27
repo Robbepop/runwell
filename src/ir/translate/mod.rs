@@ -190,7 +190,7 @@ impl ValueNumbering {
 
     /// Tries to pop 2 values from the emulation stack
     /// and feeds them into the constructed instruction.
-    fn process_instruction_2<F, I>(
+    fn process_binary_instruction<F, I>(
         &mut self,
         resource: &ModuleResource,
         f: F,
@@ -236,25 +236,25 @@ impl ValueNumbering {
                 self.push_instruction(resource, ConstInstr::f64(value.into()))?;
             }
             Operator::I32Add => {
-                self.process_instruction_2(resource, |lhs, rhs| {
+                self.process_binary_instruction(resource, |lhs, rhs| {
                     IaddInstr::new(IntType::I32, lhs, rhs)
                 })
                 .expect("i32.add: missing stack values");
             }
             Operator::I32Mul => {
-                self.process_instruction_2(resource, |lhs, rhs| {
+                self.process_binary_instruction(resource, |lhs, rhs| {
                     ImulInstr::new(IntType::I32, lhs, rhs)
                 })
                 .expect("i32.mul: missing stack values");
             }
             Operator::I32DivS => {
-                self.process_instruction_2(resource, |lhs, rhs| {
+                self.process_binary_instruction(resource, |lhs, rhs| {
                     SdivInstr::new(IntType::I32, lhs, rhs)
                 })
                 .expect("i32.divs: missing stack values");
             }
             Operator::I32DivU => {
-                self.process_instruction_2(resource, |lhs, rhs| {
+                self.process_binary_instruction(resource, |lhs, rhs| {
                     UdivInstr::new(IntType::I32, lhs, rhs)
                 })
                 .expect("i32.divu: missing stack values");
