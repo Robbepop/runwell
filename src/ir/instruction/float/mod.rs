@@ -44,7 +44,7 @@ pub use self::{
 use derive_more::{Display, From};
 
 /// An SSA floating point number instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq)]
+#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum FloatInstr {
     Abs(FabsInstr),
     Add(FaddInstr),

@@ -20,7 +20,7 @@ use derive_more::Display;
 /// # Note
 ///
 /// The bit width of the source type must be greater than the bit width of the destination type.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "itruncate {} -> {}, src {}", src_type, dst_type, src)]
 pub struct ItruncateInstr {
     src_type: IntType,
@@ -59,7 +59,7 @@ impl ItruncateInstr {
 /// # Note
 ///
 /// The bit width of the source type must be less than the bit width of the destination type.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "iextend.zero {} -> {}, src {}", src_type, dst_type, src)]
 pub struct UextendInstr {
     src_type: IntType,
@@ -98,7 +98,7 @@ impl UextendInstr {
 /// # Note
 ///
 /// The bit width of the source type must be less than the bit width of the destination type.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "iextend.sign {} -> {}, src {}", src_type, dst_type, src)]
 pub struct SextendInstr {
     src_type: IntType,
@@ -133,7 +133,7 @@ impl SextendInstr {
 }
 
 /// Instruction to convert a signed integer into a floating point number.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "iconvert {} signed -> {}, src {}", src_type, dst_type, src)]
 pub struct SintToFloatInstr {
     src_type: IntType,
@@ -153,7 +153,7 @@ impl SintToFloatInstr {
 }
 
 /// Instruction to convert an unsigned integer into a floating point number.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "iconvert {} unsigned -> {}, src {}", src_type, dst_type, src)]
 pub struct UintToFloatInstr {
     src_type: IntType,

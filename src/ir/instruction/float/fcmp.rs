@@ -17,7 +17,7 @@ use core::fmt::Display;
 use derive_more::Display;
 
 /// Compares two floating point numbers by the associated operand.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum FcompareOp {
     /// Equals operator.
     Eq,
@@ -49,7 +49,7 @@ impl Display for FcompareOp {
 }
 
 /// A comparison instruction for comparing floating point number with respect to some operand.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "fcmp.{} type {}, lhs {}, rhs {}", op, ty, lhs, rhs)]
 pub struct FcompareInstr {
     op: FcompareOp,

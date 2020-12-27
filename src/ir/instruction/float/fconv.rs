@@ -21,7 +21,7 @@ use derive_more::Display;
 ///
 /// The bit width of destination float type must be smaller than the bit width of the
 /// source float type.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "fdemote {} -> {}, source {}", src_type, dst_type, src)]
 pub struct FdemoteInstr {
     src_type: FloatType,
@@ -46,7 +46,7 @@ impl FdemoteInstr {
 ///
 /// The bit width of destination float type must be bigger than the bit width of the
 /// source float type.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "fpromote {} -> {}, source {}", src_type, dst_type, src)]
 pub struct FpromoteInstr {
     src_type: FloatType,
@@ -84,7 +84,7 @@ impl FpromoteInstr {
 ///    - If the floating-point value is negative, the minimum integer value is returned.
 ///    - If the floating-point value is NaN, zero is returned.
 
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(
     fmt = "fconvert {} -> {} unsigned, src {}, saturating {}",
     src_type,
@@ -140,7 +140,7 @@ impl FtoUintInstr {
 ///    - If the floating-point value is positive, the maximum integer value is returned.
 ///    - If the floating-point value is negative, the minimum integer value is returned.
 ///    - If the floating-point value is NaN, zero is returned.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(
     fmt = "fconvert {} -> {} signed, src {}, saturating {}",
     src_type,

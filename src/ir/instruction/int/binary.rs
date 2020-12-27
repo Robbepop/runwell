@@ -18,7 +18,7 @@ use core::{fmt::Display, marker::PhantomData};
 /// The base of all binary integer instructions.
 ///
 /// Generic over a concrete binary integer operand.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BinaryIntInstr<T>
 where
     T: BinaryIntOperand,
@@ -35,7 +35,12 @@ where
 {
     /// Creates a new binary integer instruction.
     pub fn new(ty: IntType, lhs: Value, rhs: Value) -> Self {
-        Self { ty, lhs, rhs, marker: Default::default() }
+        Self {
+            ty,
+            lhs,
+            rhs,
+            marker: Default::default(),
+        }
     }
 }
 
@@ -75,7 +80,7 @@ mod operands {
             }
         ) => {
             $( #[$attr] )*
-            #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
             pub enum $name {}
 
             impl BinaryIntOperand for $name {

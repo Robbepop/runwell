@@ -23,7 +23,7 @@ use crate::parse2::{self, F32, F64};
 use derive_more::{Display, From};
 
 /// Any Runwell supported primitive type.
-#[derive(Debug, Display, From, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Type {
     Int(IntType),
     Float(FloatType),
@@ -51,7 +51,7 @@ impl Type {
 }
 
 /// Any fixed-size integer type.
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IntType {
     #[display(fmt = "i8")]
     I8,
@@ -76,7 +76,7 @@ impl IntType {
 }
 
 /// Any floating point number type.
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum FloatType {
     #[display(fmt = "f32")]
     F32,
@@ -95,7 +95,7 @@ impl FloatType {
 }
 
 /// A Runwell constant value.
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Const {
     Int(IntConst),
     Float(FloatConst),
@@ -112,7 +112,7 @@ impl Const {
 }
 
 /// A constant fixed-size integer value.
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IntConst {
     I8(i8),
     I16(i16),
@@ -133,7 +133,7 @@ impl IntConst {
 }
 
 /// A constant floating point number value.
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum FloatConst {
     F32(F32),
     F64(F64),

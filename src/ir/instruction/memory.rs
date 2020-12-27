@@ -21,7 +21,7 @@ use derive_more::Display;
 /// Represents the alignment of a store or load instruction.
 ///
 /// The alignment is stored as `N` in `2^N`.
-#[derive(Debug, Display, PartialEq, Eq, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Alignment {
     value: u8,
 }
@@ -39,7 +39,7 @@ impl Alignment {
 }
 
 /// Loads a value of type `ty` from the given memory at the given address with given alignment.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(
     fmt = "load memory {}, address {}, alignment {}",
     memory,
@@ -73,7 +73,7 @@ impl LoadInstr {
 }
 
 /// Stores the value to the given memory at the given address with alignment.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(
     fmt = "store memory {}, address {}, value {}, alignment {}",
     memory,
@@ -110,7 +110,7 @@ impl StoreInstr {
 /// Grows the indexed linear memory by the given amount of new memory pages.
 ///
 /// Returns the previous size of the linear memory upon success or -1 upon failure.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "memory.grow memory {}, pages {}", memory_id, new_pages)]
 pub struct MemoryGrowInstr {
     memory_id: LinearMemoryId,
@@ -128,7 +128,7 @@ impl MemoryGrowInstr {
 }
 
 /// Returns the current number of pages of the indexed linear memory.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "memory.size memory {}", memory_id)]
 pub struct MemorySizeInstr {
     memory_id: LinearMemoryId,

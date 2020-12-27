@@ -17,7 +17,7 @@ use core::fmt::Display;
 use derive_more::Display;
 
 /// Compares two integers by the associated operand.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IcompareOp {
     /// Equals operator.
     Eq,
@@ -61,7 +61,7 @@ impl Display for IcompareOp {
 }
 
 /// Instruction to compare two integer values with respect to some comparison operator.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "icmp.{} type {}, lhs {}, rhs {}", op, ty, lhs, rhs)]
 pub struct IcompareInstr {
     op: IcompareOp,

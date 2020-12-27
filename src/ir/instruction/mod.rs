@@ -94,7 +94,7 @@ pub use self::{
 use derive_more::{Display, From};
 
 /// An SSA instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq)]
+#[derive(Debug, Display, From, PartialEq, Eq, Hash)]
 pub enum Instruction {
     Call(CallInstr),
     CallIndirect(CallIndirectInstr),

@@ -18,7 +18,7 @@ use core::{fmt::Display, marker::PhantomData};
 /// The base of all shift or rotate instructions.
 ///
 /// Generic over a concrete shift or rotate integer operand.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ShiftInstr<T>
 where
     T: ShiftOperand,
@@ -92,7 +92,7 @@ mod operands {
             }
         ) => {
             $( #[$attr] )*
-            #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
             pub enum $name {}
 
             impl ShiftOperand for $name {

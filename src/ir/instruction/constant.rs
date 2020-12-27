@@ -19,7 +19,7 @@ use crate::{
 use derive_more::Display;
 
 /// An instruction representing a constant value.
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "const {}", const_value)]
 pub struct ConstInstr {
     const_value: Const,

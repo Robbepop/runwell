@@ -58,7 +58,7 @@ pub use self::{
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq)]
+#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IntInstr {
     Add(IaddInstr),
     And(IandInstr),

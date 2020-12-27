@@ -18,7 +18,7 @@ use core::{fmt::Display, marker::PhantomData};
 /// The base of all unary floating point number instructions.
 ///
 /// Generic over a concrete unary floating point number operand.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UnaryFloatInstr<T>
 where
     T: UnaryFloatOperand,
@@ -79,7 +79,7 @@ mod operands {
     macro_rules! impl_unary_float_operand {
         ( $( #[$attr:meta] )* struct $name:ident($display_repr:literal); ) => {
             $( #[$attr] )*
-            #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
             pub enum $name {}
 
             impl UnaryFloatOperand for $name {

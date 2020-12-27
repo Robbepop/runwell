@@ -14,12 +14,12 @@
 
 use crate::ir::{BasicBlockId, Value};
 use core::fmt::Display;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// A ϕ-instruction in the Runwell IR.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PhiInstr {
-    sources: HashMap<BasicBlockId, Value>,
+    sources: BTreeMap<BasicBlockId, Value>,
 }
 
 impl PhiInstr {
@@ -29,7 +29,7 @@ impl PhiInstr {
         I: IntoIterator<Item = (BasicBlockId, Value)>,
     {
         Self {
-            sources: sources.into_iter().collect::<HashMap<_, _>>(),
+            sources: sources.into_iter().collect::<BTreeMap<_, _>>(),
         }
     }
 }

@@ -18,7 +18,7 @@ use core::{fmt::Display, marker::PhantomData};
 /// The base of all binary floating point number instructions.
 ///
 /// Generic over a concrete binary floating point number operand.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BinaryFloatInstr<T>
 where
     T: BinaryFloatOperand,
@@ -65,7 +65,7 @@ mod operands {
             }
         ) => {
             $( #[$attr] )*
-            #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
             pub enum $name {}
 
             impl BinaryFloatOperand for $name {

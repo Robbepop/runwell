@@ -19,7 +19,7 @@ use crate::{
 use core::fmt::Display;
 
 /// Calls a function statically.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CallInstr {
     /// The identified of the called function.
     function_id: FunctionId,
@@ -55,7 +55,7 @@ impl Display for CallInstr {
 }
 
 /// Calls a function indirectly through a table with a dynamic offset into the table.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CallIndirectInstr {
     /// The unique ID of the table holding the indirectly called functions.
     table_id: TableId,
