@@ -149,8 +149,21 @@ mod operands {
 }
 use self::operands::ShiftOperand;
 
+/// Shifts the bits of the left-hand side integer to the left by the amount of the right-hand side integer value.
 pub type IshlInstr = ShiftInstr<operands::Shl>;
+/// Shifts the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
+///
+/// # Note
+///
+/// The operation is preserving the sign of the left-hand side integer.
 pub type SshlrInstr = ShiftInstr<operands::Sshlr>;
+/// Shifts the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
+///
+/// # Note
+///
+/// The operation is not preserving the sign of the left-hand side integer.
 pub type UshlrInstr = ShiftInstr<operands::Ushlr>;
+/// Rotates the bits of the left-hand side integer to the left by the amount of the right-hand side integer value.
 pub type IrotlInstr = ShiftInstr<operands::Rotl>;
+/// Rotates the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
 pub type IrotrInstr = ShiftInstr<operands::Rotr>;

@@ -158,13 +158,23 @@ mod operands {
 }
 use self::operands::BinaryIntOperand;
 
+/// Evalutes integer addition of two integer values.
 pub type IaddInstr = BinaryIntInstr<operands::Add>;
+/// Subtracts the right-hand side integer from the left-hand side integer.
 pub type IsubInstr = BinaryIntInstr<operands::Sub>;
+/// Evalutes integer multiplication of two integer values.
 pub type ImulInstr = BinaryIntInstr<operands::Mul>;
+/// Divides the right-hand side signed integer from the left-hand side signed integer.
 pub type SdivInstr = BinaryIntInstr<operands::Sdiv>;
+/// Divides the right-hand side unsigned integer from the left-hand side unsigned integer.
 pub type UdivInstr = BinaryIntInstr<operands::Udiv>;
+/// Computes the remainder of the left-hand side signed integer divided by the right-hand side signed integer.
 pub type SremInstr = BinaryIntInstr<operands::Srem>;
+/// Computes the remainder of the left-hand side unsigned integer divided by the right-hand side unsigned integer.
 pub type UremInstr = BinaryIntInstr<operands::Urem>;
+/// Computes the bitwise and for two integer value.
 pub type IandInstr = BinaryIntInstr<operands::And>;
+/// Computes the bitwise or for two integer value.
 pub type IorInstr = BinaryIntInstr<operands::Or>;
+/// Computes the bitwise xor for two integer value.
 pub type IxorInstr = BinaryIntInstr<operands::Xor>;
