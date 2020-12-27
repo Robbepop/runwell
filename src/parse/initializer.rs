@@ -44,13 +44,13 @@ pub enum InitializerExprError {
 impl InitializerExprError {
     /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
     pub fn is_unsupported_error(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::UnsupportedOperator
-            | Self::UnsupportedFloats
-            | Self::UnsupportedV128
-            | Self::UnsupportedRefType => true,
-            _ => false,
-        }
+                | Self::UnsupportedFloats
+                | Self::UnsupportedV128
+                | Self::UnsupportedRefType
+        )
     }
 }
 

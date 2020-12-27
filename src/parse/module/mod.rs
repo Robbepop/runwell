@@ -140,12 +140,11 @@ pub struct Module {
 impl<'a> Module {
     /// Returns the function identified by `id`.
     pub fn get_fn(&self, id: FunctionId) -> Function {
-        let fn_sig_id = self
+        let fn_sig_id = *self
             .fn_sigs
             .get(id)
             .expect("encountered unexpected invalid function ID")
-            .decl()
-            .clone();
+            .decl();
         let fn_sig = self.types.get(fn_sig_id);
         Function::new(id, fn_sig)
     }

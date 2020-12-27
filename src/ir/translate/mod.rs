@@ -165,17 +165,13 @@ impl ValueNumbering {
     ///
     /// Returns the second popped value followed by the first.
     fn pop_2(&mut self) -> Result<(Value, Value), IrError> {
-        let rhs = self.stack.pop().ok_or_else(|| {
-            IrError::MissingStackValue {
-                expected: 2,
-                found: 0,
-            }
+        let rhs = self.stack.pop().ok_or(IrError::MissingStackValue {
+            expected: 2,
+            found: 0,
         })?;
-        let lhs = self.stack.pop().ok_or_else(|| {
-            IrError::MissingStackValue {
-                expected: 2,
-                found: 1,
-            }
+        let lhs = self.stack.pop().ok_or(IrError::MissingStackValue {
+            expected: 2,
+            found: 1,
         })?;
         Ok((lhs, rhs))
     }
@@ -185,11 +181,9 @@ impl ValueNumbering {
     /// Returns the values in reverse order in which they have been popped.
     fn pop_3(&mut self) -> Result<(Value, Value, Value), IrError> {
         let (snd, trd) = self.pop_2()?;
-        let fst = self.stack.pop().ok_or_else(|| {
-            IrError::MissingStackValue {
-                expected: 3,
-                found: 2,
-            }
+        let fst = self.stack.pop().ok_or(IrError::MissingStackValue {
+            expected: 3,
+            found: 2,
         })?;
         Ok((fst, snd, trd))
     }
@@ -220,13 +214,13 @@ impl ValueNumbering {
         operator: Operator,
     ) -> Result<(), IrError> {
         match operator {
-            Operator::LocalGet { local_index } => {
+            Operator::LocalGet { local_index: _ } => {
                 todo!()
             }
-            Operator::LocalSet { local_index } => {
+            Operator::LocalSet { local_index: _ } => {
                 todo!()
             }
-            Operator::LocalTee { local_index } => {
+            Operator::LocalTee { local_index: _ } => {
                 todo!()
             }
             Operator::I32Const { value } => {
@@ -284,7 +278,7 @@ impl ValueNumbering {
                     .expect("drop: emulation stack is unexpectedly empty");
             }
             Operator::Nop => (),
-            unsupported => return Err(IrError::UnsupportedOperator),
+            _unsupported => return Err(IrError::UnsupportedOperator),
         }
         Ok(())
     }
@@ -294,14 +288,14 @@ impl ValueNumbering {
     /// Returns its associated value.
     fn push_instruction<I>(
         &mut self,
-        resource: &ModuleResource,
+        _resource: &ModuleResource,
         instr: I,
     ) -> Result<Value, IrError>
     where
         I: Into<Instruction>,
     {
-        let mut block = self.blocks.current_block;
-        let block_instr = (block, instr);
+        // let mut block = self.blocks.current_block;
+        // let block_instr = (block, instr);
         // match self.instr_to_value.get(&block_instr) {
         //     Some(value) => {
 

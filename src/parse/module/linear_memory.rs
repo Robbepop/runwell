@@ -31,10 +31,7 @@ pub enum MemoryError {
 impl MemoryError {
     /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
     pub fn is_unsupported_error(&self) -> bool {
-        match self {
-            Self::Unsupported64BitLinearMemory => true,
-            _ => false,
-        }
+        matches!(self, Self::Unsupported64BitLinearMemory)
     }
 }
 

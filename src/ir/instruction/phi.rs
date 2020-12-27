@@ -51,7 +51,7 @@ impl Display for PhiInstr {
         let mut iter = self.sources.iter();
         if let Some((basic_block, value)) = iter.next() {
             write!(f, " {} -> {}", basic_block, value)?;
-            while let Some((basic_block, value)) = iter.next() {
+            for (basic_block, value) in iter {
                 write!(f, ", {} -> {}", basic_block, value)?;
             }
         }

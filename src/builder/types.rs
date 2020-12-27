@@ -71,6 +71,11 @@ impl Types {
         self.types.len()
     }
 
+    /// Returns `true` if there are no registered Wasm type definitions.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Returns the function signature identified by `id`.
     ///
     /// # Panics

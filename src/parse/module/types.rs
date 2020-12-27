@@ -42,10 +42,7 @@ pub enum TypesError {
 impl TypesError {
     /// Returns `true` if the error states that some unsupported Wasm definition has been encountered.
     pub fn is_unsupported_error(&self) -> bool {
-        match self {
-            Self::Unsupported(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Unsupported(_))
     }
 }
 
