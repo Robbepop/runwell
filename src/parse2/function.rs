@@ -43,6 +43,8 @@ impl<'a> FunctionBody<'a> {
         let mut reader = body.get_binary_reader();
         Self::validate_locals(validator, &mut reader)?;
         let count_operators = Self::validate_operators(validator, &mut reader)?;
+        let offset = reader.original_position();
+        validator.finish(offset)?;
         Ok(Self {
             id,
             body,
