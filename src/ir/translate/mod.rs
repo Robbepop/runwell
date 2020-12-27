@@ -12,9 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{instr::Instruction, BasicBlockId, Type, Value, ValueGen};
+use super::{
+    instr::Instruction,
+    instruction::{IaddInstr, ImulInstr, SdivInstr, SelectInstr, UdivInstr},
+    BasicBlockId,
+    IntType,
+    IrError,
+    Type,
+    Value,
+    ValueGen,
+};
 use crate::{
     builder::ModuleResource,
+    ir::instr::ConstInstr,
     parse2::{
         FunctionBody,
         FunctionType,
@@ -25,11 +35,11 @@ use crate::{
     Index32,
 };
 use std::collections::HashMap;
+use wasmparser::Operator;
 
 pub struct FunctionTranslator<'a, 'b> {
     resource: &'a ModuleResource,
     ops: OperatorsIter<'b>,
-    blocks: BasicBlocks,
     value_numbering: ValueNumbering,
 }
 
@@ -47,7 +57,6 @@ impl<'a, 'b> FunctionTranslator<'a, 'b> {
         Self {
             resource,
             ops: func_body.ops(),
-            blocks: BasicBlocks::default(),
             value_numbering: ValueNumbering::new(func_type, func_body.locals()),
         }
     }
@@ -112,6 +121,8 @@ pub struct ValueNumbering {
     value_offset: u32,
     /// Generator to create new unique value IDs.
     value_gen: ValueGen,
+    /// Basic blocks.
+    blocks: BasicBlocks,
     /// Mapping from instruction and basic block to value.
     ///
     /// Used to deduplicate instructions and associate them with a unique value.
@@ -143,13 +154,168 @@ impl ValueNumbering {
             len_values: 0,
             value_offset,
             value_gen,
+            blocks: BasicBlocks::default(),
             instr_to_value: HashMap::new(),
             value_entries: Vec::new(),
             stack: Vec::new(),
         }
     }
+
+    /// Tries to pop 2 values from the emulation stack.
+    ///
+    /// Returns the second popped value followed by the first.
+    fn pop_2(&mut self) -> Result<(Value, Value), IrError> {
+        let rhs = self.stack.pop().ok_or_else(|| {
+            IrError::MissingStackValue {
+                expected: 2,
+                found: 0,
+            }
+        })?;
+        let lhs = self.stack.pop().ok_or_else(|| {
+            IrError::MissingStackValue {
+                expected: 2,
+                found: 1,
+            }
+        })?;
+        Ok((lhs, rhs))
+    }
+
+    /// Tries to pop 3 values from the emulation stack.
+    ///
+    /// Returns the values in reverse order in which they have been popped.
+    fn pop_3(&mut self) -> Result<(Value, Value, Value), IrError> {
+        let (snd, trd) = self.pop_2()?;
+        let fst = self.stack.pop().ok_or_else(|| {
+            IrError::MissingStackValue {
+                expected: 3,
+                found: 2,
+            }
+        })?;
+        Ok((fst, snd, trd))
+    }
+
+    /// Tries to pop 2 values from the emulation stack
+    /// and feeds them into the constructed instruction.
+    fn process_instruction_2<F, I>(
+        &mut self,
+        resource: &ModuleResource,
+        f: F,
+    ) -> Result<(), IrError>
+    where
+        F: FnOnce(Value, Value) -> I,
+        I: Into<Instruction>,
+    {
+        let (lhs, rhs) = self.pop_2()?;
+        self.push_instruction(resource, f(lhs, rhs))?;
+        Ok(())
+    }
+
+    /// Pushes another Wasm operator to the IR translator.
+    ///
+    /// The pushed Wasm operators must be pushed in the same order in which
+    /// they appear in the Wasm function body.
+    pub fn push_operator(
+        &mut self,
+        resource: &ModuleResource,
+        operator: Operator,
+    ) -> Result<(), IrError> {
+        match operator {
+            Operator::LocalGet { local_index } => {
+                todo!()
+            }
+            Operator::LocalSet { local_index } => {
+                todo!()
+            }
+            Operator::LocalTee { local_index } => {
+                todo!()
+            }
+            Operator::I32Const { value } => {
+                self.push_instruction(resource, ConstInstr::i32(value))?;
+            }
+            Operator::I64Const { value } => {
+                self.push_instruction(resource, ConstInstr::i64(value))?;
+            }
+            Operator::F32Const { value } => {
+                self.push_instruction(resource, ConstInstr::f32(value.into()))?;
+            }
+            Operator::F64Const { value } => {
+                self.push_instruction(resource, ConstInstr::f64(value.into()))?;
+            }
+            Operator::I32Add => {
+                self.process_instruction_2(resource, |lhs, rhs| {
+                    IaddInstr::new(IntType::I32, lhs, rhs)
+                })
+                .expect("i32.add: missing stack values");
+            }
+            Operator::I32Mul => {
+                self.process_instruction_2(resource, |lhs, rhs| {
+                    ImulInstr::new(IntType::I32, lhs, rhs)
+                })
+                .expect("i32.mul: missing stack values");
+            }
+            Operator::I32DivS => {
+                self.process_instruction_2(resource, |lhs, rhs| {
+                    SdivInstr::new(IntType::I32, lhs, rhs)
+                })
+                .expect("i32.divs: missing stack values");
+            }
+            Operator::I32DivU => {
+                self.process_instruction_2(resource, |lhs, rhs| {
+                    UdivInstr::new(IntType::I32, lhs, rhs)
+                })
+                .expect("i32.divu: missing stack values");
+            }
+            Operator::Select => {
+                let (condition, val1, val2) =
+                    self.pop_3().expect("select: missing stack values");
+                self.push_instruction(
+                    resource,
+                    SelectInstr::new(
+                        condition,
+                        Type::Int(IntType::I32),
+                        val1,
+                        val2,
+                    ),
+                )?;
+            }
+            Operator::Drop => {
+                self.stack
+                    .pop()
+                    .expect("drop: emulation stack is unexpectedly empty");
+            }
+            Operator::Nop => (),
+            unsupported => return Err(IrError::UnsupportedOperator),
+        }
+        Ok(())
+    }
+
+    /// Pushes another Runwell IR instruction.
+    ///
+    /// Returns its associated value.
+    fn push_instruction<I>(
+        &mut self,
+        resource: &ModuleResource,
+        instr: I,
+    ) -> Result<Value, IrError>
+    where
+        I: Into<Instruction>,
+    {
+        let mut block = self.blocks.current_block;
+        let block_instr = (block, instr);
+        // match self.instr_to_value.get(&block_instr) {
+        //     Some(value) => {
+
+        //     }
+        //     None => {
+
+        //     }
+        // }
+        let value = self.value_gen.next();
+        Ok(value)
+    }
 }
 
+/// An entry in the value numbering table.
 #[derive(Debug)]
 pub struct ValueEntry {
     value: Value,
