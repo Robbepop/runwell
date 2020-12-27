@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{Const, Type};
+use crate::{
+    ir::{Const, FloatConst, IntConst, Type},
+    parse2::{F32, F64},
+};
 use derive_more::Display;
 
 /// An instruction representing a constant value.
@@ -26,6 +29,34 @@ impl ConstInstr {
     /// Creates a new constant instruction.
     pub fn new(const_value: Const) -> Self {
         Self { const_value }
+    }
+
+    /// Creates a new `i32` constant instruction.
+    pub fn i32(value: i32) -> Self {
+        Self {
+            const_value: Const::Int(IntConst::I32(value)),
+        }
+    }
+
+    /// Creates a new `i64` constant instruction.
+    pub fn i64(value: i64) -> Self {
+        Self {
+            const_value: Const::Int(IntConst::I64(value)),
+        }
+    }
+
+    /// Creates a new `f32` constant instruction.
+    pub fn f32(value: F32) -> Self {
+        Self {
+            const_value: Const::Float(FloatConst::F32(value)),
+        }
+    }
+
+    /// Creates a new `f64` constant instruction.
+    pub fn f64(value: F64) -> Self {
+        Self {
+            const_value: Const::Float(FloatConst::F64(value)),
+        }
     }
 
     /// Returns the type of the constant value of the constant instruction.
