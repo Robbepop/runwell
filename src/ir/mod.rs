@@ -13,6 +13,7 @@
 // limitations under the License.
 
 mod bb;
+mod error;
 mod instruction;
 mod primitives;
 mod translate;
@@ -20,6 +21,7 @@ mod value;
 
 use self::value::ValueGen;
 pub use self::{
+    error::IrError,
     bb::BasicBlockId,
     instruction::Alignment,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
