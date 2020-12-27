@@ -23,6 +23,13 @@ pub struct PhiInstr {
 }
 
 impl PhiInstr {
+    /// Appends another ϕ-operand to the ϕ-instruction.
+    ///
+    /// Returns `Some` value if the ϕ-operand already existed for the ϕ-instruction.
+    pub fn append_operand(&mut self, block: BasicBlockId, value: Value) -> Option<Value> {
+        self.sources.insert(block, value)
+    }
+
     /// Creates a new ϕ-instruction from the given ϕ-sources.
     pub fn new<I>(sources: I) -> Self
     where
