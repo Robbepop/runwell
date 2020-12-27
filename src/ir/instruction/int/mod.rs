@@ -43,8 +43,8 @@ pub use self::{
     shift::{
         IrotlInstr,
         IrotrInstr,
-        ShiftInstr,
         IshlInstr,
+        ShiftInstr,
         SshlrInstr,
         UshlrInstr,
     },

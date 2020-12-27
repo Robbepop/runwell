@@ -23,7 +23,9 @@ use crate::parse2::{self, F32, F64};
 use derive_more::{Display, From};
 
 /// Any Runwell supported primitive type.
-#[derive(Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 pub enum Type {
     Int(IntType),
     Float(FloatType),

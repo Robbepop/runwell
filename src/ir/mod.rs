@@ -21,8 +21,8 @@ mod value;
 
 use self::value::ValueGen;
 pub use self::{
-    error::IrError,
     bb::BasicBlockId,
+    error::IrError,
     instruction::Alignment,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
     value::Value,

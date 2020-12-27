@@ -19,9 +19,10 @@ use derive_more::{Display, Error};
 pub enum IrError {
     #[display(fmt = "encountered unsupported Wasm operator")]
     UnsupportedOperator,
-    #[display(fmt = "missing value in emulation stack. found {} but expected {}.", found, expected)]
-    MissingStackValue {
-        expected: u32,
-        found: u32,
-    }
+    #[display(
+        fmt = "missing value in emulation stack. found {} but expected {}.",
+        found,
+        expected
+    )]
+    MissingStackValue { expected: u32, found: u32 },
 }
