@@ -29,6 +29,16 @@ where
     marker: PhantomData<fn() -> T>,
 }
 
+impl<T> BinaryIntInstr<T>
+where
+    T: BinaryIntOperand,
+{
+    /// Creates a new binary integer instruction.
+    pub fn new(ty: IntType, lhs: Value, rhs: Value) -> Self {
+        Self { ty, lhs, rhs, marker: Default::default() }
+    }
+}
+
 impl<T> Display for BinaryIntInstr<T>
 where
     T: BinaryIntOperand,
