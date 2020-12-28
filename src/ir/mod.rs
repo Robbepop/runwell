@@ -21,6 +21,7 @@ mod value;
 
 use self::value::ValueGen;
 pub use self::{
+    translate::translate,
     bb::BasicBlockId,
     error::IrError,
     instruction::Alignment,

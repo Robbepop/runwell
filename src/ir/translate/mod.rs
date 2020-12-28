@@ -41,6 +41,16 @@ use stack::ValueStack;
 use wasmparser::Operator;
 use derive_more::Display;
 
+/// A fully translated Runwell IR function.
+pub struct Function {}
+
+/// Translates a Wasm function body to a Runwell IR function.
+///
+/// Uses the given module resources as contextual information.
+pub fn translate(_resource: &ModuleResource, _fn_body: FunctionBody) -> Function {
+    todo!()
+}
+
 pub struct FunctionTranslator<'a, 'b> {
     resource: &'a ModuleResource,
     ops: OperatorsIter<'b>,
