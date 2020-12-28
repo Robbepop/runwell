@@ -62,6 +62,26 @@ impl<'a, 'b> FunctionTranslator<'a, 'b> {
     }
 }
 
+define_id_type! {
+    /// A unique identifier of a variable in the input Wasm source input.
+    ///
+    /// # Note
+    ///
+    /// In the context of Wasm such variables are local variables that can
+    /// be operated on using `local.set`, `local.get` and `local.tee`. Those
+    /// operations are not in SSA form and we use the `Variable` index type
+    /// in order to translate them to their SSA forms.
+    ///
+    /// # Example
+    ///
+    /// Since in Wasm all local variables in a function are uniquely identified
+    /// by their local index we can simply take this local index and map it
+    /// onto the `Variable` index space.
+    #[derive(Display)]
+    #[display(fmt = "#{}", "self.index.get()")]
+    pub struct Variable;
+}
+
 #[derive(Debug)]
 pub struct BasicBlocks {
     len_blocks: u32,
