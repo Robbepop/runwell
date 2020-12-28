@@ -25,7 +25,6 @@ macro_rules! define_id_type {
     ( $( #[$attr:meta] )* pub struct $name:ident ; ) => {
         $( #[ $attr ] )*
         #[derive(
-            ::core::fmt::Debug,
             ::core::marker::Copy,
             ::core::clone::Clone,
             ::core::cmp::PartialEq,
@@ -36,6 +35,12 @@ macro_rules! define_id_type {
         )]
         pub struct $name {
             index: ::core::num::NonZeroU32,
+        }
+
+        impl ::core::fmt::Debug for $name {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                write!(f, "{}({})", ::core::stringify!($name), <Self as crate::Index32>::into_u32(*self))
+            }
         }
 
         impl crate::Index32 for $name {
@@ -57,4 +62,21 @@ macro_rules! define_id_type {
             }
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    define_id_type! { pub struct Index; }
+
+    #[test]
+    fn debug_works() {
+        fn check_for(raw_index: u32) {
+            assert_eq!(format!("{:?}", Index::from_u32(raw_index)), format!("Index({})", raw_index));
+        }
+        check_for(0);
+        check_for(1);
+        check_for(u32::MAX - 1);
+    }
 }
