@@ -39,6 +39,7 @@ use crate::{
 use std::collections::HashMap;
 use stack::ValueStack;
 use wasmparser::Operator;
+use derive_more::Display;
 
 pub struct FunctionTranslator<'a, 'b> {
     resource: &'a ModuleResource,
@@ -81,7 +82,7 @@ define_id_type! {
     /// by their local index we can simply take this local index and map it
     /// onto the `Variable` index space.
     #[derive(Display)]
-    #[display(fmt = "#{}", "self.index.get()")]
+    #[display(fmt = "var({})", "self.index.get()")]
     pub struct Variable;
 }
 
