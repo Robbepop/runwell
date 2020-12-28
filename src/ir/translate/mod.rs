@@ -37,6 +37,7 @@ use crate::{
     Index32,
 };
 use std::collections::HashMap;
+use stack::ValueStack;
 use wasmparser::Operator;
 
 pub struct FunctionTranslator<'a, 'b> {
@@ -152,7 +153,7 @@ pub struct ValueNumbering {
     /// All value entries.
     value_entries: Vec<ValueEntry>,
     /// The emulated Wasm stack using Runwell IR instruction instead of Wasm operators.
-    stack: Vec<Value>,
+    stack: ValueStack,
 }
 
 impl ValueNumbering {
@@ -179,35 +180,8 @@ impl ValueNumbering {
             blocks: BasicBlocks::default(),
             instr_to_value: HashMap::new(),
             value_entries: Vec::new(),
-            stack: Vec::new(),
+            stack: ValueStack::default(),
         }
-    }
-
-    /// Tries to pop 2 values from the emulation stack.
-    ///
-    /// Returns the second popped value followed by the first.
-    fn pop_2(&mut self) -> Result<(Value, Value), IrError> {
-        let rhs = self.stack.pop().ok_or(IrError::MissingStackValue {
-            expected: 2,
-            found: 0,
-        })?;
-        let lhs = self.stack.pop().ok_or(IrError::MissingStackValue {
-            expected: 2,
-            found: 1,
-        })?;
-        Ok((lhs, rhs))
-    }
-
-    /// Tries to pop 3 values from the emulation stack.
-    ///
-    /// Returns the values in reverse order in which they have been popped.
-    fn pop_3(&mut self) -> Result<(Value, Value, Value), IrError> {
-        let (snd, trd) = self.pop_2()?;
-        let fst = self.stack.pop().ok_or(IrError::MissingStackValue {
-            expected: 3,
-            found: 2,
-        })?;
-        Ok((fst, snd, trd))
     }
 
     /// Tries to pop 2 values from the emulation stack
@@ -221,7 +195,7 @@ impl ValueNumbering {
         F: FnOnce(Value, Value) -> I,
         I: Into<Instruction>,
     {
-        let (lhs, rhs) = self.pop_2()?;
+        let (lhs, rhs) = self.stack.pop2()?;
         self.push_instruction(resource, f(lhs, rhs))?;
         Ok(())
     }
@@ -283,7 +257,7 @@ impl ValueNumbering {
             }
             Operator::Select => {
                 let (condition, val1, val2) =
-                    self.pop_3().expect("select: missing stack values");
+                    self.stack.pop3()?;
                 self.push_instruction(
                     resource,
                     SelectInstr::new(
@@ -296,8 +270,7 @@ impl ValueNumbering {
             }
             Operator::Drop => {
                 self.stack
-                    .pop()
-                    .expect("drop: emulation stack is unexpectedly empty");
+                    .pop1()?;
             }
             Operator::Nop => (),
             _unsupported => return Err(IrError::UnsupportedOperator),
