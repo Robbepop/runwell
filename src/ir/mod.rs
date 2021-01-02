@@ -13,21 +13,22 @@
 // limitations under the License.
 
 mod bb;
+mod builder;
 mod error;
 mod instruction;
 mod primitives;
-mod translate;
+mod wasm;
 mod value;
 
-use self::value::ValueGen;
 pub use self::{
-    translate::translate,
     bb::BasicBlockId,
     error::IrError,
     instruction::Alignment,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
+    wasm::translate_wasm,
     value::Value,
 };
+use self::{builder::Instr, builder::Variable, value::ValueGen};
 
 /// All Runwell IR SSA instructions.
 pub mod instr {
