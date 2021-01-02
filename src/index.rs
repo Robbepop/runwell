@@ -33,6 +33,7 @@ macro_rules! define_id_type {
             ::core::cmp::Ord,
             ::core::hash::Hash,
         )]
+        #[repr(transparent)]
         pub struct $name {
             index: ::core::num::NonZeroU32,
         }
