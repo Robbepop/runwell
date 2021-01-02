@@ -18,7 +18,7 @@ use derive_more::Display;
 define_id_type! {
     /// An SSA value binding used for local and global value numbering.
     #[derive(Display)]
-    #[display(fmt = "%{}", "self.index.get()")]
+    #[display(fmt = "v{}", "self.index.get()")]
     pub struct Value;
 }
 
