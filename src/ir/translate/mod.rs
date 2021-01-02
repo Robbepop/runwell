@@ -36,7 +36,7 @@ use crate::{
     },
     Index32,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use stack::ValueStack;
 use wasmparser::Operator;
 use derive_more::Display;
@@ -47,7 +47,7 @@ pub struct Function {}
 /// Translates a Wasm function body to a Runwell IR function.
 ///
 /// Uses the given module resources as contextual information.
-pub fn translate(_resource: &ModuleResource, _fn_body: FunctionBody) -> Function {
+pub fn translate_wasm(_resource: &ModuleResource, _fn_body: FunctionBody) -> Function {
     todo!()
 }
 
@@ -300,16 +300,19 @@ impl ValueNumbering {
     where
         I: Into<Instruction>,
     {
-        // let mut block = self.blocks.current_block;
-        // let block_instr = (block, instr);
-        // match self.instr_to_value.get(&block_instr) {
-        //     Some(value) => {
-
-        //     }
-        //     None => {
-
-        //     }
-        // }
+        let current_block = self.blocks.current_block;
+        let mut block_instr = (current_block, instr.into());
+        let mut seen_blocks = HashSet::new();
+        let mut todo_blocks = Vec::new();
+        todo_blocks.push(current_block);
+        while let Some(block) = todo_blocks.pop() {
+            seen_blocks.insert(block);
+            block_instr.0 = block;
+            match self.instr_to_value.get(&block_instr) {
+                Some(value) => return Ok(*value),
+                None => {}
+            }
+        }
         let value = self.value_gen.next();
         Ok(value)
     }
