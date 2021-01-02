@@ -74,7 +74,10 @@ mod tests {
     #[test]
     fn debug_works() {
         fn check_for(raw_index: u32) {
-            assert_eq!(format!("{:?}", Index::from_u32(raw_index)), format!("Index({})", raw_index));
+            assert_eq!(
+                format!("{:?}", Index::from_u32(raw_index)),
+                format!("Index({})", raw_index)
+            );
         }
         check_for(0);
         check_for(1);
