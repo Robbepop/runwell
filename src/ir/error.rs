@@ -12,17 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use derive_more::{Display, Error};
+use super::{FunctionBuilderError, WasmError};
+use derive_more::{Display, Error, From};
 
 /// An error that occured while translating from Wasm to Runwell IR.
-#[derive(Debug, Display, Error, PartialEq, Eq)]
+#[derive(Debug, Display, Error, From, PartialEq, Eq)]
 pub enum IrError {
-    #[display(fmt = "encountered unsupported Wasm operator")]
-    UnsupportedOperator,
-    #[display(
-        fmt = "missing value in emulation stack. found {} but expected {}.",
-        found,
-        expected
-    )]
-    MissingStackValue { expected: u32, found: u32 },
+    FunctionBuilder(FunctionBuilderError),
+    Wasm(WasmError),
 }
