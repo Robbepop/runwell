@@ -17,6 +17,6 @@ use derive_more::Display;
 define_id_type! {
     /// The unique index of a basic block within a translated Runwell function.
     #[derive(Display)]
-    #[display(fmt = "#{}", "self.index.get()")]
+    #[display(fmt = "bb{}", "self.index.get()")]
     pub struct BasicBlockId;
 }
