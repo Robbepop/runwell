@@ -23,12 +23,16 @@ mod wasm;
 pub use self::{
     bb::BasicBlockId,
     error::IrError,
+    builder::FunctionBuilderError,
     instruction::Alignment,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
     value::Value,
     wasm::{translate_wasm, WasmError},
 };
-use self::{builder::Instr, builder::Variable, value::ValueGen};
+use self::{
+    builder::{Instr, Variable},
+    value::ValueGen,
+};
 
 /// All Runwell IR SSA instructions.
 pub mod instr {
