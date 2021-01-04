@@ -17,16 +17,16 @@ mod builder;
 mod error;
 mod instruction;
 mod primitives;
-mod wasm;
 mod value;
+mod wasm;
 
 pub use self::{
     bb::BasicBlockId,
     error::IrError,
     instruction::Alignment,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
-    wasm::translate_wasm,
     value::Value,
+    wasm::{translate_wasm, WasmError},
 };
 use self::{builder::Instr, builder::Variable, value::ValueGen};
 

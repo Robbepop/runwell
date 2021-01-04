@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::IrError;
+use super::{IrError, WasmError};
 use crate::ir::Value;
 
 /// Stack of values used for the Wasm emulation stack.
@@ -35,7 +35,8 @@ impl ValueStack {
     ) -> Result<Value, IrError> {
         self.stack
             .pop()
-            .ok_or(IrError::MissingStackValue { expected, found })
+            .ok_or(WasmError::MissingStackValue { expected, found })
+            .map_err(Into::into)
     }
 
     /// Pops the last inserted value from the stack.
@@ -67,9 +68,10 @@ impl ValueStack {
         self.stack
             .last()
             .copied()
-            .ok_or(IrError::MissingStackValue {
+            .ok_or(WasmError::MissingStackValue {
                 expected: 1,
                 found: 0,
             })
+            .map_err(Into::into)
     }
 }

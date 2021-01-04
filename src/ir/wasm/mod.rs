@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod error;
 mod stack;
 
+pub use self::error::WasmError;
 use super::{
     instr::Instruction,
     instruction::{IaddInstr, ImulInstr, SdivInstr, SelectInstr, UdivInstr},
@@ -36,10 +38,10 @@ use crate::{
     },
     Index32,
 };
-use std::collections::{HashMap, HashSet};
-use stack::ValueStack;
-use wasmparser::Operator;
 use derive_more::Display;
+use stack::ValueStack;
+use std::collections::{HashMap, HashSet};
+use wasmparser::Operator;
 
 /// A fully translated Runwell IR function.
 pub struct Function {}
@@ -47,7 +49,10 @@ pub struct Function {}
 /// Translates a Wasm function body to a Runwell IR function.
 ///
 /// Uses the given module resources as contextual information.
-pub fn translate_wasm(_resource: &ModuleResource, _fn_body: FunctionBody) -> Function {
+pub fn translate_wasm(
+    _resource: &ModuleResource,
+    _fn_body: FunctionBody,
+) -> Function {
     todo!()
 }
 
@@ -267,8 +272,7 @@ impl ValueNumbering {
                 .expect("i32.divu: missing stack values");
             }
             Operator::Select => {
-                let (condition, val1, val2) =
-                    self.stack.pop3()?;
+                let (condition, val1, val2) = self.stack.pop3()?;
                 self.push_instruction(
                     resource,
                     SelectInstr::new(
@@ -280,11 +284,10 @@ impl ValueNumbering {
                 )?;
             }
             Operator::Drop => {
-                self.stack
-                    .pop1()?;
+                self.stack.pop1()?;
             }
             Operator::Nop => (),
-            _unsupported => return Err(IrError::UnsupportedOperator),
+            _unsupported => return Err(WasmError::UnsupportedOperator).map_err(Into::into),
         }
         Ok(())
     }
