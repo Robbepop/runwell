@@ -110,3 +110,10 @@ pub enum Instruction {
     Int(IntInstr),
     Float(FloatInstr),
 }
+
+impl Instruction {
+    /// Returns `true` if the instruction terminates a basic block.
+    pub fn is_terminal(&self) -> bool {
+        matches!(self, Self::Terminal(_))
+    }
+}
