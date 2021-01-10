@@ -12,23 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "bench", feature(test))]
-#![allow(dead_code)]
+mod arena;
+mod iter;
 
-#[cfg(feature = "bench")]
-extern crate test;
-
-#[cfg(not(feature = "std"))]
-extern crate alloc;
-
-#[macro_use]
-mod index;
-pub mod builder;
-pub mod ir;
-mod maybe_std;
-pub mod parse;
-pub mod parse2;
-pub mod entity;
-
-pub use self::index::Index32;
+pub use self::{
+    arena::EntityArena,
+    iter::{Iter, IterMut},
+};
