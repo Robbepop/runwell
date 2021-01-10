@@ -122,3 +122,83 @@ where
 
 impl<'a, K, V> FusedIterator for IterMut<'a, K, V> where K: Index32 {}
 impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> where K: Index32 {}
+
+/// Iterator yielding the keys of the entitiy arena.
+pub struct Keys<'a, K> {
+    /// The current next yielded start key.
+    start: u32,
+    /// The current next yielded end key.
+    end: u32,
+    /// Required to make the data structure generic over the keys and lifetime.
+    ///
+    /// # Note
+    ///
+    /// The lifetime is important to keep the iterator in sync with Rust's
+    /// borrow checker so that the iterator does not get outdated upon later
+    /// mutations. Besides that the lifetime is not really needed.
+    key: PhantomData<fn() -> &'a K>,
+}
+
+impl<'a, K> Keys<'a, K>
+where
+    K: Index32,
+{
+    /// Creates a keys iterator yielding keys from start to end.
+    ///
+    /// # Note
+    ///
+    /// The `min_key` is the key to the first entity and `max_key`
+    /// is the key right after the last entitiy of the entity arena.
+    ///
+    /// # Panics
+    ///
+    /// If start is not small than or equal to end.
+    pub(super) fn new(min_key: K, max_key: K) -> Self {
+        let start_index = min_key.into_u32();
+        let end_index = max_key.into_u32();
+        assert!(start_index <= end_index);
+        Self {
+            start: start_index,
+            end: end_index,
+            key: Default::default(),
+        }
+    }
+}
+
+impl<'a, K> Iterator for Keys<'a, K>
+where
+    K: Index32,
+{
+    type Item = K;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = (self.end - self.start) as usize;
+        (remaining, Some(remaining))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            return None
+        }
+        let key = K::from_u32(self.start);
+        self.start += 1;
+        Some(key)
+    }
+}
+
+impl<'a, K> DoubleEndedIterator for Keys<'a, K>
+where
+    K: Index32,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            return None
+        }
+        self.end -= 1;
+        let key = K::from_u32(self.end);
+        Some(key)
+    }
+}
+
+impl<'a, K> FusedIterator for Keys<'a, K> where K: Index32 {}
+impl<'a, K> ExactSizeIterator for Keys<'a, K> where K: Index32 {}

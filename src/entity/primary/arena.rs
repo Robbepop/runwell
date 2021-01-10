@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::iter::{Iter, IterMut};
+use super::iter::{Iter, IterMut, Keys};
 use crate::Index32;
 use core::{
     marker::PhantomData,
@@ -70,6 +70,11 @@ where
     /// Returns an exclusive reference to the entity at the key if any.
     pub fn get_mut(&mut self, key: K) -> Option<&mut V> {
         self.entities.get_mut(key.into_u32() as usize)
+    }
+
+    /// Returns an iterator over the keys of the stored entities.
+    pub fn keys(&self) -> Keys<K> {
+        Keys::new(K::from_u32(0), self.max_key())
     }
 
     /// Returns an iterator over the keys and shared references to their associated data.
