@@ -27,6 +27,18 @@ pub struct EntityArena<K, V> {
     key: PhantomData<fn() -> K>,
 }
 
+impl<K, V> Clone for EntityArena<K, V>
+where
+    V: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            entities: self.entities.clone(),
+            key: Default::default(),
+        }
+    }
+}
+
 impl<K, V> Default for EntityArena<K, V> {
     fn default() -> Self {
         Self {

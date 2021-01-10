@@ -41,6 +41,18 @@ pub struct ComponentMap<K, V> {
     key: PhantomData<fn() -> K>,
 }
 
+impl<K, V> Clone for ComponentMap<K, V>
+where
+    V: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            components: self.components.clone(),
+            key: Default::default(),
+        }
+    }
+}
+
 impl<K, V> Default for ComponentMap<K, V> {
     fn default() -> Self {
         Self {

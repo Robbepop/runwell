@@ -49,6 +49,19 @@ pub struct ComponentVec<K, V> {
     key: PhantomData<fn() -> K>,
 }
 
+impl<K, V> Clone for ComponentVec<K, V>
+where
+    V: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            components: self.components.clone(),
+            len_some: self.len_some,
+            key: Default::default(),
+        }
+    }
+}
+
 impl<K, V> Default for ComponentVec<K, V> {
     fn default() -> Self {
         Self {
