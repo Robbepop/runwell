@@ -22,6 +22,7 @@ use core::{
 /// Primary map to create new entities and store required data for them.
 ///
 /// For efficiency and satety reasons it is not possible to remove entities.
+#[derive(Debug)]
 pub struct EntityArena<K, V> {
     entities: Vec<V>,
     key: PhantomData<fn() -> K>,

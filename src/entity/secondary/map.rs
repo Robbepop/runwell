@@ -36,6 +36,7 @@ use std::collections::{
 ///
 /// - The component map is well suited when only few entities have a component.
 /// - By design all secondary component containers are meant to be easily interchangable.
+#[derive(Debug)]
 pub struct ComponentMap<K, V> {
     components: HashMap<u32, V>,
     key: PhantomData<fn() -> K>,
@@ -147,6 +148,7 @@ where
 /// A view into a single entry in a map, which may either be vacant or occupied.
 ///
 /// This enum is constructed from the entry method on `ComponentMap`.
+#[derive(Debug)]
 pub enum Entry<'a, K: 'a, V: 'a> {
     Occupied(OccupiedEntry<'a, K, V>),
     Vacant(VacantEntry<'a, K, V>),
@@ -210,6 +212,7 @@ where
 }
 
 /// A view into an occupied entry in a `ComponentMap`. It is part of the `Entry` enum.
+#[derive(Debug)]
 pub struct OccupiedEntry<'a, K, V> {
     occupied: hash_map::OccupiedEntry<'a, u32, V>,
     key: PhantomData<fn() -> K>,
@@ -263,6 +266,7 @@ where
 }
 
 /// A view into a vacant entry in a `ComponentMap`. It is part of the `Entry` enum.
+#[derive(Debug)]
 pub struct VacantEntry<'a, K, V> {
     vacant: hash_map::VacantEntry<'a, u32, V>,
     key: PhantomData<fn() -> K>,
@@ -306,6 +310,7 @@ where
 }
 
 /// Iterator yielding keys and a shared reference to their associated components.
+#[derive(Debug)]
 pub struct Iter<'a, K, V> {
     iter: HashMapIter<'a, u32, V>,
     key: PhantomData<fn() -> K>,
@@ -332,6 +337,7 @@ impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where K: Index32 {}
 impl<'a, K, V> FusedIterator for Iter<'a, K, V> where K: Index32 {}
 
 /// Iterator yielding keys and an exclusive reference to their associated components.
+#[derive(Debug)]
 pub struct IterMut<'a, K, V> {
     iter: HashMapIterMut<'a, u32, V>,
     key: PhantomData<fn() -> K>,

@@ -19,6 +19,7 @@ use core::{
 };
 
 /// Iterator over the keys and shared references of their associated entity data.
+#[derive(Debug)]
 pub struct Iter<'a, K, V> {
     iter: core::slice::Iter<'a, V>,
     start: u32,
@@ -72,6 +73,7 @@ impl<'a, K, V> FusedIterator for Iter<'a, K, V> where K: Index32 {}
 impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where K: Index32 {}
 
 /// Iterator over the keys and exclusive references of their associated entity data.
+#[derive(Debug)]
 pub struct IterMut<'a, K, V> {
     iter: core::slice::IterMut<'a, V>,
     start: u32,
@@ -126,6 +128,7 @@ impl<'a, K, V> FusedIterator for IterMut<'a, K, V> where K: Index32 {}
 impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> where K: Index32 {}
 
 /// Iterator yielding the keys of the entitiy arena.
+#[derive(Debug)]
 pub struct Keys<'a, K> {
     /// The current next yielded start key.
     start: u32,

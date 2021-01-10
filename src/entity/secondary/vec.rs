@@ -32,6 +32,7 @@ use core::{
 ///
 /// - The component vector is well suited when a component is very common for entities.
 /// - By design all secondary component containers are meant to be easily interchangable.
+#[derive(Debug)]
 pub struct ComponentVec<K, V> {
     /// Stores the components at the key indices.
     ///
@@ -187,6 +188,7 @@ where
 /// A view into a single entry in a map, which may either be vacant or occupied.
 ///
 /// This enum is constructed from the entry method on `ComponentVec`.
+#[derive(Debug)]
 pub enum Entry<'a, K: 'a, V: 'a> {
     Occupied(OccupiedEntry<'a, K, V>),
     Vacant(VacantEntry<'a, K, V>),
@@ -250,6 +252,7 @@ where
 }
 
 /// A view into an occupied entry in a `ComponentVec`. It is part of the `Entry` enum.
+#[derive(Debug)]
 pub struct OccupiedEntry<'a, K, V> {
     vec: &'a mut ComponentVec<K, V>,
     key: K,
@@ -317,6 +320,7 @@ where
 }
 
 /// A view into a vacant entry in a `ComponentVec`. It is part of the `Entry` enum.
+#[derive(Debug)]
 pub struct VacantEntry<'a, K, V> {
     vec: &'a mut ComponentVec<K, V>,
     key: K,
@@ -363,6 +367,7 @@ where
 }
 
 /// Iterator yielding contained keys and shared references to their components.
+#[derive(Debug)]
 pub struct Iter<'a, K, V> {
     iter: core::slice::Iter<'a, Option<V>>,
     start: u32,
@@ -405,6 +410,7 @@ impl<'a, K, V> FusedIterator for Iter<'a, K, V> where K: Index32 {}
 impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where K: Index32 {}
 
 /// Iterator yielding contained keys and exclusive references to their components.
+#[derive(Debug)]
 pub struct IterMut<'a, K, V> {
     iter: core::slice::IterMut<'a, Option<V>>,
     start: u32,
