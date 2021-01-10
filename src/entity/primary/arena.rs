@@ -46,7 +46,7 @@ where
     }
 
     /// Creates a new entity and returns a key to it.
-    pub fn create_entity(&mut self, entity: V) -> K {
+    pub fn create(&mut self, entity: V) -> K {
         let id = self.max_key();
         self.entities.push(entity);
         id
