@@ -27,7 +27,7 @@ pub struct Iter<'a, K, V> {
 
 impl<'a, K, V> Iter<'a, K, V> {
     /// Creates a new shared iterator from the slice of entities.
-    pub fn new(entities: &'a [V]) -> Self {
+    pub(super) fn new(entities: &'a [V]) -> Self {
         Self {
             iter: entities.iter(),
             start: 0,
@@ -79,7 +79,7 @@ pub struct IterMut<'a, K, V> {
 
 impl<'a, K, V> IterMut<'a, K, V> {
     /// Creates a new exclusive iterator from the slice of entities.
-    pub fn new(entities: &'a mut [V]) -> Self {
+    pub(super) fn new(entities: &'a mut [V]) -> Self {
         let end = entities.len() as u32;
         Self {
             iter: entities.iter_mut(),
