@@ -61,8 +61,8 @@ where
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         let entity = self.iter.next_back()?;
-        let key = K::from_u32(self.end);
         self.end -= 1;
+        let key = K::from_u32(self.end);
         Some((key, entity))
     }
 }
@@ -114,8 +114,8 @@ where
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         let entity = self.iter.next_back()?;
-        let key = K::from_u32(self.end);
         self.end -= 1;
+        let key = K::from_u32(self.end);
         Some((key, entity))
     }
 }
