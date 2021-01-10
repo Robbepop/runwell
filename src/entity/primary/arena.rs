@@ -40,9 +40,14 @@ impl<K, V> EntityArena<K, V>
 where
     K: Index32,
 {
+    /// Returns the key for the next allocated entity.
+    fn max_key(&self) -> K {
+        K::from_u32(self.entities.len() as u32)
+    }
+
     /// Creates a new entity and returns a key to it.
     pub fn create_entity(&mut self, entity: V) -> K {
-        let id = K::from_u32(self.entities.len() as u32);
+        let id = self.max_key();
         self.entities.push(entity);
         id
     }
