@@ -45,7 +45,13 @@ where
         K::from_u32(self.entities.len() as u32)
     }
 
-    /// Creates a new entity and returns a key to it.
+    /// Creates a new entity and returns a unique key to it.
+    ///
+    /// # Note
+    ///
+    /// The key can be used to query and mutate data of the entity
+    /// and to add, remove or query the components of it using
+    /// secondary data structures.
     pub fn create(&mut self, entity: V) -> K {
         let id = self.max_key();
         self.entities.push(entity);

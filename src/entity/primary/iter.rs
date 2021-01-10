@@ -18,6 +18,7 @@ use core::{
     marker::PhantomData,
 };
 
+/// Iterator over the keys and shared references of their associated entity data.
 pub struct Iter<'a, K, V> {
     iter: core::slice::Iter<'a, V>,
     start: u32,
@@ -70,6 +71,7 @@ where
 impl<'a, K, V> FusedIterator for Iter<'a, K, V> where K: Index32 {}
 impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where K: Index32 {}
 
+/// Iterator over the keys and exclusive references of their associated entity data.
 pub struct IterMut<'a, K, V> {
     iter: core::slice::IterMut<'a, V>,
     start: u32,

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Data structures to add, remove and query components for existing entities.
+
 pub mod map;
 pub mod vec;
 
