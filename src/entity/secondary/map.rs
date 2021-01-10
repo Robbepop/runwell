@@ -25,9 +25,16 @@ use std::collections::{
 
 /// Sparse secondary map to associated new components for existing entities.
 ///
+/// # Efficiency
+///
+/// Very efficient if the component is very uncommon for the entities.
+/// Might be less efficient than optimal for common operations if too many entities
+/// have the component.
+///
+///
 /// # Note
 ///
-/// - The sparse secondary map is well suited when only few entities have a component.
+/// - The component map is well suited when only few entities have a component.
 /// - By design all secondary component containers are meant to be easily interchangable.
 pub struct ComponentMap<K, V> {
     components: HashMap<u32, V>,

@@ -22,9 +22,15 @@ use core::{
 
 /// Dense secondary map to associated new components for existing entities.
 ///
+/// # Efficiency
+///
+/// Very efficient if the component is very common for the entities.
+/// Might be slow for iteration and wastes a lot of space if only a few entities
+/// have the component.
+///
 /// # Note
 ///
-/// - The dense secondary map is well suited when a component is very common for entities.
+/// - The component vector is well suited when a component is very common for entities.
 /// - By design all secondary component containers are meant to be easily interchangable.
 pub struct ComponentVec<K, V> {
     /// Stores the components at the key indices.
