@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Data structures for entity component management.
+//!
+//! For efficiency purposes it is not possible to remove once created entities again.
+//! Systems are not supported by this ECS system.
+
 pub mod primary;
 pub mod secondary;
 
