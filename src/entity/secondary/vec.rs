@@ -73,6 +73,28 @@ impl<K, V> Default for ComponentVec<K, V> {
     }
 }
 
+impl<K, V> PartialEq for ComponentVec<K, V>
+where
+    K: Index32,
+    V: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false
+        }
+        self.iter().zip(other.iter()).all(|((k1, v1), (k2, v2))| {
+            k1.into_u32() == k2.into_u32() && v1 == v2
+        })
+    }
+}
+
+impl<K, V> Eq for ComponentVec<K, V>
+where
+    K: Index32,
+    V: Eq,
+{
+}
+
 impl<K, V> ComponentVec<K, V>
 where
     K: Index32,

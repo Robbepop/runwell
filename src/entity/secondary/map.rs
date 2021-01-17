@@ -63,6 +63,28 @@ impl<K, V> Default for ComponentMap<K, V> {
     }
 }
 
+impl<K, V> PartialEq for ComponentMap<K, V>
+where
+    K: Index32,
+    V: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false
+        }
+        self.iter().all(|(k, v)| {
+            other.get(k).map_or(false, |component| *v == *component)
+        })
+    }
+}
+
+impl<K, V> Eq for ComponentMap<K, V>
+where
+    K: Index32,
+    V: Eq,
+{
+}
+
 impl<K, V> ComponentMap<K, V>
 where
     K: Index32,
