@@ -12,25 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod bb;
 mod builder;
 mod error;
 mod instruction;
 mod primitives;
-mod value;
 mod wasm;
 
+use self::builder::{Instr, Variable};
 pub use self::{
-    bb::Block,
     builder::FunctionBuilderError,
     error::IrError,
     instruction::Alignment,
-    primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
-    value::Value,
+    primitives::{
+        Block,
+        Const,
+        FloatConst,
+        FloatType,
+        IntConst,
+        IntType,
+        Type,
+        Value,
+    },
     wasm::{translate_wasm, WasmError},
-};
-use self::{
-    builder::{Instr, Variable},
 };
 
 /// All Runwell IR SSA instructions.

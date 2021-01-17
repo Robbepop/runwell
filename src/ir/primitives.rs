@@ -22,6 +22,20 @@
 use crate::parse2::{self, F32, F64};
 use derive_more::{Display, From};
 
+define_id_type! {
+    /// The unique index of a basic block within a translated Runwell function.
+    #[derive(Display)]
+    #[display(fmt = "bb{}", "self.index.get()")]
+    pub struct Block;
+}
+
+define_id_type! {
+    /// An SSA value binding used for local and global value numbering.
+    #[derive(Display)]
+    #[display(fmt = "v{}", "self.index.get()")]
+    pub struct Value;
+}
+
 /// Any Runwell supported primitive type.
 #[derive(
     Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash,
