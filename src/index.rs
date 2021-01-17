@@ -66,6 +66,17 @@ macro_rules! define_id_type {
 }
 
 #[cfg(test)]
+impl Index32 for u32 {
+    fn from_u32(index: u32) -> Self {
+        index
+    }
+
+    fn into_u32(self) -> u32 {
+        self
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
