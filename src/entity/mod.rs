@@ -20,6 +20,9 @@
 pub mod primary;
 pub mod secondary;
 
+#[cfg(test)]
+mod tests;
+
 pub use self::{
     primary::EntityArena,
     secondary::{ComponentMap, ComponentVec},
