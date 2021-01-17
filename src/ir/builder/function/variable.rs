@@ -13,12 +13,18 @@
 // limitations under the License.
 
 use crate::{
-    ir::{BasicBlockId, IrError, Type, Value},
+    ir::{
+        builder::VariableAccess,
+        BasicBlockId,
+        FunctionBuilderError,
+        IrError,
+        Type,
+        Value,
+    },
     Index32,
 };
 use derive_more::{Display, From};
 use std::collections::{hash_map::Entry, HashMap};
-use crate::ir::{FunctionBuilderError, builder::VariableAccess};
 
 define_id_type! {
     /// Represents a unique variable from the input language.

@@ -21,11 +21,6 @@ pub mod primary;
 pub mod secondary;
 
 pub use self::{
-    primary::{
-        EntityArena,
-    },
-    secondary::{
-        ComponentMap,
-        ComponentVec,
-    },
+    primary::EntityArena,
+    secondary::{ComponentMap, ComponentVec},
 };

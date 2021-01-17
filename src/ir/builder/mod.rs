@@ -17,7 +17,7 @@ mod function;
 mod instruction;
 
 pub use self::{
-    function::{Variable, FunctionBuilder},
     error::{FunctionBuilderError, VariableAccess},
+    function::{FunctionBuilder, Variable},
     instruction::{FunctionInstrBuilder, Instr},
 };

@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{Index32, ir::{Instr, Value, instruction::Instruction}};
+use crate::{
+    ir::{instruction::Instruction, Instr, Value},
+    Index32,
+};
 use core::ops::{Index, IndexMut};
 
 /// Holds all data about Runwell IR instructions during function construction.
@@ -51,10 +54,7 @@ impl Instructions {
     }
 
     /// Returns an exclusive reference to the basic block at the index if any.
-    pub fn get_mut(
-        &mut self,
-        index: Instr,
-    ) -> Option<&mut InstructionData> {
+    pub fn get_mut(&mut self, index: Instr) -> Option<&mut InstructionData> {
         self.instrs.get_mut(index.into_u32() as usize)
     }
 }

@@ -287,7 +287,9 @@ impl ValueNumbering {
                 self.stack.pop1()?;
             }
             Operator::Nop => (),
-            _unsupported => return Err(WasmError::UnsupportedOperator).map_err(Into::into),
+            _unsupported => {
+                return Err(WasmError::UnsupportedOperator).map_err(Into::into)
+            }
         }
         Ok(())
     }

@@ -22,8 +22,8 @@ mod wasm;
 
 pub use self::{
     bb::BasicBlockId,
-    error::IrError,
     builder::FunctionBuilderError,
+    error::IrError,
     instruction::Alignment,
     primitives::{Const, FloatConst, FloatType, IntConst, IntType, Type},
     value::Value,

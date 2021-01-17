@@ -17,7 +17,4 @@
 pub mod map;
 pub mod vec;
 
-pub use self::{
-    map::ComponentMap,
-    vec::ComponentVec,
-};
+pub use self::{map::ComponentMap, vec::ComponentVec};

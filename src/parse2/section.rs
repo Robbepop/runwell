@@ -117,12 +117,8 @@ impl From<Payload<'_>> for PayloadKind {
             Payload::CustomSection { .. } => Self::CustomSection,
             Payload::CodeSectionStart { .. } => Self::CodeSectionStart,
             Payload::CodeSectionEntry(_) => Self::CodeSectionEntry,
-            Payload::ModuleSectionStart { .. } => {
-                Self::ModuleSectionStart
-            }
-            Payload::ModuleSectionEntry { .. } => {
-                Self::ModuleSectionEntry
-            }
+            Payload::ModuleSectionStart { .. } => Self::ModuleSectionStart,
+            Payload::ModuleSectionEntry { .. } => Self::ModuleSectionEntry,
             Payload::UnknownSection { .. } => Self::UnknownSection,
             Payload::End { .. } => Self::End,
         }
