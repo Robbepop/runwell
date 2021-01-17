@@ -90,8 +90,8 @@ pub enum PayloadKind {
     CustomSection,
     CodeSectionStart,
     CodeSectionEntry,
-    ModuleCodeSectionStart,
-    ModuleCodeSectionEntry,
+    ModuleSectionStart,
+    ModuleSectionEntry,
     UnknownSection,
     End,
 }
@@ -104,7 +104,6 @@ impl From<Payload<'_>> for PayloadKind {
             Payload::ImportSection(_) => Self::ImportSection,
             Payload::AliasSection(_) => Self::AliasSection,
             Payload::InstanceSection(_) => Self::InstanceSection,
-            Payload::ModuleSection(_) => Self::ModuleSection,
             Payload::FunctionSection(_) => Self::FunctionSection,
             Payload::TableSection(_) => Self::TableSection,
             Payload::MemorySection(_) => Self::MemorySection,
@@ -118,11 +117,11 @@ impl From<Payload<'_>> for PayloadKind {
             Payload::CustomSection { .. } => Self::CustomSection,
             Payload::CodeSectionStart { .. } => Self::CodeSectionStart,
             Payload::CodeSectionEntry(_) => Self::CodeSectionEntry,
-            Payload::ModuleCodeSectionStart { .. } => {
-                Self::ModuleCodeSectionStart
+            Payload::ModuleSectionStart { .. } => {
+                Self::ModuleSectionStart
             }
-            Payload::ModuleCodeSectionEntry { .. } => {
-                Self::ModuleCodeSectionEntry
+            Payload::ModuleSectionEntry { .. } => {
+                Self::ModuleSectionEntry
             }
             Payload::UnknownSection { .. } => Self::UnknownSection,
             Payload::End { .. } => Self::End,
@@ -294,9 +293,8 @@ impl ParseContext {
             }
             Payload::AliasSection(_)
             | Payload::InstanceSection(_)
-            | Payload::ModuleSection(_)
-            | Payload::ModuleCodeSectionStart { .. }
-            | Payload::ModuleCodeSectionEntry { .. } => {
+            | Payload::ModuleSectionStart { .. }
+            | Payload::ModuleSectionEntry { .. } => {
                 return Err(SectionError::Unsupported(
                     UnsupportedWasmSection::Module,
                 ))

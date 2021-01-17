@@ -204,9 +204,8 @@ fn process_payload(
 
         Payload::AliasSection(_)
         | Payload::InstanceSection(_)
-        | Payload::ModuleSection(_)
-        | Payload::ModuleCodeSectionStart { .. }
-        | Payload::ModuleCodeSectionEntry { .. } => {
+        | Payload::ModuleSectionStart { .. }
+        | Payload::ModuleSectionEntry { .. } => {
             return Err(CompilerError::UnsupportedWasmSection(
                 UnsupportedWasmSection::Module,
             ))
