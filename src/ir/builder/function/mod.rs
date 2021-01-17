@@ -24,7 +24,7 @@ use self::{
     values::Values,
 };
 use super::FunctionInstrBuilder;
-use crate::ir::{BasicBlockId, IrError, Type, Value};
+use crate::ir::{Block, IrError, Type, Value};
 use core::marker::PhantomData;
 
 #[derive(Debug)]
@@ -53,7 +53,7 @@ pub struct FunctionBuilder<S> {
     pub blocks: BasicBlocks,
     pub instrs: Instructions,
     pub values: Values,
-    current: Option<BasicBlockId>,
+    current: Option<Block>,
     state: PhantomData<fn() -> S>,
 }
 
@@ -131,7 +131,7 @@ impl FunctionBuilder<state::Body> {
     /// # Note
     ///
     /// After this operation the current block will reference the new basic block.
-    pub fn create_block(&mut self) -> BasicBlockId {
+    pub fn create_block(&mut self) -> Block {
         todo!()
     }
 
@@ -140,7 +140,7 @@ impl FunctionBuilder<state::Body> {
     /// # Errors
     ///
     /// If no basic blocks exist.
-    pub fn current_block(&self) -> Result<BasicBlockId, IrError> {
+    pub fn current_block(&self) -> Result<Block, IrError> {
         todo!()
     }
 
@@ -151,7 +151,7 @@ impl FunctionBuilder<state::Body> {
     /// If the basic block does not exist in this function.
     pub fn switch_to_block(
         &mut self,
-        _block: BasicBlockId,
+        _block: Block,
     ) -> Result<(), IrError> {
         todo!()
     }

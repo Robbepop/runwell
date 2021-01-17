@@ -14,7 +14,7 @@
 
 use super::instructions::Instructions;
 use crate::{
-    ir::{BasicBlockId, FunctionBuilderError, Instr, IrError},
+    ir::{Block, FunctionBuilderError, Instr, IrError},
     Index32,
 };
 use core::ops::{Index, IndexMut};
@@ -28,14 +28,14 @@ pub struct BasicBlocks {
 
 impl BasicBlocks {
     /// Creates a new basic block.
-    pub fn create_block(&mut self) -> BasicBlockId {
-        let id = BasicBlockId::from_u32(self.blocks.len() as u32);
+    pub fn create_block(&mut self) -> Block {
+        let id = Block::from_u32(self.blocks.len() as u32);
         self.blocks.push(BasicBlockData::default());
         id
     }
 
     /// Returns a shared reference to the basic block at the index if any.
-    pub fn get(&self, index: BasicBlockId) -> Result<&BasicBlockData, IrError> {
+    pub fn get(&self, index: Block) -> Result<&BasicBlockData, IrError> {
         self.blocks
             .get(index.into_u32() as usize)
             .ok_or(FunctionBuilderError::InvalidBasicBlock { block: index })
@@ -45,7 +45,7 @@ impl BasicBlocks {
     /// Returns an exclusive reference to the basic block at the index if any.
     pub fn get_mut(
         &mut self,
-        index: BasicBlockId,
+        index: Block,
     ) -> Result<&mut BasicBlockData, IrError> {
         self.blocks
             .get_mut(index.into_u32() as usize)
@@ -63,8 +63,8 @@ impl BasicBlocks {
     /// - If this basic block is already sealed.
     pub fn add_predecessor(
         &mut self,
-        block: BasicBlockId,
-        new_pred: BasicBlockId,
+        block: Block,
+        new_pred: Block,
     ) -> Result<(), IrError> {
         if !self.get(new_pred)?.filled {
             return Err(FunctionBuilderError::UnfilledPredecessor {
@@ -93,16 +93,16 @@ impl BasicBlocks {
     }
 }
 
-impl Index<BasicBlockId> for BasicBlocks {
+impl Index<Block> for BasicBlocks {
     type Output = BasicBlockData;
 
-    fn index(&self, index: BasicBlockId) -> &Self::Output {
+    fn index(&self, index: Block) -> &Self::Output {
         self.get(index).expect("invalid index for basic block")
     }
 }
 
-impl IndexMut<BasicBlockId> for BasicBlocks {
-    fn index_mut(&mut self, index: BasicBlockId) -> &mut Self::Output {
+impl IndexMut<Block> for BasicBlocks {
+    fn index_mut(&mut self, index: Block) -> &mut Self::Output {
         self.get_mut(index).expect("invalid index for basic block")
     }
 }
@@ -111,7 +111,7 @@ impl IndexMut<BasicBlockId> for BasicBlocks {
 #[derive(Debug, Default)]
 pub struct BasicBlockData {
     /// The direct predecessor basic blocks of the basic block.
-    preds: HashSet<BasicBlockId>,
+    preds: HashSet<Block>,
     /// All instructions of the basic blocks in the order in which they appear in the basic block.
     ///
     /// The same instruction technically can appear multiple times in the same basic block for
@@ -134,7 +134,7 @@ impl BasicBlockData {
     /// # Note
     ///
     /// The predecessors are yielded with no particular order.
-    pub fn preds(&self) -> hash_set::Iter<BasicBlockId> {
+    pub fn preds(&self) -> hash_set::Iter<Block> {
         self.preds.iter()
     }
 

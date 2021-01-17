@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::{function::state, FunctionBuilder};
-use crate::ir::{instruction::Instruction, BasicBlockId, IrError};
+use crate::ir::{instruction::Instruction, Block, IrError};
 
 define_id_type! {
     /// A reference to an SSA instruction.
@@ -25,14 +25,14 @@ define_id_type! {
 #[derive(Debug)]
 pub struct FunctionInstrBuilder<'a> {
     builder: &'a mut FunctionBuilder<state::Body>,
-    current: BasicBlockId,
+    current: Block,
 }
 
 impl<'a> FunctionInstrBuilder<'a> {
     /// Creates a new function instruction builder.
     fn new(
         builder: &'a mut FunctionBuilder<state::Body>,
-        current: BasicBlockId,
+        current: Block,
     ) -> Self {
         Self { builder, current }
     }

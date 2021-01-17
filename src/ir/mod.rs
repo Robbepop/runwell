@@ -21,7 +21,7 @@ mod value;
 mod wasm;
 
 pub use self::{
-    bb::BasicBlockId,
+    bb::Block,
     builder::FunctionBuilderError,
     error::IrError,
     instruction::Alignment,

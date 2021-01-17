@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{BasicBlockId, Type, Value, Variable};
+use crate::ir::{Block, Type, Value, Variable};
 use derive_more::{Display, Error};
 
 /// Errors that might occure upon building up a Runwell IR function.
@@ -24,8 +24,8 @@ pub enum FunctionBuilderError {
         sealed_block
     )]
     PredecessorForSealedBlock {
-        sealed_block: BasicBlockId,
-        new_pred: BasicBlockId,
+        sealed_block: Block,
+        new_pred: Block,
     },
     #[display(
         fmt = "tried to add unfilled predecessor {} to basic block {}",
@@ -33,25 +33,25 @@ pub enum FunctionBuilderError {
         block
     )]
     UnfilledPredecessor {
-        unfilled_pred: BasicBlockId,
-        block: BasicBlockId,
+        unfilled_pred: Block,
+        block: Block,
     },
     #[display(
         fmt = "tried to query current basic block while there is no basic block, yet."
     )]
     NoCurrentBasicBlock,
     #[display(fmt = "missing basic block at {}", block)]
-    MissingBasicBlock { block: BasicBlockId },
+    MissingBasicBlock { block: Block },
     #[display(
         fmt = "tried to seal basic block {} that is already sealed",
         block
     )]
-    BasicBlockIsAlreadySealed { block: BasicBlockId },
+    BasicBlockIsAlreadySealed { block: Block },
     #[display(
         fmt = "tried to append instructions to basic block {} that is already filled",
         block
     )]
-    BasicBlockIsAlreadyFilled { block: BasicBlockId },
+    BasicBlockIsAlreadyFilled { block: Block },
     #[display(fmt = "tried to declare too many function local variables")]
     TooManyVariableDeclarations,
     #[display(fmt = "tried {} undeclared variable {}.", variable, access)]
@@ -88,11 +88,11 @@ pub enum FunctionBuilderError {
         to
     )]
     BranchAlreadyExists {
-        from: BasicBlockId,
-        to: BasicBlockId,
+        from: Block,
+        to: Block,
     },
     #[display(fmt = "encountered invalid basic block index at {}.", block)]
-    InvalidBasicBlock { block: BasicBlockId },
+    InvalidBasicBlock { block: Block },
 }
 
 /// A variable access for better error information.

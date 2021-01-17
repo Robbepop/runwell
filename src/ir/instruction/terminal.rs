@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{BasicBlockId, Value};
+use crate::ir::{Block, Value};
 use core::fmt::Display;
 use derive_more::{Display, From};
 
@@ -48,12 +48,12 @@ impl ReturnInstr {
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "br {}", target)]
 pub struct BranchInstr {
-    target: BasicBlockId,
+    target: Block,
 }
 
 impl BranchInstr {
     /// Creates a new branch instruction branching to the given basic block.
-    pub fn new(target: BasicBlockId) -> Self {
+    pub fn new(target: Block) -> Self {
         Self { target }
     }
 }
@@ -68,16 +68,16 @@ impl BranchInstr {
 )]
 pub struct IfThenElseInstr {
     condition: Value,
-    br_then: BasicBlockId,
-    br_else: BasicBlockId,
+    br_then: Block,
+    br_else: Block,
 }
 
 impl IfThenElseInstr {
     /// Creates a new if-then-else instruction branching to either `then` or `else` depending on `condition`.
     pub fn new(
         condition: Value,
-        br_then: BasicBlockId,
-        br_else: BasicBlockId,
+        br_then: Block,
+        br_else: Block,
     ) -> Self {
         Self {
             condition,
@@ -91,15 +91,15 @@ impl IfThenElseInstr {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BranchTableInstr {
     source: Value,
-    default: BasicBlockId,
-    targets: Vec<BasicBlockId>,
+    default: Block,
+    targets: Vec<Block>,
 }
 
 impl BranchTableInstr {
     /// Creates a new branching table with the given source, default target and targets.
-    pub fn new<I>(source: Value, default: BasicBlockId, targets: I) -> Self
+    pub fn new<I>(source: Value, default: Block, targets: I) -> Self
     where
-        I: IntoIterator<Item = BasicBlockId>,
+        I: IntoIterator<Item = Block>,
     {
         Self {
             source,

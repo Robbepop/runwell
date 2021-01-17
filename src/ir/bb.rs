@@ -18,5 +18,5 @@ define_id_type! {
     /// The unique index of a basic block within a translated Runwell function.
     #[derive(Display)]
     #[display(fmt = "bb{}", "self.index.get()")]
-    pub struct BasicBlockId;
+    pub struct Block;
 }

@@ -15,7 +15,7 @@
 use crate::{
     ir::{
         builder::VariableAccess,
-        BasicBlockId,
+        Block,
         FunctionBuilderError,
         IrError,
         Type,
@@ -137,7 +137,7 @@ struct VariableDecl {
 #[derive(Debug)]
 struct VariableDefs {
     /// All definitions for the variable per basic block.
-    defs: HashMap<BasicBlockId, Value>,
+    defs: HashMap<Block, Value>,
     /// The type of the variable given upon its declaration.
     ty: Type,
 }
@@ -155,12 +155,12 @@ impl VariableDefs {
 /// The value definitions of a variable for every basic block.
 #[derive(Debug, Copy, Clone, From)]
 pub struct VariableDefinitions<'a> {
-    defs: &'a HashMap<BasicBlockId, Value>,
+    defs: &'a HashMap<Block, Value>,
 }
 
 impl<'a> VariableDefinitions<'a> {
     /// Returns the value written to the variable for the given block if any.
-    pub fn for_block(self, block: BasicBlockId) -> Option<Value> {
+    pub fn for_block(self, block: Block) -> Option<Value> {
         self.defs.get(&block).copied()
     }
 }
@@ -267,7 +267,7 @@ impl VariableTranslator {
         &mut self,
         var: Variable,
         new_value: Value,
-        block: BasicBlockId,
+        block: Block,
         value_to_type: F,
     ) -> Result<(), IrError>
     where

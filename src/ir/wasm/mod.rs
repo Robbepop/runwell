@@ -19,7 +19,7 @@ pub use self::error::WasmError;
 use super::{
     instr::Instruction,
     instruction::{IaddInstr, ImulInstr, SdivInstr, SelectInstr, UdivInstr},
-    BasicBlockId,
+    Block,
     IntType,
     IrError,
     Type,
@@ -104,15 +104,15 @@ define_id_type! {
 #[derive(Debug)]
 pub struct BasicBlocks {
     len_blocks: u32,
-    current_block: BasicBlockId,
-    entry_block: BasicBlockId,
-    blocks: HashMap<BasicBlockId, BasicBlock>,
+    current_block: Block,
+    entry_block: Block,
+    blocks: HashMap<Block, BasicBlock>,
 }
 
 impl Default for BasicBlocks {
     fn default() -> Self {
         let mut blocks = HashMap::new();
-        let entry_block = BasicBlockId::from_u32(0);
+        let entry_block = Block::from_u32(0);
         blocks.insert(entry_block, BasicBlock::default());
         Self {
             len_blocks: 1,
@@ -125,7 +125,7 @@ impl Default for BasicBlocks {
 
 #[derive(Debug, Default)]
 pub struct BasicBlock {
-    predecessors: Vec<BasicBlockId>,
+    predecessors: Vec<Block>,
 }
 
 /// The value numbering for translating Wasm operators to Runwell IR.
@@ -165,7 +165,7 @@ pub struct ValueNumbering {
     /// Mapping from instruction and basic block to value.
     ///
     /// Used to deduplicate instructions and associate them with a unique value.
-    instr_to_value: HashMap<(BasicBlockId, Instruction), Value>,
+    instr_to_value: HashMap<(Block, Instruction), Value>,
     /// All value entries.
     value_entries: Vec<ValueEntry>,
     /// The emulated Wasm stack using Runwell IR instruction instead of Wasm operators.

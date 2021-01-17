@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{BasicBlockId, Value};
+use crate::ir::{Block, Value};
 use core::fmt::Display;
 use std::collections::BTreeMap;
 
 /// A ϕ-instruction in the Runwell IR.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PhiInstr {
-    sources: BTreeMap<BasicBlockId, Value>,
+    sources: BTreeMap<Block, Value>,
 }
 
 impl PhiInstr {
@@ -28,7 +28,7 @@ impl PhiInstr {
     /// Returns `Some` value if the ϕ-operand already existed for the ϕ-instruction.
     pub fn append_operand(
         &mut self,
-        block: BasicBlockId,
+        block: Block,
         value: Value,
     ) -> Option<Value> {
         self.sources.insert(block, value)
@@ -37,7 +37,7 @@ impl PhiInstr {
     /// Creates a new ϕ-instruction from the given ϕ-sources.
     pub fn new<I>(sources: I) -> Self
     where
-        I: IntoIterator<Item = (BasicBlockId, Value)>,
+        I: IntoIterator<Item = (Block, Value)>,
     {
         Self {
             sources: sources.into_iter().collect::<BTreeMap<_, _>>(),
