@@ -31,7 +31,6 @@ pub use self::{
 };
 use self::{
     builder::{Instr, Variable},
-    value::ValueGen,
 };
 
 /// All Runwell IR SSA instructions.

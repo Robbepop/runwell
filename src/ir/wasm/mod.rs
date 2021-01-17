@@ -24,7 +24,6 @@ use super::{
     IrError,
     Type,
     Value,
-    ValueGen,
 };
 use crate::{
     builder::ModuleResource,
@@ -158,8 +157,6 @@ pub struct ValueNumbering {
     /// Determines the shift of value index between predetermined
     /// inputs and locals and newly generated values.
     value_offset: u32,
-    /// Generator to create new unique value IDs.
-    value_gen: ValueGen,
     /// Basic blocks.
     blocks: BasicBlocks,
     /// Mapping from instruction and basic block to value.
@@ -185,14 +182,12 @@ impl ValueNumbering {
         let locals = locals.map(|(_, entry)| entry).collect::<Vec<_>>();
         let len_locals = locals.iter().map(|entry| entry.count()).sum();
         let value_offset = len_inputs + len_locals;
-        let value_gen = ValueGen::from(value_offset);
         Self {
             inputs,
             locals,
             len_locals,
             len_values: 0,
             value_offset,
-            value_gen,
             blocks: BasicBlocks::default(),
             instr_to_value: HashMap::new(),
             value_entries: Vec::new(),
@@ -318,8 +313,9 @@ impl ValueNumbering {
                 None => {}
             }
         }
-        let value = self.value_gen.next();
-        Ok(value)
+        todo!()
+        // let value = self.value_gen.next();
+        // Ok(value)
     }
 }
 
