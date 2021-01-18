@@ -19,5 +19,5 @@ mod iter;
 
 pub use self::{
     arena::EntityArena,
-    iter::{Iter, IterMut, Keys},
+    iter::{Indices, Iter, IterMut},
 };

@@ -111,9 +111,9 @@ impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
 impl<'a, T> FusedIterator for IterMut<'a, T> {}
 impl<'a, T> ExactSizeIterator for IterMut<'a, T> {}
 
-/// Iterator yielding the keys of the entitiy arena.
+/// Iterator yielding the indices of allocated entities in the entitiy arena.
 #[derive(Debug)]
-pub struct Keys<'a, T> {
+pub struct Indices<'a, T> {
     /// The current next yielded start key.
     start: u32,
     /// The current next yielded end key.
@@ -128,7 +128,7 @@ pub struct Keys<'a, T> {
     key: PhantomData<fn() -> &'a T>,
 }
 
-impl<'a, T> Keys<'a, T> {
+impl<'a, T> Indices<'a, T> {
     /// Creates a keys iterator yielding keys from start to end.
     ///
     /// # Note
@@ -151,7 +151,7 @@ impl<'a, T> Keys<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for Keys<'a, T> {
+impl<'a, T> Iterator for Indices<'a, T> {
     type Item = Idx<T>;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -169,7 +169,7 @@ impl<'a, T> Iterator for Keys<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for Keys<'a, T> {
+impl<'a, T> DoubleEndedIterator for Indices<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             return None
@@ -180,5 +180,5 @@ impl<'a, T> DoubleEndedIterator for Keys<'a, T> {
     }
 }
 
-impl<'a, T> FusedIterator for Keys<'a, T> {}
-impl<'a, T> ExactSizeIterator for Keys<'a, T> {}
+impl<'a, T> FusedIterator for Indices<'a, T> {}
+impl<'a, T> ExactSizeIterator for Indices<'a, T> {}
