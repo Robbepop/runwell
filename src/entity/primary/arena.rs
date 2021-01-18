@@ -51,6 +51,13 @@ impl<T> EntityArena<T> {
         Idx::from_raw(raw_idx)
     }
 
+    /// Clears the entire entity arena.
+    ///
+    /// Removes all entities. Associated components must no longer be used.
+    pub fn clear(&mut self) {
+        self.entities.clear()
+    }
+
     /// Returns the number of created entities.
     pub fn len(&self) -> usize {
         self.entities.len()
