@@ -183,7 +183,7 @@ impl<'a, T> DoubleEndedIterator for Indices<'a, T> {
 impl<'a, T> FusedIterator for Indices<'a, T> {}
 impl<'a, T> ExactSizeIterator for Indices<'a, T> {}
 
-/// Iterator yielding the allocated values of the entitiy arena.
+/// Iterator yielding shared references to allocated values of the entitiy arena.
 #[derive(Debug)]
 pub struct Values<'a, T> {
     iter: core::slice::Iter<'a, T>,
@@ -226,3 +226,47 @@ impl<'a, T> DoubleEndedIterator for Values<'a, T> {
 
 impl<'a, T> FusedIterator for Values<'a, T> {}
 impl<'a, T> ExactSizeIterator for Values<'a, T> {}
+
+/// Iterator yielding mutable reference to allocated values of the entitiy arena.
+#[derive(Debug)]
+pub struct ValuesMut<'a, T> {
+    iter: core::slice::IterMut<'a, T>,
+}
+
+impl<'a, T> ValuesMut<'a, T> {
+    /// Creates a values iterator yielding the allocated entities of an entity arena.
+    pub(super) fn new(entities: &'a mut [T]) -> Self {
+        Self {
+            iter: entities.iter_mut(),
+        }
+    }
+}
+
+impl<'a, T> Iterator for ValuesMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n)
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for ValuesMut<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth_back(n)
+    }
+}
+
+impl<'a, T> FusedIterator for ValuesMut<'a, T> {}
+impl<'a, T> ExactSizeIterator for ValuesMut<'a, T> {}
