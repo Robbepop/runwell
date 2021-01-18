@@ -44,10 +44,6 @@ impl Function {
 }
 
 /// Incrementally guides the construction process to build a Runwell IR function.
-///
-/// Besides the dedicated `func` field this type only holds data that is required
-/// for the building process. Data that is required after the building process lives
-/// somewhere under the `func` field.
 #[derive(Debug, Default)]
 pub struct FunctionBuilder<S> {
     pub blocks: BasicBlocks,
