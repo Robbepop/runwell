@@ -18,88 +18,6 @@ use core::{
     marker::PhantomData,
 };
 
-/// Iterator over the keys and shared references of their associated entity data.
-#[derive(Debug)]
-pub struct Iter<'a, T> {
-    iter: Zip<Indices<'a, T>, Values<'a, T>>,
-}
-
-impl<'a, T> Iter<'a, T> {
-    /// Creates a new shared iterator from the slice of entities.
-    pub(super) fn new(
-        min_key: RawIdx,
-        max_key: RawIdx,
-        entities: &'a [T],
-    ) -> Self {
-        let indices = Indices::new(min_key, max_key);
-        let values = Values::new(entities);
-        debug_assert_eq!(indices.size_hint(), values.size_hint());
-        Self {
-            iter: indices.zip(values),
-        }
-    }
-}
-
-impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = (Idx<T>, &'a T);
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
-
-impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.next_back()
-    }
-}
-
-impl<'a, T> FusedIterator for Iter<'a, T> {}
-impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
-
-/// Iterator over the keys and exclusive references of their associated entity data.
-#[derive(Debug)]
-pub struct IterMut<'a, T> {
-    iter: Zip<Indices<'a, T>, ValuesMut<'a, T>>,
-}
-
-impl<'a, T> IterMut<'a, T> {
-    /// Creates a new exclusive iterator from the slice of entities.
-    pub(super) fn new(min_key: RawIdx, max_key: RawIdx, entities: &'a mut [T]) -> Self {
-        let indices = Indices::new(min_key, max_key);
-        let values = ValuesMut::new(entities);
-        debug_assert_eq!(indices.size_hint(), values.size_hint());
-        Self {
-            iter: indices.zip(values),
-        }
-    }
-}
-
-impl<'a, T> Iterator for IterMut<'a, T> {
-    type Item = (Idx<T>, &'a mut T);
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
-
-impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.next_back()
-    }
-}
-
-impl<'a, T> FusedIterator for IterMut<'a, T> {}
-impl<'a, T> ExactSizeIterator for IterMut<'a, T> {}
-
 /// Iterator yielding the indices of allocated entities in the entitiy arena.
 #[derive(Debug)]
 pub struct Indices<'a, T> {
@@ -259,3 +177,85 @@ impl<'a, T> DoubleEndedIterator for ValuesMut<'a, T> {
 
 impl<'a, T> FusedIterator for ValuesMut<'a, T> {}
 impl<'a, T> ExactSizeIterator for ValuesMut<'a, T> {}
+
+/// Iterator over the keys and shared references of their associated entity data.
+#[derive(Debug)]
+pub struct Iter<'a, T> {
+    iter: Zip<Indices<'a, T>, Values<'a, T>>,
+}
+
+impl<'a, T> Iter<'a, T> {
+    /// Creates a new shared iterator from the slice of entities.
+    pub(super) fn new(
+        min_key: RawIdx,
+        max_key: RawIdx,
+        entities: &'a [T],
+    ) -> Self {
+        let indices = Indices::new(min_key, max_key);
+        let values = Values::new(entities);
+        debug_assert_eq!(indices.size_hint(), values.size_hint());
+        Self {
+            iter: indices.zip(values),
+        }
+    }
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = (Idx<T>, &'a T);
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+}
+
+impl<'a, T> FusedIterator for Iter<'a, T> {}
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
+
+/// Iterator over the keys and exclusive references of their associated entity data.
+#[derive(Debug)]
+pub struct IterMut<'a, T> {
+    iter: Zip<Indices<'a, T>, ValuesMut<'a, T>>,
+}
+
+impl<'a, T> IterMut<'a, T> {
+    /// Creates a new exclusive iterator from the slice of entities.
+    pub(super) fn new(min_key: RawIdx, max_key: RawIdx, entities: &'a mut [T]) -> Self {
+        let indices = Indices::new(min_key, max_key);
+        let values = ValuesMut::new(entities);
+        debug_assert_eq!(indices.size_hint(), values.size_hint());
+        Self {
+            iter: indices.zip(values),
+        }
+    }
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = (Idx<T>, &'a mut T);
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+}
+
+impl<'a, T> FusedIterator for IterMut<'a, T> {}
+impl<'a, T> ExactSizeIterator for IterMut<'a, T> {}
