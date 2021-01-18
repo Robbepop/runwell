@@ -145,10 +145,7 @@ impl FunctionBuilder<state::Body> {
     /// # Errors
     ///
     /// If the basic block does not exist in this function.
-    pub fn switch_to_block(
-        &mut self,
-        _block: Block,
-    ) -> Result<(), IrError> {
+    pub fn switch_to_block(&mut self, _block: Block) -> Result<(), IrError> {
         todo!()
     }
 

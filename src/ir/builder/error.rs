@@ -32,10 +32,7 @@ pub enum FunctionBuilderError {
         unfilled_pred,
         block
     )]
-    UnfilledPredecessor {
-        unfilled_pred: Block,
-        block: Block,
-    },
+    UnfilledPredecessor { unfilled_pred: Block, block: Block },
     #[display(
         fmt = "tried to query current basic block while there is no basic block, yet."
     )]
@@ -87,10 +84,7 @@ pub enum FunctionBuilderError {
         from,
         to
     )]
-    BranchAlreadyExists {
-        from: Block,
-        to: Block,
-    },
+    BranchAlreadyExists { from: Block, to: Block },
     #[display(fmt = "encountered invalid basic block index at {}.", block)]
     InvalidBasicBlock { block: Block },
 }

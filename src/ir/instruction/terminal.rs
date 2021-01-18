@@ -74,11 +74,7 @@ pub struct IfThenElseInstr {
 
 impl IfThenElseInstr {
     /// Creates a new if-then-else instruction branching to either `then` or `else` depending on `condition`.
-    pub fn new(
-        condition: Value,
-        br_then: Block,
-        br_else: Block,
-    ) -> Self {
+    pub fn new(condition: Value, br_then: Block, br_else: Block) -> Self {
         Self {
             condition,
             br_then,
