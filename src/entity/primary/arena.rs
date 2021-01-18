@@ -65,7 +65,7 @@ impl<T> EntityArena<T> {
 
     /// Returns `true` if no entities have yet been created.
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.entities.is_empty()
     }
 
     /// Returns a shared reference to the entity at the index if any.
