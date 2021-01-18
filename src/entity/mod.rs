@@ -17,9 +17,9 @@
 //! For efficiency purposes it is not possible to remove once created entities again.
 //! Systems are not supported by this ECS system.
 
+mod index;
 pub mod primary;
 pub mod secondary;
-mod index;
 
 #[cfg(test)]
 mod tests;
