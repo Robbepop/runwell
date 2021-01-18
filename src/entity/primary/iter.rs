@@ -182,3 +182,47 @@ impl<'a, T> DoubleEndedIterator for Indices<'a, T> {
 
 impl<'a, T> FusedIterator for Indices<'a, T> {}
 impl<'a, T> ExactSizeIterator for Indices<'a, T> {}
+
+/// Iterator yielding the allocated values of the entitiy arena.
+#[derive(Debug)]
+pub struct Values<'a, T> {
+    iter: core::slice::Iter<'a, T>,
+}
+
+impl<'a, T> Values<'a, T> {
+    /// Creates a values iterator yielding the allocated entities of an entity arena.
+    pub(super) fn new(entities: &'a [T]) -> Self {
+        Self {
+            iter: entities.iter(),
+        }
+    }
+}
+
+impl<'a, T> Iterator for Values<'a, T> {
+    type Item = &'a T;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n)
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for Values<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth_back(n)
+    }
+}
+
+impl<'a, T> FusedIterator for Values<'a, T> {}
+impl<'a, T> ExactSizeIterator for Values<'a, T> {}

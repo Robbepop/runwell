@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::iter::{Iter, IterMut, Indices};
+use super::iter::{Iter, IterMut, Indices, Values};
 use crate::entity::{Idx, RawIdx};
 use core::ops::{Index, IndexMut};
 
@@ -76,12 +76,17 @@ impl<T> EntityArena<T> {
         Indices::new(RawIdx::from_u32(0), self.max_key())
     }
 
-    /// Returns an iterator over the keys and shared references to their associated data.
+    /// Returns an iterator over shared references to the allocated entities of the entity arena.
+    pub fn values(&self) -> Values<T> {
+        Values::new(&self.entities)
+    }
+
+    /// Returns an iterator over the indices and shared references to their associated data.
     pub fn iter(&self) -> Iter<T> {
         Iter::new(&self.entities)
     }
 
-    /// Returns an iterator over the keys and shared references to their associated data.
+    /// Returns an iterator over the indices and shared references to their associated data.
     pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut::new(&mut self.entities)
     }
