@@ -61,6 +61,11 @@ impl<T> EntityArena<T> {
         self.entities.clear()
     }
 
+    /// Reallocates the entity arena to make it take up as little space as possible.
+    pub fn shrink_to_fit(&mut self) {
+        self.entities.shrink_to_fit();
+    }
+
     /// Returns the number of created entities.
     pub fn len(&self) -> usize {
         self.entities.len()
