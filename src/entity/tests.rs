@@ -101,10 +101,8 @@ macro_rules! unit_test_secondary {
             // Asserts that iterating over the secondary data structure
             // yields the correct elements. The order in which the components
             // are yielded does not matter.
-            let expected = sample
-                .iter()
-                .map(|(k, c)| (*k, c))
-                .collect::<Vec<_>>();
+            let expected =
+                sample.iter().map(|(k, c)| (*k, c)).collect::<Vec<_>>();
             let mut actual = instance.iter().collect::<Vec<_>>();
             actual.sort();
             assert_eq!(actual, expected);
