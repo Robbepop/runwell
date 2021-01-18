@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::Index32;
+use crate::entity::{Idx, RawIdx};
 use core::{
     iter::{DoubleEndedIterator, FusedIterator},
     marker::PhantomData,
@@ -20,30 +20,25 @@ use core::{
 
 /// Iterator over the keys and shared references of their associated entity data.
 #[derive(Debug)]
-pub struct Iter<'a, K, V> {
-    iter: core::slice::Iter<'a, V>,
+pub struct Iter<'a, T> {
+    iter: core::slice::Iter<'a, T>,
     start: u32,
     end: u32,
-    key: PhantomData<fn() -> K>,
 }
 
-impl<'a, K, V> Iter<'a, K, V> {
+impl<'a, T> Iter<'a, T> {
     /// Creates a new shared iterator from the slice of entities.
-    pub(super) fn new(entities: &'a [V]) -> Self {
+    pub(super) fn new(entities: &'a [T]) -> Self {
         Self {
             iter: entities.iter(),
             start: 0,
             end: entities.len() as u32,
-            key: Default::default(),
         }
     }
 }
 
-impl<'a, K, V> Iterator for Iter<'a, K, V>
-where
-    K: Index32,
-{
-    type Item = (K, &'a V);
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = (Idx<T>, &'a T);
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -51,54 +46,46 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let entity = self.iter.next()?;
-        let key = K::from_u32(self.start);
+        let raw_idx = RawIdx::from_u32(self.start);
         self.start += 1;
-        Some((key, entity))
+        Some((Idx::from_raw(raw_idx), entity))
     }
 }
 
-impl<'a, K, V> DoubleEndedIterator for Iter<'a, K, V>
-where
-    K: Index32,
-{
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let entity = self.iter.next_back()?;
         self.end -= 1;
-        let key = K::from_u32(self.end);
-        Some((key, entity))
+        let raw_idx = RawIdx::from_u32(self.end);
+        Some((Idx::from_raw(raw_idx), entity))
     }
 }
 
-impl<'a, K, V> FusedIterator for Iter<'a, K, V> where K: Index32 {}
-impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where K: Index32 {}
+impl<'a, T> FusedIterator for Iter<'a, T> {}
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
 
 /// Iterator over the keys and exclusive references of their associated entity data.
 #[derive(Debug)]
-pub struct IterMut<'a, K, V> {
-    iter: core::slice::IterMut<'a, V>,
+pub struct IterMut<'a, T> {
+    iter: core::slice::IterMut<'a, T>,
     start: u32,
     end: u32,
-    key: PhantomData<fn() -> K>,
 }
 
-impl<'a, K, V> IterMut<'a, K, V> {
+impl<'a, T> IterMut<'a, T> {
     /// Creates a new exclusive iterator from the slice of entities.
-    pub(super) fn new(entities: &'a mut [V]) -> Self {
+    pub(super) fn new(entities: &'a mut [T]) -> Self {
         let end = entities.len() as u32;
         Self {
             iter: entities.iter_mut(),
             start: 0,
             end,
-            key: Default::default(),
         }
     }
 }
 
-impl<'a, K, V> Iterator for IterMut<'a, K, V>
-where
-    K: Index32,
-{
-    type Item = (K, &'a mut V);
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = (Idx<T>, &'a mut T);
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -106,30 +93,27 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let entity = self.iter.next()?;
-        let key = K::from_u32(self.start);
+        let raw_idx = RawIdx::from_u32(self.start);
         self.start += 1;
-        Some((key, entity))
+        Some((Idx::from_raw(raw_idx), entity))
     }
 }
 
-impl<'a, K, V> DoubleEndedIterator for IterMut<'a, K, V>
-where
-    K: Index32,
-{
+impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let entity = self.iter.next_back()?;
         self.end -= 1;
-        let key = K::from_u32(self.end);
-        Some((key, entity))
+        let raw_idx = RawIdx::from_u32(self.end);
+        Some((Idx::from_raw(raw_idx), entity))
     }
 }
 
-impl<'a, K, V> FusedIterator for IterMut<'a, K, V> where K: Index32 {}
-impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> where K: Index32 {}
+impl<'a, T> FusedIterator for IterMut<'a, T> {}
+impl<'a, T> ExactSizeIterator for IterMut<'a, T> {}
 
 /// Iterator yielding the keys of the entitiy arena.
 #[derive(Debug)]
-pub struct Keys<'a, K> {
+pub struct Keys<'a, T> {
     /// The current next yielded start key.
     start: u32,
     /// The current next yielded end key.
@@ -141,13 +125,10 @@ pub struct Keys<'a, K> {
     /// The lifetime is important to keep the iterator in sync with Rust's
     /// borrow checker so that the iterator does not get outdated upon later
     /// mutations. Besides that the lifetime is not really needed.
-    key: PhantomData<fn() -> &'a K>,
+    key: PhantomData<fn() -> &'a T>,
 }
 
-impl<'a, K> Keys<'a, K>
-where
-    K: Index32,
-{
+impl<'a, T> Keys<'a, T> {
     /// Creates a keys iterator yielding keys from start to end.
     ///
     /// # Note
@@ -158,7 +139,7 @@ where
     /// # Panics
     ///
     /// If start is not small than or equal to end.
-    pub(super) fn new(min_key: K, max_key: K) -> Self {
+    pub(super) fn new(min_key: RawIdx, max_key: RawIdx) -> Self {
         let start_index = min_key.into_u32();
         let end_index = max_key.into_u32();
         assert!(start_index <= end_index);
@@ -170,11 +151,8 @@ where
     }
 }
 
-impl<'a, K> Iterator for Keys<'a, K>
-where
-    K: Index32,
-{
-    type Item = K;
+impl<'a, T> Iterator for Keys<'a, T> {
+    type Item = Idx<T>;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let remaining = (self.end - self.start) as usize;
@@ -185,25 +163,22 @@ where
         if self.start == self.end {
             return None
         }
-        let key = K::from_u32(self.start);
+        let raw_idx = RawIdx::from_u32(self.start);
         self.start += 1;
-        Some(key)
+        Some(Idx::from_raw(raw_idx))
     }
 }
 
-impl<'a, K> DoubleEndedIterator for Keys<'a, K>
-where
-    K: Index32,
-{
+impl<'a, T> DoubleEndedIterator for Keys<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             return None
         }
         self.end -= 1;
-        let key = K::from_u32(self.end);
-        Some(key)
+        let raw_idx = RawIdx::from_u32(self.start);
+        Some(Idx::from_raw(raw_idx))
     }
 }
 
-impl<'a, K> FusedIterator for Keys<'a, K> where K: Index32 {}
-impl<'a, K> ExactSizeIterator for Keys<'a, K> where K: Index32 {}
+impl<'a, T> FusedIterator for Keys<'a, T> {}
+impl<'a, T> ExactSizeIterator for Keys<'a, T> {}

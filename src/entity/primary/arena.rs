@@ -13,49 +13,29 @@
 // limitations under the License.
 
 use super::iter::{Iter, IterMut, Keys};
-use crate::Index32;
-use core::{
-    marker::PhantomData,
-    ops::{Index, IndexMut},
-};
+use crate::entity::{Idx, RawIdx};
+use core::ops::{Index, IndexMut};
 
 /// Primary map to create new entities and store required data for them.
 ///
 /// For efficiency and satety reasons it is not possible to remove entities.
-#[derive(Debug)]
-pub struct EntityArena<K, V> {
-    entities: Vec<V>,
-    key: PhantomData<fn() -> K>,
+#[derive(Debug, Clone)]
+pub struct EntityArena<T> {
+    entities: Vec<T>,
 }
 
-impl<K, V> Clone for EntityArena<K, V>
-where
-    V: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            entities: self.entities.clone(),
-            key: Default::default(),
-        }
-    }
-}
-
-impl<K, V> Default for EntityArena<K, V> {
+impl<T> Default for EntityArena<T> {
     fn default() -> Self {
         Self {
             entities: Default::default(),
-            key: Default::default(),
         }
     }
 }
 
-impl<K, V> EntityArena<K, V>
-where
-    K: Index32,
-{
+impl<T> EntityArena<T> {
     /// Returns the key for the next allocated entity.
-    fn max_key(&self) -> K {
-        K::from_u32(self.entities.len() as u32)
+    fn max_key(&self) -> RawIdx {
+        RawIdx::from_u32(self.entities.len() as u32)
     }
 
     /// Creates a new entity and returns a unique key to it.
@@ -65,10 +45,10 @@ where
     /// The key can be used to query and mutate data of the entity
     /// and to add, remove or query the components of it using
     /// secondary data structures.
-    pub fn create(&mut self, entity: V) -> K {
-        let id = self.max_key();
+    pub fn create(&mut self, entity: T) -> Idx<T> {
+        let raw_idx = self.max_key();
         self.entities.push(entity);
-        id
+        Idx::from_raw(raw_idx)
     }
 
     /// Returns the number of created entities.
@@ -81,48 +61,42 @@ where
         self.len() == 0
     }
 
-    /// Returns a shared reference to the entity at the key if any.
-    pub fn get(&self, key: K) -> Option<&V> {
-        self.entities.get(key.into_u32() as usize)
+    /// Returns a shared reference to the entity at the index if any.
+    pub fn get(&self, index: Idx<T>) -> Option<&T> {
+        self.entities.get(index.into_raw().into_u32() as usize)
     }
 
-    /// Returns an exclusive reference to the entity at the key if any.
-    pub fn get_mut(&mut self, key: K) -> Option<&mut V> {
-        self.entities.get_mut(key.into_u32() as usize)
+    /// Returns an exclusive reference to the entity at the index if any.
+    pub fn get_mut(&mut self, index: Idx<T>) -> Option<&mut T> {
+        self.entities.get_mut(index.into_raw().into_u32() as usize)
     }
 
     /// Returns an iterator over the keys of the stored entities.
-    pub fn keys(&self) -> Keys<K> {
-        Keys::new(K::from_u32(0), self.max_key())
+    pub fn keys(&self) -> Keys<T> {
+        Keys::new(RawIdx::from_u32(0), self.max_key())
     }
 
     /// Returns an iterator over the keys and shared references to their associated data.
-    pub fn iter(&self) -> Iter<K, V> {
+    pub fn iter(&self) -> Iter<T> {
         Iter::new(&self.entities)
     }
 
     /// Returns an iterator over the keys and shared references to their associated data.
-    pub fn iter_mut(&mut self) -> IterMut<K, V> {
+    pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut::new(&mut self.entities)
     }
 }
 
-impl<K, V> Index<K> for EntityArena<K, V>
-where
-    K: Index32,
-{
-    type Output = V;
+impl<T> Index<Idx<T>> for EntityArena<T> {
+    type Output = T;
 
-    fn index(&self, index: K) -> &Self::Output {
-        self.get(index).expect("invalid key for entitiy")
+    fn index(&self, index: Idx<T>) -> &Self::Output {
+        self.get(index).expect("invalid index for entitiy")
     }
 }
 
-impl<K, V> IndexMut<K> for EntityArena<K, V>
-where
-    K: Index32,
-{
-    fn index_mut(&mut self, index: K) -> &mut Self::Output {
+impl<T> IndexMut<Idx<T>> for EntityArena<T> {
+    fn index_mut(&mut self, index: Idx<T>) -> &mut Self::Output {
         self.get_mut(index).expect("invalid key for entity")
     }
 }

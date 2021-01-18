@@ -19,9 +19,7 @@
 //! their parent module since they require the primary data structures in
 //! order to properly be used.
 
-use super::{ComponentMap, ComponentVec, EntityArena};
-
-type TestEntityArena = EntityArena<u32, ()>;
+use super::{ComponentMap, ComponentVec};
 
 macro_rules! unit_test_secondary {
     ( $name:ident ) => {
