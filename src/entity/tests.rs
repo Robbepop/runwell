@@ -20,19 +20,29 @@
 //! order to properly be used.
 
 use super::{ComponentMap, ComponentVec};
+use crate::entity::{Idx, RawIdx};
+
+#[derive(Debug)]
+pub enum TestEntity {}
+
+fn u32_to_idx(raw_value: u32) -> Idx<TestEntity> {
+    Idx::from_raw(RawIdx::from_u32(raw_value))
+}
 
 macro_rules! unit_test_secondary {
     ( $name:ident ) => {
         #[test]
         fn default_works() {
             let default = $name::default();
+            let null = super::u32_to_idx(0);
+
             assert!(default.is_empty());
             assert_eq!(default.len(), 0);
-            assert!(!default.contains_key(0));
-            assert_eq!(default.get(0), None);
+            assert!(!default.contains_key(null));
+            assert_eq!(default.get(null), None);
             assert_eq!(default.iter().count(), 0);
             let mut default = default;
-            assert_eq!(default.get_mut(0), None);
+            assert_eq!(default.get_mut(null), None);
             assert_eq!(default.iter_mut().count(), 0);
         }
 
@@ -47,6 +57,8 @@ macro_rules! unit_test_secondary {
             // and inserts all values and assert that they are contained
             // after the insertion.
             for (k, c) in init_values {
+                let k = super::u32_to_idx(k);
+
                 assert!(!instance.contains_key(k));
                 assert_eq!(instance.get(k), None);
                 assert_eq!(instance.insert(k, c), None);
@@ -82,6 +94,8 @@ macro_rules! unit_test_secondary {
             // and remove all populated value and assert that they are no longer
             // contained after the removal.
             for (k, c) in sample {
+                let k = super::u32_to_idx(k);
+
                 assert!(instance.contains_key(k));
                 assert_eq!(instance.get(k), Some(&c));
                 assert_eq!(instance.remove(k), Some(c));
@@ -101,8 +115,10 @@ macro_rules! unit_test_secondary {
             // Asserts that iterating over the secondary data structure
             // yields the correct elements. The order in which the components
             // are yielded does not matter.
-            let expected =
-                sample.iter().map(|(k, c)| (*k, c)).collect::<Vec<_>>();
+            let expected = sample
+                .iter()
+                .map(|(k, c)| (super::u32_to_idx(*k), c))
+                .collect::<Vec<_>>();
             let mut actual = instance.iter().collect::<Vec<_>>();
             actual.sort();
             assert_eq!(actual, expected);
@@ -117,6 +133,8 @@ macro_rules! unit_test_secondary {
             // contains any of the sample keys, is empty and does not
             // yield components upon iteration.
             for &(k, _) in &sample {
+                let k = super::u32_to_idx(k);
+
                 assert!(!instance.contains_key(k));
             }
             assert!(instance.is_empty());
@@ -160,11 +178,11 @@ macro_rules! unit_test_secondary {
 }
 
 mod map {
-    type TestComponentMap = super::ComponentMap<u32, char>;
+    type TestComponentMap = super::ComponentMap<super::TestEntity, char>;
     unit_test_secondary!(TestComponentMap);
 }
 
 mod vec {
-    type TestComponentVec = super::ComponentVec<u32, char>;
+    type TestComponentVec = super::ComponentVec<super::TestEntity, char>;
     unit_test_secondary!(TestComponentVec);
 }

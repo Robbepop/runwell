@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::Index32;
+use crate::entity::{Idx, RawIdx};
 use core::{
     iter::FusedIterator,
     marker::PhantomData,
@@ -75,7 +75,6 @@ impl<K, V> Default for ComponentVec<K, V> {
 
 impl<K, V> PartialEq for ComponentVec<K, V>
 where
-    K: Index32,
     V: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -83,31 +82,23 @@ where
             return false
         }
         self.iter().zip(other.iter()).all(|((k1, v1), (k2, v2))| {
-            k1.into_u32() == k2.into_u32() && v1 == v2
+            k1.into_raw() == k2.into_raw() && v1 == v2
         })
     }
 }
 
-impl<K, V> Eq for ComponentVec<K, V>
-where
-    K: Index32,
-    V: Eq,
-{
-}
+impl<K, V> Eq for ComponentVec<K, V> where V: Eq {}
 
-impl<K, V> ComponentVec<K, V>
-where
-    K: Index32,
-{
+impl<K, V> ComponentVec<K, V> {
     /// Converts the given key to the associated index.
-    fn key_to_index(key: K) -> usize {
-        key.into_u32() as usize
+    fn key_to_index(key: Idx<K>) -> usize {
+        key.into_raw().into_u32() as usize
     }
 
     /// Returns `true` if the key is valid for the secondary map.
     ///
     /// If the key is invalid the secondary map has to be enlarged to fit the key.
-    pub fn contains_key(&self, key: K) -> bool {
+    pub fn contains_key(&self, key: Idx<K>) -> bool {
         self.components
             .get(Self::key_to_index(key))
             .map(Option::is_some)
@@ -127,7 +118,7 @@ where
     /// Enlarges the component vector to fit the given key.
     ///
     /// Returns `true` if the secondary map actually got enlarged by the operation.
-    fn enlarge_for(&mut self, max_key: K) -> bool {
+    fn enlarge_for(&mut self, max_key: Idx<K>) -> bool {
         if self.contains_key(max_key) {
             return false
         }
@@ -137,7 +128,7 @@ where
     }
 
     /// Inserts the component for the key and returns the previous component if any.
-    pub fn insert(&mut self, key: K, component: V) -> Option<V> {
+    pub fn insert(&mut self, key: Idx<K>, component: V) -> Option<V> {
         self.enlarge_for(key);
         let old_component = replace(
             &mut self.components[Self::key_to_index(key)],
@@ -148,7 +139,7 @@ where
     }
 
     /// Removes the component for the key and returns the removed component if any.
-    pub fn remove(&mut self, key: K) -> Option<V> {
+    pub fn remove(&mut self, key: Idx<K>) -> Option<V> {
         if !self.contains_key(key) {
             return None
         }
@@ -159,14 +150,14 @@ where
     }
 
     /// Returns a shared reference to the entity at the key.
-    pub fn get(&self, key: K) -> Option<&V> {
+    pub fn get(&self, key: Idx<K>) -> Option<&V> {
         self.components
             .get(Self::key_to_index(key))
             .and_then(Into::into)
     }
 
     /// Returns an exclusive reference to the entity at the key.
-    pub fn get_mut(&mut self, key: K) -> Option<&mut V> {
+    pub fn get_mut(&mut self, key: Idx<K>) -> Option<&mut V> {
         self.components
             .get_mut(Self::key_to_index(key))
             .and_then(Into::into)
@@ -199,7 +190,7 @@ where
     }
 
     /// Gets the given key's corresponding entry in the map for in-place manipulation.
-    pub fn entry(&mut self, key: K) -> Entry<K, V> {
+    pub fn entry(&mut self, key: Idx<K>) -> Entry<K, V> {
         match self.get(key) {
             Some(_) => Entry::Occupied(OccupiedEntry { vec: self, key }),
             None => Entry::Vacant(VacantEntry { vec: self, key }),
@@ -216,10 +207,7 @@ pub enum Entry<'a, K: 'a, V: 'a> {
     Vacant(VacantEntry<'a, K, V>),
 }
 
-impl<'a, K, V> Entry<'a, K, V>
-where
-    K: Index32,
-{
+impl<'a, K, V> Entry<'a, K, V> {
     /// Ensures a value is in the entry by inserting the default if empty,
     /// and returns a mutable reference to the value in the entry.
     pub fn or_insert(self, default: V) -> &'a mut V {
@@ -236,7 +224,7 @@ where
     }
 
     /// Returns a reference to this entry's key.
-    pub fn key(&self) -> K {
+    pub fn key(&self) -> Idx<K> {
         match self {
             Entry::Occupied(occupied) => occupied.key(),
             Entry::Vacant(vacant) => vacant.key(),
@@ -260,7 +248,6 @@ where
 
 impl<'a, K, V> Entry<'a, K, V>
 where
-    K: Index32,
     V: Default,
 {
     /// Ensures a value is in the entry by inserting the default value if empty,
@@ -277,23 +264,20 @@ where
 #[derive(Debug)]
 pub struct OccupiedEntry<'a, K, V> {
     vec: &'a mut ComponentVec<K, V>,
-    key: K,
+    key: Idx<K>,
 }
 
 const UNEXPECTED_VACANT_COMPONENT: &str =
     "unexpected vacant component for occupied entry";
 
-impl<'a, K, V> OccupiedEntry<'a, K, V>
-where
-    K: Index32,
-{
+impl<'a, K, V> OccupiedEntry<'a, K, V> {
     /// Returns the key from the entry.
-    pub fn key(&self) -> K {
+    pub fn key(&self) -> Idx<K> {
         self.key
     }
 
     /// Take the ownership of the key and value from the map.
-    pub fn remove_entry(self) -> (K, V) {
+    pub fn remove_entry(self) -> (Idx<K>, V) {
         let key = self.key;
         let old_component = self.remove();
         (key, old_component)
@@ -345,15 +329,12 @@ where
 #[derive(Debug)]
 pub struct VacantEntry<'a, K, V> {
     vec: &'a mut ComponentVec<K, V>,
-    key: K,
+    key: Idx<K>,
 }
 
-impl<'a, K, V> VacantEntry<'a, K, V>
-where
-    K: Index32,
-{
+impl<'a, K, V> VacantEntry<'a, K, V> {
     /// Returns the key that would be used when inserting a value through the `VacantEntry`.
-    pub fn key(&self) -> K {
+    pub fn key(&self) -> Idx<K> {
         self.key
     }
 
@@ -366,23 +347,17 @@ where
     }
 }
 
-impl<K, V> Index<K> for ComponentVec<K, V>
-where
-    K: Index32,
-{
+impl<K, V> Index<Idx<K>> for ComponentVec<K, V> {
     type Output = V;
 
-    fn index(&self, index: K) -> &Self::Output {
+    fn index(&self, index: Idx<K>) -> &Self::Output {
         self.get(index)
             .expect("invalid key for densely stored component")
     }
 }
 
-impl<K, V> IndexMut<K> for ComponentVec<K, V>
-where
-    K: Index32,
-{
-    fn index_mut(&mut self, index: K) -> &mut Self::Output {
+impl<K, V> IndexMut<Idx<K>> for ComponentVec<K, V> {
+    fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
         self.get_mut(index)
             .expect("invalid key for densely stored component")
     }
@@ -397,11 +372,8 @@ pub struct Iter<'a, K, V> {
     key: PhantomData<fn() -> K>,
 }
 
-impl<'a, K, V> Iterator for Iter<'a, K, V>
-where
-    K: Index32,
-{
-    type Item = (K, &'a V);
+impl<'a, K, V> Iterator for Iter<'a, K, V> {
+    type Item = (Idx<K>, &'a V);
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.remaining, Some(self.remaining))
@@ -414,11 +386,11 @@ where
             }
             match self.iter.next() {
                 Some(maybe_component) => {
-                    let key = K::from_u32(self.start);
+                    let key = RawIdx::from_u32(self.start);
                     self.start += 1;
                     if let Some(component) = maybe_component {
                         self.remaining -= 1;
-                        return Some((key, component))
+                        return Some((Idx::from_raw(key), component))
                     }
                     continue
                 }
@@ -428,8 +400,8 @@ where
     }
 }
 
-impl<'a, K, V> FusedIterator for Iter<'a, K, V> where K: Index32 {}
-impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where K: Index32 {}
+impl<'a, K, V> FusedIterator for Iter<'a, K, V> {}
+impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> {}
 
 /// Iterator yielding contained keys and exclusive references to their components.
 #[derive(Debug)]
@@ -440,11 +412,8 @@ pub struct IterMut<'a, K, V> {
     key: PhantomData<fn() -> K>,
 }
 
-impl<'a, K, V> Iterator for IterMut<'a, K, V>
-where
-    K: Index32,
-{
-    type Item = (K, &'a mut V);
+impl<'a, K, V> Iterator for IterMut<'a, K, V> {
+    type Item = (Idx<K>, &'a mut V);
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.remaining, Some(self.remaining))
@@ -457,11 +426,11 @@ where
             }
             match self.iter.next() {
                 Some(maybe_component) => {
-                    let key = K::from_u32(self.start);
+                    let key = RawIdx::from_u32(self.start);
                     self.start += 1;
                     if let Some(component) = maybe_component {
                         self.remaining -= 1;
-                        return Some((key, component))
+                        return Some((Idx::from_raw(key), component))
                     }
                     continue
                 }
@@ -471,5 +440,5 @@ where
     }
 }
 
-impl<'a, K, V> FusedIterator for IterMut<'a, K, V> where K: Index32 {}
-impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> where K: Index32 {}
+impl<'a, K, V> FusedIterator for IterMut<'a, K, V> {}
+impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {}
