@@ -41,14 +41,14 @@ impl<T> EntityArena<T> {
         RawIdx::from_u32(self.entities.len() as u32)
     }
 
-    /// Creates a new entity and returns a unique key to it.
+    /// Allocates a new entity and returns a unique index to it.
     ///
     /// # Note
     ///
-    /// The key can be used to query and mutate data of the entity
-    /// and to add, remove or query the components of it using
-    /// secondary data structures.
-    pub fn create(&mut self, entity: T) -> Idx<T> {
+    /// The returned index can be used to query and mutate data of
+    /// the entity and to add, remove or query associated components
+    /// of it using secondary data structures.
+    pub fn alloc(&mut self, entity: T) -> Idx<T> {
         let raw_idx = self.max_key();
         self.entities.push(entity);
         Idx::from_raw(raw_idx)
