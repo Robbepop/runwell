@@ -88,12 +88,12 @@ impl<T> EntityArena<T> {
 
     /// Returns an iterator over the indices and shared references to their associated data.
     pub fn iter(&self) -> Iter<T> {
-        Iter::new(&self.entities)
+        Iter::new(RawIdx::from_u32(0), self.max_key(), &self.entities)
     }
 
     /// Returns an iterator over the indices and shared references to their associated data.
     pub fn iter_mut(&mut self) -> IterMut<T> {
-        IterMut::new(&mut self.entities)
+        IterMut::new(RawIdx::from_u32(0), self.max_key(), &mut self.entities)
     }
 }
 

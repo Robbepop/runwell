@@ -14,25 +14,28 @@
 
 use crate::entity::{Idx, RawIdx};
 use core::{
-    iter::{DoubleEndedIterator, FusedIterator},
+    iter::{DoubleEndedIterator, FusedIterator, Zip},
     marker::PhantomData,
 };
 
 /// Iterator over the keys and shared references of their associated entity data.
 #[derive(Debug)]
 pub struct Iter<'a, T> {
-    iter: core::slice::Iter<'a, T>,
-    start: u32,
-    end: u32,
+    iter: Zip<Indices<'a, T>, Values<'a, T>>,
 }
 
 impl<'a, T> Iter<'a, T> {
     /// Creates a new shared iterator from the slice of entities.
-    pub(super) fn new(entities: &'a [T]) -> Self {
+    pub(super) fn new(
+        min_key: RawIdx,
+        max_key: RawIdx,
+        entities: &'a [T],
+    ) -> Self {
+        let indices = Indices::new(min_key, max_key);
+        let values = Values::new(entities);
+        debug_assert_eq!(indices.size_hint(), values.size_hint());
         Self {
-            iter: entities.iter(),
-            start: 0,
-            end: entities.len() as u32,
+            iter: indices.zip(values),
         }
     }
 }
@@ -45,19 +48,13 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 
     fn next(&mut self) -> Option<Self::Item> {
-        let entity = self.iter.next()?;
-        let raw_idx = RawIdx::from_u32(self.start);
-        self.start += 1;
-        Some((Idx::from_raw(raw_idx), entity))
+        self.iter.next()
     }
 }
 
 impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        let entity = self.iter.next_back()?;
-        self.end -= 1;
-        let raw_idx = RawIdx::from_u32(self.end);
-        Some((Idx::from_raw(raw_idx), entity))
+        self.iter.next_back()
     }
 }
 
@@ -67,19 +64,17 @@ impl<'a, T> ExactSizeIterator for Iter<'a, T> {}
 /// Iterator over the keys and exclusive references of their associated entity data.
 #[derive(Debug)]
 pub struct IterMut<'a, T> {
-    iter: core::slice::IterMut<'a, T>,
-    start: u32,
-    end: u32,
+    iter: Zip<Indices<'a, T>, ValuesMut<'a, T>>,
 }
 
 impl<'a, T> IterMut<'a, T> {
     /// Creates a new exclusive iterator from the slice of entities.
-    pub(super) fn new(entities: &'a mut [T]) -> Self {
-        let end = entities.len() as u32;
+    pub(super) fn new(min_key: RawIdx, max_key: RawIdx, entities: &'a mut [T]) -> Self {
+        let indices = Indices::new(min_key, max_key);
+        let values = ValuesMut::new(entities);
+        debug_assert_eq!(indices.size_hint(), values.size_hint());
         Self {
-            iter: entities.iter_mut(),
-            start: 0,
-            end,
+            iter: indices.zip(values),
         }
     }
 }
@@ -92,19 +87,13 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     }
 
     fn next(&mut self) -> Option<Self::Item> {
-        let entity = self.iter.next()?;
-        let raw_idx = RawIdx::from_u32(self.start);
-        self.start += 1;
-        Some((Idx::from_raw(raw_idx), entity))
+        self.iter.next()
     }
 }
 
 impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        let entity = self.iter.next_back()?;
-        self.end -= 1;
-        let raw_idx = RawIdx::from_u32(self.end);
-        Some((Idx::from_raw(raw_idx), entity))
+        self.iter.next_back()
     }
 }
 
