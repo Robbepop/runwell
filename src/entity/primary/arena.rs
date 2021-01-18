@@ -15,6 +15,7 @@
 use super::iter::{Entities, EntitiesMut, Indices, Iter, IterMut};
 use crate::entity::{Idx, RawIdx};
 use core::{
+    iter::FromIterator,
     ops::{Index, IndexMut},
 };
 
@@ -126,5 +127,16 @@ impl<T> IndexMut<Idx<T>> for EntityArena<T> {
     fn index_mut(&mut self, index: Idx<T>) -> &mut Self::Output {
         let index = Self::idx_to_usize(index);
         &mut self.entities[index]
+    }
+}
+
+impl<T> FromIterator<T> for EntityArena<T> {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        EntityArena {
+            entities: Vec::from_iter(iter),
+        }
     }
 }
