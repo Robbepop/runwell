@@ -21,11 +21,11 @@ use core::{
 /// Iterator yielding the indices of allocated entities in the entitiy arena.
 #[derive(Debug)]
 pub struct Indices<'a, T> {
-    /// The current next yielded start key.
+    /// The current next yielded start index.
     start: u32,
-    /// The current next yielded end key.
+    /// The current next yielded end index.
     end: u32,
-    /// Required to make the data structure generic over the keys and lifetime.
+    /// Required to make the data structure generic over the indices and lifetime.
     ///
     /// # Note
     ///
@@ -36,7 +36,7 @@ pub struct Indices<'a, T> {
 }
 
 impl<'a, T> Indices<'a, T> {
-    /// Creates a keys iterator yielding keys from start to end.
+    /// Creates an index iterator yielding indices from start to end.
     ///
     /// # Note
     ///
@@ -46,9 +46,9 @@ impl<'a, T> Indices<'a, T> {
     /// # Panics
     ///
     /// If start is not small than or equal to end.
-    pub(super) fn new(min_key: RawIdx, max_key: RawIdx) -> Self {
-        let start_index = min_key.into_u32();
-        let end_index = max_key.into_u32();
+    pub(super) fn new(min_idx: RawIdx, max_idx: RawIdx) -> Self {
+        let start_index = min_idx.into_u32();
+        let end_index = max_idx.into_u32();
         assert!(start_index <= end_index);
         Self {
             start: start_index,
@@ -187,11 +187,11 @@ pub struct Iter<'a, T> {
 impl<'a, T> Iter<'a, T> {
     /// Creates a new shared iterator from the slice of entities.
     pub(super) fn new(
-        min_key: RawIdx,
-        max_key: RawIdx,
+        min_idx: RawIdx,
+        max_idx: RawIdx,
         entities: &'a [T],
     ) -> Self {
-        let indices = Indices::new(min_key, max_key);
+        let indices = Indices::new(min_idx, max_idx);
         let values = Entities::new(entities);
         debug_assert_eq!(indices.size_hint(), values.size_hint());
         Self {
@@ -229,8 +229,12 @@ pub struct IterMut<'a, T> {
 
 impl<'a, T> IterMut<'a, T> {
     /// Creates a new exclusive iterator from the slice of entities.
-    pub(super) fn new(min_key: RawIdx, max_key: RawIdx, entities: &'a mut [T]) -> Self {
-        let indices = Indices::new(min_key, max_key);
+    pub(super) fn new(
+        min_idx: RawIdx,
+        max_idx: RawIdx,
+        entities: &'a mut [T],
+    ) -> Self {
+        let indices = Indices::new(min_idx, max_idx);
         let values = EntitiesMut::new(entities);
         debug_assert_eq!(indices.size_hint(), values.size_hint());
         Self {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::iter::{Indices, Iter, IterMut, Entities, EntitiesMut};
+use super::iter::{Entities, EntitiesMut, Indices, Iter, IterMut};
 use crate::entity::{Idx, RawIdx};
 use core::ops::{Index, IndexMut};
 
