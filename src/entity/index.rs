@@ -17,6 +17,7 @@
 //! Design inspired by https://crates.io/crates/la-arena.
 
 use core::{
+    cmp::Ordering,
     fmt,
     hash::{Hash, Hasher},
     marker::PhantomData,
@@ -91,6 +92,7 @@ impl<T> Clone for Idx<T> {
         *self
     }
 }
+
 impl<T> Copy for Idx<T> {}
 
 impl<T> PartialEq for Idx<T> {
@@ -98,7 +100,20 @@ impl<T> PartialEq for Idx<T> {
         self.raw == other.raw
     }
 }
+
 impl<T> Eq for Idx<T> {}
+
+impl<T> PartialOrd for Idx<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.into_raw().partial_cmp(&other.into_raw())
+    }
+}
+
+impl<T> Ord for Idx<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.into_raw().cmp(&other.into_raw())
+    }
+}
 
 impl<T> Hash for Idx<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
