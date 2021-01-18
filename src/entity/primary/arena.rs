@@ -14,7 +14,9 @@
 
 use super::iter::{Entities, EntitiesMut, Indices, Iter, IterMut};
 use crate::entity::{Idx, RawIdx};
-use core::ops::{Index, IndexMut};
+use core::{
+    ops::{Index, IndexMut},
+};
 
 /// Primary map to create new entities and store required data for them.
 ///
@@ -68,14 +70,21 @@ impl<T> EntityArena<T> {
         self.entities.is_empty()
     }
 
+    /// Converts a typed index into a `usize` to be used as slice or array index.
+    fn idx_to_usize(index: Idx<T>) -> usize {
+        index.into_raw().into_u32() as usize
+    }
+
     /// Returns a shared reference to the entity at the index if any.
     pub fn get(&self, index: Idx<T>) -> Option<&T> {
-        self.entities.get(index.into_raw().into_u32() as usize)
+        let index = Self::idx_to_usize(index);
+        self.entities.get(index)
     }
 
     /// Returns an exclusive reference to the entity at the index if any.
     pub fn get_mut(&mut self, index: Idx<T>) -> Option<&mut T> {
-        self.entities.get_mut(index.into_raw().into_u32() as usize)
+        let index = Self::idx_to_usize(index);
+        self.entities.get_mut(index)
     }
 
     /// Returns an iterator over the indices of the stored entities.
@@ -108,12 +117,14 @@ impl<T> Index<Idx<T>> for EntityArena<T> {
     type Output = T;
 
     fn index(&self, index: Idx<T>) -> &Self::Output {
-        self.get(index).expect("invalid index for entitiy")
+        let index = Self::idx_to_usize(index);
+        &self.entities[index]
     }
 }
 
 impl<T> IndexMut<Idx<T>> for EntityArena<T> {
     fn index_mut(&mut self, index: Idx<T>) -> &mut Self::Output {
-        self.get_mut(index).expect("invalid key for entity")
+        let index = Self::idx_to_usize(index);
+        &mut self.entities[index]
     }
 }
