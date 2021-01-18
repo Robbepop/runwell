@@ -19,11 +19,13 @@
 
 pub mod primary;
 pub mod secondary;
+mod index;
 
 #[cfg(test)]
 mod tests;
 
 pub use self::{
+    index::{Idx, RawIdx},
     primary::EntityArena,
     secondary::{ComponentMap, ComponentVec},
 };
