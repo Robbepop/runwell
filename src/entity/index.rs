@@ -14,7 +14,7 @@
 
 //! Index types to operate on primary and secondary entity data structures.
 //!
-//! Design inspired by https://crates.io/crates/la-arena.
+//! Design inspired by <https://crates.io/crates/la-arena>.
 
 use core::{
     cmp::Ordering,
