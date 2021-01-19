@@ -31,7 +31,7 @@ pub struct InstructionData {
     pub instr: Instruction,
     /// The value that is associated with the instruction.
     ///
-    /// This is optional since some instructions such as `load` do not have
+    /// This is optional since some instructions such as `store` do not have
     /// an associated value since they are technically not in pure SSA form.
     pub value: Option<Value>,
 }
