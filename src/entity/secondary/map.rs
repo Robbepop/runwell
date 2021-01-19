@@ -19,7 +19,13 @@ use core::{
     ops::{Index, IndexMut},
 };
 use std::collections::{
-    hash_map::{self, Iter as HashMapIter, IterMut as HashMapIterMut},
+    hash_map::{
+        self,
+        Iter as HashMapIter,
+        IterMut as HashMapIterMut,
+        Values as HashMapValues,
+        ValuesMut as HashMapValuesMut,
+    },
     HashMap,
 };
 
@@ -115,6 +121,20 @@ impl<K, V> ComponentMap<K, V> {
     /// Returns a exclusive reference to the component at the given key.
     pub fn get_mut(&mut self, key: Idx<K>) -> Option<&mut V> {
         self.components.get_mut(&key.into_raw())
+    }
+
+    /// Returns an iterator over shared references to the components.
+    pub fn components(&self) -> Components<V> {
+        Components {
+            iter: self.components.values(),
+        }
+    }
+
+    /// Returns an iterator over mutable references to the components.
+    pub fn components_mut(&mut self) -> ComponentsMut<V> {
+        ComponentsMut {
+            iter: self.components.values_mut(),
+        }
     }
 
     /// Returns an iterator over the keys and a shared reference to their associated components.
@@ -305,6 +325,48 @@ impl<K, V> IndexMut<Idx<K>> for ComponentMap<K, V> {
             .expect("invalid key for sparsely stored component")
     }
 }
+
+/// Iterator yielding shared references to the components.
+#[derive(Debug)]
+pub struct Components<'a, V> {
+    iter: HashMapValues<'a, RawIdx, V>,
+}
+
+impl<'a, V> Iterator for Components<'a, V> {
+    type Item = &'a V;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+impl<'a, V> ExactSizeIterator for Components<'a, V> {}
+impl<'a, V> FusedIterator for Components<'a, V> {}
+
+/// Iterator yielding mutable references to the components.
+#[derive(Debug)]
+pub struct ComponentsMut<'a, V> {
+    iter: HashMapValuesMut<'a, RawIdx, V>,
+}
+
+impl<'a, V> Iterator for ComponentsMut<'a, V> {
+    type Item = &'a mut V;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+impl<'a, V> ExactSizeIterator for ComponentsMut<'a, V> {}
+impl<'a, V> FusedIterator for ComponentsMut<'a, V> {}
 
 /// Iterator yielding keys and a shared reference to their associated components.
 #[derive(Debug)]

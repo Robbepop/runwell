@@ -18,6 +18,7 @@ use core::{
     marker::PhantomData,
     mem::replace,
     ops::{Index, IndexMut},
+    slice::{Iter as SliceIter, IterMut as SliceIterMut},
 };
 
 /// Dense secondary map to associated new components for existing entities.
@@ -161,6 +162,22 @@ impl<K, V> ComponentVec<K, V> {
         self.components
             .get_mut(Self::key_to_index(key))
             .and_then(Into::into)
+    }
+
+    /// Returns an iterator over shared references to the components.
+    pub fn components(&self) -> Components<V> {
+        Components {
+            iter: self.components.iter(),
+            remaining: 0,
+        }
+    }
+
+    /// Returns an iterator over mutable references to the components.
+    pub fn components_mut(&mut self) -> ComponentsMut<V> {
+        ComponentsMut {
+            iter: self.components.iter_mut(),
+            remaining: 0,
+        }
     }
 
     /// Returns an iterator over the keys and shared references to their associated data.
@@ -362,6 +379,78 @@ impl<K, V> IndexMut<Idx<K>> for ComponentVec<K, V> {
             .expect("invalid key for densely stored component")
     }
 }
+
+/// Iterator yielding shared references to the components.
+#[derive(Debug)]
+pub struct Components<'a, V> {
+    iter: SliceIter<'a, Option<V>>,
+    remaining: usize,
+}
+
+impl<'a, V> Iterator for Components<'a, V> {
+    type Item = &'a V;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if self.remaining == 0 {
+                return None
+            }
+            match self.iter.next() {
+                Some(maybe_component) => {
+                    if let Some(component) = maybe_component {
+                        self.remaining -= 1;
+                        return Some(component)
+                    }
+                    continue
+                }
+                None => return None,
+            }
+        }
+    }
+}
+
+impl<'a, V> ExactSizeIterator for Components<'a, V> {}
+impl<'a, V> FusedIterator for Components<'a, V> {}
+
+/// Iterator yielding mutable references to the components.
+#[derive(Debug)]
+pub struct ComponentsMut<'a, V> {
+    iter: SliceIterMut<'a, Option<V>>,
+    remaining: usize,
+}
+
+impl<'a, V> Iterator for ComponentsMut<'a, V> {
+    type Item = &'a mut V;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if self.remaining == 0 {
+                return None
+            }
+            match self.iter.next() {
+                Some(maybe_component) => {
+                    if let Some(component) = maybe_component {
+                        self.remaining -= 1;
+                        return Some(component)
+                    }
+                    continue
+                }
+                None => return None,
+            }
+        }
+    }
+}
+
+impl<'a, V> ExactSizeIterator for ComponentsMut<'a, V> {}
+impl<'a, V> FusedIterator for ComponentsMut<'a, V> {}
 
 /// Iterator yielding contained keys and shared references to their components.
 #[derive(Debug)]
