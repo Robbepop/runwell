@@ -79,18 +79,16 @@ where
     V: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        if self.len() != other.len() {
+        if self.len_some != other.len_some {
             return false
         }
-        self.iter().zip(other.iter()).all(|((k1, v1), (k2, v2))| {
-            k1.into_raw() == k2.into_raw() && v1 == v2
-        })
+        self.components.eq(&other.components)
     }
 }
 
 impl<K, V> Eq for ComponentVec<K, V> where V: Eq {}
 
-impl<K, V> ComponentVec<K, V> {
+impl<K, V> ComponentVec<Idx<K>, V> {
     /// Converts the given key to the associated index.
     fn key_to_index(key: Idx<K>) -> usize {
         key.into_raw().into_u32() as usize
@@ -280,7 +278,7 @@ where
 /// A view into an occupied entry in a `ComponentVec`. It is part of the `Entry` enum.
 #[derive(Debug)]
 pub struct OccupiedEntry<'a, K, V> {
-    vec: &'a mut ComponentVec<K, V>,
+    vec: &'a mut ComponentVec<Idx<K>, V>,
     key: Idx<K>,
 }
 
@@ -302,7 +300,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
 
     /// Gets a reference to the value in the entry.
     pub fn get(&self) -> &V {
-        self.vec.components[<ComponentVec<K, V>>::key_to_index(self.key)]
+        self.vec.components[<ComponentVec<Idx<K>, V>>::key_to_index(self.key)]
             .as_ref()
             .expect(UNEXPECTED_VACANT_COMPONENT)
     }
@@ -312,7 +310,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
     /// If you need a reference to the `OccupiedEntry` which may outlive the
     /// destruction of the `Entry` value, see `into_mut`.
     pub fn get_mut(&mut self) -> &mut V {
-        self.vec.components[<ComponentVec<K, V>>::key_to_index(self.key)]
+        self.vec.components[<ComponentVec<Idx<K>, V>>::key_to_index(self.key)]
             .as_mut()
             .expect(UNEXPECTED_VACANT_COMPONENT)
     }
@@ -322,7 +320,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
     ///
     /// If you need multiple references to the `OccupiedEntry`, see `get_mut`.
     pub fn into_mut(self) -> &'a mut V {
-        self.vec.components[<ComponentVec<K, V>>::key_to_index(self.key)]
+        self.vec.components[<ComponentVec<Idx<K>, V>>::key_to_index(self.key)]
             .as_mut()
             .expect(UNEXPECTED_VACANT_COMPONENT)
     }
@@ -345,7 +343,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
 /// A view into a vacant entry in a `ComponentVec`. It is part of the `Entry` enum.
 #[derive(Debug)]
 pub struct VacantEntry<'a, K, V> {
-    vec: &'a mut ComponentVec<K, V>,
+    vec: &'a mut ComponentVec<Idx<K>, V>,
     key: Idx<K>,
 }
 
@@ -358,13 +356,13 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
     /// Sets the value of the entry with the VacantEntry's key, and returns a mutable reference to it.
     pub fn insert(self, value: V) -> &'a mut V {
         self.vec.insert(self.key, value);
-        self.vec.components[<ComponentVec<K, V>>::key_to_index(self.key)]
+        self.vec.components[<ComponentVec<Idx<K>, V>>::key_to_index(self.key)]
             .as_mut()
             .expect("unexpected missing component that has just been inserted")
     }
 }
 
-impl<K, V> Index<Idx<K>> for ComponentVec<K, V> {
+impl<K, V> Index<Idx<K>> for ComponentVec<Idx<K>, V> {
     type Output = V;
 
     fn index(&self, index: Idx<K>) -> &Self::Output {
@@ -373,7 +371,7 @@ impl<K, V> Index<Idx<K>> for ComponentVec<K, V> {
     }
 }
 
-impl<K, V> IndexMut<Idx<K>> for ComponentVec<K, V> {
+impl<K, V> IndexMut<Idx<K>> for ComponentVec<Idx<K>, V> {
     fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
         self.get_mut(index)
             .expect("invalid key for densely stored component")

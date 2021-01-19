@@ -74,18 +74,13 @@ where
     V: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        if self.len() != other.len() {
-            return false
-        }
-        self.iter().all(|(k, v)| {
-            other.get(k).map_or(false, |component| *v == *component)
-        })
+        self.components.eq(&other.components)
     }
 }
 
 impl<K, V> Eq for ComponentMap<K, V> where V: Eq {}
 
-impl<K, V> ComponentMap<K, V> {
+impl<K, V> ComponentMap<Idx<K>, V> {
     /// Returns `true` if the key is valid for the secondary map.
     ///
     /// If the key is invalid the secondary map has to be enlarged to fit the key.
@@ -310,7 +305,7 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
     }
 }
 
-impl<K, V> Index<Idx<K>> for ComponentMap<K, V> {
+impl<K, V> Index<Idx<K>> for ComponentMap<Idx<K>, V> {
     type Output = V;
 
     fn index(&self, index: Idx<K>) -> &Self::Output {
@@ -319,7 +314,7 @@ impl<K, V> Index<Idx<K>> for ComponentMap<K, V> {
     }
 }
 
-impl<K, V> IndexMut<Idx<K>> for ComponentMap<K, V> {
+impl<K, V> IndexMut<Idx<K>> for ComponentMap<Idx<K>, V> {
     fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
         self.get_mut(index)
             .expect("invalid key for sparsely stored component")

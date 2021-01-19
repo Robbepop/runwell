@@ -178,11 +178,17 @@ macro_rules! unit_test_secondary {
 }
 
 mod map {
-    type TestComponentMap = super::ComponentMap<super::TestEntity, char>;
+    use super::{ComponentMap, TestEntity};
+    use crate::entity::Idx;
+
+    type TestComponentMap = ComponentMap<Idx<TestEntity>, char>;
     unit_test_secondary!(TestComponentMap);
 }
 
 mod vec {
-    type TestComponentVec = super::ComponentVec<super::TestEntity, char>;
+    use super::{ComponentVec, TestEntity};
+    use crate::entity::Idx;
+
+    type TestComponentVec = ComponentVec<Idx<TestEntity>, char>;
     unit_test_secondary!(TestComponentVec);
 }
