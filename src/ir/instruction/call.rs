@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::Value,
+    ir::primitive::Value,
     parse2::{FunctionId, FunctionTypeId, TableId},
 };
 use core::fmt::Display;

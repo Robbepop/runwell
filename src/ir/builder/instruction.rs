@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{function::state, FunctionBuilder};
-use crate::ir::{instruction::Instruction, Block, IrError};
+use super::{state, FunctionBuilder};
+use crate::{
+    entity::Idx,
+    ir::{instruction::Instruction, primitive::Block, IrError},
+};
 
-define_id_type! {
-    /// A reference to an SSA instruction.
-    ///
-    /// Used to identify and operate on unique instruction within an SSA graph.
-    pub struct Instr;
-}
+/// An instruction entity of the Runwell IR.
+#[derive(Debug)]
+pub enum InstructionEntity {}
+
+/// The unique index of a basic block entity of the Runwell IR.
+pub type Instr = Idx<InstructionEntity>;
 
 #[derive(Debug)]
 pub struct FunctionInstrBuilder<'a> {

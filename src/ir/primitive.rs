@@ -19,21 +19,35 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
+use crate::entity::Idx;
 use crate::parse2::{self, F32, F64};
 use derive_more::{Display, From};
+use core::fmt;
 
-define_id_type! {
-    /// The unique index of a basic block within a translated Runwell function.
-    #[derive(Display)]
-    #[display(fmt = "bb{}", "self.index.get()")]
-    pub struct Block;
+/// A basic block entity of the Runwell IR.
+#[derive(Debug)]
+pub enum BlockEntity {}
+
+/// An SSA value entity of the Runwell IR.
+#[derive(Debug)]
+pub enum ValueEntity {}
+
+/// The unique index of a basic block entity of the Runwell IR.
+pub type Block = Idx<BlockEntity>;
+
+impl fmt::Display for Block {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "bb{}", self.into_raw())
+    }
 }
 
-define_id_type! {
-    /// An SSA value binding used for local and global value numbering.
-    #[derive(Display)]
-    #[display(fmt = "v{}", "self.index.get()")]
-    pub struct Value;
+/// The unique index of a value entity of the Runwell IR.
+pub type Value = Idx<ValueEntity>;
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "v{}", self.into_raw())
+    }
 }
 
 /// Any Runwell supported primitive type.

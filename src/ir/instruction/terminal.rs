@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{Block, Value};
+use crate::ir::primitive::{Block, Value};
 use core::fmt::Display;
 use derive_more::{Display, From};
 

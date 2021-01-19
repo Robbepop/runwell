@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::{IrError, WasmError};
-use crate::ir::Value;
+use crate::ir::primitive::Value;
 
 /// Stack of values used for the Wasm emulation stack.
 #[derive(Debug, Default, PartialEq, Eq)]

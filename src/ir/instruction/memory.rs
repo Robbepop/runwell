@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::{Type, Value},
+    ir::primitive::{Type, Value},
     parse2::LinearMemoryId,
 };
 use derive_more::Display;

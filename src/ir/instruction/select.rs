@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{Type, Value};
+use crate::ir::primitive::{Type, Value};
 use derive_more::Display;
 
 /// Choose a value based on a condition without IR-level branching.

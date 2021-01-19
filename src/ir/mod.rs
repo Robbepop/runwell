@@ -15,24 +15,14 @@
 mod builder;
 mod error;
 mod instruction;
-mod primitives;
+pub mod primitive;
 mod wasm;
 
-use self::builder::{Instr, Variable};
+use self::builder::Variable;
 pub use self::{
     builder::FunctionBuilderError,
     error::IrError,
     instruction::Alignment,
-    primitives::{
-        Block,
-        Const,
-        FloatConst,
-        FloatType,
-        IntConst,
-        IntType,
-        Type,
-        Value,
-    },
     wasm::{translate_wasm, WasmError},
 };
 

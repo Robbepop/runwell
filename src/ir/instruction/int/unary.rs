@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{IntType, Value};
+use crate::ir::primitive::{IntType, Value};
 use core::fmt::Display;
 
 /// Operand for unary integer instructions.

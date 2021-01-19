@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{Block, Type, Value, Variable};
+use crate::ir::{
+    primitive::{Block, Type, Value},
+    Variable,
+};
 use derive_more::{Display, Error};
 
 /// Errors that might occure upon building up a Runwell IR function.

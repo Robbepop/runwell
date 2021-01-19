@@ -13,39 +13,44 @@
 // limitations under the License.
 
 use crate::{
+    entity::{secondary::map::Entry, ComponentMap, Idx, RawIdx},
     ir::{
         builder::VariableAccess,
-        Block,
+        primitive::{Block, Type, Value},
         FunctionBuilderError,
         IrError,
-        Type,
-        Value,
     },
-    Index32,
 };
-use derive_more::{Display, From};
-use std::collections::{hash_map::Entry, HashMap};
+use core::fmt;
+use derive_more::From;
 
-define_id_type! {
-    /// Represents a unique variable from the input language.
-    ///
-    /// Used to translate a foreign language into SSA form.
-    ///
-    /// # Note
-    ///
-    /// In the context of Wasm such variables are local variables that can
-    /// be operated on using `local.set`, `local.get` and `local.tee`. Those
-    /// operations are not in SSA form and we use the `Variable` index type
-    /// in order to translate them to their SSA forms.
-    ///
-    /// # Example
-    ///
-    /// Since in Wasm all local variables in a function are uniquely identified
-    /// by their local index we can simply take this local index and map it
-    /// onto the `Variable` index space.
-    #[derive(Display)]
-    #[display(fmt = "var({})", "self.index.get()")]
-    pub struct Variable;
+/// A variable entity of the Runwell IR.
+///
+/// Represents a unique variable from the input language.
+/// Used to translate a foreign language into SSA form.
+///
+/// # Note
+///
+/// In the context of Wasm such variables are local variables that can
+/// be operated on using `local.set`, `local.get` and `local.tee`. Those
+/// operations are not in SSA form and we use the `Variable` index type
+/// in order to translate them to their SSA forms.
+///
+/// # Example
+///
+/// Since in Wasm all local variables in a function are uniquely identified
+/// by their local index we can simply take this local index and map it
+/// onto the `Variable` index space.
+#[derive(Debug)]
+pub enum VariableEntity {}
+
+/// The unique index of a basic block entity of the Runwell IR.
+pub type Variable = Idx<VariableEntity>;
+
+impl fmt::Display for Variable {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "var({})", self.into_raw())
+    }
 }
 
 /// Used to translate variables of some source language into Runwell IR SSA values.
@@ -113,7 +118,7 @@ pub struct VariableTranslator {
     /// # Note
     ///
     /// This map is initialized lazily during the first assignment of each variable.
-    var_to_defs: HashMap<Variable, VariableDefs>,
+    var_to_defs: ComponentMap<Variable, VariableDefs>,
 }
 
 /// Space efficient storage for variable declarations and their declared types.
@@ -137,7 +142,7 @@ struct VariableDecl {
 #[derive(Debug)]
 struct VariableDefs {
     /// All definitions for the variable per basic block.
-    defs: HashMap<Block, Value>,
+    defs: ComponentMap<Block, Value>,
     /// The type of the variable given upon its declaration.
     ty: Type,
 }
@@ -146,7 +151,7 @@ impl VariableDefs {
     /// Create a new entry for variable definitions.
     pub fn new(ty: Type) -> Self {
         Self {
-            defs: HashMap::new(),
+            defs: ComponentMap::default(),
             ty,
         }
     }
@@ -155,13 +160,13 @@ impl VariableDefs {
 /// The value definitions of a variable for every basic block.
 #[derive(Debug, Copy, Clone, From)]
 pub struct VariableDefinitions<'a> {
-    defs: &'a HashMap<Block, Value>,
+    defs: &'a ComponentMap<Block, Value>,
 }
 
 impl<'a> VariableDefinitions<'a> {
     /// Returns the value written to the variable for the given block if any.
     pub fn for_block(self, block: Block) -> Option<Value> {
-        self.defs.get(&block).copied()
+        self.defs.get(block).copied()
     }
 }
 
@@ -173,7 +178,7 @@ impl VariableTranslator {
 
     /// Returns `true` if the variable has been declared.
     fn is_declared(&self, var: Variable) -> bool {
-        var.into_u32() < self.len_vars
+        var.into_raw() < RawIdx::from_u32(self.len_vars)
     }
 
     /// Ensures that the variable has been declared.
@@ -246,7 +251,7 @@ impl VariableTranslator {
         if amount == 1 {
             // As an optimization we directly initialize the definition of the
             // variable to avoid the binary search for it upon its first assignmnet.
-            let var = Variable::from_u32(offset);
+            let var = Variable::from_raw(RawIdx::from_u32(offset));
             let old_def = self.var_to_defs.insert(var, VariableDefs::new(ty));
             debug_assert!(old_def.is_none());
         }
@@ -297,10 +302,10 @@ impl VariableTranslator {
                 // First figure out the type of the variable declaration,
                 // then check if type of new assignment matches and finally
                 // update the variable assignment.
-                let target = var.into_u32();
-                let declared_type = match var_to_type
-                    .binary_search_by(|decl| target.cmp(&decl.offset))
-                {
+                let target = var.into_raw();
+                let declared_type = match var_to_type.binary_search_by(|decl| {
+                    target.cmp(&RawIdx::from_u32(decl.offset))
+                }) {
                     Ok(index) => var_to_type[index].ty,
                     Err(index) => var_to_type[index - 1].ty,
                 };
@@ -328,7 +333,7 @@ impl VariableTranslator {
     ) -> Result<VariableDefinitions, IrError> {
         self.ensure_declared(var, VariableAccess::Read)?;
         self.var_to_defs
-            .get(&var)
+            .get(var)
             .map(|entry| VariableDefinitions { defs: &entry.defs })
             .ok_or(FunctionBuilderError::ReadBeforeWriteVariable {
                 variable: var,

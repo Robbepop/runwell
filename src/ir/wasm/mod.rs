@@ -19,14 +19,12 @@ pub use self::error::WasmError;
 use super::{
     instr::Instruction,
     instruction::{BinaryIntInstr, BinaryIntOp, SelectInstr},
-    Block,
-    IntType,
+    primitive::{Block, IntType, Type, Value},
     IrError,
-    Type,
-    Value,
 };
 use crate::{
     builder::ModuleResource,
+    entity::RawIdx,
     ir::instr::ConstInstr,
     parse2::{
         FunctionBody,
@@ -35,7 +33,6 @@ use crate::{
         LocalsIter,
         OperatorsIter,
     },
-    Index32,
 };
 use derive_more::Display;
 use stack::ValueStack;
@@ -111,7 +108,7 @@ pub struct BasicBlocks {
 impl Default for BasicBlocks {
     fn default() -> Self {
         let mut blocks = HashMap::new();
-        let entry_block = Block::from_u32(0);
+        let entry_block = Block::from_raw(RawIdx::from_u32(0));
         blocks.insert(entry_block, BasicBlock::default());
         Self {
             len_blocks: 1,

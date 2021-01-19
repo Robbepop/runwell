@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{FloatType, Value};
+use crate::ir::primitive::{FloatType, Value};
 use core::fmt::Display;
 
 /// Unary floating point instruction operand.

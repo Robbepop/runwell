@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::{Const, FloatConst, IntConst, Type},
+    ir::primitive::{Const, FloatConst, IntConst, Type},
     parse2::{F32, F64},
 };
 use derive_more::Display;

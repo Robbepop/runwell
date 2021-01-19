@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{FloatType, IntType, Value};
+use crate::ir::primitive::{FloatType, IntType, Value};
 use derive_more::Display;
 
 /// Truncates the integer value from source type to destination type.
