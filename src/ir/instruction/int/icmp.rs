@@ -18,7 +18,7 @@ use derive_more::Display;
 
 /// Compares two integers by the associated operand.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum IcompareOp {
+pub enum CompareIntOp {
     /// Equals operator.
     Eq,
     /// Not equals operator.
@@ -41,7 +41,7 @@ pub enum IcompareOp {
     Sgt,
 }
 
-impl Display for IcompareOp {
+impl Display for CompareIntOp {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let repr = match self {
             Self::Eq => "eq",
@@ -63,16 +63,36 @@ impl Display for IcompareOp {
 /// Instruction to compare two integer values with respect to some comparison operator.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "icmp.{} type {}, lhs {}, rhs {}", op, ty, lhs, rhs)]
-pub struct IcompareInstr {
-    op: IcompareOp,
+pub struct CompareIntInstr {
+    op: CompareIntOp,
     ty: IntType,
     lhs: Value,
     rhs: Value,
 }
 
-impl IcompareInstr {
+impl CompareIntInstr {
     /// Creates a new integer comparison instruction.
-    pub fn new(op: IcompareOp, ty: IntType, lhs: Value, rhs: Value) -> Self {
+    pub fn new(op: CompareIntOp, ty: IntType, lhs: Value, rhs: Value) -> Self {
         Self { op, ty, lhs, rhs }
+    }
+
+    /// Returns the compare operand of the instruction.
+    pub fn op(&self) -> CompareIntOp {
+        self.op
+    }
+
+    /// Returns the left-hand side value.
+    pub fn lhs(&self) -> Value {
+        self.lhs
+    }
+
+    /// Returns the right-hand side value.
+    pub fn rhs(&self) -> Value {
+        self.rhs
+    }
+
+    /// Returns the integer type of the instruction.
+    pub fn ty(&self) -> IntType {
+        self.ty
     }
 }

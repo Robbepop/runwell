@@ -13,104 +13,66 @@
 // limitations under the License.
 
 use crate::ir::{IntType, Value};
-use core::{fmt::Display, marker::PhantomData};
+use core::fmt::Display;
+
+/// Operand for unary integer instructions.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnaryIntOp {
+    /// Counts the number of leading zero bits in the source integer value.
+    IleadingZerosInstr,
+    /// Counts the number of trailing zero bits in the source integer value.
+    ItrailingZerosInstr,
+    /// Counts the number of set `1` bits in the source integer value.
+    IpopCountInstr,
+}
+
+impl Display for UnaryIntOp {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let repr = match self {
+            Self::IleadingZerosInstr => "ileading_zeros",
+            Self::ItrailingZerosInstr => "itrailing_zeros",
+            Self::IpopCountInstr => "ipopcount",
+        };
+        write!(f, "{}", repr)?;
+        Ok(())
+    }
+}
 
 /// The base of all unary integer instructions.
 ///
 /// Generic over a concrete unary integer operand.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct UnaryIntInstr<T>
-where
-    T: UnaryIntOperand,
-{
+pub struct UnaryIntInstr {
+    op: UnaryIntOp,
     ty: IntType,
     src: Value,
-    marker: PhantomData<fn() -> T>,
 }
 
-impl<T> Display for UnaryIntInstr<T>
-where
-    T: UnaryIntOperand,
-{
+impl Display for UnaryIntInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(
-            f,
-            "{} type {}, source {}",
-            <T as UnaryIntOperand>::DISPLAY_REPR,
-            self.ty,
-            self.src
-        )?;
+        write!(f, "{} type {}, source {}", self.op, self.ty, self.src)?;
         Ok(())
     }
 }
 
-impl<T> UnaryIntInstr<T>
-where
-    T: UnaryIntOperand,
-{
+impl UnaryIntInstr {
     /// Creates a new unary integer instruction of the given type operating on the given value.
-    fn new(ty: IntType, src: Value) -> Self {
-        Self {
-            ty,
-            src,
-            marker: Default::default(),
-        }
+    fn new(op: UnaryIntOp, ty: IntType, src: Value) -> Self {
+        Self { op, ty, src }
+    }
+
+    /// Returns the unary operand of the instruction.
+    pub fn op(&self) -> UnaryIntOp {
+        self.op
     }
 
     /// Returns the integer type of the return value.
-    fn ty(&self) -> &IntType {
+    pub fn ty(&self) -> &IntType {
         &self.ty
     }
 
     /// Returns the source value of the instruction.
-    fn src(&self) -> &Value {
+    pub fn src(&self) -> &Value {
         &self.src
     }
 }
-
-mod operands {
-    /// Types implementing this trait are unary integer instruction operands.
-    pub trait UnaryIntOperand: Sealed {
-        /// A string representation for `Display` trait implementations.
-        const DISPLAY_REPR: &'static str;
-    }
-    pub trait Sealed {}
-
-    macro_rules! impl_unary_int_operand {
-        ( $( #[$attr:meta] )* struct $name:ident($display_repr:literal); ) => {
-            $( #[$attr] )*
-            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-            pub enum $name {}
-
-            impl UnaryIntOperand for $name {
-                const DISPLAY_REPR: &'static str = $display_repr;
-            }
-            impl Sealed for $name {}
-        };
-    }
-
-    impl_unary_int_operand! {
-        /// Unary operand for counting the leading zeros in an integer.
-        struct LeadingZeros("ileading_zeros");
-    }
-
-    impl_unary_int_operand! {
-        /// Unary operand for counting the trailing zeros in an integer.
-        struct TrailingZeros("itrailing_zeros");
-    }
-
-    impl_unary_int_operand! {
-        /// Unary operand for counting the number of `1` bits in an integer.
-        struct PopCount("ipopcount");
-    }
-}
-use self::operands::UnaryIntOperand;
-
-/// Counts the number of leading zero bits in the source integer value.
-pub type IleadingZerosInstr = UnaryIntInstr<operands::LeadingZeros>;
-
-/// Counts the number of trailing zero bits in the source integer value.
-pub type ItrailingZerosInstr = UnaryIntInstr<operands::TrailingZeros>;
-
-/// Counts the number of set `1` bits in the source integer value.
-pub type IpopCountInstr = UnaryIntInstr<operands::PopCount>;

@@ -42,6 +42,11 @@ impl ReturnInstr {
     pub fn new(return_value: Value) -> Self {
         Self { return_value }
     }
+
+    /// Returns the value that is returned by the instruction.
+    pub fn return_value(&self) -> Value {
+        self.return_value
+    }
 }
 
 /// Unconditionally branches to another basic block.
@@ -55,6 +60,11 @@ impl BranchInstr {
     /// Creates a new branch instruction branching to the given basic block.
     pub fn new(target: Block) -> Self {
         Self { target }
+    }
+
+    /// Returns the target block to jump to.
+    pub fn target(&self) -> Block {
+        self.target
     }
 }
 
@@ -80,6 +90,21 @@ impl IfThenElseInstr {
             br_then,
             br_else,
         }
+    }
+
+    /// Returns the condition value of the if-then-else instruction.
+    pub fn condition(&self) -> Value {
+        self.condition
+    }
+
+    /// Returns the block to jump to in case the condition evaluates to `true`.
+    pub fn true_target(&self) -> Block {
+        self.br_then
+    }
+
+    /// Returns the block to jump to in case the condition evaluates to `false`.
+    pub fn false_target(&self) -> Block {
+        self.br_else
     }
 }
 

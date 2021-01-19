@@ -18,7 +18,7 @@ mod stack;
 pub use self::error::WasmError;
 use super::{
     instr::Instruction,
-    instruction::{IaddInstr, ImulInstr, SdivInstr, SelectInstr, UdivInstr},
+    instruction::{BinaryIntInstr, BinaryIntOp, SelectInstr},
     Block,
     IntType,
     IrError,
@@ -244,25 +244,45 @@ impl ValueNumbering {
             }
             Operator::I32Add => {
                 self.process_binary_instruction(resource, |lhs, rhs| {
-                    IaddInstr::new(IntType::I32, lhs, rhs)
+                    BinaryIntInstr::new(
+                        BinaryIntOp::Add,
+                        IntType::I32,
+                        lhs,
+                        rhs,
+                    )
                 })
                 .expect("i32.add: missing stack values");
             }
             Operator::I32Mul => {
                 self.process_binary_instruction(resource, |lhs, rhs| {
-                    ImulInstr::new(IntType::I32, lhs, rhs)
+                    BinaryIntInstr::new(
+                        BinaryIntOp::Mul,
+                        IntType::I32,
+                        lhs,
+                        rhs,
+                    )
                 })
                 .expect("i32.mul: missing stack values");
             }
             Operator::I32DivS => {
                 self.process_binary_instruction(resource, |lhs, rhs| {
-                    SdivInstr::new(IntType::I32, lhs, rhs)
+                    BinaryIntInstr::new(
+                        BinaryIntOp::Sdiv,
+                        IntType::I32,
+                        lhs,
+                        rhs,
+                    )
                 })
                 .expect("i32.divs: missing stack values");
             }
             Operator::I32DivU => {
                 self.process_binary_instruction(resource, |lhs, rhs| {
-                    UdivInstr::new(IntType::I32, lhs, rhs)
+                    BinaryIntInstr::new(
+                        BinaryIntOp::Udiv,
+                        IntType::I32,
+                        lhs,
+                        rhs,
+                    )
                 })
                 .expect("i32.divu: missing stack values");
             }

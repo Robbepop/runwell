@@ -23,20 +23,41 @@ use derive_more::Display;
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "fdemote {} -> {}, source {}", src_type, dst_type, src)]
-pub struct FdemoteInstr {
+pub struct DemoteFloatInstr {
     src_type: FloatType,
     dst_type: FloatType,
     src: Value,
 }
 
-impl FdemoteInstr {
+impl DemoteFloatInstr {
     /// Creates a new float demote instruction.
+    ///
+    /// # Panics
+    ///
+    /// If the destination floating point number type has a bit width greater
+    /// than the source floating point number type.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
+        assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,
             dst_type,
             src,
         }
+    }
+
+    /// Returns the source floating point number type before demotion.
+    pub fn src_type(&self) -> FloatType {
+        self.src_type
+    }
+
+    /// Returns the target floating point number type after demotion.
+    pub fn dst_type(&self) -> FloatType {
+        self.dst_type
+    }
+
+    /// Returns the source floating point value of the demotion.
+    pub fn src(&self) -> Value {
+        self.src
     }
 }
 
@@ -48,86 +69,51 @@ impl FdemoteInstr {
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "fpromote {} -> {}, source {}", src_type, dst_type, src)]
-pub struct FpromoteInstr {
+pub struct PromoteFloatInstr {
     src_type: FloatType,
     dst_type: FloatType,
     src: Value,
 }
 
-impl FpromoteInstr {
+impl PromoteFloatInstr {
     /// Creates a new float promote instruction.
+    ///
+    /// # Panics
+    ///
+    /// If the destination floating point number type has a bit width smaller
+    /// than the source floating point number type.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
+        assert!(src_type.bit_width() <= dst_type.bit_width());
         Self {
             src_type,
             dst_type,
             src,
         }
     }
-}
 
-/// Instruction to convert a floating point number into an unsigned integer.
-///
-/// # Note
-///
-/// Truncates the given floating point number (towards zero) to cast into the integer.
-/// Interprets the integer as **unsigned** integer.
-///
-/// Truncation from floating point to integer where IEEE 754-2008 would specify an invalid
-/// operator exception (e.g. when the floating point value is NaN or outside the range which
-/// rounds to an integer in range) is handled as follows:
-///
-/// If `saturating` is `false`:
-///    - A trap is produced.
-/// If `saturating` is `true`:
-///    - No trap is produced.
-///    - If the floating-point value is positive, the maximum integer value is returned.
-///    - If the floating-point value is negative, the minimum integer value is returned.
-///    - If the floating-point value is NaN, zero is returned.
+    /// Returns the source floating point number type before promotion.
+    pub fn src_type(&self) -> FloatType {
+        self.src_type
+    }
 
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(
-    fmt = "fconvert {} -> {} unsigned, src {}, saturating {}",
-    src_type,
-    dst_type,
-    src,
-    saturating
-)]
-pub struct FtoUintInstr {
-    src_type: FloatType,
-    dst_type: IntType,
-    src: Value,
-    saturating: bool,
-}
+    /// Returns the target floating point number type after promotion.
+    pub fn dst_type(&self) -> FloatType {
+        self.dst_type
+    }
 
-impl FtoUintInstr {
-    /// Creates a new instruction converts from float to unsigned integer type.
-    ///
-    /// # Note
-    ///
-    /// The source type must have a bit width that is greater than or equal to the bit width
-    /// of the destination type.
-    pub fn new(
-        src_type: FloatType,
-        dst_type: IntType,
-        src: Value,
-        saturating: bool,
-    ) -> Self {
-        assert!(src_type.bit_width() >= dst_type.bit_width());
-        Self {
-            src_type,
-            dst_type,
-            src,
-            saturating,
-        }
+    /// Returns the source floating point value of the promotion.
+    pub fn src(&self) -> Value {
+        self.src
     }
 }
 
-/// Instruction to convert a floating point number into a signed integer.
+/// Instruction to convert a floating point number into an integer.
 ///
 /// # Note
 ///
 /// Truncates the given floating point number (towards zero) to cast into the integer.
-/// Interprets the integer as **signed** integer.
+/// Interprets the resulting integer as either a **signed** or an **unsigned** integer
+/// depending on the `dst_signed` field.
 ///
 /// Truncation from floating point to integer where IEEE 754-2008 would specify an invalid
 /// operator exception (e.g. when the floating point value is NaN or outside the range which
@@ -142,20 +128,22 @@ impl FtoUintInstr {
 ///    - If the floating-point value is NaN, zero is returned.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(
-    fmt = "fconvert {} -> {} signed, src {}, saturating {}",
+    fmt = "fconvert_{} {} -> {}, src {}, saturating {}",
+    "if self.dst_signed { 's' } else { 'u' }",
     src_type,
     dst_type,
     src,
     saturating
 )]
-pub struct FtoSintInstr {
+pub struct FloatToIntInstr {
     src_type: FloatType,
     dst_type: IntType,
+    dst_signed: bool,
     src: Value,
     saturating: bool,
 }
 
-impl FtoSintInstr {
+impl FloatToIntInstr {
     /// Creates a new instruction converts from float to signed integer type.
     ///
     /// # Note
@@ -167,6 +155,7 @@ impl FtoSintInstr {
     pub fn new(
         src_type: FloatType,
         dst_type: IntType,
+        dst_signed: bool,
         src: Value,
         saturating: bool,
     ) -> Self {
@@ -174,8 +163,34 @@ impl FtoSintInstr {
         Self {
             src_type,
             dst_type,
+            dst_signed,
             src,
             saturating,
         }
+    }
+
+    /// Returns the source floating point number type before conversion.
+    pub fn src_type(&self) -> FloatType {
+        self.src_type
+    }
+
+    /// Returns the destination integer type after conversion.
+    pub fn dst_type(&self) -> IntType {
+        self.dst_type
+    }
+
+    /// Returns the source floating point value of the conversion.
+    pub fn src(&self) -> Value {
+        self.src
+    }
+
+    /// Returns `true` if the resulting integer is interpreted as signed integer.
+    pub fn is_signed(&self) -> bool {
+        self.dst_signed
+    }
+
+    /// Returns `true` if the conversion is saturating.
+    pub fn is_saturating(&self) -> bool {
+        self.saturating
     }
 }

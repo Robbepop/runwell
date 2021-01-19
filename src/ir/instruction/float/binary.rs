@@ -13,139 +13,95 @@
 // limitations under the License.
 
 use crate::ir::{FloatType, Value};
-use core::{fmt::Display, marker::PhantomData};
+use core::fmt::Display;
+
+/// Binary floating point instruction operand.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum BinaryFloatOp {
+    /// Adds two floating point numbers.
+    Add,
+    /// Subtracts the left-hand side floating point number from the right-hand side.
+    Sub,
+    /// Multiplies two floating point numbers.
+    Mul,
+    /// Divides the right-hand side floating point number by the left-hand side.
+    Div,
+    /// Evaluates the minimum of two floating point numbers.
+    Min,
+    /// Evaluates the maximum of two floating point numbers.
+    Max,
+    /// Takes the sign of the right-hand side floating point number
+    /// and the exponent as well as the mantissa of the left-hand side
+    /// floating point number and returns the result.
+    CopySign,
+}
+
+impl Display for BinaryFloatOp {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let repr = match self {
+            Self::Add => "fadd",
+            Self::Sub => "fsub",
+            Self::Mul => "fmul",
+            Self::Div => "fdiv",
+            Self::Min => "fmin",
+            Self::Max => "fmax",
+            Self::CopySign => "fcopysign",
+        };
+        write!(f, "{}", repr)?;
+        Ok(())
+    }
+}
 
 /// The base of all binary floating point number instructions.
 ///
 /// Generic over a concrete binary floating point number operand.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct BinaryFloatInstr<T>
-where
-    T: BinaryFloatOperand,
-{
+pub struct BinaryFloatInstr {
+    op: BinaryFloatOp,
     ty: FloatType,
     lhs: Value,
     rhs: Value,
-    marker: PhantomData<fn() -> T>,
 }
 
-impl<T> Display for BinaryFloatInstr<T>
-where
-    T: BinaryFloatOperand,
-{
+impl Display for BinaryFloatInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "{} type {}, lhs {}, rhs {}",
-            <T as BinaryFloatOperand>::DISPLAY_REPR,
-            self.ty,
-            self.lhs,
-            self.rhs
+            self.op, self.ty, self.lhs, self.rhs
         )?;
         Ok(())
     }
 }
 
-mod operands {
-    /// Types implementing this trait are binary integer instruction operands.
-    pub trait BinaryFloatOperand: Sealed {
-        /// A string representation for `Display` trait implementations.
-        const DISPLAY_REPR: &'static str;
-        /// Is `true` if the operation is commutative, i.e. identical upon swapping `lhs` and `rhs`.
-        const COMMUTATIVE: bool;
-    }
-    pub trait Sealed {}
-
-    macro_rules! impl_binary_float_operand {
-        (
-            $( #[$attr:meta] )*
-            struct $name:ident {
-                commutative: $commutative:literal,
-                display_repr: $display_repr:literal
-            }
-        ) => {
-            $( #[$attr] )*
-            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-            pub enum $name {}
-
-            impl BinaryFloatOperand for $name {
-                const DISPLAY_REPR: &'static str = $display_repr;
-                const COMMUTATIVE: bool = $commutative;
-            }
-            impl Sealed for $name {}
-        };
+impl BinaryFloatInstr {
+    /// Creates a new binary floating point number instruction.
+    pub fn new(
+        op: BinaryFloatOp,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Self {
+        Self { op, ty, lhs, rhs }
     }
 
-    impl_binary_float_operand! {
-        /// Binary operand for floating point number addition.
-        struct Add {
-            commutative: true,
-            display_repr: "fadd"
-        }
+    /// Returns the floating point comparison operand of the instruction.
+    pub fn op(&self) -> BinaryFloatOp {
+        self.op
     }
-    impl_binary_float_operand! {
-        /// Binary operand for floating point number subtraction.
-        struct Sub {
-            commutative: false,
-            display_repr: "fsub"
-        }
+
+    /// Returns the left-hand side value of the compare instruction.
+    pub fn lhs(&self) -> Value {
+        self.lhs
     }
-    impl_binary_float_operand! {
-        /// Binary operand for floating point number multiplication.
-        struct Mul {
-            commutative: true,
-            display_repr: "fmul"
-        }
+
+    /// Returns the right-hand side value of the compare instruction.
+    pub fn rhs(&self) -> Value {
+        self.rhs
     }
-    impl_binary_float_operand! {
-        /// Binary operand for floating point number division.
-        struct Div {
-            commutative: false,
-            display_repr: "fdiv"
-        }
-    }
-    impl_binary_float_operand! {
-        /// Binary operand for evaluating the minimum element of two floating point numbers.
-        struct Min {
-            commutative: true,
-            display_repr: "fmin"
-        }
-    }
-    impl_binary_float_operand! {
-        /// Binary operand for evaluating the maximum element of two floating point numbers.
-        struct Max {
-            commutative: true,
-            display_repr: "fmax"
-        }
-    }
-    impl_binary_float_operand! {
-        /// Binary operand for performing the copysign operation for two floating point numbers.
-        ///
-        /// # Note
-        ///
-        /// This is a bitwise instruction; it combines the sign bit from the second operand with all
-        /// bits other than the sign bit from the first operand, even if either operand is a NaN or a zero.
-        struct Copysign {
-            commutative: false,
-            display_repr: "fcopysign"
-        }
+
+    /// Returns the type of the compare instruction.
+    pub fn ty(&self) -> FloatType {
+        self.ty
     }
 }
-use self::operands::BinaryFloatOperand;
-
-/// Adds two floating point numbers.
-pub type FaddInstr = BinaryFloatInstr<operands::Add>;
-/// Subtracts the left-hand side floating point number from the right-hand side.
-pub type FsubInstr = BinaryFloatInstr<operands::Sub>;
-/// Multiplies two floating point numbers.
-pub type FmulInstr = BinaryFloatInstr<operands::Mul>;
-/// Divides the right-hand side floating point number by the left-hand side.
-pub type FdivInstr = BinaryFloatInstr<operands::Div>;
-/// Evaluates the minimum of two floating point numbers.
-pub type FminInstr = BinaryFloatInstr<operands::Min>;
-/// Evaluates the maximum of two floating point numbers.
-pub type FmaxInstr = BinaryFloatInstr<operands::Max>;
-/// Takes the sign of the right-hand side floating point number
-/// and the exponent as well as the mantissa of the left-hand side
-/// floating point number and returns the result.
-pub type FcopysignInstr = BinaryFloatInstr<operands::Copysign>;

@@ -18,53 +18,22 @@ mod fconv;
 mod unary;
 
 pub use self::{
-    binary::{
-        BinaryFloatInstr,
-        FaddInstr,
-        FcopysignInstr,
-        FdivInstr,
-        FmaxInstr,
-        FminInstr,
-        FmulInstr,
-        FsubInstr,
-    },
-    fcmp::{FcompareInstr, FcompareOp},
-    fconv::{FdemoteInstr, FpromoteInstr, FtoSintInstr, FtoUintInstr},
-    unary::{
-        FabsInstr,
-        FceilInstr,
-        FfloorInstr,
-        FnearestInstr,
-        FnegInstr,
-        FsqrtInstr,
-        FtruncateInstr,
-        UnaryFloatInstr,
-    },
+    binary::{BinaryFloatInstr, BinaryFloatOp},
+    fcmp::{CompareFloatInstr, CompareFloatOp},
+    fconv::{DemoteFloatInstr, FloatToIntInstr, PromoteFloatInstr},
+    unary::{UnaryFloatInstr, UnaryFloatOp},
 };
 use derive_more::{Display, From};
 
 /// An SSA floating point number instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum FloatInstr {
-    Abs(FabsInstr),
-    Add(FaddInstr),
-    Ceil(FceilInstr),
-    Compare(FcompareInstr),
-    Copysign(FcopysignInstr),
-    Demote(FdemoteInstr),
-    Div(FdivInstr),
-    Floor(FfloorInstr),
-    Max(FmaxInstr),
-    Min(FminInstr),
-    Mul(FmulInstr),
-    Nearest(FnearestInstr),
-    Neg(FnegInstr),
-    Promote(FpromoteInstr),
-    Sqrt(FsqrtInstr),
-    Sub(FsubInstr),
-    ToSint(FtoSintInstr),
-    ToUint(FtoUintInstr),
-    Truncate(FtruncateInstr),
+    Unary(UnaryFloatInstr),
+    Binary(BinaryFloatInstr),
+    Compare(CompareFloatInstr),
+    Demote(DemoteFloatInstr),
+    Promote(PromoteFloatInstr),
+    FloatToInt(FloatToIntInstr),
 }
 
 macro_rules! impl_from_float_instr_for_instr {
@@ -79,23 +48,10 @@ macro_rules! impl_from_float_instr_for_instr {
     };
 }
 impl_from_float_instr_for_instr! {
-    FabsInstr,
-    FaddInstr,
-    FceilInstr,
-    FcompareInstr,
-    FcopysignInstr,
-    FdemoteInstr,
-    FdivInstr,
-    FfloorInstr,
-    FmaxInstr,
-    FminInstr,
-    FmulInstr,
-    FnearestInstr,
-    FnegInstr,
-    FpromoteInstr,
-    FsqrtInstr,
-    FsubInstr,
-    FtoSintInstr,
-    FtoUintInstr,
-    FtruncateInstr,
+    CompareFloatInstr,
+    DemoteFloatInstr,
+    PromoteFloatInstr,
+    FloatToIntInstr,
+    UnaryFloatInstr,
+    BinaryFloatInstr,
 }

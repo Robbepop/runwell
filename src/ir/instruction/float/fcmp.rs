@@ -18,7 +18,7 @@ use derive_more::Display;
 
 /// Compares two floating point numbers by the associated operand.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum FcompareOp {
+pub enum CompareFloatOp {
     /// Equals operator.
     Eq,
     /// Not equals operator.
@@ -33,7 +33,7 @@ pub enum FcompareOp {
     Gt,
 }
 
-impl Display for FcompareOp {
+impl Display for CompareFloatOp {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let repr = match self {
             Self::Eq => "eq",
@@ -51,16 +51,36 @@ impl Display for FcompareOp {
 /// A comparison instruction for comparing floating point number with respect to some operand.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "fcmp.{} type {}, lhs {}, rhs {}", op, ty, lhs, rhs)]
-pub struct FcompareInstr {
-    op: FcompareOp,
+pub struct CompareFloatInstr {
+    op: CompareFloatOp,
     ty: FloatType,
     lhs: Value,
     rhs: Value,
 }
 
-impl FcompareInstr {
+impl CompareFloatInstr {
     /// Creates a new comparison instruction for floating point numbers.
-    pub fn new(op: FcompareOp, ty: FloatType, lhs: Value, rhs: Value) -> Self {
+    pub fn new(op: CompareFloatOp, ty: FloatType, lhs: Value, rhs: Value) -> Self {
         Self { op, ty, lhs, rhs }
+    }
+
+    /// Returns the floating point comparison operand of the instruction.
+    pub fn op(&self) -> CompareFloatOp {
+        self.op
+    }
+
+    /// Returns the left-hand side value of the compare instruction.
+    pub fn lhs(&self) -> Value {
+        self.lhs
+    }
+
+    /// Returns the right-hand side value of the compare instruction.
+    pub fn rhs(&self) -> Value {
+        self.rhs
+    }
+
+    /// Returns the type of the compare instruction.
+    pub fn ty(&self) -> FloatType {
+        self.ty
     }
 }

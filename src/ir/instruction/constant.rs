@@ -65,7 +65,7 @@ impl ConstInstr {
     }
 
     /// Returns the constant value of the constant instruction.
-    pub fn const_value(&self) -> &Const {
-        &self.const_value
+    pub fn const_value(&self) -> Const {
+        self.const_value
     }
 }

@@ -22,13 +22,13 @@ use derive_more::Display;
 /// The bit width of the source type must be greater than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "itruncate {} -> {}, src {}", src_type, dst_type, src)]
-pub struct ItruncateInstr {
+pub struct TruncateIntInstr {
     src_type: IntType,
     dst_type: IntType,
     src: Value,
 }
 
-impl ItruncateInstr {
+impl TruncateIntInstr {
     /// Creates a new truncate instruction truncating src from source type to destination type.
     ///
     /// # Note
@@ -44,77 +44,130 @@ impl ItruncateInstr {
     }
 
     /// Returns the source type of the truncate instruction.
-    pub fn src_type(&self) -> &IntType {
-        &self.src_type
+    pub fn src_type(&self) -> IntType {
+        self.src_type
     }
 
     /// Returns the destination type of the truncate instruction.
-    pub fn dst_type(&self) -> &IntType {
-        &self.src_type
+    pub fn dst_type(&self) -> IntType {
+        self.dst_type
+    }
+
+    /// Returns the source of the instruction that is to be extended.
+    pub fn src(&self) -> Value {
+        self.src
     }
 }
 
-/// Zero-extends the unsigned integer value from source type to destination type.
+/// Extends the integer value from source type to destination type.
 ///
 /// # Note
 ///
 /// The bit width of the source type must be less than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "iextend.zero {} -> {}, src {}", src_type, dst_type, src)]
-pub struct UextendInstr {
+#[display(
+    fmt = "{}extend {} -> {}, src {}",
+    "if self.signed { 's' } else { 'u' }",
+    src_type,
+    dst_type,
+    src
+)]
+pub struct ExtendIntInstr {
+    signed: bool,
     src_type: IntType,
     dst_type: IntType,
     src: Value,
 }
 
-impl UextendInstr {
-    /// Creates a new unsigned or zero-extend instruction extending src from source type to destination type.
+impl ExtendIntInstr {
+    /// Creates a new extend instruction extending src from source type to destination type.
     ///
     /// # Note
     ///
     /// The bit width of the source type must be less than the bit width of the destination type.
-    pub fn new(src_type: IntType, dst_type: IntType, src: Value) -> Self {
+    pub fn new(
+        signed: bool,
+        src_type: IntType,
+        dst_type: IntType,
+        src: Value,
+    ) -> Self {
         assert!(src_type.bit_width() > dst_type.bit_width());
         Self {
+            signed,
             src_type,
             dst_type,
             src,
         }
     }
 
-    /// Returns the source type of the truncate instruction.
-    pub fn src_type(&self) -> &IntType {
-        &self.src_type
+    /// Creates a new zero-extend instruction extending src from source type to destination type.
+    ///
+    /// # Note
+    ///
+    /// The bit width of the source type must be less than the bit width of the destination type.
+    pub fn zext(src_type: IntType, dst_type: IntType, src: Value) -> Self {
+        Self::new(false, src_type, dst_type, src)
     }
 
-    /// Returns the destination type of the truncate instruction.
-    pub fn dst_type(&self) -> &IntType {
-        &self.src_type
-    }
-}
-
-/// Sign-extends the integer value from source type to destination type.
-///
-/// # Note
-///
-/// The bit width of the source type must be less than the bit width of the destination type.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "iextend.sign {} -> {}, src {}", src_type, dst_type, src)]
-pub struct SextendInstr {
-    src_type: IntType,
-    dst_type: IntType,
-    src: Value,
-}
-
-impl SextendInstr {
     /// Creates a new sign-extend instruction extending src from source type to destination type.
     ///
     /// # Note
     ///
     /// The bit width of the source type must be less than the bit width of the destination type.
-    pub fn new(src_type: IntType, dst_type: IntType, src: Value) -> Self {
-        assert!(src_type.bit_width() > dst_type.bit_width());
+    pub fn sext(src_type: IntType, dst_type: IntType, src: Value) -> Self {
+        Self::new(true, src_type, dst_type, src)
+    }
+
+    /// Returns the source type of the truncate instruction.
+    pub fn src_type(&self) -> IntType {
+        self.src_type
+    }
+
+    /// Returns the destination type of the truncate instruction.
+    pub fn dst_type(&self) -> IntType {
+        self.dst_type
+    }
+
+    /// Returns the source of the instruction that is to be extended.
+    pub fn src(&self) -> Value {
+        self.src
+    }
+
+    /// Returns `true` if the source is treated as a signed integer.
+    ///
+    /// - `true`: `sign-extension`
+    /// - `false`: `zero-extension`
+    pub fn is_signed(&self) -> bool {
+        self.signed
+    }
+}
+
+/// Instruction to convert an integer into a floating point number.
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[display(
+    fmt = "{}convert {} -> {}, src {}",
+    "if self.signed { 's' } else { 'u' }",
+    src_type,
+    dst_type,
+    src
+)]
+pub struct IntToFloatInstr {
+    signed: bool,
+    src_type: IntType,
+    dst_type: FloatType,
+    src: Value,
+}
+
+impl IntToFloatInstr {
+    /// Creates a new instruction that converts from an integer to a floating point number.
+    pub fn new(
+        signed: bool,
+        src_type: IntType,
+        dst_type: FloatType,
+        src: Value,
+    ) -> Self {
         Self {
+            signed,
             src_type,
             dst_type,
             src,
@@ -122,52 +175,25 @@ impl SextendInstr {
     }
 
     /// Returns the source type of the truncate instruction.
-    pub fn src_type(&self) -> &IntType {
-        &self.src_type
+    pub fn src_type(&self) -> IntType {
+        self.src_type
     }
 
     /// Returns the destination type of the truncate instruction.
-    pub fn dst_type(&self) -> &IntType {
-        &self.src_type
+    pub fn dst_type(&self) -> FloatType {
+        self.dst_type
     }
-}
 
-/// Instruction to convert a signed integer into a floating point number.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "iconvert {} signed -> {}, src {}", src_type, dst_type, src)]
-pub struct SintToFloatInstr {
-    src_type: IntType,
-    dst_type: FloatType,
-    src: Value,
-}
-
-impl SintToFloatInstr {
-    /// Creates a new instruction that converts from a signed integer to a floating point number.
-    pub fn new(src_type: IntType, dst_type: FloatType, src: Value) -> Self {
-        Self {
-            src_type,
-            dst_type,
-            src,
-        }
+    /// Returns the source of the instruction that is to be extended.
+    pub fn src(&self) -> Value {
+        self.src
     }
-}
 
-/// Instruction to convert an unsigned integer into a floating point number.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "iconvert {} unsigned -> {}, src {}", src_type, dst_type, src)]
-pub struct UintToFloatInstr {
-    src_type: IntType,
-    dst_type: FloatType,
-    src: Value,
-}
-
-impl UintToFloatInstr {
-    /// Creates a new instruction that converts from a unsigned integer to a floating point number.
-    pub fn new(src_type: IntType, dst_type: FloatType, src: Value) -> Self {
-        Self {
-            src_type,
-            dst_type,
-            src,
-        }
+    /// Returns `true` if the source is treated as a signed integer.
+    ///
+    /// - `true`: `sign-extension`
+    /// - `false`: `zero-extension`
+    pub fn is_signed(&self) -> bool {
+        self.signed
     }
 }

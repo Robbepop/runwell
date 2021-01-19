@@ -13,183 +13,127 @@
 // limitations under the License.
 
 use crate::ir::{IntType, Value};
-use core::{fmt::Display, marker::PhantomData};
+use core::fmt::Display;
 
 /// The base of all binary integer instructions.
 ///
 /// Generic over a concrete binary integer operand.
+///
+/// # Note
+///
+/// - Both input values as well as the output value of the instruction are
+///   equal to the type `ty`.
+/// - In case of shift and rotate operands the `lhs` value is the source
+///   and the `rhs` value is the shift or rotate amount.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct BinaryIntInstr<T>
-where
-    T: BinaryIntOperand,
-{
+pub struct BinaryIntInstr {
+    op: BinaryIntOp,
     ty: IntType,
     lhs: Value,
     rhs: Value,
-    marker: PhantomData<fn() -> T>,
 }
 
-impl<T> BinaryIntInstr<T>
-where
-    T: BinaryIntOperand,
-{
-    /// Creates a new binary integer instruction.
-    pub fn new(ty: IntType, lhs: Value, rhs: Value) -> Self {
-        Self {
-            ty,
-            lhs,
-            rhs,
-            marker: Default::default(),
-        }
-    }
+/// Binary integer operand codes.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum BinaryIntOp {
+    /// Evalutes integer addition of two integer values.
+    Add,
+    /// Subtracts the right-hand side integer from the left-hand side integer.
+    Sub,
+    /// Evalutes integer multiplication of two integer values.
+    Mul,
+    /// Divides the right-hand side signed integer from the left-hand side signed integer.
+    Sdiv,
+    /// Divides the right-hand side unsigned integer from the left-hand side unsigned integer.
+    Udiv,
+    /// Computes the remainder of the left-hand side signed integer divided by the right-hand side signed integer.
+    Srem,
+    /// Computes the remainder of the left-hand side unsigned integer divided by the right-hand side unsigned integer.
+    Urem,
+    /// Computes the bitwise and for two integer value.
+    And,
+    /// Computes the bitwise or for two integer value.
+    Or,
+    /// Computes the bitwise xor for two integer value.
+    Xor,
+    /// Shifts the bits of the left-hand side integer to the left by the amount of the right-hand side integer value.
+    Shl,
+    /// Shifts the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
+    ///
+    /// # Note
+    ///
+    /// The operation is preserving the sign of the left-hand side integer.
+    Sshlr,
+    /// Shifts the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
+    ///
+    /// # Note
+    ///
+    /// The operation is not preserving the sign of the left-hand side integer.
+    Ushlr,
+    /// Rotates the bits of the left-hand side integer to the left by the amount of the right-hand side integer value.
+    Rotl,
+    /// Rotates the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
+    Rotr,
 }
 
-impl<T> Display for BinaryIntInstr<T>
-where
-    T: BinaryIntOperand,
-{
+impl Display for BinaryIntOp {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(
-            f,
-            "{} type {}, lhs {}, rhs {}",
-            <T as BinaryIntOperand>::DISPLAY_REPR,
-            self.ty,
-            self.lhs,
-            self.rhs
-        )?;
+        let repr = match self {
+            Self::Add => "iadd",
+            Self::Sub => "isub",
+            Self::Mul => "imul",
+            Self::Sdiv => "sdiv",
+            Self::Udiv => "udiv",
+            Self::Srem => "srem",
+            Self::Urem => "urem",
+            Self::And => "iand",
+            Self::Or => "ior",
+            Self::Xor => "ixor",
+            Self::Shl => "ishl",
+            Self::Sshlr => "sshlr",
+            Self::Ushlr => "ushlr",
+            Self::Rotl => "irotl",
+            Self::Rotr => "irotr",
+        };
+        write!(f, "{}", repr)?;
         Ok(())
     }
 }
 
-mod operands {
-    /// Types implementing this trait are binary integer instruction operands.
-    pub trait BinaryIntOperand: Sealed {
-        /// A string representation for `Display` trait implementations.
-        const DISPLAY_REPR: &'static str;
-        /// Is `true` if the operation is commutative, i.e. identical upon swapping `lhs` and `rhs`.
-        const COMMUTATIVE: bool;
-    }
-    pub trait Sealed {}
-
-    macro_rules! impl_binary_int_operand {
-        (
-            $( #[$attr:meta] )*
-            struct $name:ident {
-                commutative: $commutative:literal,
-                display_repr: $display_repr:literal
-            }
-        ) => {
-            $( #[$attr] )*
-            #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-            pub enum $name {}
-
-            impl BinaryIntOperand for $name {
-                const DISPLAY_REPR: &'static str = $display_repr;
-                const COMMUTATIVE: bool = $commutative;
-            }
-            impl Sealed for $name {}
-        };
+impl BinaryIntInstr {
+    /// Creates a new binary integer instruction.
+    pub fn new(op: BinaryIntOp, ty: IntType, lhs: Value, rhs: Value) -> Self {
+        Self { op, ty, lhs, rhs }
     }
 
-    impl_binary_int_operand! {
-        /// Binary operand for integer addition.
-        struct Add {
-            commutative: true,
-            display_repr: "iadd"
-        }
+    /// Returns the binary operand of the instruction.
+    pub fn op(&self) -> BinaryIntOp {
+        self.op
     }
 
-    impl_binary_int_operand! {
-        /// Binary operand for integer substraction.
-        struct Sub {
-            commutative: false,
-            display_repr: "isub"
-        }
+    /// Returns the left-hand side value.
+    pub fn lhs(&self) -> Value {
+        self.lhs
     }
 
-    impl_binary_int_operand! {
-        /// Binary operand for integer multiplication.
-        struct Mul {
-            commutative: true,
-            display_repr: "imul"
-        }
+    /// Returns the right-hand side value.
+    pub fn rhs(&self) -> Value {
+        self.rhs
     }
 
-    impl_binary_int_operand! {
-        /// Binary operand for signed integer division.
-        struct Sdiv {
-            commutative: false,
-            display_repr: "sdiv"
-        }
-    }
-
-    impl_binary_int_operand! {
-        /// Binary operand for unsigned integer division.
-        struct Udiv {
-            commutative: false,
-            display_repr: "udiv"
-        }
-    }
-
-    impl_binary_int_operand! {
-        /// Binary operand for signed integer remainder.
-        struct Srem {
-            commutative: false,
-            display_repr: "srem"
-        }
-    }
-
-    impl_binary_int_operand! {
-        /// Binary operand for unsigned integer remainder.
-        struct Urem {
-            commutative: false,
-            display_repr: "urem"
-        }
-    }
-
-    impl_binary_int_operand! {
-        /// Binary operand for bitwise integer and.
-        struct And {
-            commutative: true,
-            display_repr: "iand"
-        }
-    }
-
-    impl_binary_int_operand! {
-        /// Binary operand for bitwise integer or.
-        struct Or {
-            commutative: true,
-            display_repr: "ior"
-        }
-    }
-
-    impl_binary_int_operand! {
-        /// Binary operand for bitwise integer xor.
-        struct Xor {
-            commutative: true,
-            display_repr: "ixor"
-        }
+    /// Returns the integer type of the instruction.
+    pub fn ty(&self) -> IntType {
+        self.ty
     }
 }
-use self::operands::BinaryIntOperand;
 
-/// Evalutes integer addition of two integer values.
-pub type IaddInstr = BinaryIntInstr<operands::Add>;
-/// Subtracts the right-hand side integer from the left-hand side integer.
-pub type IsubInstr = BinaryIntInstr<operands::Sub>;
-/// Evalutes integer multiplication of two integer values.
-pub type ImulInstr = BinaryIntInstr<operands::Mul>;
-/// Divides the right-hand side signed integer from the left-hand side signed integer.
-pub type SdivInstr = BinaryIntInstr<operands::Sdiv>;
-/// Divides the right-hand side unsigned integer from the left-hand side unsigned integer.
-pub type UdivInstr = BinaryIntInstr<operands::Udiv>;
-/// Computes the remainder of the left-hand side signed integer divided by the right-hand side signed integer.
-pub type SremInstr = BinaryIntInstr<operands::Srem>;
-/// Computes the remainder of the left-hand side unsigned integer divided by the right-hand side unsigned integer.
-pub type UremInstr = BinaryIntInstr<operands::Urem>;
-/// Computes the bitwise and for two integer value.
-pub type IandInstr = BinaryIntInstr<operands::And>;
-/// Computes the bitwise or for two integer value.
-pub type IorInstr = BinaryIntInstr<operands::Or>;
-/// Computes the bitwise xor for two integer value.
-pub type IxorInstr = BinaryIntInstr<operands::Xor>;
+impl Display for BinaryIntInstr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "{} type {}, lhs {}, rhs {}",
+            self.op, self.ty, self.lhs, self.rhs
+        )?;
+        Ok(())
+    }
+}

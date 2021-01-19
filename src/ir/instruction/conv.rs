@@ -44,12 +44,17 @@ impl ReinterpretInstr {
     }
 
     /// Returns the source type of the reinterpret instruction.
-    pub fn src_type(&self) -> &Type {
-        &self.src_type
+    pub fn src_type(&self) -> Type {
+        self.src_type
     }
 
     /// Returns the destination type of the reinterpret instruction.
-    pub fn dst_type(&self) -> &Type {
-        &self.src_type
+    pub fn dst_type(&self) -> Type {
+        self.src_type
+    }
+
+    /// Returns the source value of the reinterpret instruction.
+    pub fn src(&self) -> Value {
+        self.src
     }
 }

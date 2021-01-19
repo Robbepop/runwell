@@ -15,75 +15,25 @@
 mod binary;
 mod icmp;
 mod iconv;
-mod shift;
 mod unary;
 
 pub use self::{
-    binary::{
-        BinaryIntInstr,
-        IaddInstr,
-        IandInstr,
-        ImulInstr,
-        IorInstr,
-        IsubInstr,
-        IxorInstr,
-        SdivInstr,
-        SremInstr,
-        UdivInstr,
-        UremInstr,
-    },
-    icmp::{IcompareInstr, IcompareOp},
-    iconv::{
-        ItruncateInstr,
-        SextendInstr,
-        SintToFloatInstr,
-        UextendInstr,
-        UintToFloatInstr,
-    },
-    shift::{
-        IrotlInstr,
-        IrotrInstr,
-        IshlInstr,
-        ShiftInstr,
-        SshlrInstr,
-        UshlrInstr,
-    },
-    unary::{
-        IleadingZerosInstr,
-        IpopCountInstr,
-        ItrailingZerosInstr,
-        UnaryIntInstr,
-    },
+    binary::{BinaryIntInstr, BinaryIntOp},
+    icmp::{CompareIntInstr, CompareIntOp},
+    iconv::{ExtendIntInstr, IntToFloatInstr, TruncateIntInstr},
+    unary::{UnaryIntInstr, UnaryIntOp},
 };
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IntInstr {
-    Add(IaddInstr),
-    And(IandInstr),
-    Compare(IcompareInstr),
-    LeadingZeros(IleadingZerosInstr),
-    Mul(ImulInstr),
-    Or(IorInstr),
-    PopCount(IpopCountInstr),
-    Rotl(IrotlInstr),
-    Rotr(IrotrInstr),
-    Sdiv(SdivInstr),
-    Shl(IshlInstr),
-    SignExtend(SextendInstr),
-    SintToFloat(SintToFloatInstr),
-    Srem(SremInstr),
-    Sshlr(SshlrInstr),
-    Sub(IsubInstr),
-    TrailingZeros(ItrailingZerosInstr),
-    Truncate(ItruncateInstr),
-    Udiv(UdivInstr),
-    UintToFloat(UintToFloatInstr),
-    Urem(UremInstr),
-    Ushlr(UshlrInstr),
-    Xor(IxorInstr),
-    ZeroExtend(UextendInstr),
+    Binary(BinaryIntInstr),
+    Unary(UnaryIntInstr),
+    Compare(CompareIntInstr),
+    Extend(ExtendIntInstr),
+    IntToFloat(IntToFloatInstr),
+    Truncate(TruncateIntInstr),
 }
 
 macro_rules! impl_from_int_instr_for_instr {
@@ -98,28 +48,10 @@ macro_rules! impl_from_int_instr_for_instr {
     };
 }
 impl_from_int_instr_for_instr! {
-    IaddInstr,
-    IandInstr,
-    IcompareInstr,
-    IleadingZerosInstr,
-    ImulInstr,
-    IorInstr,
-    IpopCountInstr,
-    IrotlInstr,
-    IrotrInstr,
-    SdivInstr,
-    IshlInstr,
-    SextendInstr,
-    SintToFloatInstr,
-    SremInstr,
-    SshlrInstr,
-    IsubInstr,
-    ItrailingZerosInstr,
-    ItruncateInstr,
-    UdivInstr,
-    UintToFloatInstr,
-    UremInstr,
-    UshlrInstr,
-    IxorInstr,
-    UextendInstr,
+    BinaryIntInstr,
+    UnaryIntInstr,
+    CompareIntInstr,
+    TruncateIntInstr,
+    IntToFloatInstr,
+    ExtendIntInstr,
 }
