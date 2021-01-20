@@ -333,9 +333,10 @@ impl FunctionBuilder<state::Body> {
         value: Value,
     ) -> Result<(), IrError> {
         let block = self.current_block()?;
-        let FunctionBuilderContext { vars, value_type, ..} = &mut self.ctx;
-        vars
-            .write_var(var, value, block, || value_type[value])?;
+        let FunctionBuilderContext {
+            vars, value_type, ..
+        } = &mut self.ctx;
+        vars.write_var(var, value, block, || value_type[value])?;
         Ok(())
     }
 

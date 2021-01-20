@@ -19,10 +19,12 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
-use crate::entity::Idx;
-use crate::parse::{self, F32, F64};
-use derive_more::{Display, From};
+use crate::{
+    entity::Idx,
+    parse::{self, F32, F64},
+};
 use core::fmt;
+use derive_more::{Display, From};
 
 /// A basic block entity of the Runwell IR.
 #[derive(Debug, Default)]
