@@ -103,6 +103,11 @@ impl<T> EntityArena<T> {
         index.into_raw().into_u32() as usize
     }
 
+    /// Returns `true` if the entity at the index has been allocated.
+    pub fn contains_key(&self, index: Idx<T>) -> bool {
+        index.into_raw() < self.max_key()
+    }
+
     /// Returns a shared reference to the entity at the index if any.
     pub fn get(&self, index: Idx<T>) -> Option<&T> {
         let index = Self::idx_to_usize(index);
