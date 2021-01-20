@@ -22,5 +22,5 @@ pub use self::{
     error::{FunctionBuilderError, VariableAccess},
     function::{Function, FunctionBuilder, FunctionBuilderContext},
     instruction::{FunctionInstrBuilder, Instr},
-    variable::Variable,
+    variable::{Variable, VariableTranslator},
 };
