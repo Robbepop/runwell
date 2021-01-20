@@ -35,6 +35,28 @@ impl<T> Default for EntityArena<T> {
     }
 }
 
+impl<T> EntityArena<T>
+where
+    T: Default,
+{
+    /// Allocates the given amount of new entities and initializes them by their default values.
+    ///
+    /// Returns the index to the first entity allocated this way.
+    /// Indices of allocated entities are guaranteed to be continuous.
+    ///
+    /// # Panics
+    ///
+    /// If the operation causes the entity arena to allocate more than or equal to `u32::MAX`
+    /// entities in total.
+    pub fn alloc_default(&mut self, amount: usize) -> Idx<T> {
+        let raw_idx = self.max_key();
+        let new_len = self.len() + amount;
+        assert!(new_len < u32::MAX as usize);
+        self.entities.resize_with(new_len, Default::default);
+        Idx::from_raw(raw_idx)
+    }
+}
+
 impl<T> EntityArena<T> {
     /// Returns the key for the next allocated entity.
     fn max_key(&self) -> RawIdx {
