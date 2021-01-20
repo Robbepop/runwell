@@ -25,12 +25,12 @@ use derive_more::{Display, From};
 use core::fmt;
 
 /// A basic block entity of the Runwell IR.
-#[derive(Debug)]
-pub enum BlockEntity {}
+#[derive(Debug, Default)]
+pub struct BlockEntity;
 
 /// An SSA value entity of the Runwell IR.
-#[derive(Debug)]
-pub enum ValueEntity {}
+#[derive(Debug, Default)]
+pub struct ValueEntity;
 
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Block = Idx<BlockEntity>;
