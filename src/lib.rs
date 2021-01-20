@@ -28,7 +28,6 @@ pub mod builder;
 pub mod entity;
 pub mod ir;
 mod maybe_std;
-pub mod parse;
 pub mod parse2;
 
 pub use self::index::Index32;
