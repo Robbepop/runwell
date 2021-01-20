@@ -100,7 +100,7 @@ impl fmt::Display for Variable {
 /// O(A * log(A/2)). The worst-case can be easily eliminated by requiring that types of variable
 /// declarations in a function are required to be unique. As stated above this is already
 /// true for typical generated Wasm binaries, e.g. in case of LLVM translations.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct VariableTranslator {
     /// The amount of declared variables.
     vars: EntityArena<VariableEntity>,
@@ -176,11 +176,6 @@ impl VariableTranslator {
         self.vars.len()
     }
 
-    /// Returns `true` if the variable has been declared.
-    fn is_declared(&self, var: Variable) -> bool {
-        self.vars.contains_key(var)
-    }
-
     /// Ensures that the variable has been declared.
     ///
     /// # Errors
@@ -191,7 +186,7 @@ impl VariableTranslator {
         var: Variable,
         access: VariableAccess,
     ) -> Result<(), IrError> {
-        if !self.is_declared(var) {
+        if !self.vars.contains_key(var) {
             return Err(FunctionBuilderError::MissingDeclarationForVariable {
                 variable: var,
                 access,
@@ -213,9 +208,9 @@ impl VariableTranslator {
         value_to_type: F,
     ) -> Result<(), IrError>
     where
-        F: FnOnce(Value) -> Type,
+        F: FnOnce() -> Type,
     {
-        let value_type = value_to_type(new_value);
+        let value_type = value_to_type();
         if declared_type != value_type {
             return Err(FunctionBuilderError::UnmatchingVariableType {
                 variable: var,
@@ -278,7 +273,7 @@ impl VariableTranslator {
         value_to_type: F,
     ) -> Result<(), IrError>
     where
-        F: FnOnce(Value) -> Type,
+        F: FnOnce() -> Type,
     {
         self.ensure_declared(var, VariableAccess::Write(new_value))?;
         let Self {
