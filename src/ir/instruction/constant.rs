@@ -14,7 +14,7 @@
 
 use crate::{
     ir::primitive::{Const, FloatConst, IntConst, Type},
-    parse2::{F32, F64},
+    parse::{F32, F64},
 };
 use derive_more::Display;
 

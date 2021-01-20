@@ -26,7 +26,7 @@ use crate::{
     builder::ModuleResource,
     entity::RawIdx,
     ir::instr::ConstInstr,
-    parse2::{
+    parse::{
         FunctionBody,
         FunctionType,
         LocalVariableEntry,

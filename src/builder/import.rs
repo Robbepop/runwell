@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::parse2 as parse;
+use crate::parse;
 
 /// A module and field name for an imported entity.
 #[derive(Debug, Clone, PartialEq, Eq)]

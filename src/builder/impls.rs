@@ -22,7 +22,7 @@ use super::{
     Table,
     Types,
 };
-use crate::parse2::{
+use crate::parse::{
     self,
     Export,
     ExportItem,
@@ -203,7 +203,7 @@ impl ModuleBuilder {
     /// # Note
     ///
     /// Guaranteed to be called at most once and before any call to [`ModuleBuilder::element_section`].
-    pub fn start_function(&mut self, id: crate::parse2::FunctionId) {
+    pub fn start_function(&mut self, id: crate::parse::FunctionId) {
         self.resources.start_function = Some(id);
     }
 
@@ -305,7 +305,7 @@ impl<'a> ImportEntity<'a> {
     pub fn import_memory(
         &mut self,
         import_name: ImportName,
-        memory: parse2::LinearMemory,
+        memory: parse::LinearMemory,
     ) -> Result<(), BuilderError> {
         self.builder
             .resources
@@ -318,7 +318,7 @@ impl<'a> ImportEntity<'a> {
     pub fn import_table(
         &mut self,
         import_name: ImportName,
-        table: parse2::Table,
+        table: parse::Table,
     ) -> Result<(), BuilderError> {
         self.builder
             .resources
@@ -364,7 +364,7 @@ impl<'a> DeclareTable<'a> {
     /// Guaranteed to be called once per internal table in the built Wasm module.
     pub fn declare_table(
         &mut self,
-        table: parse2::Table,
+        table: parse::Table,
     ) -> Result<(), BuilderError> {
         self.builder
             .resources
@@ -387,7 +387,7 @@ impl<'a> DeclareMemory<'a> {
     /// Guaranteed to be called once per internal linear memory in the built Wasm module.
     pub fn declare_memory(
         &mut self,
-        memory: parse2::LinearMemory,
+        memory: parse::LinearMemory,
     ) -> Result<(), BuilderError> {
         self.builder
             .resources
@@ -411,7 +411,7 @@ impl<'a> DefineGlobal<'a> {
     pub fn define_global(
         &mut self,
         variable: GlobalVariable,
-        init_value: crate::parse2::InitializerExpr,
+        init_value: parse::InitializerExpr,
     ) -> Result<(), BuilderError> {
         self.builder
             .resources
@@ -468,7 +468,7 @@ impl<'a> PushElement<'a> {
     /// Guaranteed to be called once per element item in the built Wasm module.
     pub fn push_element(
         &mut self,
-        element: parse2::Element,
+        element: parse::Element,
     ) -> Result<(), ParseError> {
         let id = element.table_id();
         let offset = element.offset().clone();
@@ -496,7 +496,7 @@ impl<'a> PushData<'a> {
     /// # Note
     ///
     /// Guaranteed to be called once per data item in the built Wasm module.
-    pub fn push_data(&mut self, data: parse2::Data) -> Result<(), ParseError> {
+    pub fn push_data(&mut self, data: parse::Data) -> Result<(), ParseError> {
         let id = data.memory_id();
         let offset = data.offset().clone();
         let items = data.init();

@@ -95,7 +95,7 @@ fn collect_test_inputs() -> Vec<TestInput> {
 }
 
 #[test]
-fn parse2_works() {
+fn parse_works() {
     let inputs = collect_test_inputs();
     let mut buffer = Vec::with_capacity(1000);
     let mut len_failed = 0;
@@ -119,7 +119,7 @@ fn parse2_works() {
             input.path.file_stem().unwrap().to_str().unwrap(),
             local_test
         );
-        let result = runwell::parse2::parse(&mut &input.wasm[..], &mut buffer);
+        let result = runwell::parse::parse(&mut &input.wasm[..], &mut buffer);
         match result {
             Ok(_) => {
                 println!("ok");

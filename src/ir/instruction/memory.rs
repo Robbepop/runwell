@@ -14,7 +14,7 @@
 
 use crate::{
     ir::primitive::{Type, Value},
-    parse2::LinearMemoryId,
+    parse::LinearMemoryId,
 };
 use derive_more::Display;
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    parse2::{FunctionId, GlobalVariableId, LinearMemoryId, TableId},
+    parse::{FunctionId, GlobalVariableId, LinearMemoryId, TableId},
     Index32,
 };
 use core::convert::TryFrom;

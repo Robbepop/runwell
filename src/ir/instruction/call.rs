@@ -14,7 +14,7 @@
 
 use crate::{
     ir::primitive::Value,
-    parse2::{FunctionId, FunctionTypeId, TableId},
+    parse::{FunctionId, FunctionTypeId, TableId},
 };
 use core::fmt::Display;
 

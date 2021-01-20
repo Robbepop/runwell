@@ -14,7 +14,7 @@
 
 use super::BuilderError;
 use crate::{
-    parse2::{FunctionType, FunctionTypeId},
+    parse::{FunctionType, FunctionTypeId},
     Index32,
 };
 use derive_more::{Display, Error};

@@ -20,7 +20,7 @@
 //! to a 32-bit integer value.
 
 use crate::entity::Idx;
-use crate::parse2::{self, F32, F64};
+use crate::parse::{self, F32, F64};
 use derive_more::{Display, From};
 use core::fmt;
 
@@ -59,13 +59,13 @@ pub enum Type {
     Float(FloatType),
 }
 
-impl From<parse2::Type> for Type {
-    fn from(ty: parse2::Type) -> Self {
+impl From<parse::Type> for Type {
+    fn from(ty: parse::Type) -> Self {
         match ty {
-            parse2::Type::I32 => Self::Int(IntType::I32),
-            parse2::Type::I64 => Self::Int(IntType::I64),
-            parse2::Type::F32 => Self::Float(FloatType::F32),
-            parse2::Type::F64 => Self::Float(FloatType::F64),
+            parse::Type::I32 => Self::Int(IntType::I32),
+            parse::Type::I64 => Self::Int(IntType::I64),
+            parse::Type::F32 => Self::Float(FloatType::F32),
+            parse::Type::F64 => Self::Float(FloatType::F64),
         }
     }
 }
