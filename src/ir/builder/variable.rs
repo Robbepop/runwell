@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    entity::{secondary::map::Entry, ComponentMap, Idx, RawIdx},
+    entity::{secondary::map::Entry, ComponentMap, EntityArena, Idx, RawIdx},
     ir::{
         builder::VariableAccess,
         primitive::{Block, Type, Value},
@@ -41,8 +41,8 @@ use derive_more::From;
 /// Since in Wasm all local variables in a function are uniquely identified
 /// by their local index we can simply take this local index and map it
 /// onto the `Variable` index space.
-#[derive(Debug)]
-pub enum VariableEntity {}
+#[derive(Debug, Default)]
+pub struct VariableEntity;
 
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Variable = Idx<VariableEntity>;
@@ -103,7 +103,7 @@ impl fmt::Display for Variable {
 #[derive(Debug)]
 pub struct VariableTranslator {
     /// The amount of declared variables.
-    len_vars: u32,
+    vars: EntityArena<VariableEntity>,
     /// For every declaration of multiple variables their shared declaration is appended
     /// to this vector.
     ///
@@ -130,7 +130,7 @@ pub struct VariableTranslator {
 struct VariableDecl {
     /// Denotes the first variable index of the variable declarations that share
     /// the same type. All those declared variables have adjacent indices.
-    offset: u32,
+    first_idx: RawIdx,
     /// The shared type of the variable declaration.
     ty: Type,
 }
@@ -173,12 +173,12 @@ impl<'a> VariableDefinitions<'a> {
 impl VariableTranslator {
     /// Returns the number of declared variables.
     fn len_vars(&self) -> usize {
-        self.len_vars as usize
+        self.vars.len()
     }
 
     /// Returns `true` if the variable has been declared.
     fn is_declared(&self, var: Variable) -> bool {
-        var.into_raw() < RawIdx::from_u32(self.len_vars)
+        self.vars.contains_key(var)
     }
 
     /// Ensures that the variable has been declared.
@@ -241,18 +241,20 @@ impl VariableTranslator {
         amount: u32,
         ty: Type,
     ) -> Result<(), IrError> {
-        let offset = self.len_vars;
-        self.len_vars += amount;
-        if self.len_vars >= u32::MAX {
+        let first_idx = self.vars.alloc_default(amount as usize);
+        if self.vars.len() >= u32::MAX as usize {
             return Err(FunctionBuilderError::TooManyVariableDeclarations)
                 .map_err(Into::into)
         }
-        self.var_to_type.push(VariableDecl { offset, ty }); // TODO: maybe we can get rid of this if amount == 1
+        self.var_to_type.push(VariableDecl {
+            first_idx: first_idx.into_raw(),
+            ty,
+        }); // TODO: maybe we can get rid of this if amount == 1
         if amount == 1 {
             // As an optimization we directly initialize the definition of the
             // variable to avoid the binary search for it upon its first assignmnet.
-            let var = Variable::from_raw(RawIdx::from_u32(offset));
-            let old_def = self.var_to_defs.insert(var, VariableDefs::new(ty));
+            let old_def =
+                self.var_to_defs.insert(first_idx, VariableDefs::new(ty));
             debug_assert!(old_def.is_none());
         }
         Ok(())
@@ -303,9 +305,9 @@ impl VariableTranslator {
                 // then check if type of new assignment matches and finally
                 // update the variable assignment.
                 let target = var.into_raw();
-                let declared_type = match var_to_type.binary_search_by(|decl| {
-                    target.cmp(&RawIdx::from_u32(decl.offset))
-                }) {
+                let declared_type = match var_to_type
+                    .binary_search_by(|decl| target.cmp(&decl.first_idx))
+                {
                     Ok(index) => var_to_type[index].ty,
                     Err(index) => var_to_type[index - 1].ty,
                 };
