@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{FunctionBuilderError, WasmError};
+use super::FunctionBuilderError;
 use derive_more::{Display, Error, From};
 
 /// An error that occured while translating from Wasm to Runwell IR.
 #[derive(Debug, Display, Error, From, PartialEq, Eq)]
 pub enum IrError {
     FunctionBuilder(FunctionBuilderError),
-    Wasm(WasmError),
 }

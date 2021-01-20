@@ -16,14 +16,12 @@ mod builder;
 mod error;
 mod instruction;
 pub mod primitive;
-mod wasm;
 
 use self::builder::Variable;
 pub use self::{
     builder::FunctionBuilderError,
     error::IrError,
     instruction::Alignment,
-    wasm::{translate_wasm, WasmError},
 };
 
 /// All Runwell IR SSA instructions.
