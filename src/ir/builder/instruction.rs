@@ -15,29 +15,21 @@
 use super::{state, FunctionBuilder};
 use crate::{
     entity::Idx,
-    ir::{instruction::Instruction, primitive::Block, IrError},
+    ir::{instruction::Instruction, IrError},
 };
 
-/// An instruction entity of the Runwell IR.
-#[derive(Debug)]
-pub enum InstructionEntity {}
-
 /// The unique index of a basic block entity of the Runwell IR.
-pub type Instr = Idx<InstructionEntity>;
+pub type Instr = Idx<Instruction>;
 
 #[derive(Debug)]
 pub struct FunctionInstrBuilder<'a> {
     builder: &'a mut FunctionBuilder<state::Body>,
-    current: Block,
 }
 
 impl<'a> FunctionInstrBuilder<'a> {
     /// Creates a new function instruction builder.
-    fn new(
-        builder: &'a mut FunctionBuilder<state::Body>,
-        current: Block,
-    ) -> Self {
-        Self { builder, current }
+    pub(super) fn new(builder: &'a mut FunctionBuilder<state::Body>) -> Self {
+        Self { builder }
     }
 
     /// Appends the instruction to the current basic block if possible.
