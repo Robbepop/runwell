@@ -4,6 +4,13 @@ A non-bombable, optimizing WebAssembly (Wasm) JIT compiler with deterministic be
 
 > **WIP** - The `runwell` JIT is under active development. Don't expect it to be working and expect dragons instead.
 
+## Credits
+
+Credits go to the people behind the [BytecodeAlliance](https://bytecodealliance.org/) for their fantastic
+work on the WebAssembly specification and work on WebAssembly frameworks, libraries and tooling.
+This project took a lot of inspiration from projects found under their
+[GitHub Organization](https://github.com/bytecodealliance).
+
 ## WebAssembly
 
 WebAssembly (abbreviated Wasm) is a binary instruction format for a stack-based virtual machine. Wasm is designed as a portable target for compilation of high-level languages like C/C++/Rust, enabling deployment on the web for client and server applications.
