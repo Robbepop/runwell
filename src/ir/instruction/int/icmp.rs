@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::ir::primitive::{IntType, Value};
-use core::fmt::{self, Display};
+use core::fmt::Display;
 use derive_more::Display;
 
 /// Compares two integers by the associated operand.
