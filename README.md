@@ -6,7 +6,7 @@ A non-bombable, optimizing WebAssembly (Wasm) JIT compiler with deterministic be
 
 ## Credits
 
-Credits go to the people behind the [BytecodeAlliance](https://bytecodealliance.org/) for their fantastic
+Credits go to the people behind the [Bytecode Alliance](https://bytecodealliance.org/) for their fantastic
 work on the WebAssembly specification and work on WebAssembly frameworks, libraries and tooling.
 This project took a lot of inspiration from projects found under their
 [GitHub Organization](https://github.com/bytecodealliance).
