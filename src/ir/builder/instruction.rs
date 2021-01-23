@@ -63,10 +63,10 @@ impl<'a> FunctionInstrBuilder<'a> {
     /// - If values do not match required type constraints.
     /// - Upon trying to branch to a basic block that has already been sealed.
     fn append_value_instr(
-        self,
+        &mut self,
         instruction: Instruction,
         ty: Type,
-    ) -> Result<Value, IrError> {
+    ) -> Result<(Value, Instr), IrError> {
         let block = self.builder.current_block()?;
         let instr = self.builder.ctx.instrs.alloc(instruction.into());
         let value = self.builder.ctx.values.alloc(Default::default());
@@ -75,49 +75,68 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.builder.ctx.value_type.insert(value, ty);
         self.builder
             .ctx
+            .value_users
+            .insert(value, Default::default());
+        self.builder
+            .ctx
             .value_assoc
             .insert(value, ValueAssoc::Instr(instr));
-        Ok(value)
+        Ok((value, instr))
     }
 
-    pub fn constant<C>(self, constant: C) -> Result<Value, IrError>
+    pub fn constant<C>(mut self, constant: C) -> Result<Value, IrError>
     where
         C: Into<Const>,
     {
         let constant = constant.into();
         let instruction = ConstInstr::new(constant);
-        self.append_value_instr(instruction.into(), constant.ty())
+        let (value, _) =
+            self.append_value_instr(instruction.into(), constant.ty())?;
+        Ok(value)
+    }
+
+    fn register_uses(&mut self, instr: Instr, uses: &[Value]) {
+        for &value in uses {
+            self.builder.ctx.value_users[value].insert(instr);
+        }
     }
 
     pub fn iadd(
-        self,
+        mut self,
         ty: IntType,
         lhs: Value,
         rhs: Value,
     ) -> Result<Value, IrError> {
         let instruction = BinaryIntInstr::new(BinaryIntOp::Add, ty, lhs, rhs);
-        self.append_value_instr(instruction.into(), ty.into())
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), ty.into())?;
+        self.register_uses(instr, &[lhs, rhs]);
+        Ok(value)
     }
 
     pub fn imul(
-        self,
+        mut self,
         ty: IntType,
         lhs: Value,
         rhs: Value,
     ) -> Result<Value, IrError> {
         let instruction = BinaryIntInstr::new(BinaryIntOp::Mul, ty, lhs, rhs);
-        self.append_value_instr(instruction.into(), ty.into())
+        let (value, instr) = self.append_value_instr(instruction.into(), ty.into())?;
+        self.register_uses(instr, &[lhs, rhs]);
+        Ok(value)
     }
 
     pub fn icmp(
-        self,
+        mut self,
         ty: IntType,
         op: CompareIntOp,
         lhs: Value,
         rhs: Value,
     ) -> Result<Value, IrError> {
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
-        self.append_value_instr(instruction.into(), ty.into())
+        let (value, instr) = self.append_value_instr(instruction.into(), ty.into())?;
+        self.register_uses(instr, &[lhs, rhs]);
+        Ok(value)
     }
 
     fn append_instr<I>(&mut self, instruction: I) -> Result<Instr, IrError>
@@ -140,6 +159,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         return_value: Value,
     ) -> Result<Instr, IrError> {
         let instr = self.append_instr(ReturnInstr::new(return_value))?;
+        self.register_uses(instr, &[return_value]);
         Ok(instr)
     }
 
@@ -168,6 +188,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         ))?;
         self.add_predecessor(then_target, block)?;
         self.add_predecessor(else_target, block)?;
+        self.register_uses(instr, &[condition]);
         Ok(instr)
     }
 
@@ -200,10 +221,12 @@ impl<'a> FunctionInstrBuilder<'a> {
             ))
         }
         if !self.builder.ctx.block_preds[block].insert(new_pred) {
-            return Err(IrError::FunctionBuilder(FunctionBuilderError::BranchAlreadyExists {
-                from: new_pred,
-                to: block,
-            }))
+            return Err(IrError::FunctionBuilder(
+                FunctionBuilderError::BranchAlreadyExists {
+                    from: new_pred,
+                    to: block,
+                },
+            ))
         }
         Ok(())
     }

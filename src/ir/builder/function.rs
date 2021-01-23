@@ -48,6 +48,10 @@ pub struct Function {
     /// Arena for all IR instructions.
     instrs: EntityArena<Instruction>,
     /// Block instructions.
+    ///
+    /// # Note
+    ///
+    /// Also contains all the phi instructions at the block start.
     block_instrs: ComponentVec<Block, Vec<Instr>>,
     /// Optional associated values for instructions.
     ///
@@ -161,6 +165,10 @@ pub struct FunctionBuilderContext {
     ///
     /// Only filled blocks may have successors, predecessors are always filled.
     pub block_preds: ComponentVec<Block, HashSet<Block>>,
+    /// The phi functions of every basic block.
+    ///
+    /// Every basic block can have up to one phi instruction per variable in use.
+    pub block_phis: ComponentMap<Block, ComponentMap<Variable, Instr>>,
     /// Is `true` if block is sealed.
     ///
     /// A sealed block knows all its predecessors.
@@ -175,13 +183,10 @@ pub struct FunctionBuilderContext {
     /// Marker to indicate if a block has already been visited
     /// when querying the latest value of a variable upon reading it.
     pub block_marker: ComponentMap<Block, ()>,
-    /// Stores all users of all phi instructions.
-    ///
-    /// This information is required to replace an unnecessary phi
-    /// phi instruction with its single operand. Users of the unnecessary
-    /// phi instruction are updated accordingly and phi instruction
-    /// users are checked for triviality.
-    pub phi_users: ComponentMap<Value, HashSet<Instr>>,
+    /// Required information to remove phi from its block if it becomes trivial.
+    pub phi_block: ComponentMap<Value, Block>,
+    /// Required information to remove phi from its block if it becomes trivial.
+    pub phi_var: ComponentMap<Value, Variable>,
     /// Incomplete phi nodes for all blocks.
     ///
     /// This stores a mapping from each variable in a basic block to
@@ -201,6 +206,16 @@ pub struct FunctionBuilderContext {
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
     pub value_assoc: ComponentVec<Value, ValueAssoc>,
+    /// Stores all users of all values.
+    ///
+    /// This information is required to replace an unnecessary phi
+    /// phi instruction with its single operand. Users of the unnecessary
+    /// phi instruction are updated accordingly and phi instruction
+    /// users are checked for triviality.
+    ///
+    /// Also this information can be used for optimizations when replacing
+    /// one instruction with another.
+    pub value_users: ComponentMap<Value, HashSet<Instr>>,
     /// The current basic block that is being operated on.
     pub current: Block,
     /// The variable translator.
@@ -219,15 +234,18 @@ impl Default for FunctionBuilderContext {
             values: Default::default(),
             instrs: Default::default(),
             block_preds: Default::default(),
+            block_phis: Default::default(),
             block_sealed: Default::default(),
             block_filled: Default::default(),
             block_instrs: Default::default(),
             block_marker: Default::default(),
-            phi_users: Default::default(),
+            phi_block: Default::default(),
+            phi_var: Default::default(),
             incomplete_phis: Default::default(),
             instr_value: Default::default(),
             value_type: Default::default(),
             value_assoc: Default::default(),
+            value_users: Default::default(),
             current: Block::from_raw(RawIdx::from_u32(0)),
             vars: Default::default(),
             output_types: Default::default(),
@@ -279,6 +297,10 @@ impl FunctionBuilder<state::Inputs> {
         self.ctx
             .block_instrs
             .insert(entry_block, Default::default());
+        self.ctx.block_phis.insert(entry_block, Default::default());
+        self.ctx
+            .incomplete_phis
+            .insert(entry_block, Default::default());
         self.ctx.current = entry_block;
         entry_block
     }
@@ -291,16 +313,16 @@ impl FunctionBuilder<state::Inputs> {
         let entry_block = self.create_entry_block();
         for (n, input_type) in inputs.iter().copied().enumerate() {
             let val = self.ctx.values.alloc(Default::default());
-            let prev_type = self.ctx.value_type.insert(val, input_type);
-            debug_assert!(prev_type.is_none());
-            let prev_assoc = self
-                .ctx
+            self.ctx.value_type.insert(val, input_type);
+            self.ctx
                 .value_assoc
                 .insert(val, ValueAssoc::Input(n as u32));
+            self.ctx.value_users.insert(val, Default::default());
             self.ctx.vars.declare_vars(1, input_type)?;
             let input_var = Variable::from_raw(RawIdx::from_u32(n as u32));
-            self.ctx.vars.write_var(input_var, val, entry_block, || input_type)?;
-            debug_assert!(prev_assoc.is_none());
+            self.ctx
+                .vars
+                .write_var(input_var, val, entry_block, || input_type)?;
         }
         Ok(FunctionBuilder {
             ctx: self.ctx,
@@ -369,10 +391,18 @@ impl FunctionBuilder<state::Body> {
         let prev_filled = self.ctx.block_filled.insert(new_block, false);
         let prev_instrs =
             self.ctx.block_instrs.insert(new_block, Default::default());
+        let prev_block_phis =
+            self.ctx.block_phis.insert(new_block, Default::default());
+        let prev_incomplete_phis = self
+            .ctx
+            .incomplete_phis
+            .insert(new_block, Default::default());
         debug_assert!(prev_preds.is_none());
         debug_assert!(prev_sealed.is_none());
         debug_assert!(prev_filled.is_none());
         debug_assert!(prev_instrs.is_none());
+        debug_assert!(prev_block_phis.is_none());
+        debug_assert!(prev_incomplete_phis.is_none());
         new_block
     }
 
@@ -419,6 +449,15 @@ impl FunctionBuilder<state::Body> {
                 FunctionBuilderError::BasicBlockIsAlreadySealed { block },
             ))
         }
+        // Popping incomplete phis by inserting a new empty component map.
+        let incomplete_phis = self
+            .ctx
+            .incomplete_phis
+            .insert(block, Default::default())
+            .expect("encountered missing incomplete phis component");
+        for (variable, &value) in incomplete_phis.iter() {
+            self.add_phi_operands(block, variable, value)?;
+        }
         Ok(())
     }
 
@@ -457,6 +496,20 @@ impl FunctionBuilder<state::Body> {
         Ok(())
     }
 
+    fn create_phi_instruction(&mut self, var: Variable, var_type: Type, block: Block) -> Result<Value, IrError> {
+        let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
+        let value = self.ctx.values.alloc(ValueEntity);
+        self.ctx.value_assoc.insert(value, ValueAssoc::Instr(instr));
+        self.ctx.value_type.insert(value, var_type);
+        self.ctx.value_users.insert(value, Default::default());
+        self.ctx.phi_var.insert(value, var);
+        self.ctx.phi_block.insert(value, block);
+        self.ctx.block_phis[block].insert(var, instr);
+        self.ctx.vars.write_var(var, value, block, || var_type)?;
+        self.ctx.instr_value.insert(instr, value);
+        return Ok(value)
+    }
+
     fn read_var_in_block(
         &mut self,
         var: Variable,
@@ -471,11 +524,9 @@ impl FunctionBuilder<state::Body> {
         let var_type = var_info.ty();
         if !self.ctx.block_sealed[block] {
             // Incomplete phi node required.
-            let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
-            let value = self.ctx.values.alloc(ValueEntity);
-            self.ctx.value_assoc.insert(value, ValueAssoc::Instr(instr));
-            self.ctx.value_type.insert(value, var_type);
+            let value = self.create_phi_instruction(var, var_type, block)?;
             self.ctx.vars.write_var(var, value, block, || var_type)?;
+            self.ctx.incomplete_phis[block].insert(var, value);
             return Ok(value)
         }
         let value = if self.ctx.block_preds[block].len() == 1 {
@@ -488,10 +539,7 @@ impl FunctionBuilder<state::Body> {
             self.read_var_in_block(var, pred)?
         } else {
             // Break potential cycles with operandless phi instruction.
-            let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
-            let value = self.ctx.values.alloc(ValueEntity);
-            self.ctx.value_assoc.insert(value, ValueAssoc::Instr(instr));
-            self.ctx.value_type.insert(value, var_type);
+            let value = self.create_phi_instruction(var, var_type, block)?;
             value
         };
         self.ctx.vars.write_var(var, value, block, || var_type)?;
@@ -527,16 +575,16 @@ impl FunctionBuilder<state::Body> {
         &mut self,
         phi_value: Value,
     ) -> Result<Value, IrError> {
-        let val_instr = match self.ctx.value_assoc[phi_value] {
+        let phi_instr = match self.ctx.value_assoc[phi_value] {
             ValueAssoc::Instr(instr) => instr,
             _ => panic!("unexpected non-instruction value"),
         };
-        let phi_instr = match &mut self.ctx.instrs[val_instr] {
+        let instruction = match &mut self.ctx.instrs[phi_instr] {
             Instruction::Phi(phi) => phi,
             _ => panic!("unexpected non-phi instruction"),
         };
         let mut same: Option<Value> = None;
-        for (_block, op) in phi_instr.iter() {
+        for (_block, op) in instruction.iter() {
             if Some(op) == same || op == phi_value {
                 // Unique value or self reference.
                 continue
@@ -555,17 +603,22 @@ impl FunctionBuilder<state::Body> {
             todo!();
         }
         let same = same.expect("just asserted that same is Some");
-        self.ctx.phi_users[phi_value].remove(&val_instr);
-        let users = self.ctx.phi_users[phi_value]
-            .iter()
-            .copied()
-            .collect::<Vec<_>>();
+        // Phi was determined to be trivial and can be removed.
+        // Insert a default into its phi users to replace the current users with an empty set.
+        // Additionally this allows us to iterate over users without borrow checker issues.
+        //
+        // Remove phi from its own users in case it was using itself.
+        self.ctx.value_users[phi_value].remove(&phi_instr);
+        let users = self
+            .ctx
+            .value_users
+            .insert(phi_value, Default::default())
+            .unwrap_or_default();
+        let phi_block = self.ctx.phi_block[phi_value];
+        let phi_var = self.ctx.phi_var[phi_value];
+        self.ctx.block_phis[phi_block].remove(phi_var);
         for user in users {
-            let user_instr = match self.ctx.value_assoc[phi_value] {
-                ValueAssoc::Instr(instr) => instr,
-                _ => panic!("unexpected non-instruction value"),
-            };
-            let user_instr = &mut self.ctx.instrs[user_instr];
+            let user_instr = &mut self.ctx.instrs[user];
             user_instr.replace_value(|value| {
                 if *value == phi_value {
                     *value = same;
@@ -633,6 +686,18 @@ impl FunctionBuilder<state::Body> {
         self.ctx.value_type.shrink_to_fit();
         self.ctx.value_assoc.shrink_to_fit();
         self.ctx.output_types.shrink_to_fit();
+        let mut block_instrs = ComponentVec::default();
+        for (block, var_phis) in self.ctx.block_phis.iter() {
+            // First add all phi instructions of a basic block and then
+            // append the rest of the instructions of the same basic block.
+            let mut instructions = var_phis
+                .iter()
+                .map(|(_var, &phi_instr)| phi_instr)
+                .collect::<Vec<_>>();
+            instructions.extend_from_slice(&self.ctx.block_instrs[block]);
+            block_instrs.insert(block, instructions);
+        }
+        block_instrs.shrink_to_fit();
         Ok(Function {
             blocks: self.ctx.blocks,
             values: self.ctx.values,
