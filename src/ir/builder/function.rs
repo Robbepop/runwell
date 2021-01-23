@@ -605,7 +605,7 @@ impl FunctionBuilder<state::Body> {
         }
         let unfilled_blocks = self
             .ctx
-            .block_sealed
+            .block_filled
             .iter()
             .filter_map(|(idx, &filled)| if !filled { Some(idx) } else { None })
             .collect::<Vec<_>>();
