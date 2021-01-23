@@ -16,9 +16,17 @@ use super::{function::ValueAssoc, state, FunctionBuilder};
 use crate::{
     entity::Idx,
     ir::{
-        instr::{ConstInstr, ReturnInstr},
-        instruction::Instruction,
-        primitive::{Const, Value},
+        instr::{
+            BinaryIntInstr,
+            BranchInstr,
+            CompareIntInstr,
+            ConstInstr,
+            IfThenElseInstr,
+            ReturnInstr,
+            TerminalInstr,
+        },
+        instruction::{BinaryIntOp, CompareIntOp, Instruction},
+        primitive::{Block, Const, IntType, Type, Value},
         IrError,
     },
 };
@@ -49,18 +57,17 @@ impl<'a> FunctionInstrBuilder<'a> {
     /// - If used SSA values do not exist for the function.
     /// - If values do not match required type constraints.
     /// - Upon trying to branch to a basic block that has already been sealed.
-    fn append(self, _instr: Instruction) -> Result<(), IrError> {
-        todo!()
-    }
-
-    pub fn constant(self, constant: Const) -> Result<Value, IrError> {
+    fn append_value_instr(
+        self,
+        instruction: Instruction,
+        ty: Type,
+    ) -> Result<Value, IrError> {
         let block = self.builder.current_block()?;
-        let instruction = ConstInstr::new(constant);
         let instr = self.builder.ctx.instrs.alloc(instruction.into());
         let value = self.builder.ctx.values.alloc(Default::default());
         self.builder.ctx.block_instrs[block].push(instr);
         self.builder.ctx.instr_value.insert(instr, value);
-        self.builder.ctx.value_type.insert(value, constant.ty());
+        self.builder.ctx.value_type.insert(value, ty);
         self.builder
             .ctx
             .value_assoc
@@ -68,12 +75,94 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(value)
     }
 
-    pub fn return_value(self, return_value: Value) -> Result<(), IrError> {
+    pub fn constant<C>(self, constant: C) -> Result<Value, IrError>
+    where
+        C: Into<Const>,
+    {
+        let constant = constant.into();
+        let instruction = ConstInstr::new(constant);
+        self.append_value_instr(instruction.into(), constant.ty())
+    }
+
+    pub fn iadd(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        let instruction = BinaryIntInstr::new(BinaryIntOp::Add, ty, lhs, rhs);
+        self.append_value_instr(instruction.into(), ty.into())
+    }
+
+    pub fn imul(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        let instruction = BinaryIntInstr::new(BinaryIntOp::Mul, ty, lhs, rhs);
+        self.append_value_instr(instruction.into(), ty.into())
+    }
+
+    pub fn icmp(
+        self,
+        ty: IntType,
+        op: CompareIntOp,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
+        self.append_value_instr(instruction.into(), ty.into())
+    }
+
+    fn append_instr<I>(&mut self, instruction: I) -> Result<Instr, IrError>
+    where
+        I: Into<Instruction>,
+    {
+        let instruction = instruction.into();
         let block = self.builder.current_block()?;
-        let instruction = ReturnInstr::new(return_value);
-        let instr = self.builder.ctx.instrs.alloc(instruction.into());
-        self.builder.ctx.block_filled[block] = true;
+        let is_terminal = instruction.is_terminal();
+        let instr = self.builder.ctx.instrs.alloc(instruction);
         self.builder.ctx.block_instrs[block].push(instr);
-        Ok(())
+        if is_terminal {
+            self.builder.ctx.block_filled[block] = true;
+        }
+        Ok(instr)
+    }
+
+    pub fn return_value(
+        mut self,
+        return_value: Value,
+    ) -> Result<Instr, IrError> {
+        let instr = self.append_instr(ReturnInstr::new(return_value))?;
+        Ok(instr)
+    }
+
+    pub fn br(mut self, target: Block) -> Result<Instr, IrError> {
+        let block = self.builder.current_block()?;
+        let instr = self.append_instr(BranchInstr::new(target))?;
+        self.builder.ctx.block_preds[target].insert(block);
+        Ok(instr)
+    }
+
+    pub fn trap(mut self) -> Result<Instr, IrError> {
+        self.append_instr(TerminalInstr::Trap)
+    }
+
+    pub fn if_then_else(
+        mut self,
+        condition: Value,
+        then_target: Block,
+        else_target: Block,
+    ) -> Result<Instr, IrError> {
+        let block = self.builder.current_block()?;
+        let instr = self.append_instr(IfThenElseInstr::new(
+            condition,
+            then_target,
+            else_target,
+        ))?;
+        self.builder.ctx.block_preds[then_target].insert(block);
+        self.builder.ctx.block_preds[else_target].insert(block);
+        Ok(instr)
     }
 }
