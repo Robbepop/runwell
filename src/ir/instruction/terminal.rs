@@ -106,12 +106,7 @@ impl BranchInstr {
 
 /// Conditionally either branches to `then` or `else` branch depending on `condition`.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(
-    fmt = "ite condition {}, then {}, else {}",
-    condition,
-    br_then,
-    br_else
-)]
+#[display(fmt = "if {} then {} else {}", condition, br_then, br_else)]
 pub struct IfThenElseInstr {
     condition: Value,
     br_then: Block,
