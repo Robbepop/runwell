@@ -385,24 +385,14 @@ impl FunctionBuilder<state::Body> {
     /// After this operation the current block will reference the new basic block.
     pub fn create_block(&mut self) -> Block {
         let new_block = self.ctx.blocks.alloc(Default::default());
-        let prev_preds =
-            self.ctx.block_preds.insert(new_block, Default::default());
-        let prev_sealed = self.ctx.block_sealed.insert(new_block, false);
-        let prev_filled = self.ctx.block_filled.insert(new_block, false);
-        let prev_instrs =
-            self.ctx.block_instrs.insert(new_block, Default::default());
-        let prev_block_phis =
-            self.ctx.block_phis.insert(new_block, Default::default());
-        let prev_incomplete_phis = self
-            .ctx
+        self.ctx.block_preds.insert(new_block, Default::default());
+        self.ctx.block_sealed.insert(new_block, false);
+        self.ctx.block_filled.insert(new_block, false);
+        self.ctx.block_instrs.insert(new_block, Default::default());
+        self.ctx.block_phis.insert(new_block, Default::default());
+        self.ctx
             .incomplete_phis
             .insert(new_block, Default::default());
-        debug_assert!(prev_preds.is_none());
-        debug_assert!(prev_sealed.is_none());
-        debug_assert!(prev_filled.is_none());
-        debug_assert!(prev_instrs.is_none());
-        debug_assert!(prev_block_phis.is_none());
-        debug_assert!(prev_incomplete_phis.is_none());
         new_block
     }
 
@@ -496,6 +486,7 @@ impl FunctionBuilder<state::Body> {
         Ok(())
     }
 
+    /// Creates a new phi instruction.
     fn create_phi_instruction(
         &mut self,
         var: Variable,
@@ -515,6 +506,7 @@ impl FunctionBuilder<state::Body> {
         return Ok(value)
     }
 
+    /// Reads the given variable starting from the given block.
     fn read_var_in_block(
         &mut self,
         var: Variable,
@@ -551,6 +543,9 @@ impl FunctionBuilder<state::Body> {
         Ok(value)
     }
 
+    /// Add operands to the phi instruction.
+    ///
+    /// Note that this procedure can only run once a basic block has been sealed.
     fn add_phi_operands(
         &mut self,
         block: Block,
@@ -576,6 +571,11 @@ impl FunctionBuilder<state::Body> {
         self.try_remove_trivial_phi(phi)
     }
 
+    /// Checks if the given phi instruction is trivial replacing it if true.
+    ///
+    /// Replacement is a recursive operation that replaces all uses of the
+    /// phi instruction with its only non-phi operand. During this process
+    /// other phi instruction users might become trivial and cascade the effect.
     fn try_remove_trivial_phi(
         &mut self,
         phi_value: Value,
