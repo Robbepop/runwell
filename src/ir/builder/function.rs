@@ -364,7 +364,6 @@ impl FunctionBuilder<state::Body> {
         debug_assert!(prev_sealed.is_none());
         debug_assert!(prev_filled.is_none());
         debug_assert!(prev_instrs.is_none());
-        self.ctx.current = new_block;
         new_block
     }
 
