@@ -114,11 +114,17 @@ impl<K, V> ComponentVec<Idx<K>, V> {
         self.len() == 0
     }
 
+    /// Returns `true` if the key is within bounds of the allocated capacity.
+    fn is_within_capacity(&self, key: Idx<K>) -> bool {
+        let key_at_capacity = RawIdx::from_u32(self.components.len() as u32);
+        key.into_raw() < key_at_capacity
+    }
+
     /// Enlarges the component vector to fit the given key.
     ///
     /// Returns `true` if the secondary map actually got enlarged by the operation.
     fn enlarge_for(&mut self, max_key: Idx<K>) -> bool {
-        if self.contains_key(max_key) {
+        if self.is_within_capacity(max_key) {
             return false
         }
         let required_len = 1 + Self::key_to_index(max_key);
