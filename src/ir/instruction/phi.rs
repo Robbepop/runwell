@@ -113,7 +113,7 @@ impl Display for PhiInstr {
                 write!(f, ", {} -> {}", basic_block, value)?;
             }
         }
-        write!(f, "]")?;
+        write!(f, " ]")?;
         Ok(())
     }
 }
