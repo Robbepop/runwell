@@ -171,6 +171,15 @@ impl<K, V> ComponentMap<Idx<K>, V> {
             }
         }
     }
+
+    /// Shrinks the memory consumption of the component map to a minimum.
+    ///
+    /// # Note
+    ///
+    /// This operation might reallocate heap memory.
+    pub fn shrink_to_fit(&mut self) {
+        self.components.shrink_to_fit()
+    }
 }
 
 /// A view into a single entry in a map, which may either be vacant or occupied.

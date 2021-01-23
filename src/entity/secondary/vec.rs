@@ -211,6 +211,15 @@ impl<K, V> ComponentVec<Idx<K>, V> {
             None => Entry::Vacant(VacantEntry { vec: self, key }),
         }
     }
+
+    /// Shrinks the memory consumption of the component vec to a minimum.
+    ///
+    /// # Note
+    ///
+    /// This operation might reallocate heap memory.
+    pub fn shrink_to_fit(&mut self) {
+        self.components.shrink_to_fit()
+    }
 }
 
 /// A view into a single entry in a map, which may either be vacant or occupied.
