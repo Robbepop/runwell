@@ -78,10 +78,17 @@ pub enum FunctionBuilderError {
     )]
     ReadBeforeWriteVariable { variable: Variable },
     #[display(
-        fmt = "there are still {} unsealed basic blocks upon finalizing construction",
-        amount
+        fmt = "there are still {} unsealed basic blocks upon finalizing construction: {:?}",
+        "unsealed.len()",
+        unsealed
     )]
-    UnsealedBlocksUponFinalize { amount: usize },
+    UnsealedBlocksUponFinalize { unsealed: Vec<Block> },
+    #[display(
+        fmt = "there are still {} unfilled basic blocks upon finalizing construction: {:?}",
+        "unfilled.len()",
+        unfilled
+    )]
+    UnfilledBlocksUponFinalize { unfilled: Vec<Block> },
     #[display(
         fmt = "branch from basic block {} to basic block {} already exists",
         from,
