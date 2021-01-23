@@ -30,16 +30,106 @@ use super::{
 use crate::{
     entity::{ComponentMap, ComponentVec, EntityArena, RawIdx},
     ir::{
+        instr::PhiInstr,
         instruction::Instruction,
         primitive::{Block, BlockEntity, Type, Value, ValueEntity},
         IrError,
     },
 };
-use core::marker::PhantomData;
+use core::{fmt, marker::PhantomData};
 use std::collections::HashSet;
 
 #[derive(Debug)]
-pub struct Function {}
+pub struct Function {
+    /// Arena for all block entities.
+    blocks: EntityArena<BlockEntity>,
+    /// Arena for all SSA value entities.
+    values: EntityArena<ValueEntity>,
+    /// Arena for all IR instructions.
+    instrs: EntityArena<Instruction>,
+    /// Block instructions.
+    block_instrs: ComponentVec<Block, Vec<Instr>>,
+    /// Optional associated values for instructions.
+    ///
+    /// Not all instructions can be associated with an SSA value.
+    /// For example `store` is not in pure SSA form and therefore
+    /// has no SSA value association.
+    instr_value: ComponentMap<Instr, Value>,
+    /// Types for all values.
+    value_type: ComponentVec<Value, Type>,
+    /// The association of the SSA value.
+    ///
+    /// Every SSA value has an association to either an IR instruction
+    /// or to an input parameter of the IR function under construction.
+    value_assoc: ComponentVec<Value, ValueAssoc>,
+    /// The types of the output values of the constructed function.
+    output_types: Vec<Type>,
+}
+
+impl fmt::Display for Function {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut inputs = self
+            .value_assoc
+            .iter()
+            .filter_map(|(value, assoc)| {
+                if let ValueAssoc::Input(idx) = *assoc {
+                    Some((idx, value))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        inputs.sort_by(|(lpos, _), (rpos, _)| lpos.cmp(rpos));
+        write!(f, "fn (")?;
+        if let Some(((_, first_input), rest_input)) = inputs.split_first() {
+            let value_type = self.value_type[*first_input];
+            write!(f, "{}: {}", first_input, value_type)?;
+            for (_, rest_input) in rest_input {
+                let value_type = self.value_type[*rest_input];
+                write!(f, ", {}: {}", rest_input, value_type)?;
+            }
+        }
+        write!(f, ")")?;
+        if let Some((first_output, rest_outputs)) =
+            self.output_types.split_first()
+        {
+            write!(f, " -> ")?;
+            if !rest_outputs.is_empty() {
+                write!(f, "[")?;
+            }
+            write!(f, "{}", first_output)?;
+            for rest_output in rest_outputs {
+                write!(f, ", {}", rest_output)?;
+            }
+            if !rest_outputs.is_empty() {
+                write!(f, "]")?;
+            }
+        }
+        writeln!(f)?;
+        for block in self.blocks.indices() {
+            writeln!(f, "{}:", block)?;
+            for &instr in &self.block_instrs[block] {
+                let instr_data = &self.instrs[instr];
+                let instr_value = self.instr_value.get(instr).copied();
+                match instr_value {
+                    Some(value) => {
+                        let value_type = self.value_type[value];
+                        writeln!(
+                            f,
+                            "    {}: {} = {}",
+                            value, value_type, instr_data
+                        )?;
+                    }
+                    None => {
+                        writeln!(f, "    {}", instr_data)?;
+                    }
+                }
+            }
+        }
+        writeln!(f)?;
+        Ok(())
+    }
+}
 
 impl Function {
     /// Creates a function builder to incrementally construct the function.
@@ -62,48 +152,64 @@ pub struct FunctionBuilder<S> {
 #[derive(Debug)]
 pub struct FunctionBuilderContext {
     /// Arena for all block entities.
-    blocks: EntityArena<BlockEntity>,
+    pub blocks: EntityArena<BlockEntity>,
     /// Arena for all SSA value entities.
-    values: EntityArena<ValueEntity>,
+    pub values: EntityArena<ValueEntity>,
     /// Arena for all IR instructions.
-    instrs: EntityArena<Instruction>,
+    pub instrs: EntityArena<Instruction>,
     /// Block predecessors.
     ///
     /// Only filled blocks may have successors, predecessors are always filled.
-    block_preds: ComponentVec<Block, HashSet<Block>>,
+    pub block_preds: ComponentVec<Block, HashSet<Block>>,
     /// Is `true` if block is sealed.
     ///
     /// A sealed block knows all its predecessors.
-    block_sealed: ComponentVec<Block, bool>,
+    pub block_sealed: ComponentVec<Block, bool>,
     /// Is `true` if block is filled.
     ///
     /// A filled block knows all its instructions and has
     /// a terminal instruction as its last instruction.
-    block_filled: ComponentVec<Block, bool>,
+    pub block_filled: ComponentVec<Block, bool>,
     /// Block instructions.
-    block_instrs: ComponentVec<Block, Vec<Instr>>,
+    pub block_instrs: ComponentVec<Block, Vec<Instr>>,
+    /// Marker to indicate if a block has already been visited
+    /// when querying the latest value of a variable upon reading it.
+    pub block_marker: ComponentMap<Block, ()>,
+    /// Stores all users of all phi instructions.
+    ///
+    /// This information is required to replace an unnecessary phi
+    /// phi instruction with its single operand. Users of the unnecessary
+    /// phi instruction are updated accordingly and phi instruction
+    /// users are checked for triviality.
+    pub phi_users: ComponentMap<Value, HashSet<Instr>>,
+    /// Incomplete phi nodes for all blocks.
+    ///
+    /// This stores a mapping from each variable in a basic block to
+    /// some value that must be associated to the phi instruction in
+    /// the same block representing bindings for the variable.
+    pub incomplete_phis: ComponentMap<Block, ComponentMap<Variable, Value>>,
     /// Optional associated values for instructions.
     ///
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
-    instr_value: ComponentMap<Instr, Value>,
+    pub instr_value: ComponentMap<Instr, Value>,
     /// Types for all values.
-    value_type: ComponentVec<Value, Type>,
+    pub value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
     ///
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
-    value_assoc: ComponentVec<Value, ValueAssoc>,
+    pub value_assoc: ComponentVec<Value, ValueAssoc>,
     /// The current basic block that is being operated on.
-    current: Block,
+    pub current: Block,
     /// The variable translator.
     ///
     /// This translates local variables from the source language that
     /// are not in SSA form into SSA form values.
-    vars: VariableTranslator,
+    pub vars: VariableTranslator,
     /// The types of the output values of the constructed function.
-    output_types: Vec<Type>,
+    pub output_types: Vec<Type>,
 }
 
 impl Default for FunctionBuilderContext {
@@ -116,6 +222,9 @@ impl Default for FunctionBuilderContext {
             block_sealed: Default::default(),
             block_filled: Default::default(),
             block_instrs: Default::default(),
+            block_marker: Default::default(),
+            phi_users: Default::default(),
+            incomplete_phis: Default::default(),
             instr_value: Default::default(),
             value_type: Default::default(),
             value_assoc: Default::default(),
@@ -312,7 +421,7 @@ impl FunctionBuilder<state::Body> {
     /// If the current block is already filled.
     pub fn ins(&mut self) -> Result<FunctionInstrBuilder, IrError> {
         let block = self.current_block()?;
-        let already_filled = self.ctx.block_sealed[block];
+        let already_filled = self.ctx.block_filled[block];
         if already_filled {
             return Err(IrError::FunctionBuilder(
                 FunctionBuilderError::BasicBlockIsAlreadyFilled { block },
@@ -340,14 +449,138 @@ impl FunctionBuilder<state::Body> {
         Ok(())
     }
 
+    fn read_var_in_block(
+        &mut self,
+        var: Variable,
+        block: Block,
+    ) -> Result<Value, IrError> {
+        let var_info = self.ctx.vars.get(var)?;
+        if let Some(value) = var_info.definitions().for_block(block) {
+            // Local Value Numbering
+            return Ok(value)
+        }
+        // Global Value Numbering
+        let var_type = var_info.ty();
+        if !self.ctx.block_sealed[block] {
+            // Incomplete phi node required.
+            let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
+            let value = self.ctx.values.alloc(ValueEntity);
+            self.ctx.value_assoc.insert(value, ValueAssoc::Instr(instr));
+            self.ctx.value_type.insert(value, var_type);
+            self.ctx.vars.write_var(var, value, block, || var_type)?;
+            return Ok(value)
+        }
+        let value = if self.ctx.block_preds[block].len() == 1 {
+            // Optimize the common case of one predecessor: No phi needed.
+            let pred = self.ctx.block_preds[block]
+                .iter()
+                .next()
+                .copied()
+                .expect("missing expected predecessor for basic block");
+            self.read_var_in_block(var, pred)?
+        } else {
+            // Break potential cycles with operandless phi instruction.
+            let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
+            let value = self.ctx.values.alloc(ValueEntity);
+            self.ctx.value_assoc.insert(value, ValueAssoc::Instr(instr));
+            self.ctx.value_type.insert(value, var_type);
+            value
+        };
+        self.ctx.vars.write_var(var, value, block, || var_type)?;
+        Ok(value)
+    }
+
+    fn add_phi_operands(
+        &mut self,
+        block: Block,
+        var: Variable,
+        phi: Value,
+    ) -> Result<Value, IrError> {
+        let preds = self.ctx.block_preds[block]
+            .iter()
+            .copied()
+            .collect::<Vec<_>>();
+        let instr = match self.ctx.value_assoc[phi] {
+            ValueAssoc::Instr(instr) => instr,
+            _ => panic!("unexpected non-instruction value"),
+        };
+        for pred in preds {
+            let value = self.read_var_in_block(var, pred)?;
+            let phi = match &mut self.ctx.instrs[instr] {
+                Instruction::Phi(phi) => phi,
+                _ => panic!("unexpected non-phi instruction"),
+            };
+            phi.append_operand(block, value);
+        }
+        self.try_remove_trivial_phi(phi)
+    }
+
+    fn try_remove_trivial_phi(
+        &mut self,
+        phi_value: Value,
+    ) -> Result<Value, IrError> {
+        let val_instr = match self.ctx.value_assoc[phi_value] {
+            ValueAssoc::Instr(instr) => instr,
+            _ => panic!("unexpected non-instruction value"),
+        };
+        let phi_instr = match &mut self.ctx.instrs[val_instr] {
+            Instruction::Phi(phi) => phi,
+            _ => panic!("unexpected non-phi instruction"),
+        };
+        let mut same: Option<Value> = None;
+        for (_block, op) in phi_instr.iter() {
+            if Some(op) == same || op == phi_value {
+                // Unique value or self reference.
+                continue
+            }
+            if same.is_some() {
+                // The phi merges at least two values: not trivial
+                return Ok(phi_value)
+            }
+            same = Some(op);
+        }
+        if same.is_none() {
+            // The phi is unreachable or in the start block.
+            // The paper replaces it with an undefined instruction.
+            //
+            // TODO: What do we do best in this case? Panic?
+            todo!();
+        }
+        let same = same.expect("just asserted that same is Some");
+        self.ctx.phi_users[phi_value].remove(&val_instr);
+        let users = self.ctx.phi_users[phi_value]
+            .iter()
+            .copied()
+            .collect::<Vec<_>>();
+        for user in users {
+            let user_instr = match self.ctx.value_assoc[phi_value] {
+                ValueAssoc::Instr(instr) => instr,
+                _ => panic!("unexpected non-instruction value"),
+            };
+            let user_instr = &mut self.ctx.instrs[user_instr];
+            user_instr.replace_value(|value| {
+                if *value == phi_value {
+                    *value = same;
+                    return true
+                }
+                false
+            });
+            if user_instr.is_phi() {
+                let phi_value = self.ctx.instr_value[user];
+                self.try_remove_trivial_phi(phi_value)?;
+            }
+        }
+        Ok(same)
+    }
+
     /// Reads the last assigned value of the variable within the scope of the current basic block.
     ///
     /// # Errors
     ///
     /// - If the variable has not beed declared.
-    /// - If the variable has not been assigned before for the scope of the current basic block.
-    pub fn read_var(&self, _var: Variable) -> Result<Value, IrError> {
-        todo!()
+    pub fn read_var(&mut self, var: Variable) -> Result<Value, IrError> {
+        let current = self.current_block()?;
+        self.read_var_in_block(var, current)
     }
 
     /// Finalizes construction of the built function.
@@ -357,7 +590,70 @@ impl FunctionBuilder<state::Body> {
     /// # Errors
     ///
     /// If not all basic blocks in the function are sealed and filled.
-    pub fn finalize(self) -> Result<Function, IrError> {
-        todo!()
+    pub fn finalize(mut self) -> Result<Function, IrError> {
+        let unsealed_blocks = self
+            .ctx
+            .block_sealed
+            .iter()
+            .filter_map(|(idx, &sealed)| if !sealed { Some(idx) } else { None })
+            .collect::<Vec<_>>();
+        if !unsealed_blocks.is_empty() {
+            return Err(IrError::FunctionBuilder(
+                FunctionBuilderError::UnsealedBlocksUponFinalize {
+                    unsealed: unsealed_blocks,
+                },
+            ))
+        }
+        let unfilled_blocks = self
+            .ctx
+            .block_sealed
+            .iter()
+            .filter_map(|(idx, &filled)| if !filled { Some(idx) } else { None })
+            .collect::<Vec<_>>();
+        if !unfilled_blocks.is_empty() {
+            return Err(IrError::FunctionBuilder(
+                FunctionBuilderError::UnfilledBlocksUponFinalize {
+                    unfilled: unfilled_blocks,
+                },
+            ))
+        }
+        self.ctx.blocks.shrink_to_fit();
+        self.ctx.values.shrink_to_fit();
+        self.ctx.instrs.shrink_to_fit();
+        self.ctx.block_instrs.shrink_to_fit();
+        self.ctx.instr_value.shrink_to_fit();
+        self.ctx.value_type.shrink_to_fit();
+        self.ctx.value_assoc.shrink_to_fit();
+        self.ctx.output_types.shrink_to_fit();
+        Ok(Function {
+            blocks: self.ctx.blocks,
+            values: self.ctx.values,
+            instrs: self.ctx.instrs,
+            block_instrs: self.ctx.block_instrs,
+            instr_value: self.ctx.instr_value,
+            value_type: self.ctx.value_type,
+            value_assoc: self.ctx.value_assoc,
+            output_types: self.ctx.output_types,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ir::primitive::{Const, IntConst};
+
+    use super::*;
+
+    #[test]
+    fn simple_works() -> Result<(), IrError> {
+        let mut b = Function::build()
+            .with_inputs(&[])?
+            .with_outputs(&[])?
+            .body();
+        let c = b.ins()?.constant(Const::Int(IntConst::I32(42)))?;
+        b.ins()?.return_value(c)?;
+        let fun = b.finalize()?;
+        println!("{}", fun);
+        Ok(())
     }
 }

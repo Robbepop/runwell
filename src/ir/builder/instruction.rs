@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{state, FunctionBuilder};
+use super::{function::ValueAssoc, state, FunctionBuilder};
 use crate::{
     entity::Idx,
-    ir::{instruction::Instruction, IrError},
+    ir::{
+        instr::{ConstInstr, ReturnInstr},
+        instruction::Instruction,
+        primitive::{Const, Value},
+        IrError,
+    },
 };
 
 /// The unique index of a basic block entity of the Runwell IR.
@@ -46,5 +51,29 @@ impl<'a> FunctionInstrBuilder<'a> {
     /// - Upon trying to branch to a basic block that has already been sealed.
     fn append(self, _instr: Instruction) -> Result<(), IrError> {
         todo!()
+    }
+
+    pub fn constant(self, constant: Const) -> Result<Value, IrError> {
+        let block = self.builder.current_block()?;
+        let instruction = ConstInstr::new(constant);
+        let instr = self.builder.ctx.instrs.alloc(instruction.into());
+        let value = self.builder.ctx.values.alloc(Default::default());
+        self.builder.ctx.block_instrs[block].push(instr);
+        self.builder.ctx.instr_value.insert(instr, value);
+        self.builder.ctx.value_type.insert(value, constant.ty());
+        self.builder
+            .ctx
+            .value_assoc
+            .insert(value, ValueAssoc::Instr(instr));
+        Ok(value)
+    }
+
+    pub fn return_value(self, return_value: Value) -> Result<(), IrError> {
+        let block = self.builder.current_block()?;
+        let instruction = ReturnInstr::new(return_value);
+        let instr = self.builder.ctx.instrs.alloc(instruction.into());
+        self.builder.ctx.block_filled[block] = true;
+        self.builder.ctx.block_instrs[block].push(instr);
+        Ok(())
     }
 }
