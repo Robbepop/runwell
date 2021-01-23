@@ -109,3 +109,24 @@ fn simple_input() -> Result<(), IrError> {
     println!("{}", fun);
     Ok(())
 }
+
+#[test]
+fn simple_gvn_var_read() -> Result<(), IrError> {
+    let mut b = Function::build()
+        .with_inputs(&[])?
+        .with_outputs(&[])?
+        .declare_variables(1, IntType::I32.into())?
+        .body();
+    let var = Variable::from_raw(RawIdx::from_u32(0));
+    let v0 = b.ins()?.constant(IntConst::I32(1))?;
+    b.write_var(var, v0)?;
+    let exit_block = b.create_block();
+    b.ins()?.br(exit_block)?;
+    b.switch_to_block(exit_block)?;
+    let v0 = b.read_var(var)?;
+    b.ins()?.return_value(v0)?;
+    b.seal_block()?;
+    let fun = b.finalize()?;
+    println!("{}", fun);
+    Ok(())
+}
