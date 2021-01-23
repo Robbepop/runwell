@@ -129,3 +129,43 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
     println!("{}", fun);
     Ok(())
 }
+
+#[test]
+fn simple_gvn_if_works() -> Result<(), IrError> {
+    let mut b = Function::build()
+        .with_inputs(&[IntType::I32.into()])?
+        .with_outputs(&[])?
+        .declare_variables(1, IntType::I32.into())?
+        .body();
+    let then_block = b.create_block();
+    let else_block = b.create_block();
+    let exit_block = b.create_block();
+    let input = Variable::from_raw(RawIdx::from_u32(0));
+    let var = Variable::from_raw(RawIdx::from_u32(1));
+    let v0 = b.read_var(input)?;
+    let v1 = b.ins()?.constant(IntConst::I32(0))?;
+    let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Eq, v0, v1)?;
+    b.ins()?.if_then_else(v2, then_block, else_block)?;
+
+    b.switch_to_block(then_block)?;
+    let v3 = b.ins()?.constant(IntConst::I32(10))?;
+    b.write_var(var, v3)?;
+    b.ins()?.br(exit_block)?;
+    b.seal_block()?;
+
+    b.switch_to_block(else_block)?;
+    let v4 = b.ins()?.constant(IntConst::I32(20))?;
+    b.write_var(var, v4)?;
+    b.ins()?.br(exit_block)?;
+    b.seal_block()?;
+
+    b.switch_to_block(exit_block)?;
+    let v5 = b.read_var(var)?;
+    b.ins()?.return_value(v5)?;
+    b.seal_block()?;
+
+    let fun = b.finalize()?;
+    println!("{}", fun);
+
+    Ok(())
+}
