@@ -639,18 +639,62 @@ impl FunctionBuilder<state::Body> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ir::primitive::{Const, IntConst};
-
     use super::*;
+    use crate::ir::{
+        instruction::CompareIntOp,
+        primitive::{IntConst, IntType},
+    };
 
     #[test]
-    fn simple_works() -> Result<(), IrError> {
+    fn ret_const_works() -> Result<(), IrError> {
         let mut b = Function::build()
             .with_inputs(&[])?
             .with_outputs(&[])?
             .body();
-        let c = b.ins()?.constant(Const::Int(IntConst::I32(42)))?;
+        let c = b.ins()?.constant(IntConst::I32(42))?;
         b.ins()?.return_value(c)?;
+        let fun = b.finalize()?;
+        println!("{}", fun);
+        Ok(())
+    }
+
+    #[test]
+    fn simple_block_works() -> Result<(), IrError> {
+        let mut b = Function::build()
+            .with_inputs(&[])?
+            .with_outputs(&[])?
+            .body();
+        let v1 = b.ins()?.constant(IntConst::I32(1))?;
+        let v2 = b.ins()?.constant(IntConst::I32(2))?;
+        let v3 = b.ins()?.iadd(IntType::I32, v1, v2)?;
+        let v3 = b.ins()?.imul(IntType::I32, v3, v3)?;
+        b.ins()?.return_value(v3)?;
+        let fun = b.finalize()?;
+        println!("{}", fun);
+        Ok(())
+    }
+
+    #[test]
+    fn if_then_else_works() -> Result<(), IrError> {
+        let mut b = Function::build()
+            .with_inputs(&[])?
+            .with_outputs(&[])?
+            .body();
+        let then_block = b.create_block();
+        let else_block = b.create_block();
+        let v1 = b.ins()?.constant(IntConst::I32(1))?;
+        let v2 = b.ins()?.constant(IntConst::I32(2))?;
+        let v3 = b.ins()?.icmp(IntType::I32, CompareIntOp::Ule, v1, v2)?;
+        let _v4 = b.ins()?.if_then_else(v3, then_block, else_block)?;
+        // b.seal_block()?;
+        b.switch_to_block(then_block)?;
+        let v5 = b.ins()?.constant(IntConst::I32(10))?;
+        b.ins()?.return_value(v5)?;
+        b.seal_block()?;
+        b.switch_to_block(else_block)?;
+        let v6 = b.ins()?.constant(IntConst::I32(20))?;
+        b.ins()?.return_value(v6)?;
+        b.seal_block()?;
         let fun = b.finalize()?;
         println!("{}", fun);
         Ok(())
