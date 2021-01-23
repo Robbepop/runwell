@@ -75,6 +75,11 @@ macro_rules! unit_test_secondary {
             vec![(0, 'A'), (1, 'B'), (3, 'D'), (10, 'E')]
         }
 
+        /// Returns a scrambled insert pattern.
+        fn scambled_inserts() -> Vec<(u32, char)> {
+            vec![(0, 'A'), (3, 'D'), (1, 'B'), (2, 'C')]
+        }
+
         #[test]
         fn insert_works() {
             // Single component.
@@ -83,6 +88,8 @@ macro_rules! unit_test_secondary {
             populated_instance(vec![(0, 'A'), (1, 'B')]);
             // Some components with holes.
             populated_instance(some_components_with_holes());
+            // Scrambled input pattern.
+            populated_instance(scambled_inserts());
         }
 
         #[test]
