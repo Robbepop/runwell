@@ -92,4 +92,9 @@ impl Instruction {
     pub fn is_terminal(&self) -> bool {
         matches!(self, Self::Terminal(_))
     }
+
+    /// Returns `true` if the instruction is a ϕ-instruction.
+    pub fn is_phi(&self) -> bool {
+        matches!(self, Self::Phi(_))
+    }
 }
