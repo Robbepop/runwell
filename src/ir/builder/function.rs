@@ -702,7 +702,7 @@ impl FunctionBuilder<state::Body> {
             blocks: self.ctx.blocks,
             values: self.ctx.values,
             instrs: self.ctx.instrs,
-            block_instrs: self.ctx.block_instrs,
+            block_instrs,
             instr_value: self.ctx.instr_value,
             value_type: self.ctx.value_type,
             value_assoc: self.ctx.value_assoc,
