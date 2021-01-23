@@ -699,4 +699,22 @@ mod tests {
         println!("{}", fun);
         Ok(())
     }
+
+    #[test]
+    fn simple_variable() -> Result<(), IrError> {
+        let mut b = Function::build()
+            .with_inputs(&[])?
+            .with_outputs(&[])?
+            .declare_variables(1, IntType::I32.into())?
+            .body();
+        let var = Variable::from_raw(RawIdx::from_u32(0));
+        let v1 = b.ins()?.constant(IntConst::I32(1))?;
+        b.write_var(var, v1)?;
+        let v2 = b.read_var(var)?;
+        let v3 = b.ins()?.iadd(IntType::I32, v2, v2)?;
+        b.ins()?.return_value(v3)?;
+        let fun = b.finalize()?;
+        println!("{}", fun);
+        Ok(())
+    }
 }
