@@ -566,7 +566,7 @@ impl FunctionBuilder<state::Body> {
                 Instruction::Phi(phi) => phi,
                 _ => panic!("unexpected non-phi instruction"),
             };
-            phi.append_operand(block, value);
+            phi.append_operand(pred, value);
         }
         self.try_remove_trivial_phi(phi)
     }
