@@ -94,3 +94,18 @@ fn simple_variable() -> Result<(), IrError> {
     println!("{}", fun);
     Ok(())
 }
+
+#[test]
+fn simple_input() -> Result<(), IrError> {
+    let mut b = Function::build()
+        .with_inputs(&[IntType::I32.into()])?
+        .with_outputs(&[IntType::I32.into()])?
+        .body();
+    let input = Variable::from_raw(RawIdx::from_u32(0));
+    let v0 = b.read_var(input)?;
+    let v1 = b.ins()?.iadd(IntType::I32, v0, v0)?;
+    b.ins()?.return_value(v1)?;
+    let fun = b.finalize()?;
+    println!("{}", fun);
+    Ok(())
+}
