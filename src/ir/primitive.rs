@@ -143,6 +143,18 @@ impl Const {
     }
 }
 
+impl From<IntConst> for Const {
+    fn from(int_const: IntConst) -> Self {
+        Self::Int(int_const)
+    }
+}
+
+impl From<FloatConst> for Const {
+    fn from(float_const: FloatConst) -> Self {
+        Self::Float(float_const)
+    }
+}
+
 /// A constant fixed-size integer value.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IntConst {
