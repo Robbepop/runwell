@@ -112,13 +112,51 @@ pub struct VariableTranslator {
     /// Upon first variable write the declarations array is traversed using binary
     /// search and the associated declaration is inserted into the variable definitions
     /// map for faster query upon the next time the same variable is written to again.
-    var_to_type: Vec<VariableDecl>,
+    var_to_type: VariableDeclarations,
     /// Entries for variables definitions and their declared types.
     ///
     /// # Note
     ///
     /// This map is initialized lazily during the first assignment of each variable.
-    var_to_defs: ComponentMap<Variable, VariableDefs>,
+    var_to_defs: ComponentMap<Variable, VariableDefinitions>,
+}
+
+/// The lazily declared list of variable declarations.
+#[derive(Debug, Default)]
+struct VariableDeclarations {
+    /// For every declaration of multiple variables their shared declaration is appended
+    /// to this vector.
+    ///
+    /// # Note
+    ///
+    /// Upon first variable write the declarations array is traversed using binary
+    /// search and the associated declaration is inserted into the variable definitions
+    /// map for faster query upon the next time the same variable is written to again.
+    var_to_type: Vec<VariableDecl>,
+}
+
+impl VariableDeclarations {
+    /// Registers another lazily declared variable declaration.
+    pub fn push(&mut self, decl: VariableDecl) {
+        self.var_to_type.push(decl);
+    }
+
+    /// Returns the declared type of the variable.
+    ///
+    /// # Note
+    ///
+    /// Returns the type of the last declared variable in case the variable is out of bounds.
+    /// It is the callers responsibility to never call this function with an invalid variable.
+    pub fn get_var_type(&self, var: Variable) -> Type {
+        let target = var.into_raw();
+        match self
+            .var_to_type
+            .binary_search_by(|decl| target.cmp(&decl.first_idx))
+        {
+            Ok(index) => self.var_to_type[index].ty,
+            Err(index) => self.var_to_type[index - 1].ty,
+        }
+    }
 }
 
 /// Space efficient storage for variable declarations and their declared types.
@@ -140,33 +178,55 @@ struct VariableDecl {
 /// Stores all definitions for all basic blocks for the variable
 /// as well as the type of the variable's declaration.
 #[derive(Debug)]
-struct VariableDefs {
+pub struct VariableDefinitions {
     /// All definitions for the variable per basic block.
-    defs: ComponentMap<Block, Value>,
+    block_defs: ComponentMap<Block, Value>,
     /// The type of the variable given upon its declaration.
     ty: Type,
 }
 
-impl VariableDefs {
+impl VariableDefinitions {
     /// Create a new entry for variable definitions.
-    pub fn new(ty: Type) -> Self {
+    fn new(ty: Type) -> Self {
         Self {
-            defs: ComponentMap::default(),
+            block_defs: ComponentMap::default(),
             ty,
+        }
+    }
+
+    /// Returns the type of the variable definition.
+    pub fn ty(&self) -> Type {
+        self.ty
+    }
+
+    /// Returns `true` if the variable has definitions.
+    pub fn has_definitions(&self) -> bool {
+        self.block_defs.is_empty()
+    }
+
+    /// Returns the variable's definitions for every basic block.
+    pub fn definitions<'a>(&'a self) -> VariableDefinitionPerBlock<'a> {
+        VariableDefinitionPerBlock {
+            defs: &self.block_defs,
         }
     }
 }
 
 /// The value definitions of a variable for every basic block.
 #[derive(Debug, Copy, Clone, From)]
-pub struct VariableDefinitions<'a> {
+pub struct VariableDefinitionPerBlock<'a> {
     defs: &'a ComponentMap<Block, Value>,
 }
 
-impl<'a> VariableDefinitions<'a> {
+impl<'a> VariableDefinitionPerBlock<'a> {
     /// Returns the value written to the variable for the given block if any.
     pub fn for_block(self, block: Block) -> Option<Value> {
         self.defs.get(block).copied()
+    }
+
+    /// Returns `true` if the variable has definitions.
+    pub fn has_definitions(&self) -> bool {
+        self.defs.is_empty()
     }
 }
 
@@ -248,8 +308,9 @@ impl VariableTranslator {
         if amount == 1 {
             // As an optimization we directly initialize the definition of the
             // variable to avoid the binary search for it upon its first assignmnet.
-            let old_def =
-                self.var_to_defs.insert(first_idx, VariableDefs::new(ty));
+            let old_def = self
+                .var_to_defs
+                .insert(first_idx, VariableDefinitions::new(ty));
             debug_assert!(old_def.is_none());
         }
         Ok(())
@@ -260,6 +321,10 @@ impl VariableTranslator {
     /// - The variable assignment is with respect to the given basic block.
     /// - The `value_to_type` closure is used to check whether the type of the new value
     ///   matches the type given at variable declaration.
+    ///
+    /// # Note
+    ///
+    /// Initializes the variable entry if it has never been read or written before.
     ///
     /// # Errors
     ///
@@ -283,8 +348,6 @@ impl VariableTranslator {
         } = self;
         match var_to_defs.entry(var) {
             Entry::Occupied(occupied) => {
-                // Variable has already been defined previously.
-                // Check type of new assignment first and then update assignment.
                 let declared_type = occupied.get().ty;
                 Self::ensure_types_match(
                     var,
@@ -292,27 +355,17 @@ impl VariableTranslator {
                     declared_type,
                     value_to_type,
                 )?;
-                occupied.into_mut().defs.insert(block, new_value);
+                occupied.into_mut().block_defs.insert(block, new_value);
             }
             Entry::Vacant(vacant) => {
-                // Variable has been declared but never been assigned before.
-                // First figure out the type of the variable declaration,
-                // then check if type of new assignment matches and finally
-                // update the variable assignment.
-                let target = var.into_raw();
-                let declared_type = match var_to_type
-                    .binary_search_by(|decl| target.cmp(&decl.first_idx))
-                {
-                    Ok(index) => var_to_type[index].ty,
-                    Err(index) => var_to_type[index - 1].ty,
-                };
+                let declared_type = var_to_type.get_var_type(var);
                 Self::ensure_types_match(
                     var,
                     new_value,
                     declared_type,
                     value_to_type,
                 )?;
-                vacant.insert(VariableDefs::new(declared_type));
+                vacant.insert(VariableDefinitions::new(declared_type));
             }
         }
         Ok(())
@@ -320,21 +373,27 @@ impl VariableTranslator {
 
     /// Returns all definitions per basic block of the variable.
     ///
+    /// # Note
+    ///
+    /// Initializes the variable entry if it has never been read or written before.
+    ///
     /// # Errors
     ///
     /// - If the variable has not been declared, yet.
-    /// - If the variable has never been written to before.
-    pub fn read_var(
-        &self,
+    pub fn get(
+        &mut self,
         var: Variable,
-    ) -> Result<VariableDefinitions, IrError> {
+    ) -> Result<&VariableDefinitions, IrError> {
         self.ensure_declared(var, VariableAccess::Read)?;
-        self.var_to_defs
-            .get(var)
-            .map(|entry| VariableDefinitions { defs: &entry.defs })
-            .ok_or(FunctionBuilderError::ReadBeforeWriteVariable {
-                variable: var,
-            })
-            .map_err(Into::into)
+        let Self {
+            var_to_type,
+            var_to_defs,
+            ..
+        } = self;
+        let definition = var_to_defs.entry(var).or_insert_with(|| {
+            let declared_type = var_to_type.get_var_type(var);
+            VariableDefinitions::new(declared_type)
+        });
+        Ok(definition)
     }
 }
