@@ -144,3 +144,21 @@ impl Display for BranchTableInstr {
         Ok(())
     }
 }
+
+macro_rules! impl_from_terminal_instr_for_instr {
+    ( $( $name:ident ),* $(,)? ) => {
+        $(
+            impl ::core::convert::From<$name> for crate::ir::instr::Instruction {
+                fn from(instr: $name) -> Self {
+                    Self::Terminal(crate::ir::instr::TerminalInstr::from(instr))
+                }
+            }
+        )*
+    };
+}
+impl_from_terminal_instr_for_instr! {
+    ReturnInstr,
+    BranchInstr,
+    IfThenElseInstr,
+    BranchTableInstr,
+}
