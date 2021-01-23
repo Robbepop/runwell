@@ -101,30 +101,63 @@ impl<'a> FunctionInstrBuilder<'a> {
         }
     }
 
-    pub fn iadd(
+    fn ibinary(
         mut self,
+        op: BinaryIntOp,
         ty: IntType,
         lhs: Value,
         rhs: Value,
     ) -> Result<Value, IrError> {
-        let instruction = BinaryIntInstr::new(BinaryIntOp::Add, ty, lhs, rhs);
+        let instruction = BinaryIntInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
     }
 
-    pub fn imul(
-        mut self,
+    pub fn iadd(
+        self,
         ty: IntType,
         lhs: Value,
         rhs: Value,
     ) -> Result<Value, IrError> {
-        let instruction = BinaryIntInstr::new(BinaryIntOp::Mul, ty, lhs, rhs);
-        let (value, instr) =
-            self.append_value_instr(instruction.into(), ty.into())?;
-        self.register_uses(instr, &[lhs, rhs]);
-        Ok(value)
+        self.ibinary(BinaryIntOp::Add, ty, lhs, rhs)
+    }
+
+    pub fn isub(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Sub, ty, lhs, rhs)
+    }
+
+    pub fn imul(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Mul, ty, lhs, rhs)
+    }
+
+    pub fn sdiv(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Sdiv, ty, lhs, rhs)
+    }
+
+    pub fn udiv(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Udiv, ty, lhs, rhs)
     }
 
     pub fn icmp(
