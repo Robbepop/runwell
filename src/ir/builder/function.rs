@@ -270,11 +270,25 @@ pub(crate) mod state {
 }
 
 impl FunctionBuilder<state::Inputs> {
+    /// Creates the entry block of the constructed function.
+    fn create_entry_block(&mut self) -> Block {
+        let entry_block = self.ctx.blocks.alloc(Default::default());
+        self.ctx.block_preds.insert(entry_block, Default::default());
+        self.ctx.block_sealed.insert(entry_block, true);
+        self.ctx.block_filled.insert(entry_block, false);
+        self.ctx
+            .block_instrs
+            .insert(entry_block, Default::default());
+        self.ctx.current = entry_block;
+        entry_block
+    }
+
     /// Declares the inputs parameters and their types for the function.
     pub fn with_inputs(
         mut self,
         inputs: &[Type],
     ) -> Result<FunctionBuilder<state::Outputs>, IrError> {
+        let entry_block = self.create_entry_block();
         for (n, input_type) in inputs.iter().copied().enumerate() {
             let val = self.ctx.values.alloc(Default::default());
             let prev_type = self.ctx.value_type.insert(val, input_type);
@@ -283,6 +297,9 @@ impl FunctionBuilder<state::Inputs> {
                 .ctx
                 .value_assoc
                 .insert(val, ValueAssoc::Input(n as u32));
+            self.ctx.vars.declare_vars(1, input_type)?;
+            let input_var = Variable::from_raw(RawIdx::from_u32(n as u32));
+            self.ctx.vars.write_var(input_var, val, entry_block, || input_type)?;
             debug_assert!(prev_assoc.is_none());
         }
         Ok(FunctionBuilder {
@@ -330,15 +347,7 @@ impl FunctionBuilder<state::DeclareVariables> {
     }
 
     /// Start defining the body of the function with its basic blocks and instructions.
-    pub fn body(mut self) -> FunctionBuilder<state::Body> {
-        let entry_block = self.ctx.blocks.alloc(Default::default());
-        self.ctx.block_preds.insert(entry_block, Default::default());
-        self.ctx.block_sealed.insert(entry_block, true);
-        self.ctx.block_filled.insert(entry_block, false);
-        self.ctx
-            .block_instrs
-            .insert(entry_block, Default::default());
-        self.ctx.current = entry_block;
+    pub fn body(self) -> FunctionBuilder<state::Body> {
         FunctionBuilder {
             ctx: self.ctx,
             state: Default::default(),
