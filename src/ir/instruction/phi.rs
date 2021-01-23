@@ -14,15 +14,28 @@
 
 use crate::ir::primitive::{Block, Value};
 use core::fmt::Display;
-use std::collections::BTreeMap;
+use std::{
+    collections::{btree_map::Iter as BTreeMapIter, BTreeMap},
+    iter::FusedIterator,
+};
 
 /// A ϕ-instruction in the Runwell IR.
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PhiInstr {
-    sources: BTreeMap<Block, Value>,
+    operands: BTreeMap<Block, Value>,
 }
 
 impl PhiInstr {
+    /// Creates a new ϕ-instruction from the given ϕ-sources.
+    pub fn new<I>(sources: I) -> Self
+    where
+        I: IntoIterator<Item = (Block, Value)>,
+    {
+        Self {
+            operands: sources.into_iter().collect::<BTreeMap<_, _>>(),
+        }
+    }
+
     /// Appends another ϕ-operand to the ϕ-instruction.
     ///
     /// Returns `Some` value if the ϕ-operand already existed for the ϕ-instruction.
@@ -31,24 +44,56 @@ impl PhiInstr {
         block: Block,
         value: Value,
     ) -> Option<Value> {
-        self.sources.insert(block, value)
+        self.operands.insert(block, value)
     }
 
-    /// Creates a new ϕ-instruction from the given ϕ-sources.
-    pub fn new<I>(sources: I) -> Self
-    where
-        I: IntoIterator<Item = (Block, Value)>,
-    {
-        Self {
-            sources: sources.into_iter().collect::<BTreeMap<_, _>>(),
+    /// Returns the number of operands of the ϕ-instruction.
+    pub fn len(&self) -> usize {
+        self.operands.len()
+    }
+
+    /// Returns `true` if the ϕ-instruction has no operands.
+    pub fn is_empty(&self) -> bool {
+        self.operands.is_empty()
+    }
+
+    /// Returns an iterator over the operands of the ϕ-instruction.
+    pub fn iter(&self) -> Iter {
+        Iter {
+            iter: self.operands.iter(),
         }
     }
+
+    where
+    {
+    }
 }
+
+/// Iterator over the operands of a ϕ-instruction.
+#[derive(Debug)]
+pub struct Iter<'a> {
+    iter: BTreeMapIter<'a, Block, Value>,
+}
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = (Block, Value);
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|(block, op)| (*block, *op))
+    }
+}
+
+impl<'a> FusedIterator for Iter<'a> {}
+impl<'a> ExactSizeIterator for Iter<'a> {}
 
 impl Display for PhiInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "ϕ [")?;
-        let mut iter = self.sources.iter();
+        let mut iter = self.operands.iter();
         if let Some((basic_block, value)) = iter.next() {
             write!(f, " {} -> {}", basic_block, value)?;
             for (basic_block, value) in iter {
