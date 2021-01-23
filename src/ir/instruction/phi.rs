@@ -17,7 +17,7 @@ use core::fmt::Display;
 use std::collections::BTreeMap;
 
 /// A ϕ-instruction in the Runwell IR.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PhiInstr {
     sources: BTreeMap<Block, Value>,
 }
