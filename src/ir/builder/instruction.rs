@@ -121,7 +121,8 @@ impl<'a> FunctionInstrBuilder<'a> {
         rhs: Value,
     ) -> Result<Value, IrError> {
         let instruction = BinaryIntInstr::new(BinaryIntOp::Mul, ty, lhs, rhs);
-        let (value, instr) = self.append_value_instr(instruction.into(), ty.into())?;
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), ty.into())?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
     }
@@ -134,7 +135,8 @@ impl<'a> FunctionInstrBuilder<'a> {
         rhs: Value,
     ) -> Result<Value, IrError> {
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
-        let (value, instr) = self.append_value_instr(instruction.into(), ty.into())?;
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), ty.into())?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
     }

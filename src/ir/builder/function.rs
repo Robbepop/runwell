@@ -496,7 +496,12 @@ impl FunctionBuilder<state::Body> {
         Ok(())
     }
 
-    fn create_phi_instruction(&mut self, var: Variable, var_type: Type, block: Block) -> Result<Value, IrError> {
+    fn create_phi_instruction(
+        &mut self,
+        var: Variable,
+        var_type: Type,
+        block: Block,
+    ) -> Result<Value, IrError> {
         let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
         let value = self.ctx.values.alloc(ValueEntity);
         self.ctx.value_assoc.insert(value, ValueAssoc::Instr(instr));
