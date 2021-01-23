@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{function::ValueAssoc, state, FunctionBuilder};
+use super::{
+    function::ValueAssoc,
+    state,
+    FunctionBuilder,
+    FunctionBuilderError,
+};
 use crate::{
     entity::Idx,
     ir::{
@@ -141,7 +146,7 @@ impl<'a> FunctionInstrBuilder<'a> {
     pub fn br(mut self, target: Block) -> Result<Instr, IrError> {
         let block = self.builder.current_block()?;
         let instr = self.append_instr(BranchInstr::new(target))?;
-        self.builder.ctx.block_preds[target].insert(block);
+        self.add_predecessor(target, block)?;
         Ok(instr)
     }
 
@@ -161,8 +166,45 @@ impl<'a> FunctionInstrBuilder<'a> {
             then_target,
             else_target,
         ))?;
-        self.builder.ctx.block_preds[then_target].insert(block);
-        self.builder.ctx.block_preds[else_target].insert(block);
+        self.add_predecessor(then_target, block)?;
+        self.add_predecessor(else_target, block)?;
         Ok(instr)
+    }
+
+    /// Adds a new predecessor basic block to the block.
+    ///
+    /// # Errors
+    ///
+    /// - If the new predecessor is not yet filled.
+    /// - If the block that gains a new predessor has already been sealed.
+    /// - If the new predecessor is already a predecessor of the block.
+    fn add_predecessor(
+        &mut self,
+        block: Block,
+        new_pred: Block,
+    ) -> Result<(), IrError> {
+        if !self.builder.ctx.block_filled[new_pred] {
+            return Err(IrError::FunctionBuilder(
+                FunctionBuilderError::UnfilledPredecessor {
+                    block,
+                    unfilled_pred: new_pred,
+                },
+            ))
+        }
+        if self.builder.ctx.block_sealed[block] {
+            return Err(IrError::FunctionBuilder(
+                FunctionBuilderError::PredecessorForSealedBlock {
+                    sealed_block: block,
+                    new_pred,
+                },
+            ))
+        }
+        if !self.builder.ctx.block_preds[block].insert(new_pred) {
+            return Err(IrError::FunctionBuilder(FunctionBuilderError::BranchAlreadyExists {
+                from: new_pred,
+                to: block,
+            }))
+        }
+        Ok(())
     }
 }
