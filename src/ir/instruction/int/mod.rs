@@ -17,6 +17,8 @@ mod icmp;
 mod iconv;
 mod unary;
 
+use crate::ir::primitive::Value;
+
 pub use self::{
     binary::{BinaryIntInstr, BinaryIntOp},
     icmp::{CompareIntInstr, CompareIntOp},
@@ -34,6 +36,29 @@ pub enum IntInstr {
     Extend(ExtendIntInstr),
     IntToFloat(IntToFloatInstr),
     Truncate(TruncateIntInstr),
+}
+
+impl IntInstr {
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Binary(instr) => instr.replace_value(replace),
+            Self::Unary(instr) => instr.replace_value(replace),
+            Self::Compare(instr) => instr.replace_value(replace),
+            Self::Extend(instr) => instr.replace_value(replace),
+            Self::IntToFloat(instr) => instr.replace_value(replace),
+            Self::Truncate(instr) => instr.replace_value(replace),
+        }
+    }
 }
 
 macro_rules! impl_from_int_instr_for_instr {

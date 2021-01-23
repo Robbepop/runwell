@@ -38,6 +38,23 @@ impl CallInstr {
             call_params: call_params.into_iter().collect::<Vec<_>>(),
         }
     }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        self.call_params
+            .iter_mut()
+            .map(|param| replace(param))
+            .fold(false, |l, r| l || r)
+    }
 }
 
 impl Display for CallInstr {
@@ -87,6 +104,25 @@ impl CallIndirectInstr {
             index,
             call_params: call_params.into_iter().collect::<Vec<_>>(),
         }
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.index)
+            && self
+                .call_params
+                .iter_mut()
+                .map(|param| replace(param))
+                .fold(false, |l, r| l || r)
     }
 }
 

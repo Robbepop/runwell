@@ -59,6 +59,20 @@ impl DemoteFloatInstr {
     pub fn src(&self) -> Value {
         self.src
     }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.src)
+    }
 }
 
 /// Demotes the source float value from source float type to destination float type.
@@ -104,6 +118,20 @@ impl PromoteFloatInstr {
     /// Returns the source floating point value of the promotion.
     pub fn src(&self) -> Value {
         self.src
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.src)
     }
 }
 
@@ -192,5 +220,19 @@ impl FloatToIntInstr {
     /// Returns `true` if the conversion is saturating.
     pub fn is_saturating(&self) -> bool {
         self.saturating
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.src)
     }
 }

@@ -95,4 +95,18 @@ impl CompareIntInstr {
     pub fn ty(&self) -> IntType {
         self.ty
     }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.lhs) || replace(&mut self.rhs)
+    }
 }

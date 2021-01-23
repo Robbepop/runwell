@@ -69,6 +69,8 @@ pub use self::{
 };
 use derive_more::{Display, From};
 
+use super::primitive::Value;
+
 /// An SSA instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq, Hash)]
 pub enum Instruction {
@@ -96,5 +98,33 @@ impl Instruction {
     /// Returns `true` if the instruction is a ϕ-instruction.
     pub fn is_phi(&self) -> bool {
         matches!(self, Self::Phi(_))
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Call(instr) => instr.replace_value(replace),
+            Self::CallIndirect(instr) => instr.replace_value(replace),
+            Self::Const(_instr) => false,
+            Self::MemoryGrow(instr) => instr.replace_value(replace),
+            Self::MemorySize(_instr) => false,
+            Self::Phi(instr) => instr.replace_value(replace),
+            Self::Load(instr) => instr.replace_value(replace),
+            Self::Store(instr) => instr.replace_value(replace),
+            Self::Select(instr) => instr.replace_value(replace),
+            Self::Reinterpret(instr) => instr.replace_value(replace),
+            Self::Terminal(instr) => instr.replace_value(replace),
+            Self::Int(instr) => instr.replace_value(replace),
+            Self::Float(instr) => instr.replace_value(replace),
+        }
     }
 }

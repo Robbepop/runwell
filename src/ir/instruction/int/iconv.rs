@@ -57,6 +57,20 @@ impl TruncateIntInstr {
     pub fn src(&self) -> Value {
         self.src
     }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.src)
+    }
 }
 
 /// Extends the integer value from source type to destination type.
@@ -140,6 +154,20 @@ impl ExtendIntInstr {
     pub fn is_signed(&self) -> bool {
         self.signed
     }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.src)
+    }
 }
 
 /// Instruction to convert an integer into a floating point number.
@@ -195,5 +223,19 @@ impl IntToFloatInstr {
     /// - `false`: `zero-extension`
     pub fn is_signed(&self) -> bool {
         self.signed
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.src)
     }
 }

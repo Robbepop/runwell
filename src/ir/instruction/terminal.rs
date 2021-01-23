@@ -30,6 +30,28 @@ pub enum TerminalInstr {
     BranchTable(BranchTableInstr),
 }
 
+impl TerminalInstr {
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Trap => false,
+            Self::Return(instr) => instr.replace_value(replace),
+            Self::Br(_instr) => false,
+            Self::Ite(instr) => instr.replace_value(replace),
+            Self::BranchTable(instr) => instr.replace_value(replace),
+        }
+    }
+}
+
 /// Returns the returned value from to the function's caller.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "ret {}", return_value)]
@@ -46,6 +68,20 @@ impl ReturnInstr {
     /// Returns the value that is returned by the instruction.
     pub fn return_value(&self) -> Value {
         self.return_value
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.return_value)
     }
 }
 
@@ -106,6 +142,20 @@ impl IfThenElseInstr {
     pub fn false_target(&self) -> Block {
         self.br_else
     }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.condition)
+    }
 }
 
 /// A branching table mapping indices to branching targets.
@@ -127,6 +177,20 @@ impl BranchTableInstr {
             default,
             targets: targets.into_iter().collect::<Vec<_>>(),
         }
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.source)
     }
 }
 

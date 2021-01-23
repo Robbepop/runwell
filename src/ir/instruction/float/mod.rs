@@ -17,6 +17,8 @@ mod fcmp;
 mod fconv;
 mod unary;
 
+use crate::ir::primitive::Value;
+
 pub use self::{
     binary::{BinaryFloatInstr, BinaryFloatOp},
     fcmp::{CompareFloatInstr, CompareFloatOp},
@@ -34,6 +36,29 @@ pub enum FloatInstr {
     Demote(DemoteFloatInstr),
     Promote(PromoteFloatInstr),
     FloatToInt(FloatToIntInstr),
+}
+
+impl FloatInstr {
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Unary(instr) => instr.replace_value(replace),
+            Self::Binary(instr) => instr.replace_value(replace),
+            Self::Compare(instr) => instr.replace_value(replace),
+            Self::Demote(instr) => instr.replace_value(replace),
+            Self::Promote(instr) => instr.replace_value(replace),
+            Self::FloatToInt(instr) => instr.replace_value(replace),
+        }
+    }
 }
 
 macro_rules! impl_from_float_instr_for_instr {
