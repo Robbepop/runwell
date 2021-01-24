@@ -72,7 +72,7 @@ impl Display for CompareIntOp {
 
 /// Instruction to compare two integer values with respect to some comparison operator.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "{}cmp {} {} {}", "op.prefix()", ty, lhs, rhs)]
+#[display(fmt = "{}cmp {} {} {} {}", "op.prefix()", ty, op, lhs, rhs)]
 pub struct CompareIntInstr {
     op: CompareIntOp,
     ty: IntType,
