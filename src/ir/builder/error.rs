@@ -73,6 +73,17 @@ pub enum FunctionBuilderError {
         value_type: Type,
     },
     #[display(
+        fmt = "tried to use {} with expected type {} but its type is {}",
+        value,
+        value_type,
+        expected_type
+    )]
+    UnmatchingValueType {
+        value: Value,
+        value_type: Type,
+        expected_type: Type,
+    },
+    #[display(
         fmt = "tried to read variable {} before writing to it",
         variable
     )]
