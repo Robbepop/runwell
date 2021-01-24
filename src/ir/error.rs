@@ -14,9 +14,60 @@
 
 use super::FunctionBuilderError;
 use derive_more::{Display, Error, From};
+use core::fmt;
 
 /// An error that occured while translating from Wasm to Runwell IR.
+#[derive(Debug, Error, From, PartialEq, Eq)]
+pub struct IrError {
+    kind: IrErrorKind,
+    context: Vec<String>,
+}
+
+impl fmt::Display for IrError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.kind)?;
+        if let Some((first, rest)) = self.context.split_first() {
+            writeln!(f, "\n  context: {}", first)?;
+            for context in rest {
+                writeln!(f, "           {}", context)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl IrError {
+    /// Constructs a new IR error from the given error kind.
+    fn from_kind(kind: IrErrorKind) -> Self {
+        Self {
+            kind,
+            context: Vec::new(),
+        }
+    }
+
+    /// Adds context information to the current error.
+    pub fn with_context<T>(mut self, context: T) -> Self
+    where
+        T: Into<String>,
+    {
+        self.context.push(context.into());
+        self
+    }
+
+    /// Returns a shared reference to the underlying kind of encountered error.
+    pub fn kind(&self) -> &IrErrorKind {
+        &self.kind
+    }
+}
+
+impl From<FunctionBuilderError> for IrError {
+    fn from(error: FunctionBuilderError) -> Self {
+        Self::from_kind(error.into())
+    }
+}
+
+/// An error kind that occured while translating from Wasm to Runwell IR.
 #[derive(Debug, Display, Error, From, PartialEq, Eq)]
-pub enum IrError {
+pub enum IrErrorKind {
     FunctionBuilder(FunctionBuilderError),
 }

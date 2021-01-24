@@ -412,9 +412,8 @@ impl FunctionBuilder<state::Body> {
     /// If the basic block does not exist in this function.
     pub fn switch_to_block(&mut self, block: Block) -> Result<(), IrError> {
         if !self.ctx.blocks.contains_key(block) {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::InvalidBasicBlock { block },
-            ))
+            return Err(FunctionBuilderError::InvalidBasicBlock { block })
+                .map_err(Into::into)
         }
         self.ctx.current = block;
         Ok(())
@@ -435,9 +434,10 @@ impl FunctionBuilder<state::Body> {
             .insert(block, true)
             .expect("encountered invalid current basic block");
         if already_sealed {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::BasicBlockIsAlreadySealed { block },
-            ))
+            return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
+                block,
+            })
+            .map_err(Into::into)
         }
         // Popping incomplete phis by inserting a new empty component map.
         let incomplete_phis = self
@@ -460,9 +460,10 @@ impl FunctionBuilder<state::Body> {
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled[block];
         if already_filled {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::BasicBlockIsAlreadyFilled { block },
-            ))
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
         }
         Ok(FunctionInstrBuilder::new(self))
     }
@@ -603,9 +604,10 @@ impl FunctionBuilder<state::Body> {
         if same.is_none() {
             // The phi is unreachable or in the start block.
             // The paper replaces it with an undefined instruction.
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::UnreachablePhi { value: phi_value },
-            ))
+            return Err(FunctionBuilderError::UnreachablePhi {
+                value: phi_value,
+            })
+            .map_err(Into::into)
         }
         let same = same.expect("just asserted that same is Some");
         // Phi was determined to be trivial and can be removed.
@@ -664,11 +666,10 @@ impl FunctionBuilder<state::Body> {
             .filter_map(|(idx, &sealed)| if !sealed { Some(idx) } else { None })
             .collect::<Vec<_>>();
         if !unsealed_blocks.is_empty() {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::UnsealedBlocksUponFinalize {
-                    unsealed: unsealed_blocks,
-                },
-            ))
+            return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
+                unsealed: unsealed_blocks,
+            })
+            .map_err(Into::into)
         }
         let unfilled_blocks = self
             .ctx
@@ -677,11 +678,10 @@ impl FunctionBuilder<state::Body> {
             .filter_map(|(idx, &filled)| if !filled { Some(idx) } else { None })
             .collect::<Vec<_>>();
         if !unfilled_blocks.is_empty() {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::UnfilledBlocksUponFinalize {
-                    unfilled: unfilled_blocks,
-                },
-            ))
+            return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
+                unfilled: unfilled_blocks,
+            })
+            .map_err(Into::into)
         }
         self.ctx.blocks.shrink_to_fit();
         self.ctx.values.shrink_to_fit();

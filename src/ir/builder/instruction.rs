@@ -265,28 +265,25 @@ impl<'a> FunctionInstrBuilder<'a> {
         new_pred: Block,
     ) -> Result<(), IrError> {
         if !self.builder.ctx.block_filled[new_pred] {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::UnfilledPredecessor {
-                    block,
-                    unfilled_pred: new_pred,
-                },
-            ))
+            return Err(FunctionBuilderError::UnfilledPredecessor {
+                block,
+                unfilled_pred: new_pred,
+            })
+            .map_err(Into::into)
         }
         if self.builder.ctx.block_sealed[block] {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::PredecessorForSealedBlock {
-                    sealed_block: block,
-                    new_pred,
-                },
-            ))
+            return Err(FunctionBuilderError::PredecessorForSealedBlock {
+                sealed_block: block,
+                new_pred,
+            })
+            .map_err(Into::into)
         }
         if !self.builder.ctx.block_preds[block].insert(new_pred) {
-            return Err(IrError::FunctionBuilder(
-                FunctionBuilderError::BranchAlreadyExists {
-                    from: new_pred,
-                    to: block,
-                },
-            ))
+            return Err(FunctionBuilderError::BranchAlreadyExists {
+                from: new_pred,
+                to: block,
+            })
+            .map_err(Into::into)
         }
         Ok(())
     }
