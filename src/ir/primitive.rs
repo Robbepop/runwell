@@ -57,6 +57,8 @@ impl fmt::Display for Value {
     Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 pub enum Type {
+    #[display(fmt = "bool")]
+    Bool,
     Int(IntType),
     Float(FloatType),
 }
@@ -76,6 +78,7 @@ impl Type {
     /// Returns the bit width of the type.
     pub fn bit_width(&self) -> u32 {
         match self {
+            Self::Bool => 1,
             Self::Int(int_type) => int_type.bit_width(),
             Self::Float(float_type) => float_type.bit_width(),
         }
@@ -129,6 +132,7 @@ impl FloatType {
 /// A Runwell constant value.
 #[derive(Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Const {
+    Bool(bool),
     Int(IntConst),
     Float(FloatConst),
 }
@@ -137,6 +141,7 @@ impl Const {
     /// Returns the type of the constant value.
     pub fn ty(&self) -> Type {
         match self {
+            Self::Bool(_) => Type::Bool,
             Self::Int(int_const) => int_const.ty(),
             Self::Float(float_const) => float_const.ty(),
         }
