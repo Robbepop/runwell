@@ -27,6 +27,7 @@ use crate::{
             CompareIntInstr,
             ConstInstr,
             IfThenElseInstr,
+            ReinterpretInstr,
             ReturnInstr,
             SelectInstr,
             TerminalInstr,
@@ -212,6 +213,29 @@ impl<'a> FunctionInstrBuilder<'a> {
         let instruction = SelectInstr::new(condition, ty, if_true, if_false);
         let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
         self.register_uses(instr, &[condition, if_true, if_false]);
+        Ok(value)
+    }
+
+    pub fn reinterpret(
+        mut self,
+        from_type: Type,
+        to_type: Type,
+        src: Value,
+    ) -> Result<Value, IrError> {
+        let from_bitwidth = from_type.bit_width();
+        let to_bitwidth = to_type.bit_width();
+        if from_bitwidth != to_bitwidth {
+            return Err(FunctionBuilderError::UnmatchingReinterpretBitwidths {
+                from_bitwidth,
+                to_bitwidth,
+                src,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = ReinterpretInstr::new(from_type, to_type, src);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), to_type)?;
+        self.register_uses(instr, &[src]);
         Ok(value)
     }
 

@@ -22,6 +22,17 @@ use derive_more::{Display, Error};
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum FunctionBuilderError {
     #[display(
+        fmt = "encountered invalid reinterpretation of {} from types with width {} to type with width {}",
+        src,
+        from_bitwidth,
+        to_bitwidth
+    )]
+    UnmatchingReinterpretBitwidths {
+        from_bitwidth: u32,
+        to_bitwidth: u32,
+        src: Value,
+    },
+    #[display(
         fmt = "tried to add new predecessor {} to sealed basic block {}",
         new_pred,
         sealed_block
