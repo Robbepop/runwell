@@ -107,6 +107,11 @@ impl<'a> FunctionInstrBuilder<'a> {
         }
     }
 
+    /// Returns `Ok` if the type of the value matches the expected type.
+    ///
+    /// # Errors
+    ///
+    /// If the types do not match.
     fn expect_type(
         &self,
         value: Value,
@@ -124,6 +129,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(())
     }
 
+    /// Convenience function to construct binary integer instructions.
     fn ibinary(
         mut self,
         op: BinaryIntOp,
@@ -140,6 +146,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(value)
     }
 
+    /// Integer addition.
     pub fn iadd(
         self,
         ty: IntType,
@@ -149,6 +156,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Add, ty, lhs, rhs)
     }
 
+    /// Integer subtraction.
     pub fn isub(
         self,
         ty: IntType,
@@ -158,6 +166,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Sub, ty, lhs, rhs)
     }
 
+    /// Integer multiplication.
     pub fn imul(
         self,
         ty: IntType,
@@ -167,6 +176,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Mul, ty, lhs, rhs)
     }
 
+    /// Signed integer division.
     pub fn sdiv(
         self,
         ty: IntType,
@@ -176,6 +186,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Sdiv, ty, lhs, rhs)
     }
 
+    /// Unsigned integer division.
     pub fn udiv(
         self,
         ty: IntType,
@@ -185,6 +196,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Udiv, ty, lhs, rhs)
     }
 
+    /// Signed integer remainder.
     pub fn srem(
         self,
         ty: IntType,
@@ -194,6 +206,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Srem, ty, lhs, rhs)
     }
 
+    /// Unsigned integer remainder.
     pub fn urem(
         self,
         ty: IntType,
@@ -203,6 +216,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Urem, ty, lhs, rhs)
     }
 
+    /// Integer bitwise AND.
     pub fn iand(
         self,
         ty: IntType,
@@ -212,6 +226,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::And, ty, lhs, rhs)
     }
 
+    /// Integer bitwise OR.
     pub fn ior(
         self,
         ty: IntType,
@@ -221,6 +236,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Or, ty, lhs, rhs)
     }
 
+    /// Integer bitwise XOR.
     pub fn ixor(
         self,
         ty: IntType,
@@ -230,6 +246,21 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Xor, ty, lhs, rhs)
     }
 
+    /// Integer comparison given a comparator.
+    ///
+    /// # Comparator Kinds
+    ///
+    /// - There is a sign agnostic equals (`==`) comparator.
+    /// - There are four signed integer comparators:
+    ///     - `slt`: Signed less-than
+    ///     - `sle`: Signed less-equals
+    ///     - `sgt`: Signed greater-than
+    ///     - `sge`: Signed greater-equals
+    /// - There are four unsigned integer comparators:
+    ///     - `ult`: Unsigned less-than
+    ///     - `ule`: Unsigned less-equals
+    ///     - `ugt`: Unsigned greater-than
+    ///     - `uge`: Unsigned greater-equals
     pub fn icmp(
         mut self,
         ty: IntType,
@@ -246,6 +277,11 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(value)
     }
 
+    /// Selects either `if_true` or `if_false` depending on the value of `condition`.
+    ///
+    /// # Note
+    ///
+    /// This is very similar to an if-then-else instruction that does not require jumps.
     pub fn select(
         mut self,
         ty: Type,
@@ -261,6 +297,15 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(value)
     }
 
+    /// Reinterprets the source value from its source type into its new destination type.
+    ///
+    /// # Note
+    ///
+    /// This allows casting between integer and float without conversion.
+    ///
+    /// # Errors
+    ///
+    /// If source and destination types have different bit widths.
     pub fn reinterpret(
         mut self,
         from_type: Type,
@@ -299,6 +344,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(instr)
     }
 
+    /// Returns the given value to the caller of the function.
     pub fn return_value(
         mut self,
         return_value: Value,
@@ -317,6 +363,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(instr)
     }
 
+    /// Unconditionally jumps to the target basic block.
     pub fn br(mut self, target: Block) -> Result<Instr, IrError> {
         let block = self.builder.current_block()?;
         let instr = self.append_instr(BranchInstr::new(target))?;
@@ -324,10 +371,13 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(instr)
     }
 
+    /// Immediately traps or aborts execution.
     pub fn trap(mut self) -> Result<Instr, IrError> {
         self.append_instr(TerminalInstr::Trap)
     }
 
+    /// Conditionally jumps to either `then_target` or `else_target` depending on
+    /// the value of `condition`.
     pub fn if_then_else(
         mut self,
         condition: Value,
