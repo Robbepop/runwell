@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use super::FunctionBuilderError;
-use derive_more::{Display, Error, From};
 use core::fmt;
+use derive_more::{Display, Error, From};
 
 /// An error that occured while translating from Wasm to Runwell IR.
 #[derive(Debug, Error, From, PartialEq, Eq)]

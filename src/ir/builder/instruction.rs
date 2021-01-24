@@ -224,7 +224,8 @@ impl<'a> FunctionInstrBuilder<'a> {
             return Err(FunctionBuilderError::UnmatchingFunctionReturnType {
                 returned_types: vec![return_type],
                 expected_types: expected_output.to_vec(),
-            }).map_err(Into::into)
+            })
+            .map_err(Into::into)
         }
         let instr = self.append_instr(ReturnInstr::new(return_value))?;
         self.register_uses(instr, &[return_value]);
