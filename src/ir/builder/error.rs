@@ -110,6 +110,15 @@ pub enum FunctionBuilderError {
     InvalidBasicBlock { block: Block },
     #[display(fmt = "encountered an unreachable phi instruction {}", value)]
     UnreachablePhi { value: Value },
+    #[display(
+        fmt = "encountered unmatching function return types. actual: {:?}, expected: {:?}",
+        returned_types,
+        expected_types
+    )]
+    UnmatchingFunctionReturnType {
+        returned_types: Vec<Type>,
+        expected_types: Vec<Type>,
+    },
 }
 
 /// A variable access for better error information.

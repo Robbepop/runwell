@@ -218,6 +218,14 @@ impl<'a> FunctionInstrBuilder<'a> {
         mut self,
         return_value: Value,
     ) -> Result<Instr, IrError> {
+        let expected_output = &self.builder.ctx.output_types;
+        let return_type = self.builder.ctx.value_type[return_value];
+        if &[return_type][..] != expected_output {
+            return Err(FunctionBuilderError::UnmatchingFunctionReturnType {
+                returned_types: vec![return_type],
+                expected_types: expected_output.to_vec(),
+            }).map_err(Into::into)
+        }
         let instr = self.append_instr(ReturnInstr::new(return_value))?;
         self.register_uses(instr, &[return_value]);
         Ok(instr)
