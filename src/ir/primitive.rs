@@ -130,7 +130,9 @@ impl FloatType {
 }
 
 /// A Runwell constant value.
-#[derive(Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 pub enum Const {
     Bool(bool),
     Int(IntConst),
