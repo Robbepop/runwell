@@ -603,9 +603,9 @@ impl FunctionBuilder<state::Body> {
         if same.is_none() {
             // The phi is unreachable or in the start block.
             // The paper replaces it with an undefined instruction.
-            //
-            // TODO: What do we do best in this case? Panic?
-            todo!();
+            return Err(IrError::FunctionBuilder(
+                FunctionBuilderError::UnreachablePhi { value: phi_value },
+            ))
         }
         let same = same.expect("just asserted that same is Some");
         // Phi was determined to be trivial and can be removed.

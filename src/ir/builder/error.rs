@@ -97,6 +97,8 @@ pub enum FunctionBuilderError {
     BranchAlreadyExists { from: Block, to: Block },
     #[display(fmt = "encountered invalid basic block index at {}.", block)]
     InvalidBasicBlock { block: Block },
+    #[display(fmt = "encountered an unreachable phi instruction {}", value)]
+    UnreachablePhi { value: Value },
 }
 
 /// A variable access for better error information.
