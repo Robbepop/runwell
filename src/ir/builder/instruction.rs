@@ -68,7 +68,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         ty: Type,
     ) -> Result<(Value, Instr), IrError> {
         let block = self.builder.current_block()?;
-        let instr = self.builder.ctx.instrs.alloc(instruction.into());
+        let instr = self.builder.ctx.instrs.alloc(instruction);
         let value = self.builder.ctx.values.alloc(Default::default());
         self.builder.ctx.block_instrs[block].push(instr);
         self.builder.ctx.instr_value.insert(instr, value);

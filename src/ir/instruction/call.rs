@@ -16,7 +16,7 @@ use crate::{
     ir::primitive::Value,
     parse::{FunctionId, FunctionTypeId, TableId},
 };
-use core::fmt::Display;
+use core::{convert::identity, fmt::Display};
 
 /// Calls a function statically.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -53,7 +53,7 @@ impl CallInstr {
         self.call_params
             .iter_mut()
             .map(|param| replace(param))
-            .fold(false, |l, r| l || r)
+            .any(identity)
     }
 }
 
@@ -122,7 +122,7 @@ impl CallIndirectInstr {
                 .call_params
                 .iter_mut()
                 .map(|param| replace(param))
-                .fold(false, |l, r| l || r)
+                .any(identity)
     }
 }
 

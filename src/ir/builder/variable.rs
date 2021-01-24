@@ -205,7 +205,7 @@ impl VariableDefinitions {
     }
 
     /// Returns the variable's definitions for every basic block.
-    pub fn definitions<'a>(&'a self) -> VariableDefinitionPerBlock<'a> {
+    pub fn definitions(&self) -> VariableDefinitionPerBlock {
         VariableDefinitionPerBlock {
             defs: &self.block_defs,
         }

@@ -504,7 +504,7 @@ impl FunctionBuilder<state::Body> {
         self.ctx.block_phis[block].insert(var, instr);
         self.ctx.vars.write_var(var, value, block, || var_type)?;
         self.ctx.instr_value.insert(instr, value);
-        return Ok(value)
+        Ok(value)
     }
 
     /// Reads the given variable starting from the given block.
@@ -537,8 +537,7 @@ impl FunctionBuilder<state::Body> {
             self.read_var_in_block(var, pred)?
         } else {
             // Break potential cycles with operandless phi instruction.
-            let value = self.create_phi_instruction(var, var_type, block)?;
-            value
+            self.create_phi_instruction(var, var_type, block)?
         };
         self.ctx.vars.write_var(var, value, block, || var_type)?;
         Ok(value)

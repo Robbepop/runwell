@@ -13,11 +13,8 @@
 // limitations under the License.
 
 use crate::ir::primitive::{Block, Value};
-use core::fmt::Display;
-use std::{
-    collections::{btree_map::Iter as BTreeMapIter, BTreeMap},
-    iter::FusedIterator,
-};
+use core::{convert::identity, fmt::Display, iter::FusedIterator};
+use std::collections::{btree_map::Iter as BTreeMapIter, BTreeMap};
 
 /// A ϕ-instruction in the Runwell IR.
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -78,7 +75,7 @@ impl PhiInstr {
         self.operands
             .iter_mut()
             .map(|(_block, op)| replace(op))
-            .fold(false, |l, r| l || r)
+            .any(identity)
     }
 }
 
