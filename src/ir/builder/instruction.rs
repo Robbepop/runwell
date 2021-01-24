@@ -95,6 +95,10 @@ impl<'a> FunctionInstrBuilder<'a> {
         Ok(value)
     }
 
+    /// Registers that the instruction uses the given values.
+    ///
+    /// This information is later used to remove trivial phi nodes
+    /// recursively and can later be used to down propagate other simplifications.
     fn register_uses(&mut self, instr: Instr, uses: &[Value]) {
         for &value in uses {
             self.builder.ctx.value_users[value].insert(instr);
