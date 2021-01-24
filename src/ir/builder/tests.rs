@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! The tests build up a Runwell IR function and print an output of the function.
+//!
+//! Note that currently the tests do not automatically test if the constructed
+//! function is equal to the tests expectation.
+//! Also note that currently no optimizations are performed.
+//!
+//! Automated checks to verify that the constructed functions match expectations
+//! are planned after an API for that has been designed.
+
 use super::Function;
 use crate::{
     entity::RawIdx,
