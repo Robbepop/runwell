@@ -101,6 +101,23 @@ impl<'a> FunctionInstrBuilder<'a> {
         }
     }
 
+    fn expect_type(
+        &self,
+        value: Value,
+        expected_type: Type,
+    ) -> Result<(), IrError> {
+        let value_type = self.builder.ctx.value_type[value];
+        if value_type != expected_type {
+            return Err(FunctionBuilderError::UnmatchingValueType {
+                value,
+                value_type,
+                expected_type,
+            })
+            .map_err(Into::into)
+        }
+        Ok(())
+    }
+
     fn ibinary(
         mut self,
         op: BinaryIntOp,
@@ -108,6 +125,8 @@ impl<'a> FunctionInstrBuilder<'a> {
         lhs: Value,
         rhs: Value,
     ) -> Result<Value, IrError> {
+        self.expect_type(lhs, ty.into())?;
+        self.expect_type(rhs, ty.into())?;
         let instruction = BinaryIntInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
@@ -167,6 +186,8 @@ impl<'a> FunctionInstrBuilder<'a> {
         lhs: Value,
         rhs: Value,
     ) -> Result<Value, IrError> {
+        self.expect_type(lhs, ty.into())?;
+        self.expect_type(rhs, ty.into())?;
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
