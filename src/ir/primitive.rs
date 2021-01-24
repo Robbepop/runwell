@@ -127,7 +127,7 @@ impl FloatType {
 }
 
 /// A Runwell constant value.
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Const {
     Int(IntConst),
     Float(FloatConst),
@@ -140,18 +140,6 @@ impl Const {
             Self::Int(int_const) => int_const.ty(),
             Self::Float(float_const) => float_const.ty(),
         }
-    }
-}
-
-impl From<IntConst> for Const {
-    fn from(int_const: IntConst) -> Self {
-        Self::Int(int_const)
-    }
-}
-
-impl From<FloatConst> for Const {
-    fn from(float_const: FloatConst) -> Self {
-        Self::Float(float_const)
     }
 }
 
