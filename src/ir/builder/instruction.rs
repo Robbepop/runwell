@@ -194,7 +194,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
-            self.append_value_instr(instruction.into(), ty.into())?;
+            self.append_value_instr(instruction.into(), Type::Bool)?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
     }
@@ -249,6 +249,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         then_target: Block,
         else_target: Block,
     ) -> Result<Instr, IrError> {
+        self.expect_type(condition, Type::Bool)?;
         let block = self.builder.current_block()?;
         let instr = self.append_instr(IfThenElseInstr::new(
             condition,
