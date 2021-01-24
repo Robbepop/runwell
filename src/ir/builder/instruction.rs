@@ -185,6 +185,51 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.ibinary(BinaryIntOp::Udiv, ty, lhs, rhs)
     }
 
+    pub fn srem(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Srem, ty, lhs, rhs)
+    }
+
+    pub fn urem(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Urem, ty, lhs, rhs)
+    }
+
+    pub fn iand(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::And, ty, lhs, rhs)
+    }
+
+    pub fn ior(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Or, ty, lhs, rhs)
+    }
+
+    pub fn ixor(
+        self,
+        ty: IntType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.ibinary(BinaryIntOp::Xor, ty, lhs, rhs)
+    }
+
     pub fn icmp(
         mut self,
         ty: IntType,
