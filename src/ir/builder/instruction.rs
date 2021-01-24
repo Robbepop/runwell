@@ -28,6 +28,7 @@ use crate::{
             ConstInstr,
             IfThenElseInstr,
             ReturnInstr,
+            SelectInstr,
             TerminalInstr,
         },
         instruction::{BinaryIntOp, CompareIntOp, Instruction},
@@ -196,6 +197,21 @@ impl<'a> FunctionInstrBuilder<'a> {
         let (value, instr) =
             self.append_value_instr(instruction.into(), Type::Bool)?;
         self.register_uses(instr, &[lhs, rhs]);
+        Ok(value)
+    }
+
+    pub fn select(
+        mut self,
+        ty: Type,
+        condition: Value,
+        if_true: Value,
+        if_false: Value,
+    ) -> Result<Value, IrError> {
+        self.expect_type(if_true, ty)?;
+        self.expect_type(if_false, ty)?;
+        let instruction = SelectInstr::new(condition, ty, if_true, if_false);
+        let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
+        self.register_uses(instr, &[condition, if_true, if_false]);
         Ok(value)
     }
 
