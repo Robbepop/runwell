@@ -36,7 +36,7 @@ use crate::{
 fn ret_const_works() -> Result<(), IrError> {
     let mut b = Function::build()
         .with_inputs(&[])?
-        .with_outputs(&[])?
+        .with_outputs(&[IntType::I32.into()])?
         .body();
     let c = b.ins()?.constant(IntConst::I32(42))?;
     b.ins()?.return_value(c)?;
@@ -49,7 +49,7 @@ fn ret_const_works() -> Result<(), IrError> {
 fn simple_block_works() -> Result<(), IrError> {
     let mut b = Function::build()
         .with_inputs(&[])?
-        .with_outputs(&[])?
+        .with_outputs(&[IntType::I32.into()])?
         .body();
     let v1 = b.ins()?.constant(IntConst::I32(1))?;
     let v2 = b.ins()?.constant(IntConst::I32(2))?;
@@ -65,7 +65,7 @@ fn simple_block_works() -> Result<(), IrError> {
 fn if_then_else_works() -> Result<(), IrError> {
     let mut b = Function::build()
         .with_inputs(&[])?
-        .with_outputs(&[])?
+        .with_outputs(&[IntType::I32.into()])?
         .body();
     let then_block = b.create_block();
     let else_block = b.create_block();
@@ -90,7 +90,7 @@ fn if_then_else_works() -> Result<(), IrError> {
 fn simple_variable() -> Result<(), IrError> {
     let mut b = Function::build()
         .with_inputs(&[])?
-        .with_outputs(&[])?
+        .with_outputs(&[IntType::I32.into()])?
         .declare_variables(1, IntType::I32.into())?
         .body();
     let var = Variable::from_raw(RawIdx::from_u32(0));
@@ -123,7 +123,7 @@ fn simple_input() -> Result<(), IrError> {
 fn simple_gvn_var_read() -> Result<(), IrError> {
     let mut b = Function::build()
         .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[])?
+        .with_outputs(&[IntType::I32.into()])?
         .body();
     let var = Variable::from_raw(RawIdx::from_u32(0));
     let v0 = b.ins()?.constant(IntConst::I32(1))?;
@@ -143,7 +143,7 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
 fn simple_gvn_if_works() -> Result<(), IrError> {
     let mut b = Function::build()
         .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[])?
+        .with_outputs(&[IntType::I32.into()])?
         .declare_variables(1, IntType::I32.into())?
         .body();
 
@@ -186,7 +186,7 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
 fn simple_loop_works() -> Result<(), IrError> {
     let mut b = Function::build()
         .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[])?
+        .with_outputs(&[IntType::I32.into()])?
         .declare_variables(1, IntType::I32.into())?
         .body();
 
