@@ -301,10 +301,11 @@ impl VariableTranslator {
             return Err(FunctionBuilderError::TooManyVariableDeclarations)
                 .map_err(Into::into)
         }
+        // Future task: We should be able to get rid of the push if `amount == 1` while preserving correctness.
         self.var_to_type.push(VariableDecl {
             first_idx: first_idx.into_raw(),
             ty,
-        }); // TODO: maybe we can get rid of this if amount == 1
+        });
         if amount == 1 {
             // As an optimization we directly initialize the definition of the
             // variable to avoid the binary search for it upon its first assignmnet.
