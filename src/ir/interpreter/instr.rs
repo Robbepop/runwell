@@ -70,7 +70,7 @@ impl InterpretInstr for Instruction {
             Self::Load(_instr) => unimplemented!(),
             Self::Store(_instr) => unimplemented!(),
             Self::Select(instr) => instr.interpret(value, ctx),
-            Self::Reinterpret(_instr) => unimplemented!(),
+            Self::Reinterpret(instr) => instr.interpret(value, ctx),
             Self::Terminal(instr) => instr.interpret(value, ctx),
             Self::Int(instr) => instr.interpret(value, ctx),
             Self::Float(_instr) => unimplemented!(),
