@@ -279,68 +279,66 @@ impl InterpretInstr for CompareIntInstr {
         let result_value = value.expect("missing value for instruction");
         let lhs_value = ctx.value_results[self.lhs()];
         let rhs_value = ctx.value_results[self.rhs()];
-        let lhs_value = match lhs_value {
+        let lhs_int = match lhs_value {
             Const::Int(int_const) => int_const,
             _ => unreachable!(),
         };
-        let rhs_value = match rhs_value {
+        let rhs_int = match rhs_value {
             Const::Int(int_const) => int_const,
             _ => unreachable!(),
         };
-        let result = match self.op() {
-            CompareIntOp::Eq => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            CompareIntOp::Slt => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            CompareIntOp::Ule => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        Const::Bool(lhs as u8 <= rhs as u8)
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        Const::Bool(lhs as u16 <= rhs as u16)
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        Const::Bool(lhs as u32 <= rhs as u32)
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        Const::Bool(lhs as u64 <= rhs as u64)
-                    }
-                    _ => unreachable!(),
-                }
-            }
+        debug_assert_eq!(lhs_value.ty(), rhs_value.ty());
+        use CompareIntOp as Op;
+        use IntConst::{I8, I16, I32, I64};
+        let result = match (self.op(), lhs_int, rhs_int) {
+            // Equals
+            (Op::Eq, I8(lhs), I8(rhs)) => lhs == rhs,
+            (Op::Eq, I16(lhs), I16(rhs)) => lhs == rhs,
+            (Op::Eq, I32(lhs), I32(rhs)) => lhs == rhs,
+            (Op::Eq, I64(lhs), I64(rhs)) => lhs == rhs,
+            // Signed less-than
+            (Op::Slt, I8(lhs), I8(rhs)) => lhs < rhs,
+            (Op::Slt, I16(lhs), I16(rhs)) => lhs < rhs,
+            (Op::Slt, I32(lhs), I32(rhs)) => lhs < rhs,
+            (Op::Slt, I64(lhs), I64(rhs)) => lhs < rhs,
+            // Signed less-equals
+            (Op::Sle, I8(lhs), I8(rhs)) => lhs <= rhs,
+            (Op::Sle, I16(lhs), I16(rhs)) => lhs <= rhs,
+            (Op::Sle, I32(lhs), I32(rhs)) => lhs <= rhs,
+            (Op::Sle, I64(lhs), I64(rhs)) => lhs <= rhs,
+            // Signed greater-than
+            (Op::Sgt, I8(lhs), I8(rhs)) => lhs > rhs,
+            (Op::Sgt, I16(lhs), I16(rhs)) => lhs > rhs,
+            (Op::Sgt, I32(lhs), I32(rhs)) => lhs > rhs,
+            (Op::Sgt, I64(lhs), I64(rhs)) => lhs > rhs,
+            // Signed greater-equals
+            (Op::Sge, I8(lhs), I8(rhs)) => lhs >= rhs,
+            (Op::Sge, I16(lhs), I16(rhs)) => lhs >= rhs,
+            (Op::Sge, I32(lhs), I32(rhs)) => lhs >= rhs,
+            (Op::Sge, I64(lhs), I64(rhs)) => lhs >= rhs,
+            // Unsigned less-than
+            (Op::Ult, I8(lhs), I8(rhs)) => (lhs as u8) < (rhs as u8),
+            (Op::Ult, I16(lhs), I16(rhs)) => (lhs as u16) < (rhs as u16),
+            (Op::Ult, I32(lhs), I32(rhs)) => (lhs as u32) < (rhs as u32),
+            (Op::Ult, I64(lhs), I64(rhs)) => (lhs as u64) < (rhs as u64),
+            // Unsigned less-equals
+            (Op::Ule, I8(lhs), I8(rhs)) => (lhs as u8) <= (rhs as u8),
+            (Op::Ule, I16(lhs), I16(rhs)) => (lhs as u16) <= (rhs as u16),
+            (Op::Ule, I32(lhs), I32(rhs)) => (lhs as u32) <= (rhs as u32),
+            (Op::Ule, I64(lhs), I64(rhs)) => (lhs as u64) <= (rhs as u64),
+            // Unsigned greater-than
+            (Op::Ugt, I8(lhs), I8(rhs)) => (lhs as u8) > (rhs as u8),
+            (Op::Ugt, I16(lhs), I16(rhs)) => (lhs as u16) > (rhs as u16),
+            (Op::Ugt, I32(lhs), I32(rhs)) => (lhs as u32) > (rhs as u32),
+            (Op::Ugt, I64(lhs), I64(rhs)) => (lhs as u64) > (rhs as u64),
+            // Unsigned greater-equals
+            (Op::Uge, I8(lhs), I8(rhs)) => (lhs as u8) >= (rhs as u8),
+            (Op::Uge, I16(lhs), I16(rhs)) => (lhs as u16) >= (rhs as u16),
+            (Op::Uge, I32(lhs), I32(rhs)) => (lhs as u32) >= (rhs as u32),
+            (Op::Uge, I64(lhs), I64(rhs)) => (lhs as u64) >= (rhs as u64),
             _ => unimplemented!(),
         };
+        let result = Const::Bool(result);
         ctx.value_results.insert(result_value, result);
         Ok(())
     }
