@@ -44,9 +44,18 @@ use crate::{
     parse::{F32, F64},
 };
 
-impl Instruction {
+/// Implemented by Runwell IR instructions to make them interpretable.
+pub trait InterpretInstr {
     /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+    fn interpret(
+        &self,
+        value: Option<Value>,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError>;
+}
+
+impl InterpretInstr for Instruction {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -69,9 +78,8 @@ impl Instruction {
     }
 }
 
-impl PhiInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for PhiInstr {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -89,9 +97,8 @@ impl PhiInstr {
     }
 }
 
-impl ConstInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for ConstInstr {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -102,9 +109,8 @@ impl ConstInstr {
     }
 }
 
-impl SelectInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for SelectInstr {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -122,9 +128,8 @@ impl SelectInstr {
     }
 }
 
-impl TerminalInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for TerminalInstr {
+    fn interpret(
         &self,
         _value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -162,9 +167,8 @@ impl TerminalInstr {
     }
 }
 
-impl ReinterpretInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for ReinterpretInstr {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -209,9 +213,8 @@ impl ReinterpretInstr {
     }
 }
 
-impl IntInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for IntInstr {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -227,9 +230,8 @@ impl IntInstr {
     }
 }
 
-impl UnaryIntInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for UnaryIntInstr {
+    fn interpret(
         &self,
         _value: Option<Value>,
         _ctx: &mut InterpretationContext,
@@ -238,9 +240,8 @@ impl UnaryIntInstr {
     }
 }
 
-impl TruncateIntInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for TruncateIntInstr {
+    fn interpret(
         &self,
         _value: Option<Value>,
         _ctx: &mut InterpretationContext,
@@ -249,9 +250,8 @@ impl TruncateIntInstr {
     }
 }
 
-impl ExtendIntInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for ExtendIntInstr {
+    fn interpret(
         &self,
         _value: Option<Value>,
         _ctx: &mut InterpretationContext,
@@ -260,9 +260,8 @@ impl ExtendIntInstr {
     }
 }
 
-impl IntToFloatInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for IntToFloatInstr {
+    fn interpret(
         &self,
         _value: Option<Value>,
         _ctx: &mut InterpretationContext,
@@ -271,9 +270,8 @@ impl IntToFloatInstr {
     }
 }
 
-impl CompareIntInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for CompareIntInstr {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,
@@ -348,9 +346,8 @@ impl CompareIntInstr {
     }
 }
 
-impl BinaryIntInstr {
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+impl InterpretInstr for BinaryIntInstr {
+    fn interpret(
         &self,
         value: Option<Value>,
         ctx: &mut InterpretationContext,

@@ -32,7 +32,11 @@ use crate::{
     ir::{
         instr::PhiInstr,
         instruction::Instruction,
-        interpreter::{InterpretationContext, InterpretationError},
+        interpreter::{
+            InterpretInstr,
+            InterpretationContext,
+            InterpretationError,
+        },
         primitive::{Block, BlockEntity, Type, Value, ValueEntity},
         IrError,
     },

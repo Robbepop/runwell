@@ -14,6 +14,7 @@
 
 mod instr;
 
+pub use self::instr::InterpretInstr;
 use super::builder::{Function, ValueAssoc};
 use crate::{
     entity::{ComponentMap, RawIdx},
