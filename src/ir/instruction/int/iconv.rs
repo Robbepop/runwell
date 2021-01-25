@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{FloatType, IntType, Value};
+use crate::ir::{
+    interpreter::{InterpretationContext, InterpretationError},
+    primitive::{FloatType, IntType, Value},
+};
 use derive_more::Display;
 
 /// Truncates the integer value from source type to destination type.
@@ -70,6 +73,15 @@ impl TruncateIntInstr {
         F: FnMut(&mut Value) -> bool,
     {
         replace(&mut self.src)
+    }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        _value: Option<Value>,
+        _ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        todo!()
     }
 }
 
@@ -168,6 +180,15 @@ impl ExtendIntInstr {
     {
         replace(&mut self.src)
     }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        _value: Option<Value>,
+        _ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        todo!()
+    }
 }
 
 /// Instruction to convert an integer into a floating point number.
@@ -237,5 +258,14 @@ impl IntToFloatInstr {
         F: FnMut(&mut Value) -> bool,
     {
         replace(&mut self.src)
+    }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        _value: Option<Value>,
+        _ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        todo!()
     }
 }

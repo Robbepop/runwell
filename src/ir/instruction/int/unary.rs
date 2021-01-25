@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{IntType, Value};
+use crate::ir::{
+    interpreter::{InterpretationContext, InterpretationError},
+    primitive::{IntType, Value},
+};
 use core::fmt::Display;
 
 /// Operand for unary integer instructions.
@@ -88,5 +91,14 @@ impl UnaryIntInstr {
         F: FnMut(&mut Value) -> bool,
     {
         replace(&mut self.src)
+    }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        _value: Option<Value>,
+        _ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        todo!()
     }
 }

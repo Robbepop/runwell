@@ -69,7 +69,10 @@ pub use self::{
 };
 use derive_more::{Display, From};
 
-use super::primitive::Value;
+use super::{
+    interpreter::{InterpretationContext, InterpretationError},
+    primitive::Value,
+};
 
 /// An SSA instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq, Hash)]
@@ -125,6 +128,29 @@ impl Instruction {
             Self::Terminal(instr) => instr.replace_value(replace),
             Self::Int(instr) => instr.replace_value(replace),
             Self::Float(instr) => instr.replace_value(replace),
+        }
+    }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        value: Option<Value>,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        match self {
+            Self::Call(_instr) => todo!(),
+            Self::CallIndirect(_instr) => todo!(),
+            Self::Const(instr) => instr.interpret(value, ctx),
+            Self::MemoryGrow(_instr) => todo!(),
+            Self::MemorySize(_instr) => todo!(),
+            Self::Phi(instr) => instr.interpret(value, ctx),
+            Self::Load(_instr) => todo!(),
+            Self::Store(_instr) => todo!(),
+            Self::Select(_instr) => todo!(),
+            Self::Reinterpret(_instr) => todo!(),
+            Self::Terminal(instr) => instr.interpret(value, ctx),
+            Self::Int(instr) => instr.interpret(value, ctx),
+            Self::Float(_instr) => todo!(),
         }
     }
 }

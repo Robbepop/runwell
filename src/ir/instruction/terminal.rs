@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{Block, Value};
+use crate::ir::{
+    interpreter::{InterpretationContext, InterpretationError},
+    primitive::{Block, Const, Value},
+};
 use core::fmt::Display;
 use derive_more::{Display, From};
 
@@ -48,6 +51,40 @@ impl TerminalInstr {
             Self::Br(_instr) => false,
             Self::Ite(instr) => instr.replace_value(replace),
             Self::BranchTable(instr) => instr.replace_value(replace),
+        }
+    }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        _value: Option<Value>,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        match self {
+            Self::Trap => {
+                ctx.set_trapped();
+                Ok(())
+            }
+            Self::Return(instr) => {
+                let return_value = ctx.value_results[instr.return_value];
+                ctx.set_output(return_value)?;
+                ctx.set_returned();
+                Ok(())
+            }
+            Self::Br(instr) => {
+                ctx.switch_to_block(instr.target);
+                Ok(())
+            }
+            Self::Ite(instr) => {
+                let condition = ctx.value_results[instr.condition];
+                match condition {
+                    Const::Bool(true) => ctx.switch_to_block(instr.br_then),
+                    Const::Bool(false) => ctx.switch_to_block(instr.br_else),
+                    _ => unreachable!(),
+                }
+                Ok(())
+            }
+            Self::BranchTable(_instr) => todo!(),
         }
     }
 }

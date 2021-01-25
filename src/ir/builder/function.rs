@@ -32,6 +32,7 @@ use crate::{
     ir::{
         instr::PhiInstr,
         instruction::Instruction,
+        interpreter::{InterpretationContext, InterpretationError},
         primitive::{Block, BlockEntity, Type, Value, ValueEntity},
         IrError,
     },
@@ -39,6 +40,7 @@ use crate::{
 use core::{fmt, marker::PhantomData};
 use std::collections::HashSet;
 
+/// A virtual, verified Runwell IR function.
 #[derive(Debug)]
 pub struct Function {
     /// Arena for all block entities.
@@ -60,14 +62,39 @@ pub struct Function {
     /// has no SSA value association.
     instr_value: ComponentMap<Instr, Value>,
     /// Types for all values.
-    value_type: ComponentVec<Value, Type>,
+    pub(in crate::ir) value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
     ///
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
-    value_assoc: ComponentVec<Value, ValueAssoc>,
+    pub(in crate::ir) value_assoc: ComponentVec<Value, ValueAssoc>,
     /// The types of the output values of the constructed function.
     output_types: Vec<Type>,
+}
+
+impl Function {
+    /// Returns the entry block of the function.
+    pub fn entry_block(&self) -> Block {
+        Block::from_raw(RawIdx::from_u32(0))
+    }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        loop {
+            let block = ctx.current_block();
+            let ic = ctx.bump_instruction_counter();
+            let instr = self.block_instrs[block][ic];
+            let instruction = &self.instrs[instr];
+            let instr_value = self.instr_value.get(instr).copied();
+            instruction.interpret(instr_value, ctx)?;
+            if ctx.has_trapped() || ctx.has_returned() {
+                return Ok(())
+            }
+        }
+    }
 }
 
 impl fmt::Display for Function {

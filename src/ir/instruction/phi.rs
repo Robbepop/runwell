@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{Block, Value};
+use crate::ir::{
+    interpreter::{InterpretationContext, InterpretationError},
+    primitive::{Block, Value},
+};
 use core::{convert::identity, fmt::Display, iter::FusedIterator};
 use std::collections::{btree_map::Iter as BTreeMapIter, BTreeMap};
 
@@ -76,6 +79,26 @@ impl PhiInstr {
             .iter_mut()
             .map(|(_block, op)| replace(op))
             .any(identity)
+    }
+
+    /// Evaluates the function given the interpretation context.
+    pub fn interpret(
+        &self,
+        value: Option<Value>,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        let value = value.expect("missing value for instruction");
+        let last_block = ctx
+            .last_block()
+            .expect("phi instruction is missing predecessor");
+        let result = self
+            .operands
+            .get(&last_block)
+            .copied()
+            .expect("phi instruction missing value for predecessor");
+        let result_value = ctx.value_results[result];
+        ctx.value_results.insert(value, result_value);
+        Ok(())
     }
 }
 

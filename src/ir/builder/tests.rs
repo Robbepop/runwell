@@ -26,7 +26,8 @@ use crate::{
     entity::RawIdx,
     ir::{
         instruction::CompareIntOp,
-        primitive::{IntConst, IntType},
+        interpreter::InterpretationContext,
+        primitive::{Const, IntConst, IntType},
         IrError,
         Variable,
     },
@@ -41,7 +42,13 @@ fn ret_const_works() -> Result<(), IrError> {
     let c = b.ins()?.constant(IntConst::I32(42))?;
     b.ins()?.return_value(c)?;
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx.interpret(&fun, &[]).unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(42))));
+
     Ok(())
 }
 
@@ -57,7 +64,13 @@ fn simple_block_works() -> Result<(), IrError> {
     let v3 = b.ins()?.imul(IntType::I32, v3, v3)?;
     b.ins()?.return_value(v3)?;
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx.interpret(&fun, &[]).unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(9))));
+
     Ok(())
 }
 
@@ -82,7 +95,13 @@ fn if_then_else_works() -> Result<(), IrError> {
     b.ins()?.return_value(v6)?;
     b.seal_block()?;
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx.interpret(&fun, &[]).unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(10))));
+
     Ok(())
 }
 
@@ -100,7 +119,13 @@ fn simple_variable() -> Result<(), IrError> {
     let v3 = b.ins()?.iadd(IntType::I32, v2, v2)?;
     b.ins()?.return_value(v3)?;
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx.interpret(&fun, &[]).unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(2))));
+
     Ok(())
 }
 
@@ -115,7 +140,15 @@ fn simple_input() -> Result<(), IrError> {
     let v1 = b.ins()?.iadd(IntType::I32, v0, v0)?;
     b.ins()?.return_value(v1)?;
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx
+        .interpret(&fun, &[Const::Int(IntConst::I32(11))])
+        .unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(22))));
+
     Ok(())
 }
 
@@ -135,7 +168,15 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
     b.ins()?.return_value(v0)?;
     b.seal_block()?;
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx
+        .interpret(&fun, &[Const::Int(IntConst::I32(42))])
+        .unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(1))));
+
     Ok(())
 }
 
@@ -177,7 +218,19 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
     b.seal_block()?;
 
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx
+        .interpret(&fun, &[Const::Int(IntConst::I32(0))])
+        .unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(10))));
+
+    let output2 = ctx
+        .interpret(&fun, &[Const::Int(IntConst::I32(1))])
+        .unwrap();
+    assert_eq!(output2, Some(Const::Int(IntConst::I32(20))));
 
     Ok(())
 }
@@ -224,7 +277,14 @@ fn simple_loop_works() -> Result<(), IrError> {
     b.seal_block()?;
 
     let fun = b.finalize()?;
+
     println!("{}", fun);
+
+    let mut ctx = InterpretationContext::default();
+    let output = ctx
+        .interpret(&fun, &[Const::Int(IntConst::I32(10))])
+        .unwrap();
+    assert_eq!(output, Some(Const::Int(IntConst::I32(10))));
 
     Ok(())
 }
