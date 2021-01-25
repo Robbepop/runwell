@@ -17,17 +17,13 @@ mod icmp;
 mod iconv;
 mod unary;
 
-use crate::ir::{
-    interpreter::{InterpretationContext, InterpretationError},
-    primitive::Value,
-};
-
 pub use self::{
     binary::{BinaryIntInstr, BinaryIntOp},
     icmp::{CompareIntInstr, CompareIntOp},
     iconv::{ExtendIntInstr, IntToFloatInstr, TruncateIntInstr},
     unary::{UnaryIntInstr, UnaryIntOp},
 };
+use crate::ir::primitive::Value;
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
@@ -60,22 +56,6 @@ impl IntInstr {
             Self::Extend(instr) => instr.replace_value(replace),
             Self::IntToFloat(instr) => instr.replace_value(replace),
             Self::Truncate(instr) => instr.replace_value(replace),
-        }
-    }
-
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
-        &self,
-        value: Option<Value>,
-        ctx: &mut InterpretationContext,
-    ) -> Result<(), InterpretationError> {
-        match self {
-            Self::Binary(instr) => instr.interpret(value, ctx),
-            Self::Unary(instr) => instr.interpret(value, ctx),
-            Self::Compare(instr) => instr.interpret(value, ctx),
-            Self::Extend(instr) => instr.interpret(value, ctx),
-            Self::IntToFloat(instr) => instr.interpret(value, ctx),
-            Self::Truncate(instr) => instr.interpret(value, ctx),
         }
     }
 }

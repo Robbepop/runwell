@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod instr;
+
+use super::builder::{Function, ValueAssoc};
 use crate::{
     entity::{ComponentMap, RawIdx},
     ir::primitive::{Block, Const, Type, Value},
 };
 use core::mem::replace;
 use derive_more::{Display, Error};
-
-use super::builder::{Function, ValueAssoc};
 
 /// The interpretation context.
 ///

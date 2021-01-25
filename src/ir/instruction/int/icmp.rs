@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::{
-    interpreter::{InterpretationContext, InterpretationError},
-    primitive::{Const, IntConst, IntType, Value},
-};
+use crate::ir::primitive::{IntType, Value};
 use core::fmt::Display;
 use derive_more::Display;
 
@@ -121,80 +118,5 @@ impl CompareIntInstr {
         F: FnMut(&mut Value) -> bool,
     {
         replace(&mut self.lhs) || replace(&mut self.rhs)
-    }
-
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
-        &self,
-        value: Option<Value>,
-        ctx: &mut InterpretationContext,
-    ) -> Result<(), InterpretationError> {
-        let result_value = value.expect("missing value for instruction");
-        let lhs_value = ctx.value_results[self.lhs()];
-        let rhs_value = ctx.value_results[self.rhs()];
-        let lhs_value = match lhs_value {
-            Const::Int(int_const) => int_const,
-            _ => unreachable!(),
-        };
-        let rhs_value = match rhs_value {
-            Const::Int(int_const) => int_const,
-            _ => unreachable!(),
-        };
-        let result = match self.op {
-            CompareIntOp::Eq => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        Const::Bool(lhs == rhs)
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            CompareIntOp::Slt => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        Const::Bool(lhs < rhs)
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            CompareIntOp::Ule => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        Const::Bool(lhs as u8 <= rhs as u8)
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        Const::Bool(lhs as u16 <= rhs as u16)
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        Const::Bool(lhs as u32 <= rhs as u32)
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        Const::Bool(lhs as u64 <= rhs as u64)
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            _ => unimplemented!(),
-        };
-        ctx.value_results.insert(result_value, result);
-        Ok(())
     }
 }

@@ -13,10 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    ir::{
-        interpreter::{InterpretationContext, InterpretationError},
-        primitive::{Const, FloatConst, IntConst, Type, Value},
-    },
+    ir::primitive::{Const, FloatConst, IntConst, Type},
     parse::{F32, F64},
 };
 use derive_more::Display;
@@ -70,16 +67,5 @@ impl ConstInstr {
     /// Returns the constant value of the constant instruction.
     pub fn const_value(&self) -> Const {
         self.const_value
-    }
-
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
-        &self,
-        value: Option<Value>,
-        ctx: &mut InterpretationContext,
-    ) -> Result<(), InterpretationError> {
-        let value = value.expect("missing value for instruction");
-        ctx.value_results.insert(value, self.const_value);
-        Ok(())
     }
 }
