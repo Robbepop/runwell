@@ -81,7 +81,7 @@ impl TruncateIntInstr {
         _value: Option<Value>,
         _ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        todo!()
+        unimplemented!()
     }
 }
 
@@ -187,7 +187,7 @@ impl ExtendIntInstr {
         _value: Option<Value>,
         _ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        todo!()
+        unimplemented!()
     }
 }
 
@@ -266,6 +266,6 @@ impl IntToFloatInstr {
         _value: Option<Value>,
         _ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        todo!()
+        unimplemented!()
     }
 }

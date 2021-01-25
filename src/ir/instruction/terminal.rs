@@ -84,7 +84,7 @@ impl TerminalInstr {
                 }
                 Ok(())
             }
-            Self::BranchTable(_instr) => todo!(),
+            Self::BranchTable(_instr) => unimplemented!(),
         }
     }
 }

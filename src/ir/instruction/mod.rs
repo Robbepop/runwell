@@ -138,19 +138,19 @@ impl Instruction {
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
         match self {
-            Self::Call(_instr) => todo!(),
-            Self::CallIndirect(_instr) => todo!(),
+            Self::Call(_instr) => unimplemented!(),
+            Self::CallIndirect(_instr) => unimplemented!(),
             Self::Const(instr) => instr.interpret(value, ctx),
-            Self::MemoryGrow(_instr) => todo!(),
-            Self::MemorySize(_instr) => todo!(),
+            Self::MemoryGrow(_instr) => unimplemented!(),
+            Self::MemorySize(_instr) => unimplemented!(),
             Self::Phi(instr) => instr.interpret(value, ctx),
-            Self::Load(_instr) => todo!(),
-            Self::Store(_instr) => todo!(),
-            Self::Select(_instr) => todo!(),
-            Self::Reinterpret(_instr) => todo!(),
+            Self::Load(_instr) => unimplemented!(),
+            Self::Store(_instr) => unimplemented!(),
+            Self::Select(_instr) => unimplemented!(),
+            Self::Reinterpret(_instr) => unimplemented!(),
             Self::Terminal(instr) => instr.interpret(value, ctx),
             Self::Int(instr) => instr.interpret(value, ctx),
-            Self::Float(_instr) => todo!(),
+            Self::Float(_instr) => unimplemented!(),
         }
     }
 }
