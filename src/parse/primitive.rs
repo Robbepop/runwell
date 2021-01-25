@@ -120,6 +120,18 @@ pub struct F32 {
     bits: u32,
 }
 
+impl F32 {
+    /// Returns a 32-bit floating point number from the given bits.
+    pub fn from_bits(bits: u32) -> Self {
+        Self { bits }
+    }
+
+    /// Returns the underlying bits of the 32-bit float.
+    pub fn bits(self) -> u32 {
+        self.bits
+    }
+}
+
 impl From<f32> for F32 {
     fn from(value: f32) -> Self {
         Self {
@@ -139,6 +151,18 @@ impl From<Ieee32> for F32 {
 #[display(fmt = "f64.const {}", "f64::from_le_bytes(bits.to_le_bytes())")]
 pub struct F64 {
     bits: u64,
+}
+
+impl F64 {
+    /// Returns a 64-bit floating point number from the given bits.
+    pub fn from_bits(bits: u64) -> Self {
+        Self { bits }
+    }
+
+    /// Returns the underlying bits of the 64-bit float.
+    pub fn bits(self) -> u64 {
+        self.bits
+    }
 }
 
 impl From<f64> for F64 {
