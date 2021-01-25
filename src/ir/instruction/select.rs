@@ -55,6 +55,26 @@ impl SelectInstr {
         }
     }
 
+    /// Returns the value of the condition.
+    pub fn condition(&self) -> Value {
+        self.condition
+    }
+
+    /// Returns the type of the operands.
+    pub fn ty(&self) -> Type {
+        self.ty
+    }
+
+    /// Returns the value returned if the condition evaluates to `true`.
+    pub fn true_value(&self) -> Value {
+        self.value_true
+    }
+
+    /// Returns the value returned if the condition evaluates to `false`.
+    pub fn false_value(&self) -> Value {
+        self.value_false
+    }
+
     /// Replaces all values in the instruction using the replacer.
     ///
     /// Returns `true` if a value has been replaced in the instruction.
