@@ -289,7 +289,7 @@ impl InterpretInstr for CompareIntInstr {
         };
         debug_assert_eq!(lhs_value.ty(), rhs_value.ty());
         use CompareIntOp as Op;
-        use IntConst::{I8, I16, I32, I64};
+        use IntConst::{I16, I32, I64, I8};
         let result = match (self.op(), lhs_int, rhs_int) {
             // Equals
             (Op::Eq, I8(lhs), I8(rhs)) => lhs == rhs,
@@ -353,49 +353,75 @@ impl InterpretInstr for BinaryIntInstr {
         let result_value = value.expect("missing value for instruction");
         let lhs_value = ctx.value_results[self.lhs()];
         let rhs_value = ctx.value_results[self.rhs()];
-        let lhs_value = match lhs_value {
+        let lhs_int = match lhs_value {
             Const::Int(int_const) => int_const,
             _ => unreachable!(),
         };
-        let rhs_value = match rhs_value {
+        let rhs_int = match rhs_value {
             Const::Int(int_const) => int_const,
             _ => unreachable!(),
         };
-        let result = match self.op() {
-            BinaryIntOp::Add => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        IntConst::I8(lhs.wrapping_add(rhs))
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        IntConst::I16(lhs.wrapping_add(rhs))
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        IntConst::I32(lhs.wrapping_add(rhs))
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        IntConst::I64(lhs.wrapping_add(rhs))
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            BinaryIntOp::Mul => {
-                match (lhs_value, rhs_value) {
-                    (IntConst::I8(lhs), IntConst::I8(rhs)) => {
-                        IntConst::I8(lhs.wrapping_mul(rhs))
-                    }
-                    (IntConst::I16(lhs), IntConst::I16(rhs)) => {
-                        IntConst::I16(lhs.wrapping_mul(rhs))
-                    }
-                    (IntConst::I32(lhs), IntConst::I32(rhs)) => {
-                        IntConst::I32(lhs.wrapping_mul(rhs))
-                    }
-                    (IntConst::I64(lhs), IntConst::I64(rhs)) => {
-                        IntConst::I64(lhs.wrapping_mul(rhs))
-                    }
-                    _ => unreachable!(),
-                }
-            }
+        use BinaryIntOp as Op;
+        use IntConst::{I16, I32, I64, I8};
+        #[rustfmt::skip]
+        let result = match (self.op(), lhs_int, rhs_int) {
+            // Shift and rotate operations are currently unimplemented since
+            // their semantics are not yet clear. Binary instructions typically
+            // require their left-hand and right-hand side values to be of the
+            // same type. The problem with shift and rotate instructions is that
+            // at least in Rust the right-hand side is expected to always be of
+            // type `u32` instead of having the same type as the left-hand side.
+            //
+            // Integer Addition
+            (Op::Add, I8(lhs), I8(rhs)) => I8(lhs.wrapping_add(rhs)),
+            (Op::Add, I16(lhs), I16(rhs)) => I16(lhs.wrapping_add(rhs)),
+            (Op::Add, I32(lhs), I32(rhs)) => I32(lhs.wrapping_add(rhs)),
+            (Op::Add, I64(lhs), I64(rhs)) => I64(lhs.wrapping_add(rhs)),
+            // Integer Subtraction
+            (Op::Sub, I8(lhs), I8(rhs)) => I8(lhs.wrapping_sub(rhs)),
+            (Op::Sub, I16(lhs), I16(rhs)) => I16(lhs.wrapping_sub(rhs)),
+            (Op::Sub, I32(lhs), I32(rhs)) => I32(lhs.wrapping_sub(rhs)),
+            (Op::Sub, I64(lhs), I64(rhs)) => I64(lhs.wrapping_sub(rhs)),
+            // Integer Multiplication
+            (Op::Mul, I8(lhs), I8(rhs)) => I8(lhs.wrapping_mul(rhs)),
+            (Op::Mul, I16(lhs), I16(rhs)) => I16(lhs.wrapping_mul(rhs)),
+            (Op::Mul, I32(lhs), I32(rhs)) => I32(lhs.wrapping_mul(rhs)),
+            (Op::Mul, I64(lhs), I64(rhs)) => I64(lhs.wrapping_mul(rhs)),
+            // Signed Integer Division
+            (Op::Sdiv, I8(lhs), I8(rhs)) => I8(lhs.wrapping_div(rhs)),
+            (Op::Sdiv, I16(lhs), I16(rhs)) => I16(lhs.wrapping_div(rhs)),
+            (Op::Sdiv, I32(lhs), I32(rhs)) => I32(lhs.wrapping_div(rhs)),
+            (Op::Sdiv, I64(lhs), I64(rhs)) => I64(lhs.wrapping_div(rhs)),
+            // Signed Integer Remainder
+            (Op::Srem, I8(lhs), I8(rhs)) => I8(lhs.wrapping_rem(rhs)),
+            (Op::Srem, I16(lhs), I16(rhs)) => I16(lhs.wrapping_rem(rhs)),
+            (Op::Srem, I32(lhs), I32(rhs)) => I32(lhs.wrapping_rem(rhs)),
+            (Op::Srem, I64(lhs), I64(rhs)) => I64(lhs.wrapping_rem(rhs)),
+            // Unsigned Integer Division
+            (Op::Udiv, I8(l), I8(r)) => I8((l as u8).wrapping_div(r as u8) as i8),
+            (Op::Udiv, I16(l), I16(r)) => I16((l as u16).wrapping_div(r as u16) as i16),
+            (Op::Udiv, I32(l), I32(r)) => I32((l as u32).wrapping_div(r as u32) as i32),
+            (Op::Udiv, I64(l), I64(r)) => I64((l as u64).wrapping_div(r as u64) as i64),
+            // Unsigned Integer Remainder
+            (Op::Urem, I8(l), I8(r)) => I8((l as u8).wrapping_rem(r as u8) as i8),
+            (Op::Urem, I16(l), I16(r)) => I16((l as u16).wrapping_rem(r as u16) as i16),
+            (Op::Urem, I32(l), I32(r)) => I32((l as u32).wrapping_rem(r as u32) as i32),
+            (Op::Urem, I64(l), I64(r)) => I64((l as u64).wrapping_rem(r as u64) as i64),
+            // Bitwise-AND
+            (Op::And, I8(lhs), I8(rhs)) => I8(lhs & rhs),
+            (Op::And, I16(lhs), I16(rhs)) => I16(lhs & rhs),
+            (Op::And, I32(lhs), I32(rhs)) => I32(lhs & rhs),
+            (Op::And, I64(lhs), I64(rhs)) => I64(lhs & rhs),
+            // Bitwise-OR
+            (Op::Or, I8(lhs), I8(rhs)) => I8(lhs | rhs),
+            (Op::Or, I16(lhs), I16(rhs)) => I16(lhs | rhs),
+            (Op::Or, I32(lhs), I32(rhs)) => I32(lhs | rhs),
+            (Op::Or, I64(lhs), I64(rhs)) => I64(lhs | rhs),
+            // Bitwise-XOR
+            (Op::Xor, I8(lhs), I8(rhs)) => I8(lhs ^ rhs),
+            (Op::Xor, I16(lhs), I16(rhs)) => I16(lhs ^ rhs),
+            (Op::Xor, I32(lhs), I32(rhs)) => I32(lhs ^ rhs),
+            (Op::Xor, I64(lhs), I64(rhs)) => I64(lhs ^ rhs),
             _ => unimplemented!(),
         };
         ctx.value_results.insert(result_value, result.into());
