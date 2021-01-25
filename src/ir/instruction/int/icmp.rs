@@ -194,7 +194,7 @@ impl CompareIntInstr {
             }
             _ => unimplemented!(),
         };
-        ctx.value_results.insert(result_value, result.into());
+        ctx.value_results.insert(result_value, result);
         Ok(())
     }
 }
