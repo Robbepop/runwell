@@ -58,7 +58,7 @@ impl PhiInstr {
     }
 
     /// Returns an iterator over the operands of the ϕ-instruction.
-    pub fn iter(&self) -> Iter {
+    pub fn operands(&self) -> Iter {
         Iter {
             iter: self.operands.iter(),
         }

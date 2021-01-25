@@ -616,7 +616,7 @@ impl FunctionBuilder<state::Body> {
             _ => panic!("unexpected non-phi instruction"),
         };
         let mut same: Option<Value> = None;
-        for (_block, op) in instruction.iter() {
+        for (_block, op) in instruction.operands() {
             if Some(op) == same || op == phi_value {
                 // Unique value or self reference.
                 continue
