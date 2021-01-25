@@ -64,6 +64,11 @@ impl PhiInstr {
         }
     }
 
+    /// Returns the operand for the given block if any.
+    pub fn operand_for(&self, block: Block) -> Option<Value> {
+        self.operands.get(&block).copied()
+    }
+
     /// Replaces all values in the instruction using the replacer.
     ///
     /// Returns `true` if a value has been replaced in the instruction.
