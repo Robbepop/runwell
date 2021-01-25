@@ -221,7 +221,7 @@ impl InterpretationContext {
     }
 
     /// Switches the currently executed basic block.
-    pub(in crate::ir) fn switch_to_block(&mut self, block: Block) {
+    fn switch_to_block(&mut self, block: Block) {
         let last_block = replace(&mut self.current_block, block);
         self.last_block = Some(last_block);
         self.instruction_counter = 0;
@@ -233,18 +233,18 @@ impl InterpretationContext {
     }
 
     /// Returns the last executed basic block if any.
-    pub(in crate::ir) fn last_block(&self) -> Option<Block> {
+    fn last_block(&self) -> Option<Block> {
         self.last_block
     }
 
     /// Tells the interpretation context that the function evaluation has trapped.
-    pub(in crate::ir) fn set_trapped(&mut self) {
+    fn set_trapped(&mut self) {
         assert!(!self.has_returned);
         self.has_trapped = true;
     }
 
     /// Tells the interpretation context that the function evaluation has finished.
-    pub(in crate::ir) fn set_returned(&mut self) {
+    fn set_returned(&mut self) {
         assert!(!self.has_trapped);
         self.has_returned = true;
     }
@@ -261,7 +261,7 @@ impl InterpretationContext {
     /// # Errors
     ///
     /// If an output has already been set.
-    pub(in crate::ir) fn set_output(
+    fn set_output(
         &mut self,
         output: Const,
     ) -> Result<(), InterpretationError> {
