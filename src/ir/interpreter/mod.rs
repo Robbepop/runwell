@@ -71,8 +71,6 @@ pub struct InterpretationContext {
     ///
     /// Initialized to `false` before function evaluation.
     has_returned: bool,
-    /// The current state of function evaluation.
-    state: EvaluationState,
 }
 
 impl Default for InterpretationContext {
@@ -85,7 +83,6 @@ impl Default for InterpretationContext {
             return_values: Vec::new(),
             has_trapped: false,
             has_returned: false,
-            state: EvaluationState::Initialization,
         }
     }
 }
@@ -182,9 +179,7 @@ impl InterpretationContext {
                 }
             }
         }
-        self.state = EvaluationState::Evaluation;
         function.interpret(self)?;
-        self.state = EvaluationState::Finished;
         Ok(&self.return_values)
     }
 
@@ -196,7 +191,6 @@ impl InterpretationContext {
         self.has_trapped = false;
         self.has_returned = false;
         self.instruction_counter = 0;
-        self.state = EvaluationState::Initialization;
     }
 
     /// Returns `true` if the function evaluation has trapped.
