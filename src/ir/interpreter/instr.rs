@@ -272,7 +272,6 @@ impl InterpretInstr for UnaryIntInstr {
             (UnaryIntOp::PopCount, I16(src)) => src.count_ones(),
             (UnaryIntOp::PopCount, I32(src)) => src.count_ones(),
             (UnaryIntOp::PopCount, I64(src)) => src.count_ones(),
-            _ => unimplemented!(),
         };
         ctx.value_results.insert(result_value, Const::Int(I32(result as i32)));
         Ok(())
