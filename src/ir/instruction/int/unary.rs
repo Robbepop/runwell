@@ -19,19 +19,19 @@ use core::fmt::Display;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UnaryIntOp {
     /// Counts the number of leading zero bits in the source integer value.
-    IleadingZerosInstr,
+    LeadingZeros,
     /// Counts the number of trailing zero bits in the source integer value.
-    ItrailingZerosInstr,
+    TrailingZeros,
     /// Counts the number of set `1` bits in the source integer value.
-    IpopCountInstr,
+    PopCount,
 }
 
 impl Display for UnaryIntOp {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let repr = match self {
-            Self::IleadingZerosInstr => "ileading_zeros",
-            Self::ItrailingZerosInstr => "itrailing_zeros",
-            Self::IpopCountInstr => "ipopcount",
+            Self::LeadingZeros => "ileading_zeros",
+            Self::TrailingZeros => "itrailing_zeros",
+            Self::PopCount => "ipopcount",
         };
         write!(f, "{}", repr)?;
         Ok(())
