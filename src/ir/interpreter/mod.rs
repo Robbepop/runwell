@@ -87,23 +87,6 @@ impl Default for InterpretationContext {
     }
 }
 
-/// The state of the function evaluation.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum EvaluationState {
-    /// The function evaluation is initializing.
-    Initialization,
-    /// The function is currently evaluating.
-    Evaluation,
-    /// The function evaluation has finished.
-    Finished,
-}
-
-impl Default for EvaluationState {
-    fn default() -> Self {
-        Self::Initialization
-    }
-}
-
 /// An error that may occure while evaluating a function.
 #[derive(Debug, Display, Error, PartialEq, Eq, Hash)]
 pub enum InterpretationError {
