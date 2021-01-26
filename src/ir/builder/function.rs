@@ -93,7 +93,7 @@ impl Function {
             let instr = self.block_instrs[block][ic];
             let instruction = &self.instrs[instr];
             let instr_value = self.instr_value.get(instr).copied();
-            instruction.interpret(instr_value, ctx)?;
+            instruction.interpret_instr(instr_value, ctx)?;
             if ctx.has_trapped() || ctx.has_returned() {
                 return Ok(())
             }
