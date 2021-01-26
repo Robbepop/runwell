@@ -13,7 +13,9 @@
 // limitations under the License.
 
 use super::{InterpretationContext, InterpretationError};
-use crate::{ir::{instr::{
+use crate::{
+    ir::{
+        instr::{
             BinaryIntInstr,
             BranchInstr,
             CompareIntInstr,
@@ -30,7 +32,9 @@ use crate::{ir::{instr::{
             TerminalInstr,
             TruncateIntInstr,
             UnaryIntInstr,
-        }, instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp}, primitive::{
+        },
+        instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
+        primitive::{
             Const,
             FloatConst,
             FloatType,
@@ -38,7 +42,10 @@ use crate::{ir::{instr::{
             IntType,
             Type,
             Value,
-        }}, parse::{F32, F64}};
+        },
+    },
+    parse::{F32, F64},
+};
 
 /// Implemented by Runwell IR instructions to make them interpretable.
 pub trait InterpretInstr {
@@ -258,7 +265,7 @@ impl InterpretInstr for UnaryIntInstr {
             Const::Int(int_const) => int_const,
             _ => unreachable!(),
         };
-        use IntConst::{I8, I16, I32, I64};
+        use IntConst::{I16, I32, I64, I8};
         let result = match (self.op(), source_int) {
             (UnaryIntOp::LeadingZeros, I8(src)) => src.leading_zeros(),
             (UnaryIntOp::LeadingZeros, I16(src)) => src.leading_zeros(),
@@ -273,7 +280,8 @@ impl InterpretInstr for UnaryIntInstr {
             (UnaryIntOp::PopCount, I32(src)) => src.count_ones(),
             (UnaryIntOp::PopCount, I64(src)) => src.count_ones(),
         };
-        ctx.value_results.insert(result_value, Const::Int(I32(result as i32)));
+        ctx.value_results
+            .insert(result_value, Const::Int(I32(result as i32)));
         Ok(())
     }
 }

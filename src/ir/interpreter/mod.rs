@@ -261,10 +261,7 @@ impl InterpretationContext {
     /// # Errors
     ///
     /// If an output has already been set.
-    fn set_output(
-        &mut self,
-        output: Const,
-    ) -> Result<(), InterpretationError> {
+    fn set_output(&mut self, output: Const) -> Result<(), InterpretationError> {
         if let Some(prev_output) = self.output {
             return Err(InterpretationError::AlreadySetOutput {
                 prev_output,
