@@ -17,14 +17,17 @@ use crate::{
     ir::{
         instr::{
             BinaryIntInstr,
+            BranchInstr,
             CompareIntInstr,
             ConstInstr,
             ExtendIntInstr,
+            IfThenElseInstr,
             Instruction,
             IntInstr,
             IntToFloatInstr,
             PhiInstr,
             ReinterpretInstr,
+            ReturnInstr,
             SelectInstr,
             TerminalInstr,
             TruncateIntInstr,
@@ -131,7 +134,7 @@ impl InterpretInstr for SelectInstr {
 impl InterpretInstr for TerminalInstr {
     fn interpret(
         &self,
-        _value: Option<Value>,
+        value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
         match self {
@@ -139,31 +142,51 @@ impl InterpretInstr for TerminalInstr {
                 ctx.set_trapped();
                 Ok(())
             }
-            Self::Return(instr) => {
-                let return_value = ctx.value_results[instr.return_value()];
-                ctx.set_output(return_value)?;
-                ctx.set_returned();
-                Ok(())
-            }
-            Self::Br(instr) => {
-                ctx.switch_to_block(instr.target());
-                Ok(())
-            }
-            Self::Ite(instr) => {
-                let condition = ctx.value_results[instr.condition()];
-                match condition {
-                    Const::Bool(true) => {
-                        ctx.switch_to_block(instr.true_target())
-                    }
-                    Const::Bool(false) => {
-                        ctx.switch_to_block(instr.false_target())
-                    }
-                    _ => unreachable!(),
-                }
-                Ok(())
-            }
+            Self::Return(instr) => instr.interpret(value, ctx),
+            Self::Br(instr) => instr.interpret(value, ctx),
+            Self::Ite(instr) => instr.interpret(value, ctx),
             Self::BranchTable(_instr) => unimplemented!(),
         }
+    }
+}
+
+impl InterpretInstr for ReturnInstr {
+    fn interpret(
+        &self,
+        _value: Option<Value>,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        let return_value = ctx.value_results[self.return_value()];
+        ctx.set_output(return_value)?;
+        ctx.set_returned();
+        Ok(())
+    }
+}
+
+impl InterpretInstr for BranchInstr {
+    fn interpret(
+        &self,
+        _value: Option<Value>,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        ctx.switch_to_block(self.target());
+        Ok(())
+    }
+}
+
+impl InterpretInstr for IfThenElseInstr {
+    fn interpret(
+        &self,
+        _value: Option<Value>,
+        ctx: &mut InterpretationContext,
+    ) -> Result<(), InterpretationError> {
+        let condition = ctx.value_results[self.condition()];
+        match condition {
+            Const::Bool(true) => ctx.switch_to_block(self.true_target()),
+            Const::Bool(false) => ctx.switch_to_block(self.false_target()),
+            _ => unreachable!(),
+        }
+        Ok(())
     }
 }
 
