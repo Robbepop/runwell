@@ -17,7 +17,7 @@ mod instr;
 pub use self::instr::InterpretInstr;
 use super::builder::{Function, ValueAssoc};
 use crate::{
-    entity::{ComponentMap, RawIdx},
+    entity::{ComponentVec, RawIdx},
     ir::primitive::{Block, Const, Type, Value},
 };
 use core::mem::replace;
@@ -29,7 +29,7 @@ use derive_more::{Display, Error};
 #[derive(Debug)]
 pub struct InterpretationContext {
     /// The registers used by the function evaluation.
-    registers: ComponentMap<Value, u64>,
+    registers: ComponentVec<Value, u64>,
     /// The currently executed basic block.
     ///
     /// # Note
