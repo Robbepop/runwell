@@ -281,10 +281,11 @@ fn simple_loop_works() -> Result<(), IrError> {
     println!("{}", fun);
 
     let mut ctx = InterpretationContext::default();
+    let iterations = 10;
     let output = ctx
-        .interpret(&fun, &[Const::Int(IntConst::I32(10))])
+        .interpret(&fun, &[Const::Int(IntConst::I32(iterations))])
         .unwrap();
-    assert_eq!(output, &[10]);
+    assert_eq!(output, &[iterations as u64]);
 
     Ok(())
 }
