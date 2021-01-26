@@ -44,7 +44,7 @@ use std::collections::{
 /// - By design all secondary component containers are meant to be easily interchangable.
 #[derive(Debug)]
 pub struct ComponentMap<K, V> {
-    components: HashMap<RawIdx, V>,
+    components: HashMap<RawIdx, V, ahash::RandomState>,
     key: PhantomData<fn() -> K>,
 }
 
