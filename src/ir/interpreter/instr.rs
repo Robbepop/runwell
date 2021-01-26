@@ -13,9 +13,7 @@
 // limitations under the License.
 
 use super::{InterpretationContext, InterpretationError};
-use crate::{
-    ir::{
-        instr::{
+use crate::{ir::{instr::{
             BinaryIntInstr,
             BranchInstr,
             CompareIntInstr,
@@ -32,9 +30,7 @@ use crate::{
             TerminalInstr,
             TruncateIntInstr,
             UnaryIntInstr,
-        },
-        instruction::{BinaryIntOp, CompareIntOp},
-        primitive::{
+        }, instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp}, primitive::{
             Const,
             FloatConst,
             FloatType,
@@ -42,10 +38,7 @@ use crate::{
             IntType,
             Type,
             Value,
-        },
-    },
-    parse::{F32, F64},
-};
+        }}, parse::{F32, F64}};
 
 /// Implemented by Runwell IR instructions to make them interpretable.
 pub trait InterpretInstr {
@@ -256,10 +249,33 @@ impl InterpretInstr for IntInstr {
 impl InterpretInstr for UnaryIntInstr {
     fn interpret(
         &self,
-        _value: Option<Value>,
-        _ctx: &mut InterpretationContext,
+        value: Option<Value>,
+        ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        unimplemented!()
+        let result_value = value.expect("missing value for instruction");
+        let source = ctx.value_results[self.src()];
+        let source_int = match source {
+            Const::Int(int_const) => int_const,
+            _ => unreachable!(),
+        };
+        use IntConst::{I8, I16, I32, I64};
+        let result = match (self.op(), source_int) {
+            (UnaryIntOp::LeadingZeros, I8(src)) => src.leading_zeros(),
+            (UnaryIntOp::LeadingZeros, I16(src)) => src.leading_zeros(),
+            (UnaryIntOp::LeadingZeros, I32(src)) => src.leading_zeros(),
+            (UnaryIntOp::LeadingZeros, I64(src)) => src.leading_zeros(),
+            (UnaryIntOp::TrailingZeros, I8(src)) => src.trailing_zeros(),
+            (UnaryIntOp::TrailingZeros, I16(src)) => src.trailing_zeros(),
+            (UnaryIntOp::TrailingZeros, I32(src)) => src.trailing_zeros(),
+            (UnaryIntOp::TrailingZeros, I64(src)) => src.trailing_zeros(),
+            (UnaryIntOp::PopCount, I8(src)) => src.count_ones(),
+            (UnaryIntOp::PopCount, I16(src)) => src.count_ones(),
+            (UnaryIntOp::PopCount, I32(src)) => src.count_ones(),
+            (UnaryIntOp::PopCount, I64(src)) => src.count_ones(),
+            _ => unimplemented!(),
+        };
+        ctx.value_results.insert(result_value, Const::Int(I32(result as i32)));
+        Ok(())
     }
 }
 
