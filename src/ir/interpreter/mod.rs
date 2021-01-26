@@ -30,12 +30,6 @@ use derive_more::{Display, Error};
 pub struct InterpretationContext {
     /// The registers used by the function evaluation.
     registers: ComponentMap<Value, u64>,
-    // /// The latest results of all values involved in the evaluation.
-    // ///
-    // /// # Note
-    // ///
-    // /// This is initialized with the inputs of the function evaluation.
-    // pub(in crate::ir) value_results: ComponentMap<Value, Const>,
     /// The currently executed basic block.
     ///
     /// # Note
