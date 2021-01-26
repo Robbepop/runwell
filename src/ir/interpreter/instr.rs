@@ -13,38 +13,27 @@
 // limitations under the License.
 
 use super::{InterpretationContext, InterpretationError};
-use crate::{
-    ir::{
-        instr::{
-            BinaryIntInstr,
-            BranchInstr,
-            CompareIntInstr,
-            ConstInstr,
-            ExtendIntInstr,
-            IfThenElseInstr,
-            Instruction,
-            IntInstr,
-            IntToFloatInstr,
-            PhiInstr,
-            ReinterpretInstr,
-            ReturnInstr,
-            SelectInstr,
-            TerminalInstr,
-            TruncateIntInstr,
-            UnaryIntInstr,
-        },
-        instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
-        primitive::{
-            Const,
-            FloatConst,
-            FloatType,
-            IntConst,
-            IntType,
-            Type,
-            Value,
-        },
+use crate::ir::{
+    instr::{
+        BinaryIntInstr,
+        BranchInstr,
+        CompareIntInstr,
+        ConstInstr,
+        ExtendIntInstr,
+        IfThenElseInstr,
+        Instruction,
+        IntInstr,
+        IntToFloatInstr,
+        PhiInstr,
+        ReinterpretInstr,
+        ReturnInstr,
+        SelectInstr,
+        TerminalInstr,
+        TruncateIntInstr,
+        UnaryIntInstr,
     },
-    parse::{F32, F64},
+    instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
+    primitive::{IntType, Value},
 };
 
 /// Implemented by Runwell IR instructions to make them interpretable.
@@ -94,8 +83,8 @@ impl InterpretInstr for PhiInstr {
         let result = self
             .operand_for(last_block)
             .expect("phi instruction missing value for predecessor");
-        let result_value = ctx.value_results[result];
-        ctx.value_results.insert(value, result_value);
+        let result_value = ctx.read_register(result);
+        ctx.write_register(value, result_value);
         Ok(())
     }
 }
@@ -107,7 +96,7 @@ impl InterpretInstr for ConstInstr {
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
         let value = value.expect("missing value for instruction");
-        ctx.value_results.insert(value, self.const_value());
+        ctx.write_register(value, self.const_value().into_bits64());
         Ok(())
     }
 }
@@ -118,15 +107,15 @@ impl InterpretInstr for SelectInstr {
         value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        let value = value.expect("missing value for instruction");
-        let condition = ctx.value_results[self.condition()];
-        let result_value = match condition {
-            Const::Bool(true) => self.true_value(),
-            Const::Bool(false) => self.false_value(),
-            _ => unreachable!(),
+        let return_value = value.expect("missing value for instruction");
+        let condition = ctx.read_register(self.condition());
+        let result_value = if condition != 0 {
+            self.true_value()
+        } else {
+            self.false_value()
         };
-        let result = ctx.value_results[result_value];
-        ctx.value_results.insert(value, result);
+        let result = ctx.read_register(result_value);
+        ctx.write_register(return_value, result);
         Ok(())
     }
 }
@@ -156,9 +145,8 @@ impl InterpretInstr for ReturnInstr {
         _value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        let return_value = ctx.value_results[self.return_value()];
-        ctx.set_output(return_value)?;
-        ctx.set_returned();
+        let return_value = ctx.read_register(self.return_value());
+        ctx.set_return_value(&[return_value])?;
         Ok(())
     }
 }
@@ -180,12 +168,13 @@ impl InterpretInstr for IfThenElseInstr {
         _value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        let condition = ctx.value_results[self.condition()];
-        match condition {
-            Const::Bool(true) => ctx.switch_to_block(self.true_target()),
-            Const::Bool(false) => ctx.switch_to_block(self.false_target()),
-            _ => unreachable!(),
-        }
+        let condition = ctx.read_register(self.condition());
+        let target = if condition != 0 {
+            self.true_target()
+        } else {
+            self.false_target()
+        };
+        ctx.switch_to_block(target);
         Ok(())
     }
 }
@@ -196,42 +185,14 @@ impl InterpretInstr for ReinterpretInstr {
         value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        let value = value.expect("missing value for instruction");
-        let source = ctx.value_results[self.src()];
-        debug_assert_eq!(source.ty(), self.src_type());
+        let return_value = value.expect("missing value for instruction");
+        let source = ctx.read_register(self.src());
         debug_assert_eq!(
             self.src_type().bit_width(),
             self.dst_type().bit_width()
         );
-        let bits = match source {
-            Const::Int(IntConst::I8(src)) => src as u8 as u64,
-            Const::Int(IntConst::I16(src)) => src as u16 as u64,
-            Const::Int(IntConst::I32(src)) => src as u32 as u64,
-            Const::Int(IntConst::I64(src)) => src as u64,
-            Const::Bool(src) => src as u64,
-            Const::Float(FloatConst::F32(src)) => src.bits() as u64,
-            Const::Float(FloatConst::F64(src)) => src.bits(),
-        };
-        let result = match self.dst_type() {
-            Type::Int(IntType::I8) => {
-                Const::Int(IntConst::I8(bits as u8 as i8))
-            }
-            Type::Int(IntType::I16) => {
-                Const::Int(IntConst::I16(bits as u16 as i16))
-            }
-            Type::Int(IntType::I32) => {
-                Const::Int(IntConst::I32(bits as u32 as i32))
-            }
-            Type::Int(IntType::I64) => Const::Int(IntConst::I64(bits as i64)),
-            Type::Bool => Const::Bool(bits != 0),
-            Type::Float(FloatType::F32) => {
-                Const::Float(FloatConst::F32(F32::from_bits(bits as u32)))
-            }
-            Type::Float(FloatType::F64) => {
-                Const::Float(FloatConst::F64(F64::from_bits(bits)))
-            }
-        };
-        ctx.value_results.insert(value, result);
+        // Reinterpretation just moves from one register to the other.
+        ctx.write_register(return_value, source);
         Ok(())
     }
 }
@@ -259,29 +220,14 @@ impl InterpretInstr for UnaryIntInstr {
         value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        let result_value = value.expect("missing value for instruction");
-        let source = ctx.value_results[self.src()];
-        let source_int = match source {
-            Const::Int(int_const) => int_const,
-            _ => unreachable!(),
+        let return_value = value.expect("missing value for instruction");
+        let source = ctx.read_register(self.src());
+        let result = match self.op() {
+            UnaryIntOp::LeadingZeros => source.leading_zeros(),
+            UnaryIntOp::TrailingZeros => source.trailing_zeros(),
+            UnaryIntOp::PopCount => source.count_ones(),
         };
-        use IntConst::{I16, I32, I64, I8};
-        let result = match (self.op(), source_int) {
-            (UnaryIntOp::LeadingZeros, I8(src)) => src.leading_zeros(),
-            (UnaryIntOp::LeadingZeros, I16(src)) => src.leading_zeros(),
-            (UnaryIntOp::LeadingZeros, I32(src)) => src.leading_zeros(),
-            (UnaryIntOp::LeadingZeros, I64(src)) => src.leading_zeros(),
-            (UnaryIntOp::TrailingZeros, I8(src)) => src.trailing_zeros(),
-            (UnaryIntOp::TrailingZeros, I16(src)) => src.trailing_zeros(),
-            (UnaryIntOp::TrailingZeros, I32(src)) => src.trailing_zeros(),
-            (UnaryIntOp::TrailingZeros, I64(src)) => src.trailing_zeros(),
-            (UnaryIntOp::PopCount, I8(src)) => src.count_ones(),
-            (UnaryIntOp::PopCount, I16(src)) => src.count_ones(),
-            (UnaryIntOp::PopCount, I32(src)) => src.count_ones(),
-            (UnaryIntOp::PopCount, I64(src)) => src.count_ones(),
-        };
-        ctx.value_results
-            .insert(result_value, Const::Int(I32(result as i32)));
+        ctx.write_register(return_value, result as u64);
         Ok(())
     }
 }
@@ -322,72 +268,82 @@ impl InterpretInstr for CompareIntInstr {
         value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        let result_value = value.expect("missing value for instruction");
-        let lhs_value = ctx.value_results[self.lhs()];
-        let rhs_value = ctx.value_results[self.rhs()];
-        let lhs_int = match lhs_value {
-            Const::Int(int_const) => int_const,
-            _ => unreachable!(),
-        };
-        let rhs_int = match rhs_value {
-            Const::Int(int_const) => int_const,
-            _ => unreachable!(),
-        };
-        debug_assert_eq!(lhs_value.ty(), rhs_value.ty());
+        let return_value = value.expect("missing value for instruction");
+        let lhs = ctx.read_register(self.lhs());
+        let rhs = ctx.read_register(self.rhs());
         use CompareIntOp as Op;
-        use IntConst::{I16, I32, I64, I8};
-        let result = match (self.op(), lhs_int, rhs_int) {
-            // Equals
-            (Op::Eq, I8(lhs), I8(rhs)) => lhs == rhs,
-            (Op::Eq, I16(lhs), I16(rhs)) => lhs == rhs,
-            (Op::Eq, I32(lhs), I32(rhs)) => lhs == rhs,
-            (Op::Eq, I64(lhs), I64(rhs)) => lhs == rhs,
-            // Signed less-than
-            (Op::Slt, I8(lhs), I8(rhs)) => lhs < rhs,
-            (Op::Slt, I16(lhs), I16(rhs)) => lhs < rhs,
-            (Op::Slt, I32(lhs), I32(rhs)) => lhs < rhs,
-            (Op::Slt, I64(lhs), I64(rhs)) => lhs < rhs,
-            // Signed less-equals
-            (Op::Sle, I8(lhs), I8(rhs)) => lhs <= rhs,
-            (Op::Sle, I16(lhs), I16(rhs)) => lhs <= rhs,
-            (Op::Sle, I32(lhs), I32(rhs)) => lhs <= rhs,
-            (Op::Sle, I64(lhs), I64(rhs)) => lhs <= rhs,
-            // Signed greater-than
-            (Op::Sgt, I8(lhs), I8(rhs)) => lhs > rhs,
-            (Op::Sgt, I16(lhs), I16(rhs)) => lhs > rhs,
-            (Op::Sgt, I32(lhs), I32(rhs)) => lhs > rhs,
-            (Op::Sgt, I64(lhs), I64(rhs)) => lhs > rhs,
-            // Signed greater-equals
-            (Op::Sge, I8(lhs), I8(rhs)) => lhs >= rhs,
-            (Op::Sge, I16(lhs), I16(rhs)) => lhs >= rhs,
-            (Op::Sge, I32(lhs), I32(rhs)) => lhs >= rhs,
-            (Op::Sge, I64(lhs), I64(rhs)) => lhs >= rhs,
-            // Unsigned less-than
-            (Op::Ult, I8(lhs), I8(rhs)) => (lhs as u8) < (rhs as u8),
-            (Op::Ult, I16(lhs), I16(rhs)) => (lhs as u16) < (rhs as u16),
-            (Op::Ult, I32(lhs), I32(rhs)) => (lhs as u32) < (rhs as u32),
-            (Op::Ult, I64(lhs), I64(rhs)) => (lhs as u64) < (rhs as u64),
-            // Unsigned less-equals
-            (Op::Ule, I8(lhs), I8(rhs)) => (lhs as u8) <= (rhs as u8),
-            (Op::Ule, I16(lhs), I16(rhs)) => (lhs as u16) <= (rhs as u16),
-            (Op::Ule, I32(lhs), I32(rhs)) => (lhs as u32) <= (rhs as u32),
-            (Op::Ule, I64(lhs), I64(rhs)) => (lhs as u64) <= (rhs as u64),
-            // Unsigned greater-than
-            (Op::Ugt, I8(lhs), I8(rhs)) => (lhs as u8) > (rhs as u8),
-            (Op::Ugt, I16(lhs), I16(rhs)) => (lhs as u16) > (rhs as u16),
-            (Op::Ugt, I32(lhs), I32(rhs)) => (lhs as u32) > (rhs as u32),
-            (Op::Ugt, I64(lhs), I64(rhs)) => (lhs as u64) > (rhs as u64),
-            // Unsigned greater-equals
-            (Op::Uge, I8(lhs), I8(rhs)) => (lhs as u8) >= (rhs as u8),
-            (Op::Uge, I16(lhs), I16(rhs)) => (lhs as u16) >= (rhs as u16),
-            (Op::Uge, I32(lhs), I32(rhs)) => (lhs as u32) >= (rhs as u32),
-            (Op::Uge, I64(lhs), I64(rhs)) => (lhs as u64) >= (rhs as u64),
-            _ => unimplemented!(),
+        /// Compares `lhs` and `rhs` given the comparator `op` using `f` to convert to signed.
+        fn cmp<U, S, F>(op: CompareIntOp, lhs: U, rhs: U, mut f: F) -> u64
+        where
+            U: Eq + Ord,
+            S: Ord,
+            F: FnMut(U) -> S,
+        {
+            let result = match op {
+                Op::Eq => lhs == rhs,
+                Op::Ne => lhs != rhs,
+                Op::Slt => f(lhs) < f(rhs),
+                Op::Sle => f(lhs) <= f(rhs),
+                Op::Sgt => f(lhs) > f(rhs),
+                Op::Sge => f(lhs) >= f(rhs),
+                Op::Ult => lhs < rhs,
+                Op::Ule => lhs <= rhs,
+                Op::Ugt => lhs > rhs,
+                Op::Uge => lhs >= rhs,
+            };
+            result as u64
+        }
+        let result = match self.ty() {
+            IntType::I8 => {
+                let lhs = lhs as u8;
+                let rhs = rhs as u8;
+                cmp(self.op(), lhs, rhs, |lhs| lhs as i8)
+            }
+            IntType::I16 => {
+                let lhs = lhs as u16;
+                let rhs = rhs as u16;
+                cmp(self.op(), lhs, rhs, |lhs| lhs as i16)
+            }
+            IntType::I32 => {
+                let lhs = lhs as u32;
+                let rhs = rhs as u32;
+                cmp(self.op(), lhs, rhs, |lhs| lhs as i32)
+            }
+            IntType::I64 => {
+                let lhs = lhs as u64;
+                let rhs = rhs as u64;
+                cmp(self.op(), lhs, rhs, |lhs| lhs as i64)
+            }
         };
-        let result = Const::Bool(result);
-        ctx.value_results.insert(result_value, result);
+        ctx.write_register(return_value, result);
         Ok(())
     }
+}
+
+/// Trait used to streamline operations on primitive types.
+pub trait PrimitiveInteger: Copy {
+    fn wrapping_add(self, rhs: Self) -> Self;
+    fn wrapping_sub(self, rhs: Self) -> Self;
+    fn wrapping_mul(self, rhs: Self) -> Self;
+    fn wrapping_div(self, rhs: Self) -> Self;
+    fn wrapping_rem(self, rhs: Self) -> Self;
+}
+macro_rules! impl_primitive_integer_for {
+    ( $( $type:ty ),* $(,)? ) => {
+        $(
+            impl PrimitiveInteger for $type {
+                fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
+                fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
+                fn wrapping_mul(self, rhs: Self) -> Self { self.wrapping_mul(rhs) }
+                fn wrapping_div(self, rhs: Self) -> Self { self.wrapping_div(rhs) }
+                fn wrapping_rem(self, rhs: Self) -> Self { self.wrapping_rem(rhs) }
+            }
+        )*
+    };
+}
+impl_primitive_integer_for! {
+    i8, i16, i32, i64,
+    u8, u16, u32, u64,
 }
 
 impl InterpretInstr for BinaryIntInstr {
@@ -396,81 +352,76 @@ impl InterpretInstr for BinaryIntInstr {
         value: Option<Value>,
         ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        let result_value = value.expect("missing value for instruction");
-        let lhs_value = ctx.value_results[self.lhs()];
-        let rhs_value = ctx.value_results[self.rhs()];
-        let lhs_int = match lhs_value {
-            Const::Int(int_const) => int_const,
-            _ => unreachable!(),
-        };
-        let rhs_int = match rhs_value {
-            Const::Int(int_const) => int_const,
-            _ => unreachable!(),
-        };
+        let return_value = value.expect("missing value for instruction");
+        let lhs = ctx.read_register(self.lhs());
+        let rhs = ctx.read_register(self.rhs());
+        use core::ops::{BitAnd, BitOr, BitXor};
         use BinaryIntOp as Op;
-        use IntConst::{I16, I32, I64, I8};
-        #[rustfmt::skip]
-        let result = match (self.op(), lhs_int, rhs_int) {
-            // Shift and rotate operations are currently unimplemented since
-            // their semantics are not yet clear. Binary instructions typically
-            // require their left-hand and right-hand side values to be of the
-            // same type. The problem with shift and rotate instructions is that
-            // at least in Rust the right-hand side is expected to always be of
-            // type `u32` instead of having the same type as the left-hand side.
-            //
-            // Integer Addition
-            (Op::Add, I8(lhs), I8(rhs)) => I8(lhs.wrapping_add(rhs)),
-            (Op::Add, I16(lhs), I16(rhs)) => I16(lhs.wrapping_add(rhs)),
-            (Op::Add, I32(lhs), I32(rhs)) => I32(lhs.wrapping_add(rhs)),
-            (Op::Add, I64(lhs), I64(rhs)) => I64(lhs.wrapping_add(rhs)),
-            // Integer Subtraction
-            (Op::Sub, I8(lhs), I8(rhs)) => I8(lhs.wrapping_sub(rhs)),
-            (Op::Sub, I16(lhs), I16(rhs)) => I16(lhs.wrapping_sub(rhs)),
-            (Op::Sub, I32(lhs), I32(rhs)) => I32(lhs.wrapping_sub(rhs)),
-            (Op::Sub, I64(lhs), I64(rhs)) => I64(lhs.wrapping_sub(rhs)),
-            // Integer Multiplication
-            (Op::Mul, I8(lhs), I8(rhs)) => I8(lhs.wrapping_mul(rhs)),
-            (Op::Mul, I16(lhs), I16(rhs)) => I16(lhs.wrapping_mul(rhs)),
-            (Op::Mul, I32(lhs), I32(rhs)) => I32(lhs.wrapping_mul(rhs)),
-            (Op::Mul, I64(lhs), I64(rhs)) => I64(lhs.wrapping_mul(rhs)),
-            // Signed Integer Division
-            (Op::Sdiv, I8(lhs), I8(rhs)) => I8(lhs.wrapping_div(rhs)),
-            (Op::Sdiv, I16(lhs), I16(rhs)) => I16(lhs.wrapping_div(rhs)),
-            (Op::Sdiv, I32(lhs), I32(rhs)) => I32(lhs.wrapping_div(rhs)),
-            (Op::Sdiv, I64(lhs), I64(rhs)) => I64(lhs.wrapping_div(rhs)),
-            // Signed Integer Remainder
-            (Op::Srem, I8(lhs), I8(rhs)) => I8(lhs.wrapping_rem(rhs)),
-            (Op::Srem, I16(lhs), I16(rhs)) => I16(lhs.wrapping_rem(rhs)),
-            (Op::Srem, I32(lhs), I32(rhs)) => I32(lhs.wrapping_rem(rhs)),
-            (Op::Srem, I64(lhs), I64(rhs)) => I64(lhs.wrapping_rem(rhs)),
-            // Unsigned Integer Division
-            (Op::Udiv, I8(l), I8(r)) => I8((l as u8).wrapping_div(r as u8) as i8),
-            (Op::Udiv, I16(l), I16(r)) => I16((l as u16).wrapping_div(r as u16) as i16),
-            (Op::Udiv, I32(l), I32(r)) => I32((l as u32).wrapping_div(r as u32) as i32),
-            (Op::Udiv, I64(l), I64(r)) => I64((l as u64).wrapping_div(r as u64) as i64),
-            // Unsigned Integer Remainder
-            (Op::Urem, I8(l), I8(r)) => I8((l as u8).wrapping_rem(r as u8) as i8),
-            (Op::Urem, I16(l), I16(r)) => I16((l as u16).wrapping_rem(r as u16) as i16),
-            (Op::Urem, I32(l), I32(r)) => I32((l as u32).wrapping_rem(r as u32) as i32),
-            (Op::Urem, I64(l), I64(r)) => I64((l as u64).wrapping_rem(r as u64) as i64),
-            // Bitwise-AND
-            (Op::And, I8(lhs), I8(rhs)) => I8(lhs & rhs),
-            (Op::And, I16(lhs), I16(rhs)) => I16(lhs & rhs),
-            (Op::And, I32(lhs), I32(rhs)) => I32(lhs & rhs),
-            (Op::And, I64(lhs), I64(rhs)) => I64(lhs & rhs),
-            // Bitwise-OR
-            (Op::Or, I8(lhs), I8(rhs)) => I8(lhs | rhs),
-            (Op::Or, I16(lhs), I16(rhs)) => I16(lhs | rhs),
-            (Op::Or, I32(lhs), I32(rhs)) => I32(lhs | rhs),
-            (Op::Or, I64(lhs), I64(rhs)) => I64(lhs | rhs),
-            // Bitwise-XOR
-            (Op::Xor, I8(lhs), I8(rhs)) => I8(lhs ^ rhs),
-            (Op::Xor, I16(lhs), I16(rhs)) => I16(lhs ^ rhs),
-            (Op::Xor, I32(lhs), I32(rhs)) => I32(lhs ^ rhs),
-            (Op::Xor, I64(lhs), I64(rhs)) => I64(lhs ^ rhs),
-            _ => unimplemented!(),
+        /// Computes `op` on `lhs` and `rhs` using `f` to convert from unsigned to signed.
+        fn compute<U, S, F, V>(
+            op: BinaryIntOp,
+            lhs: U,
+            rhs: U,
+            mut u2s: F,
+            mut s2u: V,
+        ) -> U
+        where
+            U: PrimitiveInteger
+                + BitAnd<Output = U>
+                + BitOr<Output = U>
+                + BitXor<Output = U>,
+            S: PrimitiveInteger
+                + BitAnd<Output = S>
+                + BitOr<Output = S>
+                + BitXor<Output = S>,
+            F: FnMut(U) -> S,
+            V: FnMut(S) -> U,
+        {
+            match op {
+                Op::Add => lhs.wrapping_add(rhs),
+                Op::Sub => lhs.wrapping_sub(rhs),
+                Op::Mul => lhs.wrapping_mul(rhs),
+                Op::Sdiv => s2u(u2s(lhs).wrapping_div(u2s(rhs))),
+                Op::Srem => s2u(u2s(lhs).wrapping_rem(u2s(rhs))),
+                Op::Udiv => lhs.wrapping_div(rhs),
+                Op::Urem => lhs.wrapping_rem(rhs),
+                Op::And => lhs & rhs,
+                Op::Or => lhs | rhs,
+                Op::Xor => lhs ^ rhs,
+                _ => unimplemented!(),
+            }
+        }
+        let result = match self.ty() {
+            IntType::I8 => {
+                let lhs = lhs as u8;
+                let rhs = rhs as u8;
+                let result =
+                    compute(self.op(), lhs, rhs, |u| u as i8, |s| s as u8);
+                result as u64
+            }
+            IntType::I16 => {
+                let lhs = lhs as u16;
+                let rhs = rhs as u16;
+                let result =
+                    compute(self.op(), lhs, rhs, |u| u as i16, |s| s as u16);
+                result as u64
+            }
+            IntType::I32 => {
+                let lhs = lhs as u32;
+                let rhs = rhs as u32;
+                let result =
+                    compute(self.op(), lhs, rhs, |u| u as i32, |s| s as u32);
+                result as u64
+            }
+            IntType::I64 => {
+                let lhs = lhs as u64;
+                let rhs = rhs as u64;
+                let result =
+                    compute(self.op(), lhs, rhs, |u| u as i64, |s| s as u64);
+                result as u64
+            }
         };
-        ctx.value_results.insert(result_value, result.into());
+        ctx.write_register(return_value, result);
         Ok(())
     }
 }

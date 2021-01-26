@@ -28,12 +28,14 @@ use derive_more::{Display, Error};
 /// Stores values required during interpretation of a function.
 #[derive(Debug)]
 pub struct InterpretationContext {
-    /// The latest results of all values involved in the evaluation.
-    ///
-    /// # Note
-    ///
-    /// This is initialized with the inputs of the function evaluation.
-    pub(in crate::ir) value_results: ComponentMap<Value, Const>,
+    /// The registers used by the function evaluation.
+    registers: ComponentMap<Value, u64>,
+    // /// The latest results of all values involved in the evaluation.
+    // ///
+    // /// # Note
+    // ///
+    // /// This is initialized with the inputs of the function evaluation.
+    // pub(in crate::ir) value_results: ComponentMap<Value, Const>,
     /// The currently executed basic block.
     ///
     /// # Note
@@ -51,12 +53,12 @@ pub struct InterpretationContext {
     /// The index of the currently executed instruction
     /// of the currently executed basic block.
     instruction_counter: usize,
-    /// The result returned by the evaluation if any.
+    /// The values returned by the evaluation of the function if any.
     ///
     /// # Note
     ///
-    /// Is initialized as `None` before function evaluation.
-    output: Option<Const>,
+    /// Is initialized as empty.
+    return_values: Vec<u64>,
     /// Is `true` if the evaluation of the function has trapped.
     ///
     /// # Note
@@ -76,11 +78,11 @@ pub struct InterpretationContext {
 impl Default for InterpretationContext {
     fn default() -> Self {
         Self {
-            value_results: Default::default(),
+            registers: Default::default(),
             current_block: Block::from_raw(RawIdx::from_u32(0)),
             last_block: None,
             instruction_counter: 0,
-            output: None,
+            return_values: Vec::new(),
             has_trapped: false,
             has_returned: false,
             state: EvaluationState::Initialization,
@@ -132,11 +134,14 @@ pub enum InterpretationError {
     #[display(fmt = "tried to read uninitialized input {}", input)]
     UninitializedInput { input: Value },
     #[display(
-        fmt = "encountered duplicate output values. first: {}, second: {}",
-        prev_output,
-        output
+        fmt = "encountered duplicate output values. first: {:?}, second: {:?}",
+        prev_return_value,
+        return_value
     )]
-    AlreadySetOutput { output: Const, prev_output: Const },
+    AlreadySetReturnValue {
+        return_value: Vec<u64>,
+        prev_return_value: Vec<u64>,
+    },
 }
 
 impl InterpretationContext {
@@ -150,7 +155,7 @@ impl InterpretationContext {
         &mut self,
         function: &Function,
         inputs: &[Const],
-    ) -> Result<Option<Const>, InterpretationError> {
+    ) -> Result<&[u64], InterpretationError> {
         self.reset();
         self.current_block = function.entry_block();
         for (n, &input) in inputs.iter().enumerate() {
@@ -167,7 +172,7 @@ impl InterpretationContext {
                             expected_type,
                         })
                     }
-                    self.value_results.insert(value, input);
+                    self.write_register(value, input.into_bits64());
                 }
                 ValueAssoc::Instr(_) => {
                     return Err(InterpretationError::TriedToInitializeNonInput {
@@ -180,14 +185,14 @@ impl InterpretationContext {
         self.state = EvaluationState::Evaluation;
         function.interpret(self)?;
         self.state = EvaluationState::Finished;
-        Ok(self.output)
+        Ok(&self.return_values)
     }
 
     /// Resets the interpretation context so that it can evaluate a new function.
     fn reset(&mut self) {
-        self.value_results.clear();
+        self.registers.clear();
         self.last_block = None;
-        self.output = None;
+        self.return_values.clear();
         self.has_trapped = false;
         self.has_returned = false;
         self.instruction_counter = 0;
@@ -204,27 +209,21 @@ impl InterpretationContext {
         self.has_returned
     }
 
-    /// Returns the output of the function evaluation if any.
-    ///
-    /// # Errors
-    ///
-    /// - If the function evaluation has trapped.
-    /// - If the evaluation has not yet finished or started.
-    pub fn output(&self) -> Result<Option<Const>, InterpretationError> {
-        if self.has_trapped() {
-            return Err(InterpretationError::EvaluationHasTrapped)
-        }
-        if self.state != EvaluationState::Finished {
-            return Err(InterpretationError::UnfinishedEvaluation)
-        }
-        Ok(self.output)
-    }
-
     /// Switches the currently executed basic block.
     fn switch_to_block(&mut self, block: Block) {
         let last_block = replace(&mut self.current_block, block);
         self.last_block = Some(last_block);
         self.instruction_counter = 0;
+    }
+
+    /// Writes the given bits into the register for the given value.
+    fn write_register(&mut self, value: Value, bits: u64) {
+        self.registers.insert(value, bits);
+    }
+
+    /// Returns the bits in the register for the given value.
+    fn read_register(&self, value: Value) -> u64 {
+        self.registers[value]
     }
 
     /// Returns the currently executed basic block.
@@ -243,10 +242,24 @@ impl InterpretationContext {
         self.has_trapped = true;
     }
 
-    /// Tells the interpretation context that the function evaluation has finished.
-    fn set_returned(&mut self) {
-        assert!(!self.has_trapped);
+    /// Sets the output to the given value.
+    ///
+    /// # Errors
+    ///
+    /// If an output has already been set.
+    fn set_return_value(
+        &mut self,
+        return_values: &[u64],
+    ) -> Result<(), InterpretationError> {
+        if self.has_returned {
+            return Err(InterpretationError::AlreadySetReturnValue {
+                prev_return_value: self.return_values.clone(),
+                return_value: return_values.to_vec(),
+            })
+        }
+        self.return_values.extend_from_slice(return_values);
         self.has_returned = true;
+        Ok(())
     }
 
     /// Bumps the instruction counter by one and returns its value before the bump.
@@ -254,21 +267,5 @@ impl InterpretationContext {
         let ic = self.instruction_counter;
         self.instruction_counter += 1;
         ic
-    }
-
-    /// Sets the output to the given value.
-    ///
-    /// # Errors
-    ///
-    /// If an output has already been set.
-    fn set_output(&mut self, output: Const) -> Result<(), InterpretationError> {
-        if let Some(prev_output) = self.output {
-            return Err(InterpretationError::AlreadySetOutput {
-                prev_output,
-                output,
-            })
-        }
-        self.output = Some(output);
-        Ok(())
     }
 }

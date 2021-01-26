@@ -47,7 +47,7 @@ fn ret_const_works() -> Result<(), IrError> {
 
     let mut ctx = InterpretationContext::default();
     let output = ctx.interpret(&fun, &[]).unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(42))));
+    assert_eq!(output, &[42]);
 
     Ok(())
 }
@@ -69,7 +69,7 @@ fn simple_block_works() -> Result<(), IrError> {
 
     let mut ctx = InterpretationContext::default();
     let output = ctx.interpret(&fun, &[]).unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(9))));
+    assert_eq!(output, &[9]);
 
     Ok(())
 }
@@ -100,7 +100,7 @@ fn if_then_else_works() -> Result<(), IrError> {
 
     let mut ctx = InterpretationContext::default();
     let output = ctx.interpret(&fun, &[]).unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(10))));
+    assert_eq!(output, &[10]);
 
     Ok(())
 }
@@ -124,7 +124,7 @@ fn simple_variable() -> Result<(), IrError> {
 
     let mut ctx = InterpretationContext::default();
     let output = ctx.interpret(&fun, &[]).unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(2))));
+    assert_eq!(output, &[2]);
 
     Ok(())
 }
@@ -147,7 +147,7 @@ fn simple_input() -> Result<(), IrError> {
     let output = ctx
         .interpret(&fun, &[Const::Int(IntConst::I32(11))])
         .unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(22))));
+    assert_eq!(output, &[22]);
 
     Ok(())
 }
@@ -175,7 +175,7 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
     let output = ctx
         .interpret(&fun, &[Const::Int(IntConst::I32(42))])
         .unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(1))));
+    assert_eq!(output, &[1]);
 
     Ok(())
 }
@@ -225,12 +225,12 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
     let output = ctx
         .interpret(&fun, &[Const::Int(IntConst::I32(0))])
         .unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(10))));
+    assert_eq!(output, &[10]);
 
     let output2 = ctx
         .interpret(&fun, &[Const::Int(IntConst::I32(1))])
         .unwrap();
-    assert_eq!(output2, Some(Const::Int(IntConst::I32(20))));
+    assert_eq!(output2, &[20]);
 
     Ok(())
 }
@@ -284,7 +284,7 @@ fn simple_loop_works() -> Result<(), IrError> {
     let output = ctx
         .interpret(&fun, &[Const::Int(IntConst::I32(10))])
         .unwrap();
-    assert_eq!(output, Some(Const::Int(IntConst::I32(10))));
+    assert_eq!(output, &[10]);
 
     Ok(())
 }
