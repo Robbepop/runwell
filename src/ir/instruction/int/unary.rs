@@ -67,13 +67,13 @@ impl UnaryIntInstr {
     }
 
     /// Returns the integer type of the return value.
-    pub fn ty(&self) -> &IntType {
-        &self.ty
+    pub fn ty(&self) -> IntType {
+        self.ty
     }
 
     /// Returns the source value of the instruction.
-    pub fn src(&self) -> &Value {
-        &self.src
+    pub fn src(&self) -> Value {
+        self.src
     }
 
     /// Replaces all values in the instruction using the replacer.
