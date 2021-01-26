@@ -237,20 +237,55 @@ impl InterpretInstr for UnaryIntInstr {
 impl InterpretInstr for TruncateIntInstr {
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
-        _ctx: &mut InterpretationContext,
+        return_value: Option<Value>,
+        ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        unimplemented!()
+        let return_value = return_value.expect("missing value for instruction");
+        let source = ctx.read_register(self.src());
+        debug_assert!(
+            self.dst_type().bit_width() <= self.src_type().bit_width()
+        );
+        fn mask(bits: u32) -> u64 {
+            (0x1 << bits) - 1
+        }
+        let result = match self.dst_type() {
+            IntType::I8 => source & mask(8),
+            IntType::I16 => source & mask(16),
+            IntType::I32 => source & mask(32),
+            IntType::I64 => source,
+        };
+        ctx.write_register(return_value, result as u64);
+        Ok(())
     }
 }
 
 impl InterpretInstr for ExtendIntInstr {
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
-        _ctx: &mut InterpretationContext,
+        return_value: Option<Value>,
+        ctx: &mut InterpretationContext,
     ) -> Result<(), InterpretationError> {
-        unimplemented!()
+        let return_value = return_value.expect("missing value for instruction");
+        let source = ctx.read_register(self.src());
+        debug_assert!(
+            self.src_type().bit_width() <= self.dst_type().bit_width()
+        );
+        let result = if self.is_signed() {
+            match (self.src_type(), self.dst_type()) {
+                (IntType::I8, IntType::I16) => source as u8 as i8 as i16 as u16 as u64,
+                (IntType::I8, IntType::I32) => source as u8 as i8 as i32 as u32 as u64,
+                (IntType::I8, IntType::I64) => source as u8 as i8 as i64 as u64,
+                (IntType::I16, IntType::I32) => source as u16 as i16 as i32 as u32 as u64,
+                (IntType::I32, IntType::I64) => source as u32 as i32 as i64 as u64,
+                (x, y) if x == y => source,
+                _ => unreachable!(),
+            }
+        } else {
+            // Nothing to do since interpreter registers are `u64`.
+            source
+        };
+        ctx.write_register(return_value, result as u64);
+        Ok(())
     }
 }
 
