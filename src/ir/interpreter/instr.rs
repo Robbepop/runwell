@@ -310,8 +310,6 @@ impl InterpretInstr for CompareIntInstr {
                 cmp(self.op(), lhs, rhs, |lhs| lhs as i32)
             }
             IntType::I64 => {
-                let lhs = lhs as u64;
-                let rhs = rhs as u64;
                 cmp(self.op(), lhs, rhs, |lhs| lhs as i64)
             }
         };
@@ -414,8 +412,6 @@ impl InterpretInstr for BinaryIntInstr {
                 result as u64
             }
             IntType::I64 => {
-                let lhs = lhs as u64;
-                let rhs = rhs as u64;
                 let result =
                     compute(self.op(), lhs, rhs, |u| u as i64, |s| s as u64);
                 result as u64
