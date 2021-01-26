@@ -148,6 +148,15 @@ impl Const {
             Self::Float(float_const) => float_const.ty(),
         }
     }
+
+    /// Returns the underlying 64-bits of the constant.
+    pub fn into_bits64(self) -> u64 {
+        match self {
+            Self::Bool(bool_const) => bool_const as u64,
+            Self::Int(int_const) => int_const.into_bits64(),
+            Self::Float(float_const) => float_const.into_bits64(),
+        }
+    }
 }
 
 /// A constant fixed-size integer value.
@@ -169,6 +178,16 @@ impl IntConst {
             Self::I64(_) => IntType::I64.into(),
         }
     }
+
+    /// Returns the underlying 64-bits of the constant.
+    pub fn into_bits64(self) -> u64 {
+        match self {
+            Self::I8(value) => value as u8 as u64,
+            Self::I16(value) => value as u16 as u64,
+            Self::I32(value) => value as u32 as u64,
+            Self::I64(value) => value as u64,
+        }
+    }
 }
 
 /// A constant floating point number value.
@@ -184,6 +203,14 @@ impl FloatConst {
         match self {
             Self::F32(_) => FloatType::F32.into(),
             Self::F64(_) => FloatType::F64.into(),
+        }
+    }
+
+    /// Returns the underlying 64-bits of the constant.
+    pub fn into_bits64(self) -> u64 {
+        match self {
+            Self::F32(value) => value.bits() as u64,
+            Self::F64(value) => value.bits(),
         }
     }
 }
