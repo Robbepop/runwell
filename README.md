@@ -35,3 +35,86 @@ Even though the `runwell` JIT guarantees deterministic behaviour and protection 
 
 High-level optimizations that might be bombable are performed by the `runwell` JIT securely to protect them from JIT bombs.
 
+## Example
+
+The following example shows how to construct a Runwell IR function equivalent to the below
+python script and evaluate it using the Runwell IR interpreter.
+```python
+x = 0
+while x < 100:
+    x = x + 1
+```
+Below is the Rust code necessary to construct the equivalent Runwell IR function:
+```rust
+let mut b = Function::build()
+    .with_inputs(&[IntType::I32.into()])?
+    .with_outputs(&[IntType::I32.into()])?
+    .declare_variables(1, IntType::I32.into())?
+    .body();
+
+let loop_head = b.create_block();
+let loop_body = b.create_block();
+let loop_exit = b.create_block();
+
+let input = Variable::from_raw(RawIdx::from_u32(0));
+let counter = Variable::from_raw(RawIdx::from_u32(1));
+
+let v0 = b.ins()?.constant(IntConst::I32(0))?;
+b.write_var(counter, v0)?;
+b.ins()?.br(loop_head)?;
+
+b.switch_to_block(loop_head)?;
+let v1 = b.read_var(counter)?;
+let v2 = b.read_var(input)?;
+let v3 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v1, v2)?;
+b.ins()?.if_then_else(v3, loop_body, loop_exit)?;
+
+b.switch_to_block(loop_body)?;
+let v4 = b.read_var(counter)?;
+let v5 = b.ins()?.constant(IntConst::I32(1))?;
+let v6 = b.ins()?.iadd(IntType::I32, v4, v5)?;
+b.write_var(counter, v6)?;
+b.ins()?.br(loop_head)?;
+b.seal_block()?;
+
+b.switch_to_block(loop_head)?;
+b.seal_block()?;
+
+b.switch_to_block(loop_exit)?;
+let v7 = b.read_var(counter)?;
+b.ins()?.return_value(v7)?;
+b.seal_block()?;
+
+let function = b.finalize()?;
+```
+Printing the Runwell IR function using `println!("{}", function)` yields the following output:
+```
+fn (v0: i32) -> i32
+bb0:
+    v1: i32 = const 0
+    br bb1
+bb1:
+    v2: i32 = ϕ [ bb0 -> v1, bb2 -> v7 ]
+    v4: bool = scmp i32 slt v2 v0
+    if v4 then bb2 else bb3
+bb2:
+    v6: i32 = const 1
+    v7: i32 = iadd i32 v2 v6
+    br bb1
+bb3:
+    ret v2
+```
+Evaluating `function` using Runwell's built-in interpreter is done as follows:
+```
+    let mut store = Store::default();
+    let func = store.push_function(function);
+    let mut ctx = EvaluationContext::new(&store);
+    let iterations = 100;
+    let result = ctx
+        .evaluate_function(
+            func,
+            [Const::Int(IntConst::I32(iterations))].iter().copied(),
+        )
+        .unwrap();
+    assert_eq!(result, iterations as u64);
+```
