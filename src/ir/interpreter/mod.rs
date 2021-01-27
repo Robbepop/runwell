@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Allows to interpret the Runwell IR.
+
 mod error;
 mod frame;
 mod instr;

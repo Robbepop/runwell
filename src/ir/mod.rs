@@ -15,7 +15,7 @@
 mod builder;
 mod error;
 mod instruction;
-mod interpreter;
+pub mod interpreter;
 pub mod primitive;
 
 use self::builder::Variable;
