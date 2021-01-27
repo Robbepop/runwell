@@ -92,6 +92,11 @@ impl Function {
     pub fn inputs(&self) -> &[Type] {
         &self.input_types
     }
+
+    /// Returns the asserted output types of the function.
+    pub fn outputs(&self) -> &[Type] {
+        &self.output_types
+    }
 }
 
 impl InterpretInstr for Function {
