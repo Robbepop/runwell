@@ -34,6 +34,9 @@ pub struct FunctionFrame {
     /// to its respective returned value right before the function
     /// returns control back to the caller.
     registers: ComponentVec<Value, u64>,
+    /// The index of the currently executed instruction
+    /// of the currently executed basic block.
+    instruction_counter: usize,
     /// The currently executed basic block.
     ///
     /// # Note
@@ -48,9 +51,6 @@ pub struct FunctionFrame {
     ///
     /// Is initialized as `None` before function evaluation.
     last_block: Option<Block>,
-    /// The index of the currently executed instruction
-    /// of the currently executed basic block.
-    instruction_counter: usize,
 }
 
 impl Default for FunctionFrame {
