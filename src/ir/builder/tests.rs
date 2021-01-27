@@ -33,6 +33,22 @@ use crate::{
     },
 };
 
+/// Evaluates the function given the inputs and returns the results.
+fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
+    let mut store = Store::default();
+    let func = store.push_function(function);
+    let mut ctx = EvaluationContext::new(&store);
+    let mut results = Vec::new();
+    ctx
+        .evaluate_function(
+            func,
+            inputs.iter().copied().map(Const::into_bits64),
+            |_, result| results.push(result),
+        )
+        .unwrap();
+    results
+}
+
 #[test]
 fn ret_const_works() -> Result<(), IrError> {
     let mut b = Function::build()
@@ -45,11 +61,8 @@ fn ret_const_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let result = ctx.evaluate_function(func, vec![]).unwrap();
-    assert_eq!(result, 42);
+    let results = evaluate_function(function, &[]);
+    assert_eq!(results, vec![42]);
 
     Ok(())
 }
@@ -69,11 +82,8 @@ fn simple_block_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let result = ctx.evaluate_function(func, vec![]).unwrap();
-    assert_eq!(result, 9);
+    let results = evaluate_function(function, &[]);
+    assert_eq!(results, vec![9]);
 
     Ok(())
 }
@@ -102,11 +112,8 @@ fn if_then_else_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let result = ctx.evaluate_function(func, vec![]).unwrap();
-    assert_eq!(result, 10);
+    let results = evaluate_function(function, &[]);
+    assert_eq!(results, vec![10]);
 
     Ok(())
 }
@@ -128,11 +135,8 @@ fn simple_variable() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let result = ctx.evaluate_function(func, vec![]).unwrap();
-    assert_eq!(result, 2);
+    let results = evaluate_function(function, &[]);
+    assert_eq!(results, vec![2]);
 
     Ok(())
 }
@@ -151,16 +155,8 @@ fn simple_input() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let result = ctx
-        .evaluate_function(
-            func,
-            [Const::Int(IntConst::I32(11))].iter().copied(),
-        )
-        .unwrap();
-    assert_eq!(result, 22);
+    let results = evaluate_function(function, &[Const::Int(IntConst::I32(11))]);
+    assert_eq!(results, vec![22]);
 
     Ok(())
 }
@@ -184,16 +180,8 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let result = ctx
-        .evaluate_function(
-            func,
-            [Const::Int(IntConst::I32(42))].iter().copied(),
-        )
-        .unwrap();
-    assert_eq!(result, 1);
+    let results = evaluate_function(function, &[Const::Int(IntConst::I32(42))]);
+    assert_eq!(results, vec![1]);
 
     Ok(())
 }
@@ -242,20 +230,24 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
     let mut store = Store::default();
     let func = store.push_function(function);
     let mut ctx = EvaluationContext::new(&store);
-    let result1 = ctx
+    let mut results = Vec::new();
+    ctx
         .evaluate_function(
             func,
-            [Const::Int(IntConst::I32(0))].iter().copied(),
+            vec![0],
+            |_, result| results.push(result),
         )
         .unwrap();
-    assert_eq!(result1, 10);
-    let result2 = ctx
+    assert_eq!(results, vec![10]);
+    results.clear();
+    ctx
         .evaluate_function(
             func,
-            [Const::Int(IntConst::I32(1))].iter().copied(),
+            vec![1],
+            |_, result| results.push(result),
         )
         .unwrap();
-    assert_eq!(result2, 20);
+    assert_eq!(results, vec![20]);
 
     Ok(())
 }
@@ -305,17 +297,9 @@ fn simple_loop_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let iterations = 100_000_000;
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let result = ctx
-        .evaluate_function(
-            func,
-            [Const::Int(IntConst::I32(iterations))].iter().copied(),
-        )
-        .unwrap();
-    assert_eq!(result, iterations as u64);
+    let iterations = 100;
+    let results = evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
+    assert_eq!(results, vec![iterations as u64]);
 
     Ok(())
 }
