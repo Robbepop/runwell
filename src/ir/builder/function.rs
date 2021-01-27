@@ -33,7 +33,7 @@ use crate::{
         instr::PhiInstr,
         instruction::Instruction,
         interpreter::{
-            FunctionEvaluationContext,
+            EvaluationContext,
             FunctionFrame,
             InterpretInstr,
             InterpretationError,
@@ -103,7 +103,7 @@ impl InterpretInstr for Function {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let block = frame.current_block();

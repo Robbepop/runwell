@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{FunctionEvaluationContext, FunctionFrame, InterpretationError};
+use super::{EvaluationContext, Func, FunctionFrame, InterpretationError};
 use crate::{
     entity::RawIdx,
     ir::{
@@ -37,7 +37,6 @@ use crate::{
         instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
         primitive::{IntType, Value},
     },
-    parse::FunctionId,
 };
 
 /// Implemented by Runwell IR instructions to make them interpretable.
@@ -46,7 +45,7 @@ pub trait InterpretInstr {
     fn interpret_instr(
         &self,
         return_return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError>;
 }
@@ -66,14 +65,14 @@ pub enum InterpretationFlow {
     /// with the functions inputs. The outer evaluation context
     /// then has to check the aquired inputs against the called
     /// function signature.
-    TailCall(FunctionId),
+    TailCall(Func),
 }
 
 impl InterpretInstr for Instruction {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
@@ -106,7 +105,7 @@ impl InterpretInstr for PhiInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -126,7 +125,7 @@ impl InterpretInstr for ConstInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -139,7 +138,7 @@ impl InterpretInstr for SelectInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -159,7 +158,7 @@ impl InterpretInstr for TerminalInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
@@ -178,7 +177,7 @@ impl InterpretInstr for ReturnInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = frame.read_register(self.return_value());
@@ -192,7 +191,7 @@ impl InterpretInstr for BranchInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         frame.switch_to_block(self.target());
@@ -204,7 +203,7 @@ impl InterpretInstr for IfThenElseInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let condition = frame.read_register(self.condition());
@@ -222,7 +221,7 @@ impl InterpretInstr for ReinterpretInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -241,7 +240,7 @@ impl InterpretInstr for IntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
@@ -271,7 +270,7 @@ impl InterpretInstr for UnaryIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -290,7 +289,7 @@ impl InterpretInstr for TruncateIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -316,7 +315,7 @@ impl InterpretInstr for ExtendIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -355,7 +354,7 @@ impl InterpretInstr for IntToFloatInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         _frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         // WebAssembly instructions that map to IntToFloatInstr:
@@ -393,7 +392,7 @@ impl InterpretInstr for CompareIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
@@ -474,7 +473,7 @@ impl InterpretInstr for BinaryIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        _ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");

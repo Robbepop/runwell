@@ -21,8 +21,8 @@ pub use self::{
     error::InterpretationError,
     instr::{InterpretInstr, InterpretationFlow},
 };
-use super::{builder::Function, primitive::{Const, Value}};
-use crate::{entity::{EntityArena, Idx, RawIdx}};
+use super::{builder::Function, primitive::Value};
+use crate::entity::{EntityArena, Idx, RawIdx};
 
 /// A function index.
 pub type Func = Idx<Function>;
@@ -67,85 +67,24 @@ impl<'a> EvaluationContext<'a> {
     }
 
     /// Evaluates the given function.
-    pub fn evaluate_function<I>(&mut self, func: Func, inputs: I) -> Result<u64, InterpretationError>
-    where
-        I: IntoIterator<Item = Const>,
-    {
-        let mut frame = self.create_frame();
-        let function = self.store.get_fn(func);
-        evaluate_function(
-            function,
-            self,
-            &mut frame,
-            inputs.into_iter().map(|input| input.into_bits64()),
-        )?;
-        let result_value = Value::from_raw(RawIdx::from_u32(0));
-        let result = frame.read_register(result_value);
-        Ok(result)
-    }
-
-    /// Creates a new function evaluation frame.
     ///
-    /// This might reuse function evaluation frames used in past evaluations.
-    fn create_frame(&mut self) -> FunctionFrame {
-        if let Some(mut frame) = self.cached_frames.pop() {
-            frame.reset();
-            return frame
-        }
-        Default::default()
-    }
-
-    /// Releases the function evaluation frame back to its evaluation context for caching.
-    fn release_frame(&mut self, frame: FunctionFrame) {
-        self.cached_frames.push(frame);
-    }
-}
-
-/// Evaluates the function with the inputs using the evaluation context and frame.
-pub fn evaluate_function<'a, I>(
-    fun: &'a Function,
-    ctx: &mut EvaluationContext<'a>,
-    frame: &mut FunctionFrame,
-    inputs: I,
-) -> Result<(), InterpretationError>
-where
-    I: IntoIterator<Item = u64>,
-{
-    let fn_ctx = FunctionEvaluationContext::new(fun, ctx);
-    fn_ctx.evaluate(frame, inputs)?;
-    Ok(())
-}
-
-/// The evaluation context used by a particular executed function.
-///
-/// This holds the greater evaluation context as well as the function's frame.
-#[derive(Debug)]
-pub struct FunctionEvaluationContext<'a, 'b> {
-    fun: &'a Function,
-    pub ctx: &'b mut EvaluationContext<'a>,
-}
-
-impl<'a, 'b> FunctionEvaluationContext<'a, 'b> {
-    /// Creates a new function evaluation context.
-    fn new(
-        fun: &'a Function,
-        ctx: &'b mut EvaluationContext<'a>,
-    ) -> Self {
-        Self { fun, ctx }
-    }
-
-    /// Evaluate the function
-    fn evaluate<I>(
-        mut self,
-        frame: &mut FunctionFrame,
+    /// This creates a new call frame for the function which can be costly.
+    /// For tail calls this function should not be used.
+    pub fn evaluate_function<I, O>(
+        &mut self,
+        func: Func,
         inputs: I,
+        mut outputs: O,
     ) -> Result<(), InterpretationError>
     where
         I: IntoIterator<Item = u64>,
+        O: FnMut(Value, u64),
     {
-        frame.initialize(self.fun, inputs)?;
+        let mut frame = self.create_frame();
+        let function = self.store.get_fn(func);
+        frame.initialize(function, inputs)?;
         loop {
-            match self.fun.interpret_instr(None, &mut self, frame)? {
+            match function.interpret_instr(None, self, &mut frame)? {
                 InterpretationFlow::Continue => continue,
                 InterpretationFlow::Return => break,
                 InterpretationFlow::TailCall(_id) => {
@@ -157,7 +96,27 @@ impl<'a, 'b> FunctionEvaluationContext<'a, 'b> {
                 }
             }
         }
-        // Values are returned through the first registers of the function `frame`.
+        for (n, _) in function.outputs().iter().enumerate() {
+            let result_value = Value::from_raw(RawIdx::from_u32(n as u32));
+            let result = frame.read_register(result_value);
+            outputs(result_value, result)
+        }
+        self.release_frame(frame);
         Ok(())
+    }
+
+    /// Creates a new function evaluation frame.
+    ///
+    /// This might reuse function evaluation frames used in past evaluations.
+    fn create_frame(&mut self) -> FunctionFrame {
+        if let Some(frame) = self.cached_frames.pop() {
+            return frame
+        }
+        Default::default()
+    }
+
+    /// Releases the function evaluation frame back to its evaluation context for caching.
+    fn release_frame(&mut self, frame: FunctionFrame) {
+        self.cached_frames.push(frame);
     }
 }
