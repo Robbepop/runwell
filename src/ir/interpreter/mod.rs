@@ -25,9 +25,16 @@ pub use self::{
 };
 use super::{builder::Function, primitive::Value};
 use crate::entity::{EntityArena, Idx, RawIdx};
+use core::fmt;
 
 /// A function index.
 pub type Func = Idx<Function>;
+
+impl fmt::Display for Func {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "func({})", self.into_raw())
+    }
+}
 
 /// Holds all data that is immutable during a function evaluation.
 ///
