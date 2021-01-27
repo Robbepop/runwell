@@ -22,6 +22,7 @@ use crate::{
             CompareIntInstr,
             ConstInstr,
             ExtendIntInstr,
+            FloatToIntInstr,
             IfThenElseInstr,
             Instruction,
             IntInstr,
@@ -35,7 +36,7 @@ use crate::{
             UnaryIntInstr,
         },
         instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
-        primitive::{IntType, Value},
+        primitive::{FloatType, IntType, Value},
     },
 };
 
@@ -351,40 +352,54 @@ impl InterpretInstr for ExtendIntInstr {
 }
 
 impl InterpretInstr for IntToFloatInstr {
+    /// WebAssembly instructions that map to IntToFloatInstr:
+    ///
+    /// `i32` conversion to `f32` and `f64`:
+    ///  - `i32.trunc_f32_s`
+    ///  - `i32.trunc_f32_u`
+    ///  - `i32.trunc_f64_s`
+    ///  - `i32.trunc_f64_u`
+    ///
+    /// `i64` conversion to `f32` and `f64`:
+    ///  - `i64.trunc_f32_s`
+    ///  - `i64.trunc_f32_u`
+    ///  - `i64.trunc_f64_s`
+    ///  - `i64.trunc_f64_u`
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
+        return_value: Option<Value>,
         _ctx: &mut EvaluationContext,
-        _frame: &mut FunctionFrame,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        // WebAssembly instructions that map to IntToFloatInstr:
-        //
-        // i32 conversion to f32 and f64:
-        //  - i32.trunc_f32_s
-        //  - i32.trunc_f32_u
-        //  - i32.trunc_f64_s
-        //  - i32.trunc_f64_u
-        //
-        // i64 conversion to f32 and f64:
-        //  - i64.trunc_f32_s
-        //  - i64.trunc_f32_u
-        //  - i64.trunc_f64_s
-        //  - i64.trunc_f64_u
-        //
-        // WebAssembly instructions that map to FloatTotIntInstr:
-        //
-        // f32 conversion to i32 and i64:
-        //  - f32.convert_i32_s
-        //  - f32.convert_i32_u
-        //  - f32.convert_i64_s
-        //  - f32.convert_i64_u
-        //
-        // f64 conversion to i32 and i64:
-        //  - f64.convert_i32_s
-        //  - f64.convert_i32_u
-        //  - f64.convert_i64_s
-        //  - f64.convert_i64_u
-        unimplemented!()
+        let return_value = return_value.expect("missing value for instruction");
+        let source = frame.read_register(self.src());
+        use FloatType::{F32, F64};
+        use IntType::{I16, I32, I64, I8};
+        let result = match (self.is_signed(), self.src_type(), self.dst_type())
+        {
+            // uN -> f32
+            (false, I8, F32) => (source as u8 as f32).to_bits() as u64,
+            (false, I16, F32) => (source as u16 as f32).to_bits() as u64,
+            (false, I32, F32) => (source as u32 as f32).to_bits() as u64,
+            (false, I64, F32) => (source as u64 as f32).to_bits() as u64,
+            // uN -> f64
+            (false, I8, F64) => (source as u8 as f64).to_bits(),
+            (false, I16, F64) => (source as u16 as f64).to_bits(),
+            (false, I32, F64) => (source as u32 as f64).to_bits(),
+            (false, I64, F64) => (source as u64 as f64).to_bits(),
+            // iN -> f32
+            (true, I8, F32) => (source as u8 as i8 as f32).to_bits() as u64,
+            (true, I16, F32) => (source as u16 as i16 as f32).to_bits() as u64,
+            (true, I32, F32) => (source as u32 as i32 as f32).to_bits() as u64,
+            (true, I64, F32) => (source as u64 as i64 as f32).to_bits() as u64,
+            // iN -> f64
+            (true, I8, F64) => (source as u8 as i8 as f64).to_bits(),
+            (true, I16, F64) => (source as u16 as i16 as f64).to_bits(),
+            (true, I32, F64) => (source as u32 as i32 as f64).to_bits(),
+            (true, I64, F64) => (source as u64 as i64 as f64).to_bits(),
+        };
+        frame.write_register(return_value, result as u64);
+        Ok(InterpretationFlow::Continue)
     }
 }
 
@@ -545,5 +560,29 @@ impl InterpretInstr for BinaryIntInstr {
         };
         frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
+    }
+}
+
+impl InterpretInstr for FloatToIntInstr {
+    fn interpret_instr(
+        &self,
+        _return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        _frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        // WebAssembly instructions that map to FloatTotIntInstr:
+        //
+        // f32 conversion to i32 and i64:
+        //  - f32.convert_i32_s
+        //  - f32.convert_i32_u
+        //  - f32.convert_i64_s
+        //  - f32.convert_i64_u
+        //
+        // f64 conversion to i32 and i64:
+        //  - f64.convert_i32_s
+        //  - f64.convert_i32_u
+        //  - f64.convert_i64_s
+        //  - f64.convert_i64_u
+        unimplemented!()
     }
 }
