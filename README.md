@@ -35,6 +35,3 @@ Even though the `runwell` JIT guarantees deterministic behaviour and protection 
 
 High-level optimizations that might be bombable are performed by the `runwell` JIT securely to protect them from JIT bombs.
 
-## Architectures
-
-Initially the `runwell` JIT only supports the x86 architecture.
