@@ -13,28 +13,28 @@
 // limitations under the License.
 
 use crate::{
-    ir::primitive::Value,
-    parse::{FunctionId, FunctionTypeId, TableId},
+    ir::{interpreter::Func, primitive::Value},
+    parse::{FunctionTypeId, TableId},
 };
 use core::{convert::identity, fmt::Display};
 
 /// Calls a function statically.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CallInstr {
-    /// The identified of the called function.
-    function_id: FunctionId,
+    /// The index of the called function.
+    func: Func,
     /// The parameters of the function call.
     call_params: Vec<Value>,
 }
 
 impl CallInstr {
     /// Creates a new call instruction to call the indexed function using the given parameters.
-    pub fn new<I>(function_id: FunctionId, call_params: I) -> Self
+    pub fn new<I>(func: Func, call_params: I) -> Self
     where
         I: IntoIterator<Item = Value>,
     {
         Self {
-            function_id,
+            func,
             call_params: call_params.into_iter().collect::<Vec<_>>(),
         }
     }
@@ -59,14 +59,14 @@ impl CallInstr {
 
 impl Display for CallInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "call {}, params: [", self.function_id)?;
+        write!(f, "call {} [ ", self.func)?;
         if let Some((fst, rest)) = self.call_params.split_first() {
             write!(f, "{}", fst)?;
             for param in rest {
                 write!(f, ", {}", param)?;
             }
         }
-        write!(f, "]")?;
+        write!(f, " ]")?;
         Ok(())
     }
 }
