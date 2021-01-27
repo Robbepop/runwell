@@ -12,231 +12,153 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod error;
+mod frame;
 mod instr;
 
-pub use self::instr::InterpretInstr;
-use super::builder::{Function, ValueAssoc};
-use crate::{
-    entity::{ComponentVec, RawIdx},
-    ir::primitive::{Block, Const, Type, Value},
+pub(in crate::ir) use self::frame::FunctionFrame;
+pub use self::{
+    error::InterpretationError,
+    instr::{InterpretInstr, InterpretationFlow},
 };
-use core::mem::replace;
-use derive_more::{Display, Error};
+use super::{builder::Function, primitive::{Const, Value}};
+use crate::{entity::{EntityArena, Idx, RawIdx}};
 
-/// The interpretation context.
+/// A function index.
+pub type Func = Idx<Function>;
+
+/// Holds all data that is immutable during a function evaluation.
 ///
-/// Stores values required during interpretation of a function.
-#[derive(Debug)]
-pub struct InterpretationContext {
-    /// The registers used by the function evaluation.
-    registers: ComponentVec<Value, u64>,
-    /// The currently executed basic block.
-    ///
-    /// # Note
-    ///
-    /// Must be initialized with the functions entry block.
-    current_block: Block,
-    /// The last visited block.
-    ///
-    /// Used to resolve phi instruction operands.
-    ///
-    /// # Note
-    ///
-    /// Is initialized as `None` before function evaluation.
-    last_block: Option<Block>,
-    /// The index of the currently executed instruction
-    /// of the currently executed basic block.
-    instruction_counter: usize,
-    /// The values returned by the evaluation of the function if any.
-    ///
-    /// # Note
-    ///
-    /// Is initialized as empty.
-    return_values: Vec<u64>,
-    /// Is `true` if the evaluation of the function has trapped.
-    ///
-    /// # Note
-    ///
-    /// Initialized to `false` before function evaluation.
-    has_trapped: bool,
-    /// Is `true` if the evaluation of the function is finished.
-    ///
-    /// # Note
-    ///
-    /// Initialized to `false` before function evaluation.
-    has_returned: bool,
+/// This includes but is not limited to definitions of functions,
+/// linear memories, tables, global variables etc.
+#[derive(Debug, Default)]
+pub struct Store {
+    functions: EntityArena<Function>,
 }
 
-impl Default for InterpretationContext {
-    fn default() -> Self {
-        Self {
-            registers: Default::default(),
-            current_block: Block::from_raw(RawIdx::from_u32(0)),
-            last_block: None,
-            instruction_counter: 0,
-            return_values: Vec::new(),
-            has_trapped: false,
-            has_returned: false,
-        }
+impl Store {
+    /// Pushes a function to the store and returns its key.
+    pub fn push_function(&mut self, function: Function) -> Func {
+        self.functions.alloc(function)
+    }
+
+    /// Returns a shared reference to the function associated to the given index.
+    pub fn get_fn(&self, func: Func) -> &Function {
+        &self.functions[func]
     }
 }
 
-/// An error that may occure while evaluating a function.
-#[derive(Debug, Display, Error, PartialEq, Eq, Hash)]
-pub enum InterpretationError {
-    #[display(fmt = "the function evaluation has not yet finished")]
-    UnfinishedEvaluation,
-    #[display(fmt = "the function evaluation has trapped")]
-    EvaluationHasTrapped,
-    #[display(
-        fmt = "tried to initialize the non-input {} to {}",
-        non_input,
-        init
-    )]
-    TriedToInitializeNonInput { non_input: Value, init: Const },
-    #[display(
-        fmt = "tried to initialize input {} with type {} that requires type {}",
-        value,
-        given_type,
-        expected_type
-    )]
-    UnmatchingInputTypes {
-        value: Value,
-        given_type: Type,
-        expected_type: Type,
-    },
-    #[display(fmt = "tried to read uninitialized input {}", input)]
-    UninitializedInput { input: Value },
-    #[display(
-        fmt = "encountered duplicate output values. first: {:?}, second: {:?}",
-        prev_return_value,
-        return_value
-    )]
-    AlreadySetReturnValue {
-        return_value: Vec<u64>,
-        prev_return_value: Vec<u64>,
-    },
+/// The evaluation context for the entire virtual machine.
+///
+/// This holds all the mutable data such as the actual linear memory.
+#[derive(Debug)]
+pub struct EvaluationContext<'a> {
+    pub store: &'a Store,
+    cached_frames: Vec<FunctionFrame>,
 }
 
-impl InterpretationContext {
-    /// Initializes the interpretation context for the function with the given inputs.
+impl<'a> EvaluationContext<'a> {
+    /// Creates a new evaluation context from the given shared reference to the store.
+    pub fn new(store: &'a Store) -> Self {
+        Self {
+            store,
+            cached_frames: Vec::new(),
+        }
+    }
+
+    /// Evaluates the given function.
+    pub fn evaluate_function<I>(&mut self, func: Func, inputs: I) -> Result<u64, InterpretationError>
+    where
+        I: IntoIterator<Item = Const>,
+    {
+        let mut frame = self.create_frame();
+        let function = self.store.get_fn(func);
+        evaluate_function(
+            function,
+            self,
+            &mut frame,
+            inputs.into_iter().map(|input| input.into_bits64()),
+        )?;
+        let result_value = Value::from_raw(RawIdx::from_u32(0));
+        let result = frame.read_register(result_value);
+        Ok(result)
+    }
+
+    /// Creates a new function evaluation frame.
     ///
-    /// # Errors
-    ///
-    /// - If the given inputs do not match the input signature of the function.
-    /// - If the function evaluation traps.
-    pub fn interpret(
-        &mut self,
-        function: &Function,
-        inputs: &[Const],
-    ) -> Result<&[u64], InterpretationError> {
-        self.reset();
-        self.current_block = function.entry_block();
-        for (n, &input) in inputs.iter().enumerate() {
-            let value = Value::from_raw(RawIdx::from_u32(n as u32));
-            match function.value_assoc[value] {
-                ValueAssoc::Input(pos) => {
-                    assert_eq!(pos, n as u32);
-                    let value_type = input.ty();
-                    let expected_type = function.value_type[value];
-                    if value_type != expected_type {
-                        return Err(InterpretationError::UnmatchingInputTypes {
-                            value,
-                            given_type: value_type,
-                            expected_type,
-                        })
-                    }
-                    self.write_register(value, input.into_bits64());
-                }
-                ValueAssoc::Instr(_) => {
-                    return Err(InterpretationError::TriedToInitializeNonInput {
-                        non_input: value,
-                        init: input,
-                    })
+    /// This might reuse function evaluation frames used in past evaluations.
+    fn create_frame(&mut self) -> FunctionFrame {
+        if let Some(mut frame) = self.cached_frames.pop() {
+            frame.reset();
+            return frame
+        }
+        Default::default()
+    }
+
+    /// Releases the function evaluation frame back to its evaluation context for caching.
+    fn release_frame(&mut self, frame: FunctionFrame) {
+        self.cached_frames.push(frame);
+    }
+}
+
+/// Evaluates the function with the inputs using the evaluation context and frame.
+pub fn evaluate_function<'a, I>(
+    fun: &'a Function,
+    ctx: &mut EvaluationContext<'a>,
+    frame: &mut FunctionFrame,
+    inputs: I,
+) -> Result<(), InterpretationError>
+where
+    I: IntoIterator<Item = u64>,
+{
+    let fn_ctx = FunctionEvaluationContext::new(fun, ctx, frame);
+    fn_ctx.evaluate(inputs)?;
+    Ok(())
+}
+
+/// The evaluation context used by a particular executed function.
+///
+/// This holds the greater evaluation context as well as the function's frame.
+#[derive(Debug)]
+pub struct FunctionEvaluationContext<'a, 'b, 'c> {
+    fun: &'a Function,
+    pub ctx: &'b mut EvaluationContext<'a>,
+    pub frame: &'c mut FunctionFrame,
+}
+
+impl<'a, 'b, 'c> FunctionEvaluationContext<'a, 'b, 'c> {
+    /// Creates a new function evaluation context.
+    fn new(
+        fun: &'a Function,
+        ctx: &'b mut EvaluationContext<'a>,
+        frame: &'c mut FunctionFrame,
+    ) -> Self {
+        Self { fun, ctx, frame }
+    }
+
+    /// Evaluate the function
+    fn evaluate<I>(
+        mut self,
+        inputs: I,
+    ) -> Result<(), InterpretationError>
+    where
+        I: IntoIterator<Item = u64>,
+    {
+        self.frame.initialize(self.fun, inputs)?;
+        loop {
+            match self.fun.interpret_instr(None, &mut self)? {
+                InterpretationFlow::Continue => continue,
+                InterpretationFlow::Return => break,
+                InterpretationFlow::TailCall(_id) => {
+                    // TODO:
+                    //  - replace `fun` with the function associated to the ID
+                    //  - check if the inputs in the first N registers of `frame` match
+                    //    the new `fun` signature.
+                    unimplemented!()
                 }
             }
         }
-        function.interpret(self)?;
-        Ok(&self.return_values)
-    }
-
-    /// Resets the interpretation context so that it can evaluate a new function.
-    fn reset(&mut self) {
-        self.registers.clear();
-        self.last_block = None;
-        self.return_values.clear();
-        self.has_trapped = false;
-        self.has_returned = false;
-        self.instruction_counter = 0;
-    }
-
-    /// Returns `true` if the function evaluation has trapped.
-    pub fn has_trapped(&self) -> bool {
-        self.has_trapped
-    }
-
-    /// Returns `true` if the function evaluation has finished.
-    pub fn has_returned(&self) -> bool {
-        self.has_returned
-    }
-
-    /// Switches the currently executed basic block.
-    fn switch_to_block(&mut self, block: Block) {
-        let last_block = replace(&mut self.current_block, block);
-        self.last_block = Some(last_block);
-        self.instruction_counter = 0;
-    }
-
-    /// Writes the given bits into the register for the given value.
-    fn write_register(&mut self, value: Value, bits: u64) {
-        self.registers.insert(value, bits);
-    }
-
-    /// Returns the bits in the register for the given value.
-    fn read_register(&self, value: Value) -> u64 {
-        self.registers[value]
-    }
-
-    /// Returns the currently executed basic block.
-    pub(in crate::ir) fn current_block(&self) -> Block {
-        self.current_block
-    }
-
-    /// Returns the last executed basic block if any.
-    fn last_block(&self) -> Option<Block> {
-        self.last_block
-    }
-
-    /// Tells the interpretation context that the function evaluation has trapped.
-    fn set_trapped(&mut self) {
-        assert!(!self.has_returned);
-        self.has_trapped = true;
-    }
-
-    /// Sets the output to the given value.
-    ///
-    /// # Errors
-    ///
-    /// If an output has already been set.
-    fn set_return_value(
-        &mut self,
-        return_values: &[u64],
-    ) -> Result<(), InterpretationError> {
-        if self.has_returned {
-            return Err(InterpretationError::AlreadySetReturnValue {
-                prev_return_value: self.return_values.clone(),
-                return_value: return_values.to_vec(),
-            })
-        }
-        self.return_values.extend_from_slice(return_values);
-        self.has_returned = true;
+        // Values are returned through the first registers of the function `frame`.
         Ok(())
-    }
-
-    /// Bumps the instruction counter by one and returns its value before the bump.
-    pub(in crate::ir) fn bump_instruction_counter(&mut self) -> usize {
-        let ic = self.instruction_counter;
-        self.instruction_counter += 1;
-        ic
     }
 }

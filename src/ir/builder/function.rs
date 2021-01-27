@@ -33,9 +33,10 @@ use crate::{
         instr::PhiInstr,
         instruction::Instruction,
         interpreter::{
+            FunctionEvaluationContext,
             InterpretInstr,
-            InterpretationContext,
             InterpretationError,
+            InterpretationFlow,
         },
         primitive::{Block, BlockEntity, Type, Value, ValueEntity},
         IrError,
@@ -90,22 +91,20 @@ impl Function {
     pub fn inputs(&self) -> &[Type] {
         &self.input_types
     }
-    /// Evaluates the function given the interpretation context.
-    pub fn interpret(
+}
+
+impl InterpretInstr for Function {
+    fn interpret_instr(
         &self,
-        ctx: &mut InterpretationContext,
-    ) -> Result<(), InterpretationError> {
-        loop {
-            let block = ctx.current_block();
-            let ic = ctx.bump_instruction_counter();
-            let instr = self.block_instrs[block][ic];
-            let instruction = &self.instrs[instr];
-            let instr_value = self.instr_value.get(instr).copied();
-            instruction.interpret_instr(instr_value, ctx)?;
-            if ctx.has_trapped() || ctx.has_returned() {
-                return Ok(())
-            }
-        }
+        _return_value: Option<Value>,
+        ctx: &mut FunctionEvaluationContext,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let block = ctx.frame.current_block();
+        let ic = ctx.frame.bump_instruction_counter();
+        let instr = self.block_instrs[block][ic];
+        let instruction = &self.instrs[instr];
+        let instr_value = self.instr_value.get(instr).copied();
+        instruction.interpret_instr(instr_value, ctx)
     }
 }
 
