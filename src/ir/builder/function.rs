@@ -72,6 +72,10 @@ pub struct Function {
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
     pub(in crate::ir) value_assoc: ComponentVec<Value, ValueAssoc>,
+    /// The types of the input values of the constructed function.
+    ///
+    /// Used in order to check upon evaluating the function.
+    input_types: Vec<Type>,
     /// The types of the output values of the constructed function.
     output_types: Vec<Type>,
 }
@@ -82,6 +86,10 @@ impl Function {
         Block::from_raw(RawIdx::from_u32(0))
     }
 
+    /// Returns the expected input types of the function.
+    pub fn inputs(&self) -> &[Type] {
+        &self.input_types
+    }
     /// Evaluates the function given the interpretation context.
     pub fn interpret(
         &self,
@@ -254,6 +262,10 @@ pub struct FunctionBuilderContext {
     /// This translates local variables from the source language that
     /// are not in SSA form into SSA form values.
     pub vars: VariableTranslator,
+    /// The types of the input values of the constructed function.
+    ///
+    /// Used in order to check upon evaluating the function.
+    pub input_types: Vec<Type>,
     /// The types of the output values of the constructed function.
     pub output_types: Vec<Type>,
 }
@@ -279,6 +291,7 @@ impl Default for FunctionBuilderContext {
             value_users: Default::default(),
             current: Block::from_raw(RawIdx::from_u32(0)),
             vars: Default::default(),
+            input_types: Default::default(),
             output_types: Default::default(),
         }
     }
@@ -355,6 +368,7 @@ impl FunctionBuilder<state::Inputs> {
                 .vars
                 .write_var(input_var, val, entry_block, || input_type)?;
         }
+        self.ctx.input_types.extend_from_slice(inputs);
         Ok(FunctionBuilder {
             ctx: self.ctx,
             state: Default::default(),
@@ -720,6 +734,7 @@ impl FunctionBuilder<state::Body> {
         self.ctx.instr_value.shrink_to_fit();
         self.ctx.value_type.shrink_to_fit();
         self.ctx.value_assoc.shrink_to_fit();
+        self.ctx.input_types.shrink_to_fit();
         self.ctx.output_types.shrink_to_fit();
         let mut block_instrs = ComponentVec::default();
         for (block, var_phis) in self.ctx.block_phis.iter() {
@@ -741,6 +756,7 @@ impl FunctionBuilder<state::Body> {
             instr_value: self.ctx.instr_value,
             value_type: self.ctx.value_type,
             value_assoc: self.ctx.value_assoc,
+            input_types: self.ctx.input_types,
             output_types: self.ctx.output_types,
         })
     }
