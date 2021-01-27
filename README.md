@@ -46,6 +46,9 @@ while x < 100:
 ```
 Below is the Rust code necessary to construct the equivalent Runwell IR function:
 ```rust
+use runwell::ir::*;
+use runwell::ir::interpreter::*;
+
 let mut b = Function::build()
     .with_inputs(&[IntType::I32.into()])?
     .with_outputs(&[IntType::I32.into()])?
@@ -88,7 +91,7 @@ b.seal_block()?;
 let function = b.finalize()?;
 ```
 Printing the Runwell IR function using `println!("{}", function)` yields the following output:
-```
+```llvm
 fn (v0: i32) -> i32
 bb0:
     v1: i32 = const 0
@@ -105,7 +108,7 @@ bb3:
     ret v2
 ```
 Evaluating `function` using Runwell's built-in interpreter is done as follows:
-```
+```rust
     let mut store = Store::default();
     let func = store.push_function(function);
     let mut ctx = EvaluationContext::new(&store);
