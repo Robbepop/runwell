@@ -109,16 +109,16 @@ bb3:
 ```
 Evaluating `function` using Runwell's built-in interpreter is done as follows:
 ```rust
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
-    let mut results = Vec::new();
-    let iterations = 100;
-    ctx.evaluate_function(
-        func,
-        [iterations].iter().copied(),
-        |_, result| results.push(result),
-    )
-    .unwrap();
-    assert_eq!(result[0], iterations);
+let mut store = Store::default();
+let func = store.push_function(function);
+let mut ctx = EvaluationContext::new(&store);
+let mut results = Vec::new();
+let iterations = 100;
+ctx.evaluate_function(
+    func,
+    [iterations].iter().copied(),
+    |_, result| results.push(result),
+)
+.unwrap();
+assert_eq!(result[0], iterations);
 ```
