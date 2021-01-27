@@ -12,30 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{FunctionEvaluationContext, InterpretationError};
-use crate::{entity::RawIdx, ir::{
-    instr::{
-        BinaryIntInstr,
-        BranchInstr,
-        CompareIntInstr,
-        ConstInstr,
-        ExtendIntInstr,
-        IfThenElseInstr,
-        Instruction,
-        IntInstr,
-        IntToFloatInstr,
-        PhiInstr,
-        ReinterpretInstr,
-        ReturnInstr,
-        SelectInstr,
-        TerminalInstr,
-        TruncateIntInstr,
-        UnaryIntInstr,
+use super::{FunctionEvaluationContext, FunctionFrame, InterpretationError};
+use crate::{
+    entity::RawIdx,
+    ir::{
+        instr::{
+            BinaryIntInstr,
+            BranchInstr,
+            CompareIntInstr,
+            ConstInstr,
+            ExtendIntInstr,
+            IfThenElseInstr,
+            Instruction,
+            IntInstr,
+            IntToFloatInstr,
+            PhiInstr,
+            ReinterpretInstr,
+            ReturnInstr,
+            SelectInstr,
+            TerminalInstr,
+            TruncateIntInstr,
+            UnaryIntInstr,
+        },
+        instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
+        primitive::{IntType, Value},
     },
-    instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
-    primitive::{IntType, Value},
-}};
-use crate::parse::FunctionId;
+    parse::FunctionId,
+};
 
 /// Implemented by Runwell IR instructions to make them interpretable.
 pub trait InterpretInstr {
@@ -44,6 +47,7 @@ pub trait InterpretInstr {
         &self,
         return_return_value: Option<Value>,
         ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError>;
 }
 
@@ -70,22 +74,29 @@ impl InterpretInstr for Instruction {
         &self,
         return_value: Option<Value>,
         ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
             Self::Call(_instr) => unimplemented!(),
             Self::CallIndirect(_instr) => unimplemented!(),
-            Self::Const(instr) => instr.interpret_instr(return_value, ctx),
+            Self::Const(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
             Self::MemoryGrow(_instr) => unimplemented!(),
             Self::MemorySize(_instr) => unimplemented!(),
-            Self::Phi(instr) => instr.interpret_instr(return_value, ctx),
+            Self::Phi(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Load(_instr) => unimplemented!(),
             Self::Store(_instr) => unimplemented!(),
-            Self::Select(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Reinterpret(instr) => {
-                instr.interpret_instr(return_value, ctx)
+            Self::Select(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
             }
-            Self::Terminal(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Int(instr) => instr.interpret_instr(return_value, ctx),
+            Self::Reinterpret(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::Terminal(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::Int(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Float(_instr) => unimplemented!(),
         }
     }
@@ -95,18 +106,18 @@ impl InterpretInstr for PhiInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let last_block = ctx
-            .frame
+        let last_block = frame
             .last_block()
             .expect("phi instruction is missing predecessor");
         let result = self
             .operand_for(last_block)
             .expect("phi instruction missing value for predecessor");
-        let result = ctx.frame.read_register(result);
-        ctx.frame.write_register(return_value, result);
+        let result = frame.read_register(result);
+        frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -115,10 +126,11 @@ impl InterpretInstr for ConstInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        ctx.frame.write_register(return_value, self.const_value().into_bits64());
+        frame.write_register(return_value, self.const_value().into_bits64());
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -127,17 +139,18 @@ impl InterpretInstr for SelectInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let condition = ctx.frame.read_register(self.condition());
+        let condition = frame.read_register(self.condition());
         let result_value = if condition != 0 {
             self.true_value()
         } else {
             self.false_value()
         };
-        let result = ctx.frame.read_register(result_value);
-        ctx.frame.write_register(return_value, result);
+        let result = frame.read_register(result_value);
+        frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -147,14 +160,15 @@ impl InterpretInstr for TerminalInstr {
         &self,
         return_value: Option<Value>,
         ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            Self::Trap => {
-                Err(InterpretationError::EvaluationHasTrapped)
+            Self::Trap => Err(InterpretationError::EvaluationHasTrapped),
+            Self::Return(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
             }
-            Self::Return(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Br(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Ite(instr) => instr.interpret_instr(return_value, ctx),
+            Self::Br(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Ite(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::BranchTable(_instr) => unimplemented!(),
         }
     }
@@ -164,11 +178,12 @@ impl InterpretInstr for ReturnInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = ctx.frame.read_register(self.return_value());
+        let return_value = frame.read_register(self.return_value());
         let r0 = Value::from_raw(RawIdx::from_u32(0));
-        ctx.frame.write_register(r0, return_value);
+        frame.write_register(r0, return_value);
         Ok(InterpretationFlow::Return)
     }
 }
@@ -177,9 +192,10 @@ impl InterpretInstr for BranchInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        ctx.frame.switch_to_block(self.target());
+        frame.switch_to_block(self.target());
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -188,15 +204,16 @@ impl InterpretInstr for IfThenElseInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let condition = ctx.frame.read_register(self.condition());
+        let condition = frame.read_register(self.condition());
         let target = if condition != 0 {
             self.true_target()
         } else {
             self.false_target()
         };
-        ctx.frame.switch_to_block(target);
+        frame.switch_to_block(target);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -205,16 +222,17 @@ impl InterpretInstr for ReinterpretInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let source = ctx.frame.read_register(self.src());
+        let source = frame.read_register(self.src());
         debug_assert_eq!(
             self.src_type().bit_width(),
             self.dst_type().bit_width()
         );
         // Reinterpretation just moves from one register to the other.
-        ctx.frame.write_register(return_value, source);
+        frame.write_register(return_value, source);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -224,14 +242,27 @@ impl InterpretInstr for IntInstr {
         &self,
         return_value: Option<Value>,
         ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            Self::Binary(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Unary(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Compare(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Extend(instr) => instr.interpret_instr(return_value, ctx),
-            Self::IntToFloat(instr) => instr.interpret_instr(return_value, ctx),
-            Self::Truncate(instr) => instr.interpret_instr(return_value, ctx),
+            Self::Binary(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::Unary(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::Compare(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::Extend(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::IntToFloat(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::Truncate(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
         }
     }
 }
@@ -240,16 +271,17 @@ impl InterpretInstr for UnaryIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let source = ctx.frame.read_register(self.src());
+        let source = frame.read_register(self.src());
         let result = match self.op() {
             UnaryIntOp::LeadingZeros => source.leading_zeros(),
             UnaryIntOp::TrailingZeros => source.trailing_zeros(),
             UnaryIntOp::PopCount => source.count_ones(),
         };
-        ctx.frame.write_register(return_value, result as u64);
+        frame.write_register(return_value, result as u64);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -258,10 +290,11 @@ impl InterpretInstr for TruncateIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let source = ctx.frame.read_register(self.src());
+        let source = frame.read_register(self.src());
         debug_assert!(
             self.dst_type().bit_width() <= self.src_type().bit_width()
         );
@@ -274,7 +307,7 @@ impl InterpretInstr for TruncateIntInstr {
             IntType::I32 => source & mask(32),
             IntType::I64 => source,
         };
-        ctx.frame.write_register(return_value, result as u64);
+        frame.write_register(return_value, result as u64);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -283,20 +316,29 @@ impl InterpretInstr for ExtendIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let source = ctx.frame.read_register(self.src());
+        let source = frame.read_register(self.src());
         debug_assert!(
             self.src_type().bit_width() <= self.dst_type().bit_width()
         );
         let result = if self.is_signed() {
             match (self.src_type(), self.dst_type()) {
-                (IntType::I8, IntType::I16) => source as u8 as i8 as i16 as u16 as u64,
-                (IntType::I8, IntType::I32) => source as u8 as i8 as i32 as u32 as u64,
+                (IntType::I8, IntType::I16) => {
+                    source as u8 as i8 as i16 as u16 as u64
+                }
+                (IntType::I8, IntType::I32) => {
+                    source as u8 as i8 as i32 as u32 as u64
+                }
                 (IntType::I8, IntType::I64) => source as u8 as i8 as i64 as u64,
-                (IntType::I16, IntType::I32) => source as u16 as i16 as i32 as u32 as u64,
-                (IntType::I32, IntType::I64) => source as u32 as i32 as i64 as u64,
+                (IntType::I16, IntType::I32) => {
+                    source as u16 as i16 as i32 as u32 as u64
+                }
+                (IntType::I32, IntType::I64) => {
+                    source as u32 as i32 as i64 as u64
+                }
                 (x, y) if x == y => source,
                 _ => unreachable!(),
             }
@@ -304,7 +346,7 @@ impl InterpretInstr for ExtendIntInstr {
             // Nothing to do since interpreter registers are `u64`.
             source
         };
-        ctx.frame.write_register(return_value, result as u64);
+        frame.write_register(return_value, result as u64);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -314,6 +356,7 @@ impl InterpretInstr for IntToFloatInstr {
         &self,
         _return_value: Option<Value>,
         _ctx: &mut FunctionEvaluationContext,
+        _frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         // WebAssembly instructions that map to IntToFloatInstr:
         //
@@ -350,11 +393,12 @@ impl InterpretInstr for CompareIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let lhs = ctx.frame.read_register(self.lhs());
-        let rhs = ctx.frame.read_register(self.rhs());
+        let lhs = frame.read_register(self.lhs());
+        let rhs = frame.read_register(self.rhs());
         use CompareIntOp as Op;
         /// Compares `lhs` and `rhs` given the comparator `op` using `f` to convert to signed.
         fn cmp<U, S, F>(op: CompareIntOp, lhs: U, rhs: U, mut f: F) -> u64
@@ -395,7 +439,7 @@ impl InterpretInstr for CompareIntInstr {
             }
             IntType::I64 => cmp(self.op(), lhs, rhs, |lhs| lhs as i64),
         };
-        ctx.frame.write_register(return_value, result);
+        frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -430,11 +474,12 @@ impl InterpretInstr for BinaryIntInstr {
     fn interpret_instr(
         &self,
         return_value: Option<Value>,
-        ctx: &mut FunctionEvaluationContext,
+        _ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect("missing value for instruction");
-        let lhs = ctx.frame.read_register(self.lhs());
-        let rhs = ctx.frame.read_register(self.rhs());
+        let lhs = frame.read_register(self.lhs());
+        let rhs = frame.read_register(self.rhs());
         use core::ops::{BitAnd, BitOr, BitXor};
         use BinaryIntOp as Op;
         /// Computes `op` on `lhs` and `rhs` using `f` to convert from unsigned to signed.
@@ -499,7 +544,7 @@ impl InterpretInstr for BinaryIntInstr {
                 result as u64
             }
         };
-        ctx.frame.write_register(return_value, result);
+        frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
     }
 }

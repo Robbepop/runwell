@@ -34,6 +34,7 @@ use crate::{
         instruction::Instruction,
         interpreter::{
             FunctionEvaluationContext,
+            FunctionFrame,
             InterpretInstr,
             InterpretationError,
             InterpretationFlow,
@@ -98,13 +99,14 @@ impl InterpretInstr for Function {
         &self,
         _return_value: Option<Value>,
         ctx: &mut FunctionEvaluationContext,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let block = ctx.frame.current_block();
-        let ic = ctx.frame.bump_instruction_counter();
+        let block = frame.current_block();
+        let ic = frame.bump_instruction_counter();
         let instr = self.block_instrs[block][ic];
         let instruction = &self.instrs[instr];
         let instr_value = self.instr_value.get(instr).copied();
-        instruction.interpret_instr(instr_value, ctx)
+        instruction.interpret_instr(instr_value, ctx, frame)
     }
 }
 

@@ -111,8 +111,8 @@ pub fn evaluate_function<'a, I>(
 where
     I: IntoIterator<Item = u64>,
 {
-    let fn_ctx = FunctionEvaluationContext::new(fun, ctx, frame);
-    fn_ctx.evaluate(inputs)?;
+    let fn_ctx = FunctionEvaluationContext::new(fun, ctx);
+    fn_ctx.evaluate(frame, inputs)?;
     Ok(())
 }
 
@@ -120,33 +120,32 @@ where
 ///
 /// This holds the greater evaluation context as well as the function's frame.
 #[derive(Debug)]
-pub struct FunctionEvaluationContext<'a, 'b, 'c> {
+pub struct FunctionEvaluationContext<'a, 'b> {
     fun: &'a Function,
     pub ctx: &'b mut EvaluationContext<'a>,
-    pub frame: &'c mut FunctionFrame,
 }
 
-impl<'a, 'b, 'c> FunctionEvaluationContext<'a, 'b, 'c> {
+impl<'a, 'b> FunctionEvaluationContext<'a, 'b> {
     /// Creates a new function evaluation context.
     fn new(
         fun: &'a Function,
         ctx: &'b mut EvaluationContext<'a>,
-        frame: &'c mut FunctionFrame,
     ) -> Self {
-        Self { fun, ctx, frame }
+        Self { fun, ctx }
     }
 
     /// Evaluate the function
     fn evaluate<I>(
         mut self,
+        frame: &mut FunctionFrame,
         inputs: I,
     ) -> Result<(), InterpretationError>
     where
         I: IntoIterator<Item = u64>,
     {
-        self.frame.initialize(self.fun, inputs)?;
+        frame.initialize(self.fun, inputs)?;
         loop {
-            match self.fun.interpret_instr(None, &mut self)? {
+            match self.fun.interpret_instr(None, &mut self, frame)? {
                 InterpretationFlow::Continue => continue,
                 InterpretationFlow::Return => break,
                 InterpretationFlow::TailCall(_id) => {
