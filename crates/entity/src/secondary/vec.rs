@@ -14,7 +14,7 @@
 
 //! Container to associate some entities to components in a dense representation.
 
-use crate::entity::{Idx, RawIdx};
+use crate::{Idx, RawIdx};
 use core::{
     iter::FusedIterator,
     marker::PhantomData,

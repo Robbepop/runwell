@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::iter::{Entities, EntitiesMut, Indices, Iter, IterMut};
-use crate::entity::{Idx, RawIdx};
+use crate::{Idx, RawIdx};
 use core::{
     iter::FromIterator,
     ops::{Index, IndexMut},

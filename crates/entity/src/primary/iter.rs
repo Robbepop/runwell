@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::entity::{Idx, RawIdx};
+use crate::{Idx, RawIdx};
 use core::{
     iter::{DoubleEndedIterator, FusedIterator, Zip},
     marker::PhantomData,

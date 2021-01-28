@@ -20,7 +20,7 @@
 //! order to properly be used.
 
 use super::{ComponentMap, ComponentVec};
-use crate::entity::{Idx, RawIdx};
+use crate::{Idx, RawIdx};
 
 #[derive(Debug)]
 pub enum TestEntity {}
@@ -186,7 +186,7 @@ macro_rules! unit_test_secondary {
 
 mod map {
     use super::{ComponentMap, TestEntity};
-    use crate::entity::Idx;
+    use crate::Idx;
 
     type TestComponentMap = ComponentMap<Idx<TestEntity>, char>;
     unit_test_secondary!(TestComponentMap);
@@ -194,7 +194,7 @@ mod map {
 
 mod vec {
     use super::{ComponentVec, TestEntity};
-    use crate::entity::Idx;
+    use crate::Idx;
 
     type TestComponentVec = ComponentVec<Idx<TestEntity>, char>;
     unit_test_secondary!(TestComponentVec);

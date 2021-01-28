@@ -15,7 +15,7 @@
 //! Vector-like container to associate every entity to a component that is default initialized.
 
 use super::Immutable;
-use crate::entity::{Idx, RawIdx};
+use crate::{Idx, RawIdx};
 use core::{
     marker::PhantomData,
     ops::{Index, IndexMut},
