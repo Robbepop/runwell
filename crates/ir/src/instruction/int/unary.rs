@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{IntType, Value};
+use crate::primitive::{IntType, Value};
 use core::fmt::Display;
 
 /// Operand for unary integer instructions.
@@ -57,7 +57,7 @@ impl Display for UnaryIntInstr {
 
 impl UnaryIntInstr {
     /// Creates a new unary integer instruction of the given type operating on the given value.
-    fn new(op: UnaryIntOp, ty: IntType, src: Value) -> Self {
+    pub fn new(op: UnaryIntOp, ty: IntType, src: Value) -> Self {
         Self { op, ty, src }
     }
 

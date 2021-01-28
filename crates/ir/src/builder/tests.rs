@@ -23,15 +23,20 @@
 
 use super::Function;
 use crate::{
-    entity::RawIdx,
-    ir::{
-        instruction::CompareIntOp,
-        interpreter::{EvaluationContext, Store},
-        primitive::{Const, IntConst, IntType},
-        IrError,
-        Variable,
+    instruction::CompareIntOp,
+    interpreter::{
+        EvaluationContext,
+        Store,
     },
+    primitive::{
+        Const,
+        IntConst,
+        IntType,
+    },
+    IrError,
+    Variable,
 };
+use entity::RawIdx;
 
 /// Evaluates the function given the inputs and returns the results.
 fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
@@ -287,8 +292,7 @@ fn simple_loop_works() -> Result<(), IrError> {
     println!("{}", function);
 
     let iterations = 100_000_000;
-    let results =
-        evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
+    let results = evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
     assert_eq!(results, vec![iterations as u64]);
 
     Ok(())

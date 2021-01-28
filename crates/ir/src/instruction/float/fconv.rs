@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{FloatType, IntType, Value};
+use crate::primitive::{FloatType, IntType, Value};
 use derive_more::Display;
 
 /// Demotes the source float value from source float type to destination float type.

@@ -13,12 +13,10 @@
 // limitations under the License.
 
 use super::InterpretationError;
+use entity::{DefaultComponentVec, RawIdx};
 use crate::{
-    entity::{DefaultComponentVec, RawIdx},
-    ir::{
-        builder::Function,
-        primitive::{Block, Value},
-    },
+    builder::Function,
+    primitive::{Block, Value},
 };
 use core::mem::replace;
 

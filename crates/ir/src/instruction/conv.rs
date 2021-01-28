@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{Type, Value};
+use crate::primitive::{Type, Value};
 use derive_more::Display;
 
 /// Reinterprets the bytes of the source from source type to destination type.

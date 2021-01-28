@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    ir::primitive::{Const, FloatConst, IntConst, Type},
-    parse::{F32, F64},
+use crate::primitive::{
+    Const,
+    FloatConst,
+    IntConst,
+    Type,
+    F32,
+    F64,
 };
 use derive_more::Display;
 

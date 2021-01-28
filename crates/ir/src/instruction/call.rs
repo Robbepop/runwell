@@ -13,10 +13,17 @@
 // limitations under the License.
 
 use crate::{
-    ir::{interpreter::Func, primitive::Value},
-    parse::{FunctionTypeId, TableId},
+    primitive::Func,
+    primitive::{
+        FuncType,
+        Table,
+        Value,
+    },
 };
-use core::{convert::identity, fmt::Display};
+use core::{
+    convert::identity,
+    fmt::Display,
+};
 
 /// Calls a function statically.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -85,12 +92,12 @@ impl Display for CallInstr {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CallIndirectInstr {
     /// The unique ID of the table holding the indirectly called functions.
-    table_id: TableId,
+    table: Table,
     /// The type of the indirectly called function that is expected by this instruction.
     ///
     /// If the dynamically chosen function does not match this function type the
     /// call will trap at execution time.
-    func_type: FunctionTypeId,
+    func_type: FuncType,
     /// The index of the function in the table that is indirectly called.
     index: Value,
     /// The parameters given to the indirectly called function.
@@ -100,8 +107,8 @@ pub struct CallIndirectInstr {
 impl CallIndirectInstr {
     /// Creates a new call instruction to call the indexed function using the given parameters.
     pub fn new<I>(
-        table_id: TableId,
-        func_type: FunctionTypeId,
+        table: Table,
+        func_type: FuncType,
         index: Value,
         call_params: I,
     ) -> Self
@@ -109,7 +116,7 @@ impl CallIndirectInstr {
         I: IntoIterator<Item = Value>,
     {
         Self {
-            table_id,
+            table,
             func_type,
             index,
             call_params: call_params.into_iter().collect::<Vec<_>>(),
@@ -141,7 +148,7 @@ impl Display for CallIndirectInstr {
         write!(
             f,
             "call.indirect table {}, func_type {}, index {}, params: [",
-            self.table_id, self.func_type, self.index
+            self.table, self.func_type, self.index
         )?;
         if let Some((fst, rest)) = self.call_params.split_first() {
             write!(f, "{}", fst)?;

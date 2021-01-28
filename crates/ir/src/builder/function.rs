@@ -22,28 +22,43 @@
 //! its predecessors as all predecessors are known.
 
 use super::{
-    instruction::{FunctionInstrBuilder, Instr},
+    instruction::{
+        FunctionInstrBuilder,
+        Instr,
+    },
     variable::Variable,
     FunctionBuilderError,
     VariableTranslator,
 };
 use crate::{
-    entity::{ComponentMap, ComponentVec, EntityArena, RawIdx},
-    ir::{
-        instr::PhiInstr,
-        instruction::Instruction,
-        interpreter::{
-            EvaluationContext,
-            FunctionFrame,
-            InterpretInstr,
-            InterpretationError,
-            InterpretationFlow,
-        },
-        primitive::{Block, BlockEntity, Type, Value, ValueEntity},
-        IrError,
+    instr::PhiInstr,
+    instruction::Instruction,
+    interpreter::{
+        EvaluationContext,
+        FunctionFrame,
+        InterpretInstr,
+        InterpretationError,
+        InterpretationFlow,
     },
+    primitive::{
+        Block,
+        BlockEntity,
+        Type,
+        Value,
+        ValueEntity,
+    },
+    IrError,
 };
-use core::{fmt, marker::PhantomData};
+use core::{
+    fmt,
+    marker::PhantomData,
+};
+use entity::{
+    ComponentMap,
+    ComponentVec,
+    EntityArena,
+    RawIdx,
+};
 use std::collections::HashSet;
 
 /// A virtual, verified Runwell IR function.
@@ -68,12 +83,12 @@ pub struct Function {
     /// has no SSA value association.
     instr_value: ComponentMap<Instr, Value>,
     /// Types for all values.
-    pub(in crate::ir) value_type: ComponentVec<Value, Type>,
+    pub(crate) value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
     ///
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
-    pub(in crate::ir) value_assoc: ComponentVec<Value, ValueAssoc>,
+    pub(crate) value_assoc: ComponentVec<Value, ValueAssoc>,
     /// The types of the input values of the constructed function.
     ///
     /// Used in order to check upon evaluating the function.
@@ -139,9 +154,7 @@ impl fmt::Display for Function {
             }
         }
         write!(f, ")")?;
-        if let Some((first_output, rest_outputs)) =
-            self.output_types.split_first()
-        {
+        if let Some((first_output, rest_outputs)) = self.output_types.split_first() {
             write!(f, " -> ")?;
             if !rest_outputs.is_empty() {
                 write!(f, "[")?;
@@ -163,11 +176,7 @@ impl fmt::Display for Function {
                 match instr_value {
                     Some(value) => {
                         let value_type = self.value_type[value];
-                        writeln!(
-                            f,
-                            "    {}: {} = {}",
-                            value, value_type, instr_data
-                        )?;
+                        writeln!(f, "    {}: {} = {}", value, value_type, instr_data)?;
                     }
                     None => {
                         writeln!(f, "    {}", instr_data)?;
@@ -407,11 +416,7 @@ impl FunctionBuilder<state::DeclareVariables> {
     ///
     /// This includes variables that are artifacts of translation from the original source
     /// language to whatever input source is fed into Runwell IR.
-    pub fn declare_variables(
-        mut self,
-        amount: u32,
-        ty: Type,
-    ) -> Result<Self, IrError> {
+    pub fn declare_variables(mut self, amount: u32, ty: Type) -> Result<Self, IrError> {
         self.ctx.vars.declare_vars(amount, ty)?;
         Ok(FunctionBuilder {
             ctx: self.ctx,
@@ -485,10 +490,8 @@ impl FunctionBuilder<state::Body> {
             .insert(block, true)
             .expect("encountered invalid current basic block");
         if already_sealed {
-            return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
-                block,
-            })
-            .map_err(Into::into)
+            return Err(FunctionBuilderError::BasicBlockIsAlreadySealed { block })
+                .map_err(Into::into)
         }
         // Popping incomplete phis by inserting a new empty component map.
         let incomplete_phis = self
@@ -511,10 +514,8 @@ impl FunctionBuilder<state::Body> {
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled[block];
         if already_filled {
-            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
-                block,
-            })
-            .map_err(Into::into)
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled { block })
+                .map_err(Into::into)
         }
         Ok(FunctionInstrBuilder::new(self))
     }
@@ -525,11 +526,7 @@ impl FunctionBuilder<state::Body> {
     ///
     /// - If the variable has not beed declared.
     /// - If the type of the assigned value does not match the variable's type declaration.
-    pub fn write_var(
-        &mut self,
-        var: Variable,
-        value: Value,
-    ) -> Result<(), IrError> {
+    pub fn write_var(&mut self, var: Variable, value: Value) -> Result<(), IrError> {
         let block = self.current_block()?;
         let FunctionBuilderContext {
             vars, value_type, ..
@@ -627,10 +624,7 @@ impl FunctionBuilder<state::Body> {
     /// Replacement is a recursive operation that replaces all uses of the
     /// phi instruction with its only non-phi operand. During this process
     /// other phi instruction users might become trivial and cascade the effect.
-    fn try_remove_trivial_phi(
-        &mut self,
-        phi_value: Value,
-    ) -> Result<Value, IrError> {
+    fn try_remove_trivial_phi(&mut self, phi_value: Value) -> Result<Value, IrError> {
         let phi_instr = match self.ctx.value_assoc[phi_value] {
             ValueAssoc::Instr(instr) => instr,
             _ => panic!("unexpected non-instruction value"),
@@ -654,10 +648,8 @@ impl FunctionBuilder<state::Body> {
         if same.is_none() {
             // The phi is unreachable or in the start block.
             // The paper replaces it with an undefined instruction.
-            return Err(FunctionBuilderError::UnreachablePhi {
-                value: phi_value,
-            })
-            .map_err(Into::into)
+            return Err(FunctionBuilderError::UnreachablePhi { value: phi_value })
+                .map_err(Into::into)
         }
         let same = same.expect("just asserted that same is Some");
         // Phi was determined to be trivial and can be removed.

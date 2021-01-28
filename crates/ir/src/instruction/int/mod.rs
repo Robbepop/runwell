@@ -23,7 +23,7 @@ pub use self::{
     iconv::{ExtendIntInstr, IntToFloatInstr, TruncateIntInstr},
     unary::{UnaryIntInstr, UnaryIntOp},
 };
-use crate::ir::primitive::Value;
+use crate::primitive::Value;
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
@@ -63,9 +63,9 @@ impl IntInstr {
 macro_rules! impl_from_int_instr_for_instr {
     ( $( $name:ident ),* $(,)? ) => {
         $(
-            impl ::core::convert::From<$name> for crate::ir::instr::Instruction {
+            impl ::core::convert::From<$name> for crate::instr::Instruction {
                 fn from(instr: $name) -> Self {
-                    Self::Int(crate::ir::instr::IntInstr::from(instr))
+                    Self::Int(crate::instr::IntInstr::from(instr))
                 }
             }
         )*

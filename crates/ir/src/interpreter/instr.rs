@@ -12,36 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{EvaluationContext, Func, FunctionFrame, InterpretationError};
+use super::{
+    EvaluationContext,
+    Func,
+    FunctionFrame,
+    InterpretationError,
+};
 use crate::{
-    entity::RawIdx,
-    ir::{
-        instr::{
-            BinaryIntInstr,
-            BranchInstr,
-            CallInstr,
-            CompareIntInstr,
-            ConstInstr,
-            ExtendIntInstr,
-            FloatToIntInstr,
-            IfThenElseInstr,
-            Instruction,
-            IntInstr,
-            IntToFloatInstr,
-            PhiInstr,
-            ReinterpretInstr,
-            ReturnInstr,
-            SelectInstr,
-            TailCallInstr,
-            TerminalInstr,
-            TruncateIntInstr,
-            UnaryIntInstr,
-        },
-        instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
-        primitive::{FloatType, IntType, Value},
+    instr::{
+        BinaryIntInstr,
+        BranchInstr,
+        CallInstr,
+        CompareIntInstr,
+        ConstInstr,
+        ExtendIntInstr,
+        FloatToIntInstr,
+        IfThenElseInstr,
+        Instruction,
+        IntInstr,
+        IntToFloatInstr,
+        PhiInstr,
+        ReinterpretInstr,
+        ReturnInstr,
+        SelectInstr,
+        TailCallInstr,
+        TerminalInstr,
+        TruncateIntInstr,
+        UnaryIntInstr,
+    },
+    instruction::{
+        BinaryIntOp,
+        CompareIntOp,
+        UnaryIntOp,
+    },
+    primitive::{
+        FloatType,
+        IntType,
+        Value,
     },
 };
 use core::mem::replace;
+use entity::RawIdx;
 
 /// Implemented by Runwell IR instructions to make them interpretable.
 pub trait InterpretInstr {
@@ -83,27 +94,17 @@ impl InterpretInstr for Instruction {
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            Self::Call(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::Call(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::CallIndirect(_instr) => unimplemented!(),
-            Self::Const(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::Const(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::MemoryGrow(_instr) => unimplemented!(),
             Self::MemorySize(_instr) => unimplemented!(),
             Self::Phi(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Load(_instr) => unimplemented!(),
             Self::Store(_instr) => unimplemented!(),
-            Self::Select(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Reinterpret(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Terminal(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::Select(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Reinterpret(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Terminal(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Int(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Float(_instr) => unimplemented!(),
         }
@@ -172,14 +173,10 @@ impl InterpretInstr for TerminalInstr {
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
             Self::Trap => Err(InterpretationError::EvaluationHasTrapped),
-            Self::Return(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::Return(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Br(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Ite(instr) => instr.interpret_instr(return_value, ctx, frame),
-            Self::TailCall(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::TailCall(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::BranchTable(_instr) => unimplemented!(),
         }
     }
@@ -300,10 +297,7 @@ impl InterpretInstr for ReinterpretInstr {
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
-        debug_assert_eq!(
-            self.src_type().bit_width(),
-            self.dst_type().bit_width()
-        );
+        debug_assert_eq!(self.src_type().bit_width(), self.dst_type().bit_width());
         // Reinterpretation just moves from one register to the other.
         frame.write_register(return_value, source);
         Ok(InterpretationFlow::Continue)
@@ -318,24 +312,12 @@ impl InterpretInstr for IntInstr {
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            Self::Binary(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Unary(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Compare(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Extend(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::IntToFloat(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Truncate(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::Binary(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Unary(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Compare(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Extend(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::IntToFloat(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Truncate(instr) => instr.interpret_instr(return_value, ctx, frame),
         }
     }
 }
@@ -368,9 +350,7 @@ impl InterpretInstr for TruncateIntInstr {
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
-        debug_assert!(
-            self.dst_type().bit_width() <= self.src_type().bit_width()
-        );
+        debug_assert!(self.dst_type().bit_width() <= self.src_type().bit_width());
         fn mask(bits: u32) -> u64 {
             (0x1 << bits) - 1
         }
@@ -394,24 +374,14 @@ impl InterpretInstr for ExtendIntInstr {
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
-        debug_assert!(
-            self.src_type().bit_width() <= self.dst_type().bit_width()
-        );
+        debug_assert!(self.src_type().bit_width() <= self.dst_type().bit_width());
         let result = if self.is_signed() {
             match (self.src_type(), self.dst_type()) {
-                (IntType::I8, IntType::I16) => {
-                    source as u8 as i8 as i16 as u16 as u64
-                }
-                (IntType::I8, IntType::I32) => {
-                    source as u8 as i8 as i32 as u32 as u64
-                }
+                (IntType::I8, IntType::I16) => source as u8 as i8 as i16 as u16 as u64,
+                (IntType::I8, IntType::I32) => source as u8 as i8 as i32 as u32 as u64,
                 (IntType::I8, IntType::I64) => source as u8 as i8 as i64 as u64,
-                (IntType::I16, IntType::I32) => {
-                    source as u16 as i16 as i32 as u32 as u64
-                }
-                (IntType::I32, IntType::I64) => {
-                    source as u32 as i32 as i64 as u64
-                }
+                (IntType::I16, IntType::I32) => source as u16 as i16 as i32 as u32 as u64,
+                (IntType::I32, IntType::I64) => source as u32 as i32 as i64 as u64,
                 (x, y) if x == y => source,
                 _ => unreachable!(),
             }
@@ -446,10 +416,17 @@ impl InterpretInstr for IntToFloatInstr {
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
-        use FloatType::{F32, F64};
-        use IntType::{I16, I32, I64, I8};
-        let result = match (self.is_signed(), self.src_type(), self.dst_type())
-        {
+        use FloatType::{
+            F32,
+            F64,
+        };
+        use IntType::{
+            I16,
+            I32,
+            I64,
+            I8,
+        };
+        let result = match (self.is_signed(), self.src_type(), self.dst_type()) {
             // uN -> f32
             (false, I8, F32) => (source as u8 as f32).to_bits() as u64,
             (false, I16, F32) => (source as u16 as f32).to_bits() as u64,
@@ -567,7 +544,11 @@ impl InterpretInstr for BinaryIntInstr {
         let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
-        use core::ops::{BitAnd, BitOr, BitXor};
+        use core::ops::{
+            BitAnd,
+            BitOr,
+            BitXor,
+        };
         use BinaryIntOp as Op;
         /// Computes `op` on `lhs` and `rhs` using `f` to convert from unsigned to signed.
         fn compute<U, S, F, V>(
@@ -607,27 +588,23 @@ impl InterpretInstr for BinaryIntInstr {
             IntType::I8 => {
                 let lhs = lhs as u8;
                 let rhs = rhs as u8;
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i8, |s| s as u8);
+                let result = compute(self.op(), lhs, rhs, |u| u as i8, |s| s as u8);
                 result as u64
             }
             IntType::I16 => {
                 let lhs = lhs as u16;
                 let rhs = rhs as u16;
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i16, |s| s as u16);
+                let result = compute(self.op(), lhs, rhs, |u| u as i16, |s| s as u16);
                 result as u64
             }
             IntType::I32 => {
                 let lhs = lhs as u32;
                 let rhs = rhs as u32;
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i32, |s| s as u32);
+                let result = compute(self.op(), lhs, rhs, |u| u as i32, |s| s as u32);
                 result as u64
             }
             IntType::I64 => {
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i64, |s| s as u64);
+                let result = compute(self.op(), lhs, rhs, |u| u as i64, |s| s as u64);
                 result as u64
             }
         };

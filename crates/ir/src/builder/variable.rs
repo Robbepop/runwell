@@ -13,16 +13,25 @@
 // limitations under the License.
 
 use crate::{
-    entity::{secondary::map::Entry, ComponentMap, EntityArena, Idx, RawIdx},
-    ir::{
-        builder::VariableAccess,
-        primitive::{Block, Type, Value},
-        FunctionBuilderError,
-        IrError,
+    builder::VariableAccess,
+    primitive::{
+        Block,
+        Type,
+        Value,
     },
+    FunctionBuilderError,
+    IrError,
 };
 use core::fmt;
 use derive_more::From;
+use entity::{
+    DisplayHook,
+    secondary::map::Entry,
+    ComponentMap,
+    EntityArena,
+    Idx,
+    RawIdx,
+};
 
 /// A variable entity of the Runwell IR.
 ///
@@ -47,9 +56,9 @@ pub struct VariableEntity;
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Variable = Idx<VariableEntity>;
 
-impl fmt::Display for Variable {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "var({})", self.into_raw())
+impl DisplayHook for VariableEntity {
+    fn fmt(idx: Variable, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "var({})", idx.into_raw())
     }
 }
 
@@ -199,11 +208,6 @@ impl VariableDefinitions {
         self.ty
     }
 
-    /// Returns `true` if the variable has definitions.
-    pub fn has_definitions(&self) -> bool {
-        self.block_defs.is_empty()
-    }
-
     /// Returns the variable's definitions for every basic block.
     pub fn definitions(&self) -> VariableDefinitionPerBlock {
         VariableDefinitionPerBlock {
@@ -223,19 +227,9 @@ impl<'a> VariableDefinitionPerBlock<'a> {
     pub fn for_block(self, block: Block) -> Option<Value> {
         self.defs.get(block).copied()
     }
-
-    /// Returns `true` if the variable has definitions.
-    pub fn has_definitions(&self) -> bool {
-        self.defs.is_empty()
-    }
 }
 
 impl VariableTranslator {
-    /// Returns the number of declared variables.
-    fn len_vars(&self) -> usize {
-        self.vars.len()
-    }
-
     /// Ensures that the variable has been declared.
     ///
     /// # Errors
@@ -291,11 +285,7 @@ impl VariableTranslator {
     /// # Errors
     ///
     /// If there are more than 2^31 variable declarations.
-    pub fn declare_vars(
-        &mut self,
-        amount: u32,
-        ty: Type,
-    ) -> Result<(), IrError> {
+    pub fn declare_vars(&mut self, amount: u32, ty: Type) -> Result<(), IrError> {
         let first_idx = self.vars.alloc_default(amount as usize);
         if self.vars.len() >= u32::MAX as usize {
             return Err(FunctionBuilderError::TooManyVariableDeclarations)
@@ -350,22 +340,12 @@ impl VariableTranslator {
         match var_to_defs.entry(var) {
             Entry::Occupied(occupied) => {
                 let declared_type = occupied.get().ty;
-                Self::ensure_types_match(
-                    var,
-                    new_value,
-                    declared_type,
-                    value_to_type,
-                )?;
+                Self::ensure_types_match(var, new_value, declared_type, value_to_type)?;
                 occupied.into_mut().block_defs.insert(block, new_value);
             }
             Entry::Vacant(vacant) => {
                 let declared_type = var_to_type.get_var_type(var);
-                Self::ensure_types_match(
-                    var,
-                    new_value,
-                    declared_type,
-                    value_to_type,
-                )?;
+                Self::ensure_types_match(var, new_value, declared_type, value_to_type)?;
                 vacant.insert(VariableDefinitions::new(declared_type));
             }
         }
@@ -381,10 +361,7 @@ impl VariableTranslator {
     /// # Errors
     ///
     /// - If the variable has not been declared, yet.
-    pub fn get(
-        &mut self,
-        var: Variable,
-    ) -> Result<&VariableDefinitions, IrError> {
+    pub fn get(&mut self, var: Variable) -> Result<&VariableDefinitions, IrError> {
         self.ensure_declared(var, VariableAccess::Read)?;
         let Self {
             var_to_type,

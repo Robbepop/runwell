@@ -17,7 +17,7 @@ mod fcmp;
 mod fconv;
 mod unary;
 
-use crate::ir::primitive::Value;
+use crate::primitive::Value;
 
 pub use self::{
     binary::{BinaryFloatInstr, BinaryFloatOp},
@@ -64,9 +64,9 @@ impl FloatInstr {
 macro_rules! impl_from_float_instr_for_instr {
     ( $( $name:ident ),* $(,)? ) => {
         $(
-            impl ::core::convert::From<$name> for crate::ir::instr::Instruction {
+            impl ::core::convert::From<$name> for crate::instr::Instruction {
                 fn from(instr: $name) -> Self {
-                    Self::Float(crate::ir::instr::FloatInstr::from(instr))
+                    Self::Float(crate::instr::FloatInstr::from(instr))
                 }
             }
         )*

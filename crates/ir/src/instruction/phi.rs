@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{Block, Value};
+use crate::primitive::{Block, Value};
 use core::{convert::identity, fmt::Display, iter::FusedIterator};
 use std::collections::{btree_map::Iter as BTreeMapIter, BTreeMap};
 

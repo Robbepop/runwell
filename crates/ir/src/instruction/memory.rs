@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    ir::primitive::{Type, Value},
-    parse::LinearMemoryId,
-};
+use crate::primitive::Mem;
+use crate::primitive::{Const, Type, Value};
 use derive_more::Display;
 
 /// Represents the alignment of a store or load instruction.
@@ -41,33 +39,30 @@ impl Alignment {
 /// Loads a value of type `ty` from the given memory at the given address with given alignment.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(
-    fmt = "load memory {}, address {}, alignment {}",
-    memory,
+    fmt = "load {} from {}+{}",
+    ty,
     address,
-    alignment
+    offset,
 )]
 pub struct LoadInstr {
-    memory: LinearMemoryId,
-    address: Value,
-    alignment: Alignment,
     ty: Type,
+    address: Value,
+    offset: Const,
 }
 
 impl LoadInstr {
     /// Creates a new load instruction.
     ///
-    /// Loads a value of type `ty` from the given memory at the given address and alignment.
+    /// Loads a value of type `ty` from the given memory at the given address.
     pub fn new(
-        memory: LinearMemoryId,
-        address: Value,
-        alignment: Alignment,
         ty: Type,
+        address: Value,
+        offset: Const,
     ) -> Self {
         Self {
-            memory,
-            address,
-            alignment,
             ty,
+            address,
+            offset,
         }
     }
 
@@ -86,20 +81,20 @@ impl LoadInstr {
     }
 }
 
-/// Stores the value to the given memory at the given address with alignment.
+/// Stores the value at the given address and offset.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(
-    fmt = "store memory {}, address {}, value {}, alignment {}",
-    memory,
-    address,
+    fmt = "store {} {} from {}+{}",
+    ty,
     value,
-    alignment
+    address,
+    offset,
 )]
 pub struct StoreInstr {
-    memory: LinearMemoryId,
     address: Value,
+    offset: Const,
     value: Value,
-    alignment: Alignment,
+    ty: Type,
 }
 
 impl StoreInstr {
@@ -107,16 +102,16 @@ impl StoreInstr {
     ///
     /// Stores the value to the given memory at the given address with alignment.
     pub fn new(
-        memory: LinearMemoryId,
         address: Value,
+        offset: Const,
         value: Value,
-        alignment: Alignment,
+        ty: Type,
     ) -> Self {
         Self {
-            memory,
             address,
+            offset,
             value,
-            alignment,
+            ty,
         }
     }
 
@@ -148,17 +143,17 @@ impl StoreInstr {
 ///
 /// Returns the previous size of the linear memory upon success or -1 upon failure.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "memory.grow memory {}, pages {}", memory_id, new_pages)]
+#[display(fmt = "memory.grow memory {}, pages {}", memory, new_pages)]
 pub struct MemoryGrowInstr {
-    memory_id: LinearMemoryId,
+    memory: Mem,
     new_pages: Value,
 }
 
 impl MemoryGrowInstr {
     /// Creates a new memory grow instruction to grow the indexed linear memory.
-    pub fn new(memory_id: LinearMemoryId, new_pages: Value) -> Self {
+    pub fn new(memory: Mem, new_pages: Value) -> Self {
         Self {
-            memory_id,
+            memory,
             new_pages,
         }
     }
@@ -180,14 +175,14 @@ impl MemoryGrowInstr {
 
 /// Returns the current number of pages of the indexed linear memory.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "memory.size memory {}", memory_id)]
+#[display(fmt = "memory.size memory {}", memory)]
 pub struct MemorySizeInstr {
-    memory_id: LinearMemoryId,
+    memory: Mem,
 }
 
 impl MemorySizeInstr {
     /// Creates a new memory size instruction to return the size (in pages) of the indexed linear memory.
-    pub fn new(memory_id: LinearMemoryId) -> Self {
-        Self { memory_id }
+    pub fn new(memory: Mem) -> Self {
+        Self { memory }
     }
 }

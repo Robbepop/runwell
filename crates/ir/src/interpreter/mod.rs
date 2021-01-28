@@ -18,23 +18,14 @@ mod error;
 mod frame;
 mod instr;
 
+use crate::primitive::Func;
 pub use self::error::InterpretationError;
-pub(in crate::ir) use self::{
+pub(crate) use self::{
     frame::FunctionFrame,
     instr::{InterpretInstr, InterpretationFlow},
 };
 use super::{builder::Function, primitive::Value};
-use crate::entity::{EntityArena, Idx, RawIdx};
-use core::fmt;
-
-/// A function index.
-pub type Func = Idx<Function>;
-
-impl fmt::Display for Func {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "func({})", self.into_raw())
-    }
-}
+use entity::{EntityArena, RawIdx};
 
 /// Holds all data that is immutable during a function evaluation.
 ///

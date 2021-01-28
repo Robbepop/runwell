@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use super::CallInstr;
-use crate::ir::{
-    interpreter::Func,
+use crate::{
+    primitive::Func,
     primitive::{Block, Value},
 };
 use core::fmt::Display;
@@ -35,7 +35,7 @@ impl Display for TailCallInstr {
 
 impl TailCallInstr {
     /// Creates a new tail call instruction to call the indexed function using the given parameters.
-    fn new<I>(func: Func, call_params: I) -> Self
+    pub fn new<I>(func: Func, call_params: I) -> Self
     where
         I: IntoIterator<Item = Value>,
     {
@@ -262,9 +262,9 @@ impl Display for BranchTableInstr {
 macro_rules! impl_from_terminal_instr_for_instr {
     ( $( $name:ident ),* $(,)? ) => {
         $(
-            impl ::core::convert::From<$name> for crate::ir::instr::Instruction {
+            impl ::core::convert::From<$name> for crate::instr::Instruction {
                 fn from(instr: $name) -> Self {
-                    Self::Terminal(crate::ir::instr::TerminalInstr::from(instr))
+                    Self::Terminal(crate::instr::TerminalInstr::from(instr))
                 }
             }
         )*

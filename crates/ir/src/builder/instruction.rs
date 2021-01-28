@@ -19,24 +19,32 @@ use super::{
     FunctionBuilderError,
 };
 use crate::{
-    entity::Idx,
-    ir::{
-        instr::{
-            BinaryIntInstr,
-            BranchInstr,
-            CompareIntInstr,
-            ConstInstr,
-            IfThenElseInstr,
-            ReinterpretInstr,
-            ReturnInstr,
-            SelectInstr,
-            TerminalInstr,
-        },
-        instruction::{BinaryIntOp, CompareIntOp, Instruction},
-        primitive::{Block, Const, IntType, Type, Value},
-        IrError,
+    instr::{
+        BinaryIntInstr,
+        BranchInstr,
+        CompareIntInstr,
+        ConstInstr,
+        IfThenElseInstr,
+        ReinterpretInstr,
+        ReturnInstr,
+        SelectInstr,
+        TerminalInstr,
     },
+    instruction::{
+        BinaryIntOp,
+        CompareIntOp,
+        Instruction,
+    },
+    primitive::{
+        Block,
+        Const,
+        IntType,
+        Type,
+        Value,
+    },
+    IrError,
 };
+use entity::Idx;
 
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Instr = Idx<Instruction>;
@@ -92,8 +100,7 @@ impl<'a> FunctionInstrBuilder<'a> {
     {
         let constant = constant.into();
         let instruction = ConstInstr::new(constant);
-        let (value, _) =
-            self.append_value_instr(instruction.into(), constant.ty())?;
+        let (value, _) = self.append_value_instr(instruction.into(), constant.ty())?;
         Ok(value)
     }
 
@@ -112,11 +119,7 @@ impl<'a> FunctionInstrBuilder<'a> {
     /// # Errors
     ///
     /// If the types do not match.
-    fn expect_type(
-        &self,
-        value: Value,
-        expected_type: Type,
-    ) -> Result<(), IrError> {
+    fn expect_type(&self, value: Value, expected_type: Type) -> Result<(), IrError> {
         let value_type = self.builder.ctx.value_type[value];
         if value_type != expected_type {
             return Err(FunctionBuilderError::UnmatchingValueType {
@@ -140,109 +143,58 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = BinaryIntInstr::new(op, ty, lhs, rhs);
-        let (value, instr) =
-            self.append_value_instr(instruction.into(), ty.into())?;
+        let (value, instr) = self.append_value_instr(instruction.into(), ty.into())?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
     }
 
     /// Integer addition.
-    pub fn iadd(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn iadd(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Add, ty, lhs, rhs)
     }
 
     /// Integer subtraction.
-    pub fn isub(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn isub(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Sub, ty, lhs, rhs)
     }
 
     /// Integer multiplication.
-    pub fn imul(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn imul(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Mul, ty, lhs, rhs)
     }
 
     /// Signed integer division.
-    pub fn sdiv(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn sdiv(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Sdiv, ty, lhs, rhs)
     }
 
     /// Unsigned integer division.
-    pub fn udiv(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn udiv(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Udiv, ty, lhs, rhs)
     }
 
     /// Signed integer remainder.
-    pub fn srem(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn srem(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Srem, ty, lhs, rhs)
     }
 
     /// Unsigned integer remainder.
-    pub fn urem(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn urem(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Urem, ty, lhs, rhs)
     }
 
     /// Integer bitwise AND.
-    pub fn iand(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn iand(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::And, ty, lhs, rhs)
     }
 
     /// Integer bitwise OR.
-    pub fn ior(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn ior(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Or, ty, lhs, rhs)
     }
 
     /// Integer bitwise XOR.
-    pub fn ixor(
-        self,
-        ty: IntType,
-        lhs: Value,
-        rhs: Value,
-    ) -> Result<Value, IrError> {
+    pub fn ixor(self, ty: IntType, lhs: Value, rhs: Value) -> Result<Value, IrError> {
         self.ibinary(BinaryIntOp::Xor, ty, lhs, rhs)
     }
 
@@ -271,8 +223,7 @@ impl<'a> FunctionInstrBuilder<'a> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
-        let (value, instr) =
-            self.append_value_instr(instruction.into(), Type::Bool)?;
+        let (value, instr) = self.append_value_instr(instruction.into(), Type::Bool)?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
     }
@@ -323,8 +274,7 @@ impl<'a> FunctionInstrBuilder<'a> {
             .map_err(Into::into)
         }
         let instruction = ReinterpretInstr::new(from_type, to_type, src);
-        let (value, instr) =
-            self.append_value_instr(instruction.into(), to_type)?;
+        let (value, instr) = self.append_value_instr(instruction.into(), to_type)?;
         self.register_uses(instr, &[src]);
         Ok(value)
     }
@@ -345,10 +295,7 @@ impl<'a> FunctionInstrBuilder<'a> {
     }
 
     /// Returns the given value to the caller of the function.
-    pub fn return_value(
-        mut self,
-        return_value: Value,
-    ) -> Result<Instr, IrError> {
+    pub fn return_value(mut self, return_value: Value) -> Result<Instr, IrError> {
         let expected_output = &self.builder.ctx.output_types;
         let return_type = self.builder.ctx.value_type[return_value];
         if &[return_type][..] != expected_output {
@@ -386,11 +333,8 @@ impl<'a> FunctionInstrBuilder<'a> {
     ) -> Result<Instr, IrError> {
         self.expect_type(condition, Type::Bool)?;
         let block = self.builder.current_block()?;
-        let instr = self.append_instr(IfThenElseInstr::new(
-            condition,
-            then_target,
-            else_target,
-        ))?;
+        let instr =
+            self.append_instr(IfThenElseInstr::new(condition, then_target, else_target))?;
         self.add_predecessor(then_target, block)?;
         self.add_predecessor(else_target, block)?;
         self.register_uses(instr, &[condition]);
@@ -404,11 +348,7 @@ impl<'a> FunctionInstrBuilder<'a> {
     /// - If the new predecessor is not yet filled.
     /// - If the block that gains a new predessor has already been sealed.
     /// - If the new predecessor is already a predecessor of the block.
-    fn add_predecessor(
-        &mut self,
-        block: Block,
-        new_pred: Block,
-    ) -> Result<(), IrError> {
+    fn add_predecessor(&mut self, block: Block, new_pred: Block) -> Result<(), IrError> {
         if !self.builder.ctx.block_filled[new_pred] {
             return Err(FunctionBuilderError::UnfilledPredecessor {
                 block,

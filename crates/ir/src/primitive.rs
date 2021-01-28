@@ -19,12 +19,58 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
-use crate::{
-    entity::Idx,
-    parse::{self, F32, F64},
-};
+use entity::{Idx, DisplayHook};
 use core::fmt;
 use derive_more::{Display, From};
+use crate::builder::Function;
+
+/// A function index.
+pub type Func = Idx<Function>;
+
+impl DisplayHook for Function {
+    fn fmt(idx: Func, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "func({})", idx.into_raw())
+    }
+}
+
+/// A function type entity of the Runwell IR.
+#[derive(Debug, Default)]
+pub struct FuncTypeEntity;
+
+/// The unique index of a function type entity of the Runwell IR.
+pub type FuncType = Idx<FuncTypeEntity>;
+
+impl DisplayHook for FuncTypeEntity {
+    fn fmt(idx: FuncType, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "func_type({})", idx.into_raw())
+    }
+}
+
+/// A linear memory entity of the Runwell IR.
+#[derive(Debug, Default)]
+pub struct LinearMemoryEntity;
+
+/// The unique index of a linear memory entity of the Runwell IR.
+pub type Mem = Idx<LinearMemoryEntity>;
+
+impl DisplayHook for LinearMemoryEntity {
+    fn fmt(idx: Mem, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "mem({})", idx.into_raw())
+    }
+}
+
+/// A table entity of the Runwell IR.
+#[derive(Debug, Default)]
+pub struct TableEntity;
+
+/// The unique index of a table entity of the Runwell IR.
+pub type Table = Idx<TableEntity>;
+
+impl DisplayHook for TableEntity {
+    fn fmt(idx: Table, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "table({})", idx.into_raw())
+    }
+}
 
 /// A basic block entity of the Runwell IR.
 #[derive(Debug, Default)]
@@ -37,18 +83,18 @@ pub struct ValueEntity;
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Block = Idx<BlockEntity>;
 
-impl fmt::Display for Block {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "bb{}", self.into_raw())
+impl DisplayHook for BlockEntity {
+    fn fmt(idx: Block, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "bb{}", idx.into_raw())
     }
 }
 
 /// The unique index of a value entity of the Runwell IR.
 pub type Value = Idx<ValueEntity>;
 
-impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "v{}", self.into_raw())
+impl DisplayHook for ValueEntity {
+    fn fmt(idx: Value, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "v{}", idx.into_raw())
     }
 }
 
@@ -61,17 +107,6 @@ pub enum Type {
     Bool,
     Int(IntType),
     Float(FloatType),
-}
-
-impl From<parse::Type> for Type {
-    fn from(ty: parse::Type) -> Self {
-        match ty {
-            parse::Type::I32 => Self::Int(IntType::I32),
-            parse::Type::I64 => Self::Int(IntType::I64),
-            parse::Type::F32 => Self::Float(FloatType::F32),
-            parse::Type::F64 => Self::Float(FloatType::F64),
-        }
-    }
 }
 
 impl Type {
@@ -211,6 +246,60 @@ impl FloatConst {
         match self {
             Self::F32(value) => value.bits() as u64,
             Self::F64(value) => value.bits(),
+        }
+    }
+}
+
+/// A `f32` (32-bit floating point) value.
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[display(fmt = "{}", "f32::from_le_bytes(bits.to_le_bytes())")]
+pub struct F32 {
+    bits: u32,
+}
+
+impl F32 {
+    /// Returns a 32-bit floating point number from the given bits.
+    pub fn from_bits(bits: u32) -> Self {
+        Self { bits }
+    }
+
+    /// Returns the underlying bits of the 32-bit float.
+    pub fn bits(self) -> u32 {
+        self.bits
+    }
+}
+
+impl From<f32> for F32 {
+    fn from(value: f32) -> Self {
+        Self {
+            bits: u32::from_le_bytes(value.to_le_bytes()),
+        }
+    }
+}
+
+/// A `f64` (64-bit floating point) value.
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[display(fmt = "{}", "f64::from_le_bytes(bits.to_le_bytes())")]
+pub struct F64 {
+    bits: u64,
+}
+
+impl F64 {
+    /// Returns a 64-bit floating point number from the given bits.
+    pub fn from_bits(bits: u64) -> Self {
+        Self { bits }
+    }
+
+    /// Returns the underlying bits of the 64-bit float.
+    pub fn bits(self) -> u64 {
+        self.bits
+    }
+}
+
+impl From<f64> for F64 {
+    fn from(value: f64) -> Self {
+        Self {
+            bits: u64::from_le_bytes(value.to_le_bytes()),
         }
     }
 }
