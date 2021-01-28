@@ -14,7 +14,7 @@
 
 //! Runwell IR data structures, SSA builder and IR interpreter.
 
-mod builder;
+pub mod builder;
 mod error;
 mod instruction;
 pub mod interpreter;
