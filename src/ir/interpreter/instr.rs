@@ -19,6 +19,7 @@ use crate::{
         instr::{
             BinaryIntInstr,
             BranchInstr,
+            CallInstr,
             CompareIntInstr,
             ConstInstr,
             ExtendIntInstr,
@@ -218,6 +219,26 @@ impl InterpretInstr for IfThenElseInstr {
             self.false_target()
         };
         frame.switch_to_block(target);
+        Ok(InterpretationFlow::Continue)
+    }
+}
+
+impl InterpretInstr for CallInstr {
+    fn interpret_instr(
+        &self,
+        _return_return_value: Option<Value>,
+        ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let params = self
+            .params()
+            .iter()
+            .copied()
+            .map(|param| frame.read_register(param))
+            .collect::<Vec<_>>();
+        ctx.evaluate_function(self.func(), params, |value, result| {
+            frame.write_register(value, result)
+        })?;
         Ok(InterpretationFlow::Continue)
     }
 }
