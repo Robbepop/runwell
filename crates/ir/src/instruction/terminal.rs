@@ -13,10 +13,7 @@
 // limitations under the License.
 
 use super::CallInstr;
-use crate::{
-    primitive::Func,
-    primitive::{Block, Value},
-};
+use crate::primitive::{Block, Func, Value};
 use core::fmt::Display;
 use derive_more::{Display, From};
 

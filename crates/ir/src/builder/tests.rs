@@ -24,15 +24,9 @@
 use super::Function;
 use crate::{
     instruction::CompareIntOp,
-    interpreter::{
-        EvaluationContext,
-    },
+    interpreter::EvaluationContext,
+    primitive::{Const, IntConst, IntType},
     store::Store,
-    primitive::{
-        Const,
-        IntConst,
-        IntType,
-    },
     IrError,
     Variable,
 };
@@ -292,7 +286,8 @@ fn simple_loop_works() -> Result<(), IrError> {
     println!("{}", function);
 
     let iterations = 100_000_000;
-    let results = evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
+    let results =
+        evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
     assert_eq!(results, vec![iterations as u64]);
 
     Ok(())

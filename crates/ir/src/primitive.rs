@@ -19,10 +19,10 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
-use entity::{Idx, DisplayHook};
+use crate::builder::Function;
 use core::fmt;
 use derive_more::{Display, From};
-use crate::builder::Function;
+use entity::{DisplayHook, Idx};
 
 /// A function index.
 pub type Func = Idx<Function>;

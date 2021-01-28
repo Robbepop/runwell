@@ -12,18 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    primitive::Func,
-    primitive::{
-        FuncType,
-        Table,
-        Value,
-    },
-};
-use core::{
-    convert::identity,
-    fmt::Display,
-};
+use crate::primitive::{Func, FuncType, Table, Value};
+use core::{convert::identity, fmt::Display};
 
 /// Calls a function statically.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

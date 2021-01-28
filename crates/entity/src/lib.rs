@@ -25,7 +25,7 @@ pub mod secondary;
 mod tests;
 
 pub use self::{
-    index::{Idx, RawIdx, DisplayHook},
+    index::{DisplayHook, Idx, RawIdx},
     primary::EntityArena,
     secondary::{
         ComponentMap,

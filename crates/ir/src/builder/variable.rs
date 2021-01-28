@@ -14,20 +14,16 @@
 
 use crate::{
     builder::VariableAccess,
-    primitive::{
-        Block,
-        Type,
-        Value,
-    },
+    primitive::{Block, Type, Value},
     FunctionBuilderError,
     IrError,
 };
 use core::fmt;
 use derive_more::From;
 use entity::{
-    DisplayHook,
     secondary::map::Entry,
     ComponentMap,
+    DisplayHook,
     EntityArena,
     Idx,
     RawIdx,
@@ -285,7 +281,11 @@ impl VariableTranslator {
     /// # Errors
     ///
     /// If there are more than 2^31 variable declarations.
-    pub fn declare_vars(&mut self, amount: u32, ty: Type) -> Result<(), IrError> {
+    pub fn declare_vars(
+        &mut self,
+        amount: u32,
+        ty: Type,
+    ) -> Result<(), IrError> {
         let first_idx = self.vars.alloc_default(amount as usize);
         if self.vars.len() >= u32::MAX as usize {
             return Err(FunctionBuilderError::TooManyVariableDeclarations)
@@ -340,12 +340,22 @@ impl VariableTranslator {
         match var_to_defs.entry(var) {
             Entry::Occupied(occupied) => {
                 let declared_type = occupied.get().ty;
-                Self::ensure_types_match(var, new_value, declared_type, value_to_type)?;
+                Self::ensure_types_match(
+                    var,
+                    new_value,
+                    declared_type,
+                    value_to_type,
+                )?;
                 occupied.into_mut().block_defs.insert(block, new_value);
             }
             Entry::Vacant(vacant) => {
                 let declared_type = var_to_type.get_var_type(var);
-                Self::ensure_types_match(var, new_value, declared_type, value_to_type)?;
+                Self::ensure_types_match(
+                    var,
+                    new_value,
+                    declared_type,
+                    value_to_type,
+                )?;
                 vacant.insert(VariableDefinitions::new(declared_type));
             }
         }
@@ -361,7 +371,10 @@ impl VariableTranslator {
     /// # Errors
     ///
     /// - If the variable has not been declared, yet.
-    pub fn get(&mut self, var: Variable) -> Result<&VariableDefinitions, IrError> {
+    pub fn get(
+        &mut self,
+        var: Variable,
+    ) -> Result<&VariableDefinitions, IrError> {
         self.ensure_declared(var, VariableAccess::Read)?;
         let Self {
             var_to_type,

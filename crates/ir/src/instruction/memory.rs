@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::Mem;
-use crate::primitive::{Const, Type, Value};
+use crate::primitive::{Const, Mem, Type, Value};
 use derive_more::Display;
 
 /// Represents the alignment of a store or load instruction.
@@ -38,12 +37,7 @@ impl Alignment {
 
 /// Loads a value of type `ty` from the given memory at the given address with given alignment.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(
-    fmt = "load {} from {}+{}",
-    ty,
-    address,
-    offset,
-)]
+#[display(fmt = "load {} from {}+{}", ty, address, offset)]
 pub struct LoadInstr {
     ty: Type,
     address: Value,
@@ -54,11 +48,7 @@ impl LoadInstr {
     /// Creates a new load instruction.
     ///
     /// Loads a value of type `ty` from the given memory at the given address.
-    pub fn new(
-        ty: Type,
-        address: Value,
-        offset: Const,
-    ) -> Self {
+    pub fn new(ty: Type, address: Value, offset: Const) -> Self {
         Self {
             ty,
             address,
@@ -83,13 +73,7 @@ impl LoadInstr {
 
 /// Stores the value at the given address and offset.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(
-    fmt = "store {} {} from {}+{}",
-    ty,
-    value,
-    address,
-    offset,
-)]
+#[display(fmt = "store {} {} from {}+{}", ty, value, address, offset)]
 pub struct StoreInstr {
     address: Value,
     offset: Const,
@@ -101,12 +85,7 @@ impl StoreInstr {
     /// Creates a new store instruction.
     ///
     /// Stores the value to the given memory at the given address with alignment.
-    pub fn new(
-        address: Value,
-        offset: Const,
-        value: Value,
-        ty: Type,
-    ) -> Self {
+    pub fn new(address: Value, offset: Const, value: Value, ty: Type) -> Self {
         Self {
             address,
             offset,
@@ -152,10 +131,7 @@ pub struct MemoryGrowInstr {
 impl MemoryGrowInstr {
     /// Creates a new memory grow instruction to grow the indexed linear memory.
     pub fn new(memory: Mem, new_pages: Value) -> Self {
-        Self {
-            memory,
-            new_pages,
-        }
+        Self { memory, new_pages }
     }
 
     /// Replaces all values in the instruction using the replacer.
