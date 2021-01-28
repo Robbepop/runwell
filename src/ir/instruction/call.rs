@@ -39,6 +39,16 @@ impl CallInstr {
         }
     }
 
+    /// Returns the called function index.
+    pub fn func(&self) -> Func {
+        self.func
+    }
+
+    /// Returns the function call parameters.
+    pub fn params(&self) -> &[Value] {
+        &self.call_params
+    }
+
     /// Replaces all values in the instruction using the replacer.
     ///
     /// Returns `true` if a value has been replaced in the instruction.
