@@ -21,16 +21,15 @@
 //! Automated checks to verify that the constructed functions match expectations
 //! are planned after an API for that has been designed.
 
-use super::Function;
-use crate::{
-    instruction::CompareIntOp,
-    interpreter::EvaluationContext,
-    primitive::{Const, IntConst, IntType},
-    store::Store,
-    IrError,
-    Variable,
-};
+use crate::EvaluationContext;
 use entity::RawIdx;
+use ir::{
+    builder::{Function, Variable},
+    instr::operands::CompareIntOp,
+    primitive::{Const, IntConst, IntType},
+    IrError,
+    Store,
+};
 
 /// Evaluates the function given the inputs and returns the results.
 fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {

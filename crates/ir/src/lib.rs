@@ -17,7 +17,6 @@
 pub mod builder;
 mod error;
 mod instruction;
-pub mod interpreter;
 pub mod primitive;
 mod store;
 
@@ -26,6 +25,7 @@ pub use self::{
     builder::FunctionBuilderError,
     error::IrError,
     instruction::Alignment,
+    store::Store,
 };
 
 /// All Runwell IR SSA instructions.

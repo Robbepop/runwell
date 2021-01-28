@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::InterpretationError;
-use crate::{
+use ir::{
     builder::Function,
     primitive::{Block, Value},
 };

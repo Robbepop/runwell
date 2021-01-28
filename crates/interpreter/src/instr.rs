@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::{EvaluationContext, Func, FunctionFrame, InterpretationError};
-use crate::{
+use ir::{
     builder::Function,
     instr::{
         BinaryIntInstr,
@@ -36,7 +36,7 @@ use crate::{
         TruncateIntInstr,
         UnaryIntInstr,
     },
-    instruction::{BinaryIntOp, CompareIntOp, UnaryIntOp},
+    instr::operands::{BinaryIntOp, CompareIntOp, UnaryIntOp},
     primitive::{FloatType, IntType, Value},
 };
 use core::mem::replace;

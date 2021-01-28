@@ -22,12 +22,12 @@ mod instr;
 mod tests;
 
 pub use self::error::InterpretationError;
-pub(crate) use self::{
+use self::{
     frame::FunctionFrame,
     instr::{InterpretInstr, InterpretationFlow},
 };
-use super::{builder::Function, primitive::Value};
-use crate::{primitive::Func, store::Store};
+use ir::{builder::Function, primitive::Value};
+use ir::{primitive::Func, Store};
 use entity::RawIdx;
 
 /// The evaluation context for the entire virtual machine.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{Const, Type, Value};
+use ir::primitive::{Const, Type, Value};
 use derive_more::{Display, Error};
 
 /// An error that may occure while evaluating a function.
