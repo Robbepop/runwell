@@ -1,3 +1,3 @@
-[submodule "testsuite"]
+[submodule "crates/wasm/testsuite"]
 	path = testsuite
 	url = git@github.com:WebAssembly/testsuite.git
