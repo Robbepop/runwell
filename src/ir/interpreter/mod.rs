@@ -64,8 +64,6 @@ impl Store {
 pub struct EvaluationContext<'a> {
     /// The store that holds immutable data.
     pub store: &'a Store,
-    /// Shared extended register space.
-    stacks: Vec<Vec<u64>>,
     /// Cached function frames to reuse memory allocations.
     cached_frames: Vec<FunctionFrame>,
 }
@@ -75,7 +73,6 @@ impl<'a> EvaluationContext<'a> {
     pub fn new(store: &'a Store) -> Self {
         Self {
             store,
-            stacks: Vec::new(),
             cached_frames: Vec::new(),
         }
     }
@@ -128,21 +125,5 @@ impl<'a> EvaluationContext<'a> {
     /// Releases the function evaluation frame back to its evaluation context for caching.
     fn release_frame(&mut self, frame: FunctionFrame) {
         self.cached_frames.push(frame);
-    }
-
-    /// Creates a new extended register stack space.
-    ///
-    /// This might reuse earlier allocated register stacks.
-    fn create_stack(&mut self) -> Vec<u64> {
-        if let Some(mut stack) = self.stacks.pop() {
-            stack.clear();
-            return stack
-        }
-        Default::default()
-    }
-
-    /// Release the extended register stack space for reuse.
-    fn release_stack(&mut self, stack: Vec<u64>) {
-        self.stacks.push(stack);
     }
 }
