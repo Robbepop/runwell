@@ -15,6 +15,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(feature = "bench", feature(test))]
 #![allow(dead_code)]
+#![forbid(unsafe_code)]
 
 #[cfg(feature = "bench")]
 extern crate test;
