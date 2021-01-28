@@ -91,9 +91,9 @@ impl DisplayHook for VariableEntity {
 ///
 /// ## Variable Reads
 ///
-/// Both [`read_var`] as well as [`VariableDefinitions::for_block`] have a constant
+/// Both `read_var` as well as `VariableDefinitions::for_block` have a constant
 /// execution time of O(1). However, reading the value of a variable during translation
-/// might call [`VariableDefinitions::for_block`] multiple times for each recursive
+/// might call `VariableDefinitions::for_block` multiple times for each recursive
 /// predecessor of the current basic block. Therefore the execution time of reading
 /// a variable is in O(P) where P is the set of predecessors of the current basic block
 /// in the worst case.
@@ -280,7 +280,7 @@ impl VariableTranslator {
     /// Declares an amount of variables that share the same type.
     ///
     /// A variable is required to be declared before reading or writing to it
-    /// using [`VariableTranslator::read_var`] and [`VariableTranslator::write_var`].
+    /// using `VariableTranslator::read_var` and `VariableTranslator::write_var`.
     ///
     /// # Errors
     ///
