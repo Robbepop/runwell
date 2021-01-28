@@ -727,9 +727,7 @@ impl InterpretInstr for DemoteFloatInstr {
         let source = frame.read_register(self.src());
         assert!(self.dst_type().bit_width() <= self.src_type().bit_width());
         let result = match (self.src_type(), self.dst_type()) {
-            (FloatType::F64, FloatType::F32) => {
-                f32_reg(reg_f64(source) as f32)
-            }
+            (FloatType::F64, FloatType::F32) => f32_reg(reg_f64(source) as f32),
             _ => source,
         };
         frame.write_register(return_value, result);
@@ -748,9 +746,7 @@ impl InterpretInstr for PromoteFloatInstr {
         let source = frame.read_register(self.src());
         assert!(self.src_type().bit_width() <= self.dst_type().bit_width());
         let result = match (self.src_type(), self.dst_type()) {
-            (FloatType::F32, FloatType::F64) => {
-                f64_reg(reg_f32(source) as f64)
-            }
+            (FloatType::F32, FloatType::F64) => f64_reg(reg_f32(source) as f64),
             _ => source,
         };
         frame.write_register(return_value, result);
