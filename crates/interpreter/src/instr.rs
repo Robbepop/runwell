@@ -129,7 +129,7 @@ impl InterpretInstr for Instruction {
                 instr.interpret_instr(return_value, ctx, frame)
             }
             Self::Int(instr) => instr.interpret_instr(return_value, ctx, frame),
-            Self::Float(_instr) => unimplemented!(),
+            Self::Float(instr) => instr.interpret_instr(return_value, ctx, frame),
         }
     }
 }
