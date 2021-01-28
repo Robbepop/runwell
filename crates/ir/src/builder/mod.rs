@@ -23,7 +23,7 @@ mod tests;
 use self::function::state;
 pub use self::{
     error::{FunctionBuilderError, VariableAccess},
-    function::{Function, FunctionBuilder, FunctionBuilderContext, ValueAssoc},
+    function::{Function, FunctionBuilder, FunctionBuilderContext},
     instruction::{FunctionInstrBuilder, Instr},
     variable::{Variable, VariableTranslator},
 };
