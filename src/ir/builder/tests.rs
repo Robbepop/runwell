@@ -42,7 +42,7 @@ fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
     ctx.evaluate_function(
         func,
         inputs.iter().copied().map(Const::into_bits64),
-        |_, result| results.push(result),
+        |result| results.push(result),
     )
     .unwrap();
     results
@@ -230,11 +230,11 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
     let func = store.push_function(function);
     let mut ctx = EvaluationContext::new(&store);
     let mut results = Vec::new();
-    ctx.evaluate_function(func, vec![0], |_, result| results.push(result))
+    ctx.evaluate_function(func, vec![0], |result| results.push(result))
         .unwrap();
     assert_eq!(results, vec![10]);
     results.clear();
-    ctx.evaluate_function(func, vec![1], |_, result| results.push(result))
+    ctx.evaluate_function(func, vec![1], |result| results.push(result))
         .unwrap();
     assert_eq!(results, vec![20]);
 

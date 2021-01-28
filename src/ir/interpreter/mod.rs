@@ -80,22 +80,49 @@ impl<'a> EvaluationContext<'a> {
     /// Evaluates the given function.
     ///
     /// This creates a new call frame for the function which can be costly.
-    /// For tail calls this function should not be used.
+    /// The outputs are returned in order of their function definition appearance.
+    ///
+    /// # Note
+    ///
+    /// This API is for use externally to the interpreter.
+    /// Users call it in order to invoke the entry level function.
     pub fn evaluate_function<I, O>(
         &mut self,
         func: Func,
         inputs: I,
-        mut outputs: O,
+        outputs: O,
     ) -> Result<(), InterpretationError>
     where
         I: IntoIterator<Item = u64>,
-        O: FnMut(Value, u64),
+        O: FnMut(u64),
     {
         let mut frame = self.create_frame();
-        let mut function = self.store.get_fn(func);
+        let function = self.store.get_fn(func);
         frame.initialize(function, inputs)?;
+        self.evaluate_function_frame(function, &mut frame, outputs)?;
+        self.release_frame(frame);
+        Ok(())
+    }
+
+    /// Evaluates the given function using the function frame.
+    ///
+    /// The function frame is expected to already be setup with the input parameters.
+    /// The outputs are returned in order of their function definition appearance.
+    ///
+    /// # Note
+    ///
+    /// This API is for use internally to the interpreter.
+    fn evaluate_function_frame<O>(
+        &mut self,
+        mut function: &'a Function,
+        frame: &mut FunctionFrame,
+        mut outputs: O,
+    ) -> Result<(), InterpretationError>
+    where
+        O: FnMut(u64),
+    {
         loop {
-            match function.interpret_instr(None, self, &mut frame)? {
+            match function.interpret_instr(None, self, frame)? {
                 InterpretationFlow::Continue => continue,
                 InterpretationFlow::Return => break,
                 InterpretationFlow::TailCall(func) => {
@@ -106,9 +133,8 @@ impl<'a> EvaluationContext<'a> {
         for (n, _) in function.outputs().iter().enumerate() {
             let result_value = Value::from_raw(RawIdx::from_u32(n as u32));
             let result = frame.read_register(result_value);
-            outputs(result_value, result)
+            outputs(result)
         }
-        self.release_frame(frame);
         Ok(())
     }
 
