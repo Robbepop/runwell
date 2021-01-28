@@ -33,6 +33,7 @@ use ir::{
         CompareFloatInstr,
         CompareIntInstr,
         ConstInstr,
+        DemoteFloatInstr,
         ExtendIntInstr,
         FloatInstr,
         FloatToIntInstr,
@@ -41,6 +42,7 @@ use ir::{
         IntInstr,
         IntToFloatInstr,
         PhiInstr,
+        PromoteFloatInstr,
         ReinterpretInstr,
         ReturnInstr,
         SelectInstr,
@@ -678,11 +680,15 @@ impl InterpretInstr for FloatInstr {
             FloatInstr::Compare(instr) => {
                 instr.interpret_instr(return_value, ctx, frame)
             }
-            FloatInstr::Demote(_instr) => unimplemented!(),
+            FloatInstr::Demote(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
             FloatInstr::FloatToInt(instr) => {
                 instr.interpret_instr(return_value, ctx, frame)
             }
-            FloatInstr::Promote(_instr) => unimplemented!(),
+            FloatInstr::Promote(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
             FloatInstr::Unary(instr) => {
                 instr.interpret_instr(return_value, ctx, frame)
             }
@@ -708,6 +714,48 @@ fn reg_f64(reg: u64) -> f64 {
 /// Converts the `f64` into a `u64` bits register.
 fn f64_reg(float: f64) -> u64 {
     float.to_bits()
+}
+
+impl InterpretInstr for DemoteFloatInstr {
+    fn interpret_instr(
+        &self,
+        return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let source = frame.read_register(self.src());
+        assert!(self.dst_type().bit_width() <= self.src_type().bit_width());
+        let result = match (self.src_type(), self.dst_type()) {
+            (FloatType::F64, FloatType::F32) => {
+                f32_reg(reg_f64(source) as f32)
+            }
+            _ => source,
+        };
+        frame.write_register(return_value, result);
+        Ok(InterpretationFlow::Continue)
+    }
+}
+
+impl InterpretInstr for PromoteFloatInstr {
+    fn interpret_instr(
+        &self,
+        return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let source = frame.read_register(self.src());
+        assert!(self.src_type().bit_width() <= self.dst_type().bit_width());
+        let result = match (self.src_type(), self.dst_type()) {
+            (FloatType::F32, FloatType::F64) => {
+                f64_reg(reg_f32(source) as f64)
+            }
+            _ => source,
+        };
+        frame.write_register(return_value, result);
+        Ok(InterpretationFlow::Continue)
+    }
 }
 
 impl InterpretInstr for CompareFloatInstr {
