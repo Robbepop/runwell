@@ -26,8 +26,6 @@ extern crate alloc;
 #[macro_use]
 mod index;
 pub mod builder;
-pub mod entity;
-pub mod ir;
 mod maybe_std;
 pub mod parse;
 

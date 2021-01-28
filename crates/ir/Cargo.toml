@@ -1,0 +1,24 @@
+[package]
+name = "runwell_ir"
+version = "0.1.0"
+authors = ["Robin Freyler <robin.freyler@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+entity = { package = "runwell_entity", path = "../entity" }
+derive_more = "0.99.2"
+cfg-if = "1"
+ahash = "0.6"
+
+[dev-dependencies]
+wabt = "0.10"
+anyhow = "1.0"
+wast = "32.0"
+wat = "1.0"
+
+[features]
+default = ["std"]
+bench = ["std"]
+std = []

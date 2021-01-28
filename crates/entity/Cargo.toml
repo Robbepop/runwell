@@ -1,5 +1,5 @@
 [package]
-name = "runwell"
+name = "runwell_entity"
 version = "0.1.0"
 authors = ["Robin Freyler <robin.freyler@gmail.com>"]
 edition = "2018"
