@@ -49,6 +49,7 @@ use entity::Idx;
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Instr = Idx<Instruction>;
 
+/// Builder guiding the construction of Runwell IR instructions.
 #[derive(Debug)]
 pub struct FunctionInstrBuilder<'a> {
     builder: &'a mut FunctionBuilder<state::Body>,
