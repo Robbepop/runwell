@@ -19,6 +19,7 @@ mod error;
 mod instruction;
 pub mod interpreter;
 pub mod primitive;
+mod store;
 
 use self::builder::Variable;
 pub use self::{

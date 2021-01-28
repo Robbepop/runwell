@@ -18,35 +18,14 @@ mod error;
 mod frame;
 mod instr;
 
-use crate::primitive::Func;
 pub use self::error::InterpretationError;
 pub(crate) use self::{
     frame::FunctionFrame,
     instr::{InterpretInstr, InterpretationFlow},
 };
 use super::{builder::Function, primitive::Value};
-use entity::{EntityArena, RawIdx};
-
-/// Holds all data that is immutable during a function evaluation.
-///
-/// This includes but is not limited to definitions of functions,
-/// linear memories, tables, global variables etc.
-#[derive(Debug, Default)]
-pub struct Store {
-    functions: EntityArena<Function>,
-}
-
-impl Store {
-    /// Pushes a function to the store and returns its key.
-    pub fn push_function(&mut self, function: Function) -> Func {
-        self.functions.alloc(function)
-    }
-
-    /// Returns a shared reference to the function associated to the given index.
-    pub fn get_fn(&self, func: Func) -> &Function {
-        &self.functions[func]
-    }
-}
+use crate::{primitive::Func, store::Store};
+use entity::RawIdx;
 
 /// The evaluation context for the entire virtual machine.
 ///

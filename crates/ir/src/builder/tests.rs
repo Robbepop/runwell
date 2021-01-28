@@ -26,8 +26,8 @@ use crate::{
     instruction::CompareIntOp,
     interpreter::{
         EvaluationContext,
-        Store,
     },
+    store::Store,
     primitive::{
         Const,
         IntConst,
