@@ -18,6 +18,9 @@ mod error;
 mod frame;
 mod instr;
 
+#[cfg(test)]
+mod tests;
+
 pub use self::error::InterpretationError;
 pub(crate) use self::{
     frame::FunctionFrame,

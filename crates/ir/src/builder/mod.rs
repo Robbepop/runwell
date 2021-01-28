@@ -17,9 +17,6 @@ mod function;
 mod instruction;
 mod variable;
 
-#[cfg(test)]
-mod tests;
-
 use self::function::state;
 pub use self::{
     error::{FunctionBuilderError, VariableAccess},
