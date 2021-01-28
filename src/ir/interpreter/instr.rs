@@ -31,6 +31,7 @@ use crate::{
             ReinterpretInstr,
             ReturnInstr,
             SelectInstr,
+            TailCallInstr,
             TerminalInstr,
             TruncateIntInstr,
             UnaryIntInstr,
@@ -169,6 +170,9 @@ impl InterpretInstr for TerminalInstr {
             }
             Self::Br(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::Ite(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::TailCall(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
             Self::BranchTable(_instr) => unimplemented!(),
         }
     }
@@ -215,6 +219,37 @@ impl InterpretInstr for IfThenElseInstr {
         };
         frame.switch_to_block(target);
         Ok(InterpretationFlow::Continue)
+    }
+}
+
+impl InterpretInstr for TailCallInstr {
+    fn interpret_instr(
+        &self,
+        _return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        // Store the function parameters in the first registers.
+        //
+        // The temporary buffer is required to avoid the problem of
+        // parameters overwriting each other. This may happen if the
+        // parameters are filled fom the same set of values that are
+        // acting as the tail called functions inputs.
+        //
+        // If we find the allocation and deallocation to slow down
+        // too much we could move the temporary buffer into `ctx`
+        // and make its allocation reusable.
+        let temp = self
+            .params()
+            .iter()
+            .copied()
+            .map(|param| frame.read_register(param))
+            .collect::<Vec<_>>();
+        for (n, param) in temp.iter().copied().enumerate() {
+            let param_value = Value::from_raw(RawIdx::from_u32(n as u32));
+            frame.write_register(param_value, param)
+        }
+        Ok(InterpretationFlow::TailCall(self.func()))
     }
 }
 

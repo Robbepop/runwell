@@ -90,18 +90,14 @@ impl<'a> EvaluationContext<'a> {
         O: FnMut(Value, u64),
     {
         let mut frame = self.create_frame();
-        let function = self.store.get_fn(func);
+        let mut function = self.store.get_fn(func);
         frame.initialize(function, inputs)?;
         loop {
             match function.interpret_instr(None, self, &mut frame)? {
                 InterpretationFlow::Continue => continue,
                 InterpretationFlow::Return => break,
-                InterpretationFlow::TailCall(_id) => {
-                    // TODO:
-                    //  - replace `fun` with the function associated to the ID
-                    //  - check if the inputs in the first N registers of `frame` match
-                    //    the new `fun` signature.
-                    unimplemented!()
+                InterpretationFlow::TailCall(func) => {
+                    function = &self.store.get_fn(func);
                 }
             }
         }
