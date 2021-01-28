@@ -86,36 +86,43 @@ impl<K, V> ComponentMap<Idx<K>, V> {
     /// Returns `true` if the key is valid for the secondary map.
     ///
     /// If the key is invalid the secondary map has to be enlarged to fit the key.
+    #[inline]
     pub fn contains_key(&self, key: Idx<K>) -> bool {
         self.components.contains_key(&key.into_raw())
     }
 
     /// Returns the number of components in the secondary map.
+    #[inline]
     pub fn len(&self) -> usize {
         self.components.len()
     }
 
     /// Returns `true` if there are no components in the secondary map.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.components.is_empty()
     }
 
     /// Inserts the component for the key and returns the previous component if any.
+    #[inline]
     pub fn insert(&mut self, key: Idx<K>, component: V) -> Option<V> {
         self.components.insert(key.into_raw(), component)
     }
 
     /// Removes the components for the key and returns the removed component if any.
+    #[inline]
     pub fn remove(&mut self, key: Idx<K>) -> Option<V> {
         self.components.remove(&key.into_raw())
     }
 
     /// Returns a shared reference to the component at the given key.
+    #[inline]
     pub fn get(&self, key: Idx<K>) -> Option<&V> {
         self.components.get(&key.into_raw())
     }
 
     /// Returns a exclusive reference to the component at the given key.
+    #[inline]
     pub fn get_mut(&mut self, key: Idx<K>) -> Option<&mut V> {
         self.components.get_mut(&key.into_raw())
     }
@@ -156,6 +163,7 @@ impl<K, V> ComponentMap<Idx<K>, V> {
     }
 
     /// Gets the given key's corresponding entry in the map for in-place manipulation.
+    #[inline]
     pub fn entry(&mut self, key: Idx<K>) -> Entry<K, V> {
         let key_index = key.into_raw();
         match self.components.entry(key_index) {
@@ -319,6 +327,7 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
 impl<K, V> Index<Idx<K>> for ComponentMap<Idx<K>, V> {
     type Output = V;
 
+    #[inline]
     fn index(&self, index: Idx<K>) -> &Self::Output {
         self.get(index)
             .expect("invalid key for sparsely stored component")
@@ -326,6 +335,7 @@ impl<K, V> Index<Idx<K>> for ComponentMap<Idx<K>, V> {
 }
 
 impl<K, V> IndexMut<Idx<K>> for ComponentMap<Idx<K>, V> {
+    #[inline]
     fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
         self.get_mut(index)
             .expect("invalid key for sparsely stored component")

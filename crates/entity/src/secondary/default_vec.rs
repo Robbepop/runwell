@@ -131,6 +131,7 @@ where
     }
 
     /// Clears the default component vector for reusing its memory.
+    #[inline]
     pub fn clear(&mut self) {
         self.components.clear();
     }
@@ -161,6 +162,7 @@ where
 {
     type Output = V;
 
+    #[inline]
     fn index(&self, index: Idx<K>) -> &Self::Output {
         self.get(index)
     }
@@ -170,6 +172,7 @@ impl<K, V> IndexMut<Idx<K>> for DefaultComponentVec<Idx<K>, V>
 where
     V: Default,
 {
+    #[inline]
     fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
         self.get_mut(index)
     }

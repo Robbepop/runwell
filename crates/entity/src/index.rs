@@ -49,6 +49,7 @@ impl RawIdx {
     /// # Panics
     ///
     /// If the given index is equal to `u32::MAX`.
+    #[inline]
     pub fn from_u32(index: u32) -> Self {
         Self {
             index: NonZeroU32::new(index.wrapping_add(1))
@@ -91,6 +92,7 @@ where
 
 impl<T> Idx<T> {
     /// Creates a new index from a [`RawIdx`].
+    #[inline]
     pub fn from_raw(raw: RawIdx) -> Self {
         Idx {
             raw,
@@ -99,12 +101,14 @@ impl<T> Idx<T> {
     }
 
     /// Converts this index into the underlying [`RawIdx`].
+    #[inline]
     pub fn into_raw(self) -> RawIdx {
         self.raw
     }
 }
 
 impl<T> Clone for Idx<T> {
+    #[inline]
     fn clone(&self) -> Self {
         *self
     }
@@ -113,6 +117,7 @@ impl<T> Clone for Idx<T> {
 impl<T> Copy for Idx<T> {}
 
 impl<T> PartialEq for Idx<T> {
+    #[inline]
     fn eq(&self, other: &Idx<T>) -> bool {
         self.raw == other.raw
     }
@@ -121,18 +126,21 @@ impl<T> PartialEq for Idx<T> {
 impl<T> Eq for Idx<T> {}
 
 impl<T> PartialOrd for Idx<T> {
+    #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.into_raw().partial_cmp(&other.into_raw())
     }
 }
 
 impl<T> Ord for Idx<T> {
+    #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         self.into_raw().cmp(&other.into_raw())
     }
 }
 
 impl<T> Hash for Idx<T> {
+    #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.raw.hash(state)
     }

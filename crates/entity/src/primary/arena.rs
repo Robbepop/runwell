@@ -70,6 +70,7 @@ impl<T> EntityArena<T> {
     /// The returned index can be used to query and mutate data of
     /// the entity and to add, remove or query associated components
     /// of it using secondary data structures.
+    #[inline]
     pub fn alloc(&mut self, entity: T) -> Idx<T> {
         let raw_idx = self.max_key();
         self.entities.push(entity);
@@ -104,17 +105,20 @@ impl<T> EntityArena<T> {
     }
 
     /// Returns `true` if the entity at the index has been allocated.
+    #[inline]
     pub fn contains_key(&self, index: Idx<T>) -> bool {
         index.into_raw() < self.max_key()
     }
 
     /// Returns a shared reference to the entity at the index if any.
+    #[inline]
     pub fn get(&self, index: Idx<T>) -> Option<&T> {
         let index = Self::idx_to_usize(index);
         self.entities.get(index)
     }
 
     /// Returns an exclusive reference to the entity at the index if any.
+    #[inline]
     pub fn get_mut(&mut self, index: Idx<T>) -> Option<&mut T> {
         let index = Self::idx_to_usize(index);
         self.entities.get_mut(index)
@@ -149,6 +153,7 @@ impl<T> EntityArena<T> {
 impl<T> Index<Idx<T>> for EntityArena<T> {
     type Output = T;
 
+    #[inline]
     fn index(&self, index: Idx<T>) -> &Self::Output {
         let index = Self::idx_to_usize(index);
         &self.entities[index]
@@ -156,6 +161,7 @@ impl<T> Index<Idx<T>> for EntityArena<T> {
 }
 
 impl<T> IndexMut<Idx<T>> for EntityArena<T> {
+    #[inline]
     fn index_mut(&mut self, index: Idx<T>) -> &mut Self::Output {
         let index = Self::idx_to_usize(index);
         &mut self.entities[index]
