@@ -15,21 +15,12 @@
 //! Map-like container to associate every entity to a component that is default initialized.
 
 use super::Immutable;
-use crate::entity::{
-    Idx,
-    RawIdx,
-};
+use crate::entity::{Idx, RawIdx};
 use core::{
     marker::PhantomData,
-    ops::{
-        Index,
-        IndexMut,
-    },
+    ops::{Index, IndexMut},
 };
-use std::{
-    collections::HashMap,
-    iter::FusedIterator,
-};
+use std::{collections::HashMap, iter::FusedIterator};
 
 /// Container where every entity has a component that is default initialized.
 ///

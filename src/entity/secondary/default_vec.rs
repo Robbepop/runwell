@@ -15,16 +15,10 @@
 //! Vector-like container to associate every entity to a component that is default initialized.
 
 use super::Immutable;
-use crate::entity::{
-    Idx,
-    RawIdx,
-};
+use crate::entity::{Idx, RawIdx};
 use core::{
     marker::PhantomData,
-    ops::{
-        Index,
-        IndexMut,
-    },
+    ops::{Index, IndexMut},
 };
 use std::iter::FusedIterator;
 
@@ -244,7 +238,9 @@ where
 {
     /// Creates a new default component vector components iterator.
     fn new(vec: &'a DefaultComponentVec<K, V>) -> Self {
-        Self { iter: Iter::new(vec) }
+        Self {
+            iter: Iter::new(vec),
+        }
     }
 }
 

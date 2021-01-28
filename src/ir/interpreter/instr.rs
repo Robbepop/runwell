@@ -72,7 +72,8 @@ pub enum InterpretationFlow {
     TailCall(Func),
 }
 
-const MISSING_RETURN_VALUE_ERRSTR: &str = "missing return value for returning instruction";
+const MISSING_RETURN_VALUE_ERRSTR: &str =
+    "missing return value for returning instruction";
 
 impl InterpretInstr for Instruction {
     fn interpret_instr(
@@ -244,22 +245,17 @@ impl InterpretInstr for CallInstr {
                 .copied()
                 .map(|param| frame.read_register(param)),
         )?;
-        ctx.evaluate_function_frame(
-            function,
-            &mut new_frame,
-            |result| {
-                // Actually this is wrong and we ideally should write
-                // the return value into `return_value` parameter.
-                // However, there is only one `return_value` parameter
-                // while there is an arbitrary amount of actual results.
-                //
-                // We need to adjust `interpret_instr` interace in order
-                // to take multiple return values into account.
-                let return_value = return_value
-                    .expect(MISSING_RETURN_VALUE_ERRSTR);
-                frame.write_register(return_value, result)
-            },
-        )?;
+        ctx.evaluate_function_frame(function, &mut new_frame, |result| {
+            // Actually this is wrong and we ideally should write
+            // the return value into `return_value` parameter.
+            // However, there is only one `return_value` parameter
+            // while there is an arbitrary amount of actual results.
+            //
+            // We need to adjust `interpret_instr` interace in order
+            // to take multiple return values into account.
+            let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+            frame.write_register(return_value, result)
+        })?;
         Ok(InterpretationFlow::Continue)
     }
 }

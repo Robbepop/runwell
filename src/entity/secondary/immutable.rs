@@ -21,7 +21,19 @@ use derive_more::{Display, From};
 /// references to default components in case of a missing component. This
 /// way those data structures can avoid mutations in `&self` methods such
 /// as access through their [`Index`][`core::ops::Index`] trait implementation.
-#[derive(Debug, Default, Display, Copy, Clone, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Default,
+    Display,
+    Copy,
+    Clone,
+    From,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+)]
 pub struct Immutable<T> {
     value: T,
 }
