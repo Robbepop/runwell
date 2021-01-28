@@ -18,7 +18,14 @@ use entity::RawIdx;
 use ir::{
     builder::Function,
     instr::{
-        operands::{BinaryIntOp, CompareIntOp, UnaryFloatOp, UnaryIntOp},
+        operands::{
+            BinaryFloatOp,
+            BinaryIntOp,
+            CompareIntOp,
+            UnaryFloatOp,
+            UnaryIntOp,
+        },
+        BinaryFloatInstr,
         BinaryIntInstr,
         BranchInstr,
         CallInstr,
@@ -661,7 +668,7 @@ impl InterpretInstr for FloatInstr {
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            FloatInstr::Binary(_instr) => unimplemented!(),
+            FloatInstr::Binary(instr) => instr.interpret_instr(return_value, ctx, frame),
             FloatInstr::Compare(_instr) => unimplemented!(),
             FloatInstr::Demote(_instr) => unimplemented!(),
             FloatInstr::FloatToInt(instr) => {
@@ -693,6 +700,56 @@ fn reg_f64(reg: u64) -> f64 {
 /// Converts the `f64` into a `u64` bits register.
 fn f64_reg(float: f64) -> u64 {
     float.to_bits()
+}
+
+impl InterpretInstr for BinaryFloatInstr {
+    fn interpret_instr(
+        &self,
+        return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let lhs = frame.read_register(self.lhs());
+        let rhs = frame.read_register(self.rhs());
+        use core::ops::{Add, Div, Mul, Sub};
+        use BinaryFloatOp as Op;
+        use FloatType::{F32, F64};
+        fn operate_f32<F>(lhs: u64, rhs: u64, op: F) -> u64
+        where
+            F: FnOnce(f32, f32) -> f32,
+        {
+            let lhs = reg_f32(lhs);
+            let rhs = reg_f32(rhs);
+            f32_reg(op(lhs, rhs))
+        }
+        fn operate_f64<F>(lhs: u64, rhs: u64, op: F) -> u64
+        where
+            F: FnOnce(f64, f64) -> f64,
+        {
+            let lhs = reg_f64(lhs);
+            let rhs = reg_f64(rhs);
+            f64_reg(op(lhs, rhs))
+        }
+        let result = match (self.ty(), self.op()) {
+            (F32, Op::Add) => operate_f32(lhs, rhs, f32::add),
+            (F64, Op::Add) => operate_f64(lhs, rhs, f64::add),
+            (F32, Op::Sub) => operate_f32(lhs, rhs, f32::sub),
+            (F64, Op::Sub) => operate_f64(lhs, rhs, f64::sub),
+            (F32, Op::Mul) => operate_f32(lhs, rhs, f32::mul),
+            (F64, Op::Mul) => operate_f64(lhs, rhs, f64::mul),
+            (F32, Op::Div) => operate_f32(lhs, rhs, f32::div),
+            (F64, Op::Div) => operate_f64(lhs, rhs, f64::div),
+            (F32, Op::Min) => operate_f32(lhs, rhs, f32::min),
+            (F64, Op::Min) => operate_f64(lhs, rhs, f64::min),
+            (F32, Op::Max) => operate_f32(lhs, rhs, f32::max),
+            (F64, Op::Max) => operate_f64(lhs, rhs, f64::max),
+            (F32, Op::CopySign) => operate_f32(lhs, rhs, f32::copysign),
+            (F64, Op::CopySign) => operate_f64(lhs, rhs, f64::copysign),
+        };
+        frame.write_register(return_value, result);
+        Ok(InterpretationFlow::Continue)
+    }
 }
 
 impl InterpretInstr for UnaryFloatInstr {
