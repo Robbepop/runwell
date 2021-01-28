@@ -21,6 +21,7 @@ use ir::{
         operands::{
             BinaryFloatOp,
             BinaryIntOp,
+            CompareFloatOp,
             CompareIntOp,
             UnaryFloatOp,
             UnaryIntOp,
@@ -29,6 +30,7 @@ use ir::{
         BinaryIntInstr,
         BranchInstr,
         CallInstr,
+        CompareFloatInstr,
         CompareIntInstr,
         ConstInstr,
         ExtendIntInstr,
@@ -129,7 +131,9 @@ impl InterpretInstr for Instruction {
                 instr.interpret_instr(return_value, ctx, frame)
             }
             Self::Int(instr) => instr.interpret_instr(return_value, ctx, frame),
-            Self::Float(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::Float(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
         }
     }
 }
@@ -668,8 +672,12 @@ impl InterpretInstr for FloatInstr {
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            FloatInstr::Binary(instr) => instr.interpret_instr(return_value, ctx, frame),
-            FloatInstr::Compare(_instr) => unimplemented!(),
+            FloatInstr::Binary(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            FloatInstr::Compare(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
             FloatInstr::Demote(_instr) => unimplemented!(),
             FloatInstr::FloatToInt(instr) => {
                 instr.interpret_instr(return_value, ctx, frame)
@@ -700,6 +708,53 @@ fn reg_f64(reg: u64) -> f64 {
 /// Converts the `f64` into a `u64` bits register.
 fn f64_reg(float: f64) -> u64 {
     float.to_bits()
+}
+
+impl InterpretInstr for CompareFloatInstr {
+    fn interpret_instr(
+        &self,
+        return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let lhs = frame.read_register(self.lhs());
+        let rhs = frame.read_register(self.rhs());
+        use CompareFloatOp as Op;
+        use FloatType::{F32, F64};
+        fn operate_f32<F>(lhs: u64, rhs: u64, op: F) -> u64
+        where
+            F: FnOnce(&f32, &f32) -> bool,
+        {
+            let lhs = reg_f32(lhs);
+            let rhs = reg_f32(rhs);
+            op(&lhs, &rhs) as u64
+        }
+        fn operate_f64<F>(lhs: u64, rhs: u64, op: F) -> u64
+        where
+            F: FnOnce(&f64, &f64) -> bool,
+        {
+            let lhs = reg_f64(lhs);
+            let rhs = reg_f64(rhs);
+            op(&lhs, &rhs) as u64
+        }
+        let result = match (self.ty(), self.op()) {
+            (F32, Op::Eq) => operate_f32(lhs, rhs, f32::eq),
+            (F64, Op::Eq) => operate_f64(lhs, rhs, f64::eq),
+            (F32, Op::Ne) => operate_f32(lhs, rhs, f32::ne),
+            (F64, Op::Ne) => operate_f64(lhs, rhs, f64::ne),
+            (F32, Op::Le) => operate_f32(lhs, rhs, f32::le),
+            (F64, Op::Le) => operate_f64(lhs, rhs, f64::le),
+            (F32, Op::Lt) => operate_f32(lhs, rhs, f32::lt),
+            (F64, Op::Lt) => operate_f64(lhs, rhs, f64::lt),
+            (F32, Op::Ge) => operate_f32(lhs, rhs, f32::ge),
+            (F64, Op::Ge) => operate_f64(lhs, rhs, f64::ge),
+            (F32, Op::Gt) => operate_f32(lhs, rhs, f32::gt),
+            (F64, Op::Gt) => operate_f64(lhs, rhs, f64::gt),
+        };
+        frame.write_register(return_value, result);
+        Ok(InterpretationFlow::Continue)
+    }
 }
 
 impl InterpretInstr for BinaryFloatInstr {
