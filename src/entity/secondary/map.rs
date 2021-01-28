@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Container to associate some entities to components in a sparse representation.
+
 use crate::entity::{Idx, RawIdx};
 use core::{
     iter::FusedIterator,
@@ -176,7 +178,7 @@ impl<K, V> ComponentMap<Idx<K>, V> {
     ///
     /// # Note
     ///
-    /// This operation might reallocate heap memory.
+    /// The operation may costly reallocate heap memory and copy its underlying components.
     pub fn shrink_to_fit(&mut self) {
         self.components.shrink_to_fit()
     }
