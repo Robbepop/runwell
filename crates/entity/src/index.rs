@@ -24,6 +24,11 @@ use core::{
     num::NonZeroU32,
 };
 
+/// A hook to customize the `Display` impl of type alises to `Idx`.
+pub trait DisplayHook: Sized {
+    fn fmt(idx: Idx<Self>, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+}
+
 /// The raw index of an entity.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RawIdx {
@@ -73,6 +78,15 @@ impl fmt::Display for RawIdx {
 pub struct Idx<T> {
     raw: RawIdx,
     marker: PhantomData<fn() -> T>,
+}
+
+impl<T> fmt::Display for Idx<T>
+where
+    T: DisplayHook,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        <T as DisplayHook>::fmt(*self, f)
+    }
 }
 
 impl<T> Idx<T> {
