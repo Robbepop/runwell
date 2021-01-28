@@ -56,6 +56,21 @@ impl LoadInstr {
         }
     }
 
+    /// Returns the address where to store the value in linear memory.
+    pub fn address(&self) -> Value {
+        self.address
+    }
+
+    /// Returns the address offset of the store instruction.
+    pub fn offset(&self) -> Const {
+        self.offset
+    }
+
+    /// Returns the type of the value that is stored in linear memory.
+    pub fn ty(&self) -> Type {
+        self.ty
+    }
+
     /// Replaces all values in the instruction using the replacer.
     ///
     /// Returns `true` if a value has been replaced in the instruction.
@@ -94,15 +109,26 @@ impl StoreInstr {
         }
     }
 
-    /// Returns the address where to store the value in the linear memory.
+    /// Returns the address where to store the value in linear memory.
     pub fn address(&self) -> Value {
         self.address
     }
 
-    /// Returns the value that is to be stored in the linear memory.
+    /// Returns the address offset of the store instruction.
+    pub fn offset(&self) -> Const {
+        self.offset
+    }
+
+    /// Returns the value that is to be stored in linear memory.
     pub fn value(&self) -> Value {
         self.value
     }
+
+    /// Returns the type of the value that is stored in linear memory.
+    pub fn ty(&self) -> Type {
+        self.ty
+    }
+
     /// Replaces all values in the instruction using the replacer.
     ///
     /// Returns `true` if a value has been replaced in the instruction.
