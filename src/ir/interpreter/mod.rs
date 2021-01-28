@@ -18,9 +18,9 @@ mod error;
 mod frame;
 mod instr;
 
-pub(in crate::ir) use self::frame::FunctionFrame;
-pub use self::{
-    error::InterpretationError,
+pub use self::error::InterpretationError;
+pub(in crate::ir) use self::{
+    frame::FunctionFrame,
     instr::{InterpretInstr, InterpretationFlow},
 };
 use super::{builder::Function, primitive::Value};
