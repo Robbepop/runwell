@@ -71,6 +71,8 @@ pub enum InterpretationFlow {
     TailCall(Func),
 }
 
+const MISSING_RETURN_VALUE_ERRSTR: &str = "missing return value for returning instruction";
+
 impl InterpretInstr for Instruction {
     fn interpret_instr(
         &self,
@@ -113,7 +115,7 @@ impl InterpretInstr for PhiInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let last_block = frame
             .last_block()
             .expect("phi instruction is missing predecessor");
@@ -133,7 +135,7 @@ impl InterpretInstr for ConstInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         frame.write_register(return_value, self.const_value().into_bits64());
         Ok(InterpretationFlow::Continue)
     }
@@ -146,7 +148,7 @@ impl InterpretInstr for SelectInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let condition = frame.read_register(self.condition());
         let result_value = if condition != 0 {
             self.true_value()
@@ -289,7 +291,7 @@ impl InterpretInstr for ReinterpretInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
         debug_assert_eq!(
             self.src_type().bit_width(),
@@ -338,7 +340,7 @@ impl InterpretInstr for UnaryIntInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
         let result = match self.op() {
             UnaryIntOp::LeadingZeros => source.leading_zeros(),
@@ -357,7 +359,7 @@ impl InterpretInstr for TruncateIntInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
         debug_assert!(
             self.dst_type().bit_width() <= self.src_type().bit_width()
@@ -383,7 +385,7 @@ impl InterpretInstr for ExtendIntInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
         debug_assert!(
             self.src_type().bit_width() <= self.dst_type().bit_width()
@@ -435,7 +437,7 @@ impl InterpretInstr for IntToFloatInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use IntType::{I16, I32, I64, I8};
@@ -474,7 +476,7 @@ impl InterpretInstr for CompareIntInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use CompareIntOp as Op;
@@ -555,7 +557,7 @@ impl InterpretInstr for BinaryIntInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect("missing value for instruction");
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use core::ops::{BitAnd, BitOr, BitXor};
