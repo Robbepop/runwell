@@ -230,15 +230,19 @@ impl InterpretInstr for CallInstr {
         ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let params = self
-            .params()
-            .iter()
-            .copied()
-            .map(|param| frame.read_register(param))
-            .collect::<Vec<_>>();
-        ctx.evaluate_function(self.func(), params, |value, result| {
-            frame.write_register(value, result)
-        })?;
+        let mut temp = ctx.create_stack();
+        temp.extend(
+            self.params()
+                .iter()
+                .copied()
+                .map(|param| frame.read_register(param)),
+        );
+        ctx.evaluate_function(
+            self.func(),
+            temp.iter().copied(),
+            |value, result| frame.write_register(value, result),
+        )?;
+        ctx.release_stack(temp);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -247,7 +251,7 @@ impl InterpretInstr for TailCallInstr {
     fn interpret_instr(
         &self,
         _return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
+        ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         // Store the function parameters in the first registers.
@@ -260,16 +264,18 @@ impl InterpretInstr for TailCallInstr {
         // If we find the allocation and deallocation to slow down
         // too much we could move the temporary buffer into `ctx`
         // and make its allocation reusable.
-        let temp = self
-            .params()
-            .iter()
-            .copied()
-            .map(|param| frame.read_register(param))
-            .collect::<Vec<_>>();
+        let mut temp = ctx.create_stack();
+        temp.extend(
+            self.params()
+                .iter()
+                .copied()
+                .map(|param| frame.read_register(param)),
+        );
         for (n, param) in temp.iter().copied().enumerate() {
             let param_value = Value::from_raw(RawIdx::from_u32(n as u32));
             frame.write_register(param_value, param)
         }
+        ctx.release_stack(temp);
         Ok(InterpretationFlow::TailCall(self.func()))
     }
 }
