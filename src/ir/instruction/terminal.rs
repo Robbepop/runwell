@@ -12,9 +12,62 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{Block, Value};
+use super::CallInstr;
+use crate::ir::{
+    interpreter::Func,
+    primitive::{Block, Value},
+};
 use core::fmt::Display;
 use derive_more::{Display, From};
+
+/// A tail call instruction.
+#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TailCallInstr {
+    /// The underlying call instruction.
+    instr: CallInstr,
+}
+
+impl Display for TailCallInstr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "tail{}", self.instr)
+    }
+}
+
+impl TailCallInstr {
+    /// Creates a new tail call instruction to call the indexed function using the given parameters.
+    fn new<I>(func: Func, call_params: I) -> Self
+    where
+        I: IntoIterator<Item = Value>,
+    {
+        Self {
+            instr: CallInstr::new(func, call_params),
+        }
+    }
+
+    /// Returns the called function index.
+    pub fn func(&self) -> Func {
+        self.instr.func()
+    }
+
+    /// Returns the function call parameters.
+    pub fn params(&self) -> &[Value] {
+        self.instr.params()
+    }
+
+    /// Replaces all values in the instruction using the replacer.
+    ///
+    /// Returns `true` if a value has been replaced in the instruction.
+    ///
+    /// # Note
+    ///
+    /// By contract the replacer returns `true` if replacement happened.
+    pub fn replace_value<F>(&mut self, replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        self.instr.replace_value(replace)
+    }
+}
 
 /// A terminal SSA instruction.
 ///
@@ -27,6 +80,7 @@ pub enum TerminalInstr {
     Return(ReturnInstr),
     Br(BranchInstr),
     Ite(IfThenElseInstr),
+    TailCall(TailCallInstr),
     BranchTable(BranchTableInstr),
 }
 
@@ -47,6 +101,7 @@ impl TerminalInstr {
             Self::Return(instr) => instr.replace_value(replace),
             Self::Br(_instr) => false,
             Self::Ite(instr) => instr.replace_value(replace),
+            Self::TailCall(instr) => instr.replace_value(replace),
             Self::BranchTable(instr) => instr.replace_value(replace),
         }
     }

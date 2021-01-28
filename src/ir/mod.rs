@@ -69,6 +69,7 @@ pub mod instr {
         ReturnInstr,
         SelectInstr,
         StoreInstr,
+        TailCallInstr,
         TerminalInstr,
         TruncateIntInstr,
         UnaryFloatInstr,
