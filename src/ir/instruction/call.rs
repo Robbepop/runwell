@@ -59,8 +59,8 @@ impl CallInstr {
 
 impl Display for CallInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "call {} [ ", self.func)?;
-        if let Some((fst, rest)) = self.call_params.split_first() {
+        write!(f, "call {} [ ", self.func())?;
+        if let Some((fst, rest)) = self.params().split_first() {
             write!(f, "{}", fst)?;
             for param in rest {
                 write!(f, ", {}", param)?;
