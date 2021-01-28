@@ -75,7 +75,7 @@ impl fmt::Display for RawIdx {
 }
 
 /// The index of an entity allocated in an entity arena that holds `T`s.
-pub struct Idx<T> {
+pub struct Idx<T: ?Sized> {
     raw: RawIdx,
     marker: PhantomData<fn() -> T>,
 }
