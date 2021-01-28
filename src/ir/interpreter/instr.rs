@@ -79,7 +79,7 @@ impl InterpretInstr for Instruction {
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            Self::Call(_instr) => unimplemented!(),
+            Self::Call(instr) => instr.interpret_instr(return_value, ctx, frame),
             Self::CallIndirect(_instr) => unimplemented!(),
             Self::Const(instr) => {
                 instr.interpret_instr(return_value, ctx, frame)
