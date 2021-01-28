@@ -121,7 +121,7 @@ where
     fn get(&self, key: Idx<K>) -> &V {
         self.components
             .get(Self::key_to_index(key))
-            .unwrap_or_else(|| &self.prototype)
+            .unwrap_or(&self.prototype)
     }
 
     /// Returns an exclusive reference to the entity at the key.

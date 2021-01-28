@@ -98,7 +98,7 @@ where
     fn get(&self, key: Idx<K>) -> &V {
         self.components
             .get(&key.into_raw())
-            .unwrap_or_else(|| &self.prototype)
+            .unwrap_or(&self.prototype)
     }
 
     /// Returns an exclusive reference to the entity at the key.
