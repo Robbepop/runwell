@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ir::primitive::{Const, Type, Value};
 use derive_more::{Display, Error};
+use ir::primitive::{Const, Type, Value};
 
 /// An error that may occure while evaluating a function.
 #[derive(Debug, Display, Error, PartialEq, Eq, Hash)]

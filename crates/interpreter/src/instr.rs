@@ -13,9 +13,12 @@
 // limitations under the License.
 
 use super::{EvaluationContext, Func, FunctionFrame, InterpretationError};
+use core::mem::replace;
+use entity::RawIdx;
 use ir::{
     builder::Function,
     instr::{
+        operands::{BinaryIntOp, CompareIntOp, UnaryIntOp},
         BinaryIntInstr,
         BranchInstr,
         CallInstr,
@@ -36,11 +39,8 @@ use ir::{
         TruncateIntInstr,
         UnaryIntInstr,
     },
-    instr::operands::{BinaryIntOp, CompareIntOp, UnaryIntOp},
     primitive::{FloatType, IntType, Value},
 };
-use core::mem::replace;
-use entity::RawIdx;
 
 /// Implemented by Runwell IR instructions to make them interpretable.
 pub trait InterpretInstr {

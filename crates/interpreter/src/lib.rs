@@ -26,9 +26,12 @@ use self::{
     frame::FunctionFrame,
     instr::{InterpretInstr, InterpretationFlow},
 };
-use ir::{builder::Function, primitive::Value};
-use ir::{primitive::Func, Store};
 use entity::RawIdx;
+use ir::{
+    builder::Function,
+    primitive::{Func, Value},
+    Store,
+};
 
 /// The evaluation context for the entire virtual machine.
 ///
