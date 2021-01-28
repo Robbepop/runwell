@@ -41,6 +41,7 @@ use crate::{
         primitive::{FloatType, IntType, Value},
     },
 };
+use core::mem::replace;
 
 /// Implemented by Runwell IR instructions to make them interpretable.
 pub trait InterpretInstr {
@@ -230,23 +231,35 @@ impl InterpretInstr for IfThenElseInstr {
 impl InterpretInstr for CallInstr {
     fn interpret_instr(
         &self,
-        _return_return_value: Option<Value>,
+        return_value: Option<Value>,
         ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let mut temp = ctx.create_stack();
-        temp.extend(
+        let mut new_frame = ctx.create_frame();
+        let function = ctx.store.get_fn(self.func());
+        new_frame.initialize(
+            function,
             self.params()
                 .iter()
                 .copied()
                 .map(|param| frame.read_register(param)),
-        );
-        ctx.evaluate_function(
-            self.func(),
-            temp.iter().copied(),
-            |value, result| frame.write_register(value, result),
         )?;
-        ctx.release_stack(temp);
+        ctx.evaluate_function_frame(
+            function,
+            &mut new_frame,
+            |result| {
+                // Actually this is wrong and we ideally should write
+                // the return value into `return_value` parameter.
+                // However, there is only one `return_value` parameter
+                // while there is an arbitrary amount of actual results.
+                //
+                // We need to adjust `interpret_instr` interace in order
+                // to take multiple return values into account.
+                let return_value = return_value
+                    .expect(MISSING_RETURN_VALUE_ERRSTR);
+                frame.write_register(return_value, result)
+            },
+        )?;
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -258,28 +271,26 @@ impl InterpretInstr for TailCallInstr {
         ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        // Store the function parameters in the first registers.
+        // Create a new function frame and load input parameters into it.
+        // We cannot do this within the current frame since we might risk
+        // overriding inputs with each other.
+        // The old frame is released before continuing execution to have
+        // efficient tail calls without exploding the frame stack.
+        // In a tail call recursion this caching would result in similar
+        // behavior as using two ping-pong buffers.
         //
-        // The temporary buffer is required to avoid the problem of
-        // parameters overwriting each other. This may happen if the
-        // parameters are filled fom the same set of values that are
-        // acting as the tail called functions inputs.
-        //
-        // If we find the allocation and deallocation to slow down
-        // too much we could move the temporary buffer into `ctx`
-        // and make its allocation reusable.
-        let mut temp = ctx.create_stack();
-        temp.extend(
+        // Since function frames are cached reusing them is very cheap.
+        let mut new_frame = ctx.create_frame();
+        let function = ctx.store.get_fn(self.func());
+        new_frame.initialize(
+            function,
             self.params()
                 .iter()
                 .copied()
                 .map(|param| frame.read_register(param)),
-        );
-        for (n, param) in temp.iter().copied().enumerate() {
-            let param_value = Value::from_raw(RawIdx::from_u32(n as u32));
-            frame.write_register(param_value, param)
-        }
-        ctx.release_stack(temp);
+        )?;
+        let old_frame = replace(frame, new_frame);
+        ctx.release_frame(old_frame);
         Ok(InterpretationFlow::TailCall(self.func()))
     }
 }
