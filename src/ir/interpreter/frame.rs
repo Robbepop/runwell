@@ -14,7 +14,7 @@
 
 use super::InterpretationError;
 use crate::{
-    entity::{ComponentVec, RawIdx},
+    entity::{DefaultComponentVec, RawIdx},
     ir::{
         builder::Function,
         primitive::{Block, Value},
@@ -33,7 +33,7 @@ pub struct FunctionFrame {
     /// For every return value `i` the `i`-th register is set
     /// to its respective returned value right before the function
     /// returns control back to the caller.
-    registers: ComponentVec<Value, u64>,
+    registers: DefaultComponentVec<Value, u64>,
     /// The index of the currently executed instruction
     /// of the currently executed basic block.
     instruction_counter: usize,
@@ -115,7 +115,7 @@ impl FunctionFrame {
 
     /// Writes the given bits into the register for the given value.
     pub fn write_register(&mut self, value: Value, bits: u64) {
-        self.registers.insert(value, bits);
+        self.registers[value] = bits;
     }
 
     /// Returns the bits in the register for the given value.
