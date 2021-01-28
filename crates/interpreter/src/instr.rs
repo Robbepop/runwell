@@ -652,25 +652,55 @@ impl InterpretInstr for BinaryIntInstr {
 }
 
 impl InterpretInstr for FloatToIntInstr {
+    /// WebAssembly instructions that map to `FloatTotIntInstr`:
+    ///
+    /// `f32` conversion to `i32` and `i64`:
+    ///  - `f32.convert_i32_s`
+    ///  - `f32.convert_i32_u`
+    ///  - `f32.convert_i64_s`
+    ///  - `f32.convert_i64_u`
+    ///
+    /// `f64` conversion to `i32` and `i64`:
+    ///  - `f64.convert_i32_s`
+    ///  - `f64.convert_i32_u`
+    ///  - `f64.convert_i64_s`
+    ///  - `f64.convert_i64_u`
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
+        return_value: Option<Value>,
         _ctx: &mut EvaluationContext,
-        _frame: &mut FunctionFrame,
+        frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        // WebAssembly instructions that map to FloatTotIntInstr:
-        //
-        // f32 conversion to i32 and i64:
-        //  - f32.convert_i32_s
-        //  - f32.convert_i32_u
-        //  - f32.convert_i64_s
-        //  - f32.convert_i64_u
-        //
-        // f64 conversion to i32 and i64:
-        //  - f64.convert_i32_s
-        //  - f64.convert_i32_u
-        //  - f64.convert_i64_s
-        //  - f64.convert_i64_u
-        unimplemented!()
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let source = frame.read_register(self.src());
+        use FloatType::{F32, F64};
+        use IntType::{I16, I32, I64, I8};
+        fn reg_f32(reg: u64) -> f32 { f32::from_bits(reg as u32) }
+        fn reg_f64(reg: u64) -> f64 { f64::from_bits(reg) }
+        let result = match (self.is_signed(), self.src_type(), self.dst_type())
+        {
+            // f32 -> uN
+            (false, F32, I8) => reg_f32(source) as u8 as u64,
+            (false, F32, I16) => reg_f32(source) as u16 as u64,
+            (false, F32, I32) => reg_f32(source) as u32 as u64,
+            (false, F32, I64) => reg_f32(source) as u64,
+            // f64 -> uN
+            (false, F64, I8) => reg_f64(source) as u8 as u64,
+            (false, F64, I16) => reg_f64(source) as u16 as u64,
+            (false, F64, I32) => reg_f64(source) as u32 as u64,
+            (false, F64, I64) => reg_f64(source) as u64,
+            // f32 -> iN
+            (true, F32, I8) => reg_f32(source) as i8 as u8 as u64,
+            (true, F32, I16) => reg_f32(source) as i16 as u16 as u64,
+            (true, F32, I32) => reg_f32(source) as i32 as u32 as u64,
+            (true, F32, I64) => reg_f32(source) as i64 as u64,
+            // f64 -> iN
+            (true, F64, I8) => reg_f64(source) as i8 as u8 as u64,
+            (true, F64, I16) => reg_f64(source) as i16 as u16 as u64,
+            (true, F64, I32) => reg_f64(source) as i32 as u32 as u64,
+            (true, F64, I64) => reg_f64(source) as i64 as u64,
+        };
+        frame.write_register(return_value, result as u64);
+        Ok(InterpretationFlow::Continue)
     }
 }
