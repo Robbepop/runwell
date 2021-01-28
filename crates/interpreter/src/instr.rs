@@ -18,13 +18,14 @@ use entity::RawIdx;
 use ir::{
     builder::Function,
     instr::{
-        operands::{BinaryIntOp, CompareIntOp, UnaryIntOp},
+        operands::{BinaryIntOp, CompareIntOp, UnaryFloatOp, UnaryIntOp},
         BinaryIntInstr,
         BranchInstr,
         CallInstr,
         CompareIntInstr,
         ConstInstr,
         ExtendIntInstr,
+        FloatInstr,
         FloatToIntInstr,
         IfThenElseInstr,
         Instruction,
@@ -37,6 +38,7 @@ use ir::{
         TailCallInstr,
         TerminalInstr,
         TruncateIntInstr,
+        UnaryFloatInstr,
         UnaryIntInstr,
     },
     primitive::{FloatType, IntType, Value},
@@ -47,7 +49,7 @@ pub trait InterpretInstr {
     /// Evaluates the function given the interpretation context.
     fn interpret_instr(
         &self,
-        return_return_value: Option<Value>,
+        return_value: Option<Value>,
         ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError>;
@@ -651,6 +653,93 @@ impl InterpretInstr for BinaryIntInstr {
     }
 }
 
+impl InterpretInstr for FloatInstr {
+    fn interpret_instr(
+        &self,
+        return_value: Option<Value>,
+        ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        match self {
+            FloatInstr::Binary(_instr) => unimplemented!(),
+            FloatInstr::Compare(_instr) => unimplemented!(),
+            FloatInstr::Demote(_instr) => unimplemented!(),
+            FloatInstr::FloatToInt(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            FloatInstr::Promote(_instr) => unimplemented!(),
+            FloatInstr::Unary(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+        }
+    }
+}
+
+/// Converts the register `u64` bits into a `f32` float.
+fn reg_f32(reg: u64) -> f32 {
+    f32::from_bits(reg as u32)
+}
+
+/// Converts the `f32` into a `u64` bits register.
+fn f32_reg(float: f32) -> u64 {
+    float.to_bits() as u64
+}
+
+/// Converts the register `u64` bits into a `f64` float.
+fn reg_f64(reg: u64) -> f64 {
+    f64::from_bits(reg)
+}
+
+/// Converts the `f64` into a `u64` bits register.
+fn f64_reg(float: f64) -> u64 {
+    float.to_bits()
+}
+
+impl InterpretInstr for UnaryFloatInstr {
+    fn interpret_instr(
+        &self,
+        return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let source = frame.read_register(self.src());
+        use FloatType::{F32, F64};
+        use UnaryFloatOp as Op;
+        fn operate_f32<F>(reg: u64, op: F) -> u64
+        where
+            F: FnOnce(f32) -> f32,
+        {
+            f32_reg(op(reg_f32(reg)))
+        }
+        fn operate_f64<F>(reg: u64, op: F) -> u64
+        where
+            F: FnOnce(f64) -> f64,
+        {
+            f64_reg(op(reg_f64(reg)))
+        }
+        use core::ops::Neg;
+        let result = match (self.ty(), self.op()) {
+            (F32, Op::Abs) => operate_f32(source, f32::abs),
+            (F64, Op::Abs) => operate_f64(source, f64::abs),
+            (F32, Op::Neg) => operate_f32(source, f32::neg),
+            (F64, Op::Neg) => operate_f64(source, f64::neg),
+            (F32, Op::Sqrt) => operate_f32(source, f32::sqrt),
+            (F64, Op::Sqrt) => operate_f64(source, f64::sqrt),
+            (F32, Op::Ceil) => operate_f32(source, f32::ceil),
+            (F64, Op::Ceil) => operate_f64(source, f64::ceil),
+            (F32, Op::Floor) => operate_f32(source, f32::floor),
+            (F64, Op::Floor) => operate_f64(source, f64::floor),
+            (F32, Op::Truncate) => operate_f32(source, f32::trunc),
+            (F64, Op::Truncate) => operate_f64(source, f64::trunc),
+            (F32, Op::Nearest) => operate_f32(source, f32::round),
+            (F64, Op::Nearest) => operate_f64(source, f64::round),
+        };
+        frame.write_register(return_value, result);
+        Ok(InterpretationFlow::Continue)
+    }
+}
+
 impl InterpretInstr for FloatToIntInstr {
     /// WebAssembly instructions that map to `FloatTotIntInstr`:
     ///
@@ -675,8 +764,6 @@ impl InterpretInstr for FloatToIntInstr {
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use IntType::{I16, I32, I64, I8};
-        fn reg_f32(reg: u64) -> f32 { f32::from_bits(reg as u32) }
-        fn reg_f64(reg: u64) -> f64 { f64::from_bits(reg) }
         let result = match (self.is_signed(), self.src_type(), self.dst_type())
         {
             // f32 -> uN
