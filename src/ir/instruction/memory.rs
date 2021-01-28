@@ -120,7 +120,6 @@ impl StoreInstr {
         }
     }
 
-
     /// Returns the address where to store the value in the linear memory.
     pub fn address(&self) -> Value {
         self.address

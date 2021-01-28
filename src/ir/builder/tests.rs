@@ -39,13 +39,12 @@ fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
     let func = store.push_function(function);
     let mut ctx = EvaluationContext::new(&store);
     let mut results = Vec::new();
-    ctx
-        .evaluate_function(
-            func,
-            inputs.iter().copied().map(Const::into_bits64),
-            |_, result| results.push(result),
-        )
-        .unwrap();
+    ctx.evaluate_function(
+        func,
+        inputs.iter().copied().map(Const::into_bits64),
+        |_, result| results.push(result),
+    )
+    .unwrap();
     results
 }
 
@@ -231,21 +230,11 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
     let func = store.push_function(function);
     let mut ctx = EvaluationContext::new(&store);
     let mut results = Vec::new();
-    ctx
-        .evaluate_function(
-            func,
-            vec![0],
-            |_, result| results.push(result),
-        )
+    ctx.evaluate_function(func, vec![0], |_, result| results.push(result))
         .unwrap();
     assert_eq!(results, vec![10]);
     results.clear();
-    ctx
-        .evaluate_function(
-            func,
-            vec![1],
-            |_, result| results.push(result),
-        )
+    ctx.evaluate_function(func, vec![1], |_, result| results.push(result))
         .unwrap();
     assert_eq!(results, vec![20]);
 
@@ -297,8 +286,9 @@ fn simple_loop_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let iterations = 100;
-    let results = evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
+    let iterations = 100_000_000;
+    let results =
+        evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
     assert_eq!(results, vec![iterations as u64]);
 
     Ok(())

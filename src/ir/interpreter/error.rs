@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ir::primitive::{Const, Value, Type};
+use crate::ir::primitive::{Const, Type, Value};
 use derive_more::{Display, Error};
 
 /// An error that may occure while evaluating a function.
@@ -51,10 +51,10 @@ pub enum InterpretationError {
     #[display(
         fmt = "provided {} inputs for a function evaluation but require {}",
         given_inputs,
-        required_inputs,
+        required_inputs
     )]
     UnmatchingInputValues {
         given_inputs: usize,
         required_inputs: usize,
-    }
+    },
 }
