@@ -87,21 +87,25 @@ impl CompareIntInstr {
     }
 
     /// Returns the compare operand of the instruction.
+    #[inline]
     pub fn op(&self) -> CompareIntOp {
         self.op
     }
 
     /// Returns the left-hand side value.
+    #[inline]
     pub fn lhs(&self) -> Value {
         self.lhs
     }
 
     /// Returns the right-hand side value.
+    #[inline]
     pub fn rhs(&self) -> Value {
         self.rhs
     }
 
     /// Returns the integer type of the instruction.
+    #[inline]
     pub fn ty(&self) -> IntType {
         self.ty
     }

@@ -57,11 +57,13 @@ impl ConstInstr {
     }
 
     /// Returns the type of the constant value of the constant instruction.
+    #[inline]
     pub fn ty(&self) -> Type {
         self.const_value.ty()
     }
 
     /// Returns the constant value of the constant instruction.
+    #[inline]
     pub fn const_value(&self) -> Const {
         self.const_value
     }

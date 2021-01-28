@@ -62,6 +62,7 @@ impl PhiInstr {
     }
 
     /// Returns the operand for the given block if any.
+    #[inline]
     pub fn operand_for(&self, block: Block) -> Option<Value> {
         self.operands.get(&block).copied()
     }

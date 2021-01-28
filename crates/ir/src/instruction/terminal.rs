@@ -118,6 +118,7 @@ impl ReturnInstr {
     }
 
     /// Returns the value that is returned by the instruction.
+    #[inline]
     pub fn return_value(&self) -> Value {
         self.return_value
     }
@@ -151,6 +152,7 @@ impl BranchInstr {
     }
 
     /// Returns the target block to jump to.
+    #[inline]
     pub fn target(&self) -> Block {
         self.target
     }
@@ -176,16 +178,19 @@ impl IfThenElseInstr {
     }
 
     /// Returns the condition value of the if-then-else instruction.
+    #[inline]
     pub fn condition(&self) -> Value {
         self.condition
     }
 
     /// Returns the block to jump to in case the condition evaluates to `true`.
+    #[inline]
     pub fn true_target(&self) -> Block {
         self.br_then
     }
 
     /// Returns the block to jump to in case the condition evaluates to `false`.
+    #[inline]
     pub fn false_target(&self) -> Block {
         self.br_else
     }

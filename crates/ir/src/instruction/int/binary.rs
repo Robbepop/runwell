@@ -107,21 +107,25 @@ impl BinaryIntInstr {
     }
 
     /// Returns the binary operand of the instruction.
+    #[inline]
     pub fn op(&self) -> BinaryIntOp {
         self.op
     }
 
     /// Returns the left-hand side value.
+    #[inline]
     pub fn lhs(&self) -> Value {
         self.lhs
     }
 
     /// Returns the right-hand side value.
+    #[inline]
     pub fn rhs(&self) -> Value {
         self.rhs
     }
 
     /// Returns the integer type of the instruction.
+    #[inline]
     pub fn ty(&self) -> IntType {
         self.ty
     }
