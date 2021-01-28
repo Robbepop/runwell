@@ -36,6 +36,9 @@ pub struct RawIdx {
 }
 
 impl RawIdx {
+    /// The maximum `u32` raw value that is allows as underlying value for `RawIdx`.
+    pub const MAX_U32: u32 = u32::MAX - 1;
+
     /// Constructs a raw index from an `u32` value.
     ///
     /// # Panics

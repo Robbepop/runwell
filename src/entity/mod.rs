@@ -25,7 +25,15 @@ pub mod secondary;
 mod tests;
 
 pub use self::{
-    index::{Idx, RawIdx},
+    index::{
+        Idx,
+        RawIdx,
+    },
     primary::EntityArena,
-    secondary::{ComponentMap, ComponentVec},
+    secondary::{
+        ComponentMap,
+        ComponentVec,
+        DefaultComponentMap,
+        DefaultComponentVec,
+    },
 };
