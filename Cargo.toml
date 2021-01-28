@@ -2,5 +2,6 @@
 members = [
     "crates/entity",
     "crates/ir",
+    "crates/interpreter",
     "crates/wasm",
 ]
