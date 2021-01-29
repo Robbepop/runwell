@@ -577,16 +577,10 @@ macro_rules! impl_primitive_integer_for {
                 fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
                 fn wrapping_mul(self, rhs: Self) -> Self { self.wrapping_mul(rhs) }
                 fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError> {
-                    if rhs == 0 {
-                        return Err(InterpretationError::DivisionByZero)
-                    }
-                    Ok(self.wrapping_div(rhs))
+                    self.checked_div(rhs).ok_or(InterpretationError::DivisionByZero)
                 }
                 fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError> {
-                    if rhs == 0 {
-                        return Err(InterpretationError::DivisionByZero)
-                    }
-                    Ok(self.wrapping_rem(rhs))
+                    self.checked_div(rhs).ok_or(InterpretationError::DivisionByZero)
                 }
             }
         )*
