@@ -566,8 +566,8 @@ pub trait PrimitiveInteger: Copy {
     fn wrapping_add(self, rhs: Self) -> Self;
     fn wrapping_sub(self, rhs: Self) -> Self;
     fn wrapping_mul(self, rhs: Self) -> Self;
-    fn wrapping_div(self, rhs: Self) -> Self;
-    fn wrapping_rem(self, rhs: Self) -> Self;
+    fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError>;
+    fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError>;
 }
 macro_rules! impl_primitive_integer_for {
     ( $( $type:ty ),* $(,)? ) => {
@@ -576,8 +576,18 @@ macro_rules! impl_primitive_integer_for {
                 fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
                 fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
                 fn wrapping_mul(self, rhs: Self) -> Self { self.wrapping_mul(rhs) }
-                fn wrapping_div(self, rhs: Self) -> Self { self.wrapping_div(rhs) }
-                fn wrapping_rem(self, rhs: Self) -> Self { self.wrapping_rem(rhs) }
+                fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError> {
+                    if rhs == 0 {
+                        return Err(InterpretationError::DivisionByZero)
+                    }
+                    Ok(self.wrapping_div(rhs))
+                }
+                fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError> {
+                    if rhs == 0 {
+                        return Err(InterpretationError::DivisionByZero)
+                    }
+                    Ok(self.wrapping_rem(rhs))
+                }
             }
         )*
     };
@@ -606,7 +616,7 @@ impl InterpretInstr for BinaryIntInstr {
             rhs: U,
             mut u2s: F,
             mut s2u: V,
-        ) -> U
+        ) -> Result<U, InterpretationError>
         where
             U: PrimitiveInteger
                 + BitAnd<Output = U>
@@ -619,45 +629,46 @@ impl InterpretInstr for BinaryIntInstr {
             F: FnMut(U) -> S,
             V: FnMut(S) -> U,
         {
-            match op {
+            let result = match op {
                 Op::Add => lhs.wrapping_add(rhs),
                 Op::Sub => lhs.wrapping_sub(rhs),
                 Op::Mul => lhs.wrapping_mul(rhs),
-                Op::Sdiv => s2u(u2s(lhs).wrapping_div(u2s(rhs))),
-                Op::Srem => s2u(u2s(lhs).wrapping_rem(u2s(rhs))),
-                Op::Udiv => lhs.wrapping_div(rhs),
-                Op::Urem => lhs.wrapping_rem(rhs),
+                Op::Sdiv => s2u(u2s(lhs).checked_div(u2s(rhs))?),
+                Op::Srem => s2u(u2s(lhs).checked_rem(u2s(rhs))?),
+                Op::Udiv => lhs.checked_div(rhs)?,
+                Op::Urem => lhs.checked_rem(rhs)?,
                 Op::And => lhs & rhs,
                 Op::Or => lhs | rhs,
                 Op::Xor => lhs ^ rhs,
                 _ => unimplemented!(),
-            }
+            };
+            Ok(result)
         }
         let result = match self.ty() {
             IntType::I8 => {
                 let lhs = lhs as u8;
                 let rhs = rhs as u8;
                 let result =
-                    compute(self.op(), lhs, rhs, |u| u as i8, |s| s as u8);
+                    compute(self.op(), lhs, rhs, |u| u as i8, |s| s as u8)?;
                 result as u64
             }
             IntType::I16 => {
                 let lhs = lhs as u16;
                 let rhs = rhs as u16;
                 let result =
-                    compute(self.op(), lhs, rhs, |u| u as i16, |s| s as u16);
+                    compute(self.op(), lhs, rhs, |u| u as i16, |s| s as u16)?;
                 result as u64
             }
             IntType::I32 => {
                 let lhs = lhs as u32;
                 let rhs = rhs as u32;
                 let result =
-                    compute(self.op(), lhs, rhs, |u| u as i32, |s| s as u32);
+                    compute(self.op(), lhs, rhs, |u| u as i32, |s| s as u32)?;
                 result as u64
             }
             IntType::I64 => {
                 let result =
-                    compute(self.op(), lhs, rhs, |u| u as i64, |s| s as u64);
+                    compute(self.op(), lhs, rhs, |u| u as i64, |s| s as u64)?;
                 result as u64
             }
         };
@@ -837,8 +848,22 @@ impl InterpretInstr for BinaryFloatInstr {
             (F64, Op::Sub) => operate_f64(lhs, rhs, f64::sub),
             (F32, Op::Mul) => operate_f32(lhs, rhs, f32::mul),
             (F64, Op::Mul) => operate_f64(lhs, rhs, f64::mul),
-            (F32, Op::Div) => operate_f32(lhs, rhs, f32::div),
-            (F64, Op::Div) => operate_f64(lhs, rhs, f64::div),
+            (F32, Op::Div) => {
+                let lhs = reg_f32(lhs);
+                let rhs = reg_f32(rhs);
+                if rhs.abs() == 0.0 {
+                    return Err(InterpretationError::DivisionByZero)
+                }
+                f32_reg(f32::div(lhs, rhs))
+            }
+            (F64, Op::Div) => {
+                let lhs = reg_f64(lhs);
+                let rhs = reg_f64(rhs);
+                if rhs.abs() == 0.0 {
+                    return Err(InterpretationError::DivisionByZero)
+                }
+                f64_reg(f64::div(lhs, rhs))
+            }
             (F32, Op::Min) => operate_f32(lhs, rhs, f32::min),
             (F64, Op::Min) => operate_f64(lhs, rhs, f64::min),
             (F32, Op::Max) => operate_f32(lhs, rhs, f32::max),
