@@ -51,7 +51,7 @@ pub use self::{
         UnaryIntOp,
     },
     memory::{
-        Alignment,
+        HeapAddr,
         LoadInstr,
         MemoryGrowInstr,
         MemorySizeInstr,

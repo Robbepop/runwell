@@ -21,12 +21,7 @@ pub mod primitive;
 mod store;
 
 use self::builder::Variable;
-pub use self::{
-    builder::FunctionBuilderError,
-    error::IrError,
-    instruction::Alignment,
-    store::Store,
-};
+pub use self::{builder::FunctionBuilderError, error::IrError, store::Store};
 
 /// All Runwell IR SSA instructions.
 pub mod instr {
@@ -57,6 +52,7 @@ pub mod instr {
         ExtendIntInstr,
         FloatInstr,
         FloatToIntInstr,
+        HeapAddr,
         IfThenElseInstr,
         Instruction,
         IntInstr,

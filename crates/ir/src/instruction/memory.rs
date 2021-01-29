@@ -12,26 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{Const, Mem, Type, Value};
-use derive_more::Display;
+use crate::primitive::{Mem, Type, Value};
+use derive_more::{Display, From};
 
-/// Represents the alignment of a store or load instruction.
-///
-/// The alignment is stored as `N` in `2^N`.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Alignment {
-    value: u8,
+/// An immediate `u32` value of a Runwell IR instruction.
+#[derive(
+    Debug, Copy, Clone, Display, PartialEq, Eq, PartialOrd, Ord, Hash, From,
+)]
+pub struct ImmU32 {
+    /// The underlying `u32` value.
+    value: u32,
 }
 
-impl Alignment {
-    /// Creates a new alignment from the given value.
-    pub fn new(value: u8) -> Self {
-        Self { value }
+/// Returns a pointer from the heap at the given location.
+///
+/// Checks if the range `ptr..ptr+size` is within bounds of the target heap memory.
+/// The `load` and `store` instructions can use the address value returned by
+/// this instruction in order to load or store values from and to the heap memory.
+///
+/// Traps if `ptr..ptr+size` is not within bounds for the target heap memory.
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[display(fmt = "heap_addr {}[{}..{}+{}]", heap, ptr, ptr, size)]
+pub struct HeapAddr {
+    heap: Mem,
+    ptr: Value,
+    size: ImmU32,
+}
+
+impl HeapAddr {
+    /// Creates a new heap addressing instruction.
+    ///
+    /// For more information visit [`HeapAddr`].
+    pub fn new(heap: Mem, ptr: Value, size: ImmU32) -> Self {
+        Self { heap, ptr, size }
     }
 
-    /// Returns the alignment in bytes.
-    pub fn get_in_bytes(&self) -> u32 {
-        1u32.wrapping_shl(self.value as u32)
+    /// Returns index of the heap to index into.
+    pub fn heap(&self) -> Mem {
+        self.heap
+    }
+
+    /// Returns the pointer where to index into the linear memory.
+    pub fn ptr(&self) -> Value {
+        self.ptr
+    }
+
+    /// Returns the size of the area to allow indexing into the linear memory.
+    pub fn size(&self) -> ImmU32 {
+        self.size
     }
 }
 
@@ -41,14 +69,14 @@ impl Alignment {
 pub struct LoadInstr {
     ty: Type,
     address: Value,
-    offset: Const,
+    offset: ImmU32,
 }
 
 impl LoadInstr {
     /// Creates a new load instruction.
     ///
     /// Loads a value of type `ty` from the given memory at the given address.
-    pub fn new(ty: Type, address: Value, offset: Const) -> Self {
+    pub fn new(ty: Type, address: Value, offset: ImmU32) -> Self {
         Self {
             ty,
             address,
@@ -62,7 +90,7 @@ impl LoadInstr {
     }
 
     /// Returns the address offset of the store instruction.
-    pub fn offset(&self) -> Const {
+    pub fn offset(&self) -> ImmU32 {
         self.offset
     }
 
@@ -91,7 +119,7 @@ impl LoadInstr {
 #[display(fmt = "store {} {} from {}+{}", ty, value, address, offset)]
 pub struct StoreInstr {
     address: Value,
-    offset: Const,
+    offset: ImmU32,
     value: Value,
     ty: Type,
 }
@@ -100,7 +128,7 @@ impl StoreInstr {
     /// Creates a new store instruction.
     ///
     /// Stores the value to the given memory at the given address with alignment.
-    pub fn new(address: Value, offset: Const, value: Value, ty: Type) -> Self {
+    pub fn new(address: Value, offset: ImmU32, value: Value, ty: Type) -> Self {
         Self {
             address,
             offset,
@@ -115,7 +143,7 @@ impl StoreInstr {
     }
 
     /// Returns the address offset of the store instruction.
-    pub fn offset(&self) -> Const {
+    pub fn offset(&self) -> ImmU32 {
         self.offset
     }
 
