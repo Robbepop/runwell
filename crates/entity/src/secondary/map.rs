@@ -192,6 +192,24 @@ impl<K, V> ComponentMap<Idx<K>, V> {
     }
 }
 
+impl<K, V> Index<Idx<K>> for ComponentMap<Idx<K>, V> {
+    type Output = V;
+
+    #[inline]
+    fn index(&self, index: Idx<K>) -> &Self::Output {
+        self.get(index)
+            .expect("invalid key for sparsely stored component")
+    }
+}
+
+impl<K, V> IndexMut<Idx<K>> for ComponentMap<Idx<K>, V> {
+    #[inline]
+    fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
+        self.get_mut(index)
+            .expect("invalid key for sparsely stored component")
+    }
+}
+
 impl<'a, K, V> IntoIterator for &'a ComponentMap<Idx<K>, V> {
     type Item = (Idx<K>, &'a V);
     type IntoIter = Iter<'a, K, V>;
@@ -339,24 +357,6 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
     /// Sets the value of the entry with the VacantEntry's key, and returns a mutable reference to it.
     pub fn insert(self, value: V) -> &'a mut V {
         self.vacant.insert(value)
-    }
-}
-
-impl<K, V> Index<Idx<K>> for ComponentMap<Idx<K>, V> {
-    type Output = V;
-
-    #[inline]
-    fn index(&self, index: Idx<K>) -> &Self::Output {
-        self.get(index)
-            .expect("invalid key for sparsely stored component")
-    }
-}
-
-impl<K, V> IndexMut<Idx<K>> for ComponentMap<Idx<K>, V> {
-    #[inline]
-    fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
-        self.get_mut(index)
-            .expect("invalid key for sparsely stored component")
     }
 }
 

@@ -238,6 +238,24 @@ impl<K, V> ComponentVec<Idx<K>, V> {
     }
 }
 
+impl<K, V> Index<Idx<K>> for ComponentVec<Idx<K>, V> {
+    type Output = V;
+
+    #[inline]
+    fn index(&self, index: Idx<K>) -> &Self::Output {
+        self.get(index)
+            .expect("invalid key for densely stored component")
+    }
+}
+
+impl<K, V> IndexMut<Idx<K>> for ComponentVec<Idx<K>, V> {
+    #[inline]
+    fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
+        self.get_mut(index)
+            .expect("invalid key for densely stored component")
+    }
+}
+
 impl<'a, K, V> IntoIterator for &'a ComponentVec<Idx<K>, V> {
     type Item = (Idx<K>, &'a V);
     type IntoIter = Iter<'a, K, V>;
@@ -402,24 +420,6 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
         self.vec.components[<ComponentVec<Idx<K>, V>>::key_to_index(self.key)]
             .as_mut()
             .expect("unexpected missing component that has just been inserted")
-    }
-}
-
-impl<K, V> Index<Idx<K>> for ComponentVec<Idx<K>, V> {
-    type Output = V;
-
-    #[inline]
-    fn index(&self, index: Idx<K>) -> &Self::Output {
-        self.get(index)
-            .expect("invalid key for densely stored component")
-    }
-}
-
-impl<K, V> IndexMut<Idx<K>> for ComponentVec<Idx<K>, V> {
-    #[inline]
-    fn index_mut(&mut self, index: Idx<K>) -> &mut Self::Output {
-        self.get_mut(index)
-            .expect("invalid key for densely stored component")
     }
 }
 
