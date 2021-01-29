@@ -41,8 +41,6 @@ pub struct HeapAddr {
 
 impl HeapAddr {
     /// Creates a new heap addressing instruction.
-    ///
-    /// For more information visit [`HeapAddr`].
     pub fn new(heap: Mem, ptr: Value, size: ImmU32) -> Self {
         Self { heap, ptr, size }
     }
@@ -74,8 +72,6 @@ pub struct LoadInstr {
 
 impl LoadInstr {
     /// Creates a new load instruction.
-    ///
-    /// Loads a value of type `ty` from the given memory at the given address.
     pub fn new(ty: Type, address: Value, offset: ImmU32) -> Self {
         Self {
             ty,
@@ -126,8 +122,6 @@ pub struct StoreInstr {
 
 impl StoreInstr {
     /// Creates a new store instruction.
-    ///
-    /// Stores the value to the given memory at the given address with alignment.
     pub fn new(address: Value, offset: ImmU32, value: Value, ty: Type) -> Self {
         Self {
             address,
