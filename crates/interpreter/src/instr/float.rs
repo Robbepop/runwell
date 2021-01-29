@@ -22,11 +22,7 @@ use super::{
 };
 use ir::{
     instr::{
-        operands::{
-            BinaryFloatOp,
-            CompareFloatOp,
-            UnaryFloatOp,
-        },
+        operands::{BinaryFloatOp, CompareFloatOp, UnaryFloatOp},
         BinaryFloatInstr,
         CompareFloatInstr,
         DemoteFloatInstr,

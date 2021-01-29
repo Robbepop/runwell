@@ -57,8 +57,6 @@ pub enum InterpretationError {
         given_inputs: usize,
         required_inputs: usize,
     },
-    #[display(
-        fmt = "encountered division by zero"
-    )]
+    #[display(fmt = "encountered division by zero")]
     DivisionByZero,
 }
