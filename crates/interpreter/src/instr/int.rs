@@ -322,16 +322,17 @@ impl InterpretInstr for BinaryIntInstr {
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use core::ops::{BitAnd, BitOr, BitXor};
-        use BinaryIntOp as Op;
+        use BinaryIntOp::*;
         use IntType::{I16, I32, I64, I8};
-        fn compute<T, F>(lhs: u64, rhs: u64, f: F) -> u64
+        use PrimitiveInteger as PrimInt;
+        fn eval<T, F>(lhs: u64, rhs: u64, f: F) -> u64
         where
             T: PrimitiveInteger,
             F: FnOnce(T, T) -> T,
         {
             f(T::from_reg(lhs), T::from_reg(rhs)).into_reg()
         }
-        fn compute_checked<T, F>(
+        fn eval_div<T, F>(
             lhs: u64,
             rhs: u64,
             f: F,
@@ -342,7 +343,7 @@ impl InterpretInstr for BinaryIntInstr {
         {
             Ok(f(T::from_reg(lhs), T::from_reg(rhs))?.into_reg())
         }
-        fn compute_shift<T, F>(lhs: u64, rhs: u64, f: F) -> u64
+        fn eval_shift<T, F>(lhs: u64, rhs: u64, f: F) -> u64
         where
             T: PrimitiveInteger,
             F: FnOnce(T, u32) -> T,
@@ -350,162 +351,66 @@ impl InterpretInstr for BinaryIntInstr {
             f(T::from_reg(lhs), rhs as u32).into_reg()
         }
         let result = match (self.op(), self.ty()) {
-            (Op::Add, I8) => compute(lhs, rhs, u8::wrapping_add),
-            (Op::Add, I16) => compute(lhs, rhs, u16::wrapping_add),
-            (Op::Add, I32) => compute(lhs, rhs, u32::wrapping_add),
-            (Op::Add, I64) => compute(lhs, rhs, u64::wrapping_add),
-            (Op::Sub, I8) => compute(lhs, rhs, u8::wrapping_sub),
-            (Op::Sub, I16) => compute(lhs, rhs, u16::wrapping_sub),
-            (Op::Sub, I32) => compute(lhs, rhs, u32::wrapping_sub),
-            (Op::Sub, I64) => compute(lhs, rhs, u64::wrapping_sub),
-            (Op::Mul, I8) => compute(lhs, rhs, u8::wrapping_mul),
-            (Op::Mul, I16) => compute(lhs, rhs, u16::wrapping_mul),
-            (Op::Mul, I32) => compute(lhs, rhs, u32::wrapping_mul),
-            (Op::Mul, I64) => compute(lhs, rhs, u64::wrapping_mul),
-            (Op::Sdiv, I8) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i8 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Sdiv, I16) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i16 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Sdiv, I32) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i32 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Sdiv, I64) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i64 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Udiv, I8) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u8 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Udiv, I16) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u16 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Udiv, I32) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u32 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Udiv, I64) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u64 as PrimitiveInteger>::checked_div,
-                )?
-            }
-            (Op::Srem, I8) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i8 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::Srem, I16) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i16 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::Srem, I32) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i32 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::Srem, I64) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <i64 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::Urem, I8) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u8 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::Urem, I16) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u16 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::Urem, I32) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u32 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::Urem, I64) => {
-                compute_checked(
-                    lhs,
-                    rhs,
-                    <u64 as PrimitiveInteger>::checked_rem,
-                )?
-            }
-            (Op::And, I8) => compute(lhs, rhs, u8::bitand),
-            (Op::And, I16) => compute(lhs, rhs, u16::bitand),
-            (Op::And, I32) => compute(lhs, rhs, u32::bitand),
-            (Op::And, I64) => compute(lhs, rhs, u64::bitand),
-            (Op::Or, I8) => compute(lhs, rhs, u8::bitor),
-            (Op::Or, I16) => compute(lhs, rhs, u16::bitor),
-            (Op::Or, I32) => compute(lhs, rhs, u32::bitor),
-            (Op::Or, I64) => compute(lhs, rhs, u64::bitor),
-            (Op::Xor, I8) => compute(lhs, rhs, u8::bitxor),
-            (Op::Xor, I16) => compute(lhs, rhs, u16::bitxor),
-            (Op::Xor, I32) => compute(lhs, rhs, u32::bitxor),
-            (Op::Xor, I64) => compute(lhs, rhs, u64::bitxor),
-            (Op::Shl, I8) => compute_shift(lhs, rhs, u8::wrapping_shl),
-            (Op::Shl, I16) => compute_shift(lhs, rhs, u16::wrapping_shl),
-            (Op::Shl, I32) => compute_shift(lhs, rhs, u32::wrapping_shl),
-            (Op::Shl, I64) => compute_shift(lhs, rhs, u64::wrapping_shl),
-            (Op::Sshr, I8) => compute_shift(lhs, rhs, i8::wrapping_shr),
-            (Op::Sshr, I16) => compute_shift(lhs, rhs, i16::wrapping_shr),
-            (Op::Sshr, I32) => compute_shift(lhs, rhs, i32::wrapping_shr),
-            (Op::Sshr, I64) => compute_shift(lhs, rhs, i64::wrapping_shr),
-            (Op::Ushr, I8) => compute_shift(lhs, rhs, u8::wrapping_shr),
-            (Op::Ushr, I16) => compute_shift(lhs, rhs, u16::wrapping_shr),
-            (Op::Ushr, I32) => compute_shift(lhs, rhs, u32::wrapping_shr),
-            (Op::Ushr, I64) => compute_shift(lhs, rhs, u64::wrapping_shr),
-            (Op::Rotl, I8) => compute_shift(lhs, rhs, u8::rotate_left),
-            (Op::Rotl, I16) => compute_shift(lhs, rhs, u16::rotate_left),
-            (Op::Rotl, I32) => compute_shift(lhs, rhs, u32::rotate_left),
-            (Op::Rotl, I64) => compute_shift(lhs, rhs, u64::rotate_left),
-            (Op::Rotr, I8) => compute_shift(lhs, rhs, u8::rotate_right),
-            (Op::Rotr, I16) => compute_shift(lhs, rhs, u16::rotate_right),
-            (Op::Rotr, I32) => compute_shift(lhs, rhs, u32::rotate_right),
-            (Op::Rotr, I64) => compute_shift(lhs, rhs, u64::rotate_right),
+            (Add, I8) => eval(lhs, rhs, u8::wrapping_add),
+            (Add, I16) => eval(lhs, rhs, u16::wrapping_add),
+            (Add, I32) => eval(lhs, rhs, u32::wrapping_add),
+            (Add, I64) => eval(lhs, rhs, u64::wrapping_add),
+            (Sub, I8) => eval(lhs, rhs, u8::wrapping_sub),
+            (Sub, I16) => eval(lhs, rhs, u16::wrapping_sub),
+            (Sub, I32) => eval(lhs, rhs, u32::wrapping_sub),
+            (Sub, I64) => eval(lhs, rhs, u64::wrapping_sub),
+            (Mul, I8) => eval(lhs, rhs, u8::wrapping_mul),
+            (Mul, I16) => eval(lhs, rhs, u16::wrapping_mul),
+            (Mul, I32) => eval(lhs, rhs, u32::wrapping_mul),
+            (Mul, I64) => eval(lhs, rhs, u64::wrapping_mul),
+            (Sdiv, I8) => eval_div(lhs, rhs, <i8 as PrimInt>::checked_div)?,
+            (Sdiv, I16) => eval_div(lhs, rhs, <i16 as PrimInt>::checked_div)?,
+            (Sdiv, I32) => eval_div(lhs, rhs, <i32 as PrimInt>::checked_div)?,
+            (Sdiv, I64) => eval_div(lhs, rhs, <i64 as PrimInt>::checked_div)?,
+            (Udiv, I8) => eval_div(lhs, rhs, <u8 as PrimInt>::checked_div)?,
+            (Udiv, I16) => eval_div(lhs, rhs, <u16 as PrimInt>::checked_div)?,
+            (Udiv, I32) => eval_div(lhs, rhs, <u32 as PrimInt>::checked_div)?,
+            (Udiv, I64) => eval_div(lhs, rhs, <u64 as PrimInt>::checked_div)?,
+            (Srem, I8) => eval_div(lhs, rhs, <i8 as PrimInt>::checked_rem)?,
+            (Srem, I16) => eval_div(lhs, rhs, <i16 as PrimInt>::checked_rem)?,
+            (Srem, I32) => eval_div(lhs, rhs, <i32 as PrimInt>::checked_rem)?,
+            (Srem, I64) => eval_div(lhs, rhs, <i64 as PrimInt>::checked_rem)?,
+            (Urem, I8) => eval_div(lhs, rhs, <u8 as PrimInt>::checked_rem)?,
+            (Urem, I16) => eval_div(lhs, rhs, <u16 as PrimInt>::checked_rem)?,
+            (Urem, I32) => eval_div(lhs, rhs, <u32 as PrimInt>::checked_rem)?,
+            (Urem, I64) => eval_div(lhs, rhs, <u64 as PrimInt>::checked_rem)?,
+            (And, I8) => eval(lhs, rhs, u8::bitand),
+            (And, I16) => eval(lhs, rhs, u16::bitand),
+            (And, I32) => eval(lhs, rhs, u32::bitand),
+            (And, I64) => eval(lhs, rhs, u64::bitand),
+            (Or, I8) => eval(lhs, rhs, u8::bitor),
+            (Or, I16) => eval(lhs, rhs, u16::bitor),
+            (Or, I32) => eval(lhs, rhs, u32::bitor),
+            (Or, I64) => eval(lhs, rhs, u64::bitor),
+            (Xor, I8) => eval(lhs, rhs, u8::bitxor),
+            (Xor, I16) => eval(lhs, rhs, u16::bitxor),
+            (Xor, I32) => eval(lhs, rhs, u32::bitxor),
+            (Xor, I64) => eval(lhs, rhs, u64::bitxor),
+            (Shl, I8) => eval_shift(lhs, rhs, u8::wrapping_shl),
+            (Shl, I16) => eval_shift(lhs, rhs, u16::wrapping_shl),
+            (Shl, I32) => eval_shift(lhs, rhs, u32::wrapping_shl),
+            (Shl, I64) => eval_shift(lhs, rhs, u64::wrapping_shl),
+            (Sshr, I8) => eval_shift(lhs, rhs, i8::wrapping_shr),
+            (Sshr, I16) => eval_shift(lhs, rhs, i16::wrapping_shr),
+            (Sshr, I32) => eval_shift(lhs, rhs, i32::wrapping_shr),
+            (Sshr, I64) => eval_shift(lhs, rhs, i64::wrapping_shr),
+            (Ushr, I8) => eval_shift(lhs, rhs, u8::wrapping_shr),
+            (Ushr, I16) => eval_shift(lhs, rhs, u16::wrapping_shr),
+            (Ushr, I32) => eval_shift(lhs, rhs, u32::wrapping_shr),
+            (Ushr, I64) => eval_shift(lhs, rhs, u64::wrapping_shr),
+            (Rotl, I8) => eval_shift(lhs, rhs, u8::rotate_left),
+            (Rotl, I16) => eval_shift(lhs, rhs, u16::rotate_left),
+            (Rotl, I32) => eval_shift(lhs, rhs, u32::rotate_left),
+            (Rotl, I64) => eval_shift(lhs, rhs, u64::rotate_left),
+            (Rotr, I8) => eval_shift(lhs, rhs, u8::rotate_right),
+            (Rotr, I16) => eval_shift(lhs, rhs, u16::rotate_right),
+            (Rotr, I32) => eval_shift(lhs, rhs, u32::rotate_right),
+            (Rotr, I64) => eval_shift(lhs, rhs, u64::rotate_right),
         };
         frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
