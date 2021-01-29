@@ -63,13 +63,13 @@ pub enum BinaryIntOp {
     /// # Note
     ///
     /// The operation is preserving the sign of the left-hand side integer.
-    Sshlr,
+    Sshr,
     /// Shifts the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
     ///
     /// # Note
     ///
     /// The operation is not preserving the sign of the left-hand side integer.
-    Ushlr,
+    Ushr,
     /// Rotates the bits of the left-hand side integer to the left by the amount of the right-hand side integer value.
     Rotl,
     /// Rotates the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
@@ -90,8 +90,8 @@ impl Display for BinaryIntOp {
             Self::Or => "ior",
             Self::Xor => "ixor",
             Self::Shl => "ishl",
-            Self::Sshlr => "sshlr",
-            Self::Ushlr => "ushlr",
+            Self::Sshr => "sshr",
+            Self::Ushr => "ushr",
             Self::Rotl => "irotl",
             Self::Rotr => "irotr",
         };
