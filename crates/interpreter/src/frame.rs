@@ -98,7 +98,7 @@ impl FunctionFrame {
     }
 
     /// Resets the interpretation context so that it can evaluate a new function.
-    pub fn reset(&mut self) {
+    fn reset(&mut self) {
         self.registers.clear();
         self.last_block = None;
         self.instruction_counter = 0;
