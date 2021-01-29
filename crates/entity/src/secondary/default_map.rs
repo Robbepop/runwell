@@ -113,12 +113,12 @@ where
     }
 
     /// Returns an iterator yielding the components of the default component vector.
-    pub fn components(&self) -> Components<Idx<K>, V> {
+    pub fn components(&self) -> Components<K, V> {
         Components::new(self)
     }
 
     /// Returns an iterator yielding the indices and components of the default component vector.
-    pub fn iter(&self) -> Iter<Idx<K>, V> {
+    pub fn iter(&self) -> Iter<K, V> {
         Iter::new(self)
     }
 
@@ -154,6 +154,18 @@ where
     }
 }
 
+impl<'a, K, V> IntoIterator for &'a DefaultComponentMap<Idx<K>, V>
+where
+    V: Default,
+{
+    type Item = (Idx<K>, &'a V);
+    type IntoIter = Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 /// Iterator over the indices and components of a default component map.
 ///
 /// # Note
@@ -162,7 +174,7 @@ where
 /// user normally wants since they eagerly iterate over the entire key space of their
 /// entity which yields approx 2^32 components in total.
 pub struct Iter<'a, K, V> {
-    vec: &'a DefaultComponentMap<K, V>,
+    vec: &'a DefaultComponentMap<Idx<K>, V>,
     current: u32,
 }
 
@@ -171,12 +183,12 @@ where
     V: Default,
 {
     /// Creates a new default component map iterator.
-    fn new(vec: &'a DefaultComponentMap<K, V>) -> Self {
+    fn new(vec: &'a DefaultComponentMap<Idx<K>, V>) -> Self {
         Self { vec, current: 0 }
     }
 }
 
-impl<'a, K, V> Iterator for Iter<'a, Idx<K>, V>
+impl<'a, K, V> Iterator for Iter<'a, K, V>
 where
     V: Default,
 {
@@ -197,8 +209,8 @@ where
     }
 }
 
-impl<'a, K, V> FusedIterator for Iter<'a, Idx<K>, V> where V: Default {}
-impl<'a, K, V> ExactSizeIterator for Iter<'a, Idx<K>, V> where V: Default {}
+impl<'a, K, V> FusedIterator for Iter<'a, K, V> where V: Default {}
+impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where V: Default {}
 
 /// Iterator over the components of a default component map.
 ///
@@ -216,14 +228,14 @@ where
     V: Default,
 {
     /// Creates a new default component map components iterator.
-    fn new(vec: &'a DefaultComponentMap<K, V>) -> Self {
+    fn new(vec: &'a DefaultComponentMap<Idx<K>, V>) -> Self {
         Self {
             iter: Iter::new(vec),
         }
     }
 }
 
-impl<'a, K, V> Iterator for Components<'a, Idx<K>, V>
+impl<'a, K, V> Iterator for Components<'a, K, V>
 where
     V: Default,
 {
@@ -238,5 +250,5 @@ where
     }
 }
 
-impl<'a, K, V> FusedIterator for Components<'a, Idx<K>, V> where V: Default {}
-impl<'a, K, V> ExactSizeIterator for Components<'a, Idx<K>, V> where V: Default {}
+impl<'a, K, V> FusedIterator for Components<'a, K, V> where V: Default {}
+impl<'a, K, V> ExactSizeIterator for Components<'a, K, V> where V: Default {}

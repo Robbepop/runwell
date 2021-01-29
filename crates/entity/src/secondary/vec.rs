@@ -238,6 +238,24 @@ impl<K, V> ComponentVec<Idx<K>, V> {
     }
 }
 
+impl<'a, K, V> IntoIterator for &'a ComponentVec<Idx<K>, V> {
+    type Item = (Idx<K>, &'a V);
+    type IntoIter = Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, K, V> IntoIterator for &'a mut ComponentVec<Idx<K>, V> {
+    type Item = (Idx<K>, &'a mut V);
+    type IntoIter = IterMut<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
 /// A view into a single entry in a map, which may either be vacant or occupied.
 ///
 /// This enum is constructed from the entry method on `ComponentVec`.

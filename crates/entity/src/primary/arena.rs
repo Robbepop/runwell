@@ -178,3 +178,21 @@ impl<T> FromIterator<T> for EntityArena<T> {
         }
     }
 }
+
+impl<'a, T> IntoIterator for &'a EntityArena<T> {
+    type Item = (Idx<T>, &'a T);
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut EntityArena<T> {
+    type Item = (Idx<T>, &'a mut T);
+    type IntoIter = IterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
