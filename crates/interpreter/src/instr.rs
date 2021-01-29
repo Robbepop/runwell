@@ -561,21 +561,41 @@ impl InterpretInstr for CompareIntInstr {
     }
 }
 
+#[rustfmt::skip]
+mod conv {
+    pub fn reg_to_i8(reg: u64) -> i8 { reg as u8 as i8 }
+    pub fn reg_to_i16(reg: u64) -> i16 { reg as u16 as i16 }
+    pub fn reg_to_i32(reg: u64) -> i32 { reg as u32 as i32 }
+    pub fn reg_to_i64(reg: u64) -> i64 { reg as u64 as i64 }
+    pub fn reg_to_u8(reg: u64) -> u8 { reg as u8 }
+    pub fn reg_to_u16(reg: u64) -> u16 { reg as u16 }
+    pub fn reg_to_u32(reg: u64) -> u32 { reg as u32 }
+    pub fn reg_to_u64(reg: u64) -> u64 { reg }
+    pub fn i8_to_reg(val: i8) -> u64 { val as u8 as u64 }
+    pub fn i16_to_reg(val: i16) -> u64 { val as u16 as u64 }
+    pub fn i32_to_reg(val: i32) -> u64 { val as u32 as u64 }
+    pub fn i64_to_reg(val: i64) -> u64 { val as u64 }
+    pub fn u8_to_reg(val: u8) -> u64 { val as u64 }
+    pub fn u16_to_reg(val: u16) -> u64 { val as u64 }
+    pub fn u32_to_reg(val: u32) -> u64 { val as u64 }
+    pub fn u64_to_reg(val: u64) -> u64 { val }
+}
+
 /// Trait used to streamline operations on primitive types.
 pub trait PrimitiveInteger: Copy {
-    fn wrapping_add(self, rhs: Self) -> Self;
-    fn wrapping_sub(self, rhs: Self) -> Self;
-    fn wrapping_mul(self, rhs: Self) -> Self;
+    fn from_reg(reg: u64) -> Self;
+    fn into_reg(self) -> u64;
+
     fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError>;
     fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError>;
 }
 macro_rules! impl_primitive_integer_for {
-    ( $( $type:ty ),* $(,)? ) => {
+    ( $( ($type:ty, $reg_to_val:ident, $val_to_reg:ident) ),* $(,)? ) => {
         $(
             impl PrimitiveInteger for $type {
-                fn wrapping_add(self, rhs: Self) -> Self { self.wrapping_add(rhs) }
-                fn wrapping_sub(self, rhs: Self) -> Self { self.wrapping_sub(rhs) }
-                fn wrapping_mul(self, rhs: Self) -> Self { self.wrapping_mul(rhs) }
+                fn from_reg(reg: u64) -> Self { conv::$reg_to_val(reg) }
+                fn into_reg(self) -> u64 { conv::$val_to_reg(self) }
+
                 fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError> {
                     self.checked_div(rhs).ok_or(InterpretationError::DivisionByZero)
                 }
@@ -587,8 +607,14 @@ macro_rules! impl_primitive_integer_for {
     };
 }
 impl_primitive_integer_for! {
-    i8, i16, i32, i64,
-    u8, u16, u32, u64,
+    ( i8, reg_to_i8 , i8_to_reg ),
+    (i16, reg_to_i16, i16_to_reg),
+    (i32, reg_to_i32, i32_to_reg),
+    (i64, reg_to_i64, i64_to_reg),
+    ( u8, reg_to_u8 , u8_to_reg ),
+    (u16, reg_to_u16, u16_to_reg),
+    (u32, reg_to_u32, u32_to_reg),
+    (u64, reg_to_u64, u64_to_reg),
 }
 
 impl InterpretInstr for BinaryIntInstr {
@@ -602,69 +628,90 @@ impl InterpretInstr for BinaryIntInstr {
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use core::ops::{BitAnd, BitOr, BitXor};
+        use IntType::{I8, I16, I32, I64};
         use BinaryIntOp as Op;
-        /// Computes `op` on `lhs` and `rhs` using `f` to convert from unsigned to signed.
-        fn compute<U, S, F, V>(
-            op: BinaryIntOp,
-            lhs: U,
-            rhs: U,
-            mut u2s: F,
-            mut s2u: V,
-        ) -> Result<U, InterpretationError>
+        fn compute<T, F>(lhs: u64, rhs: u64, f: F) -> u64
         where
-            U: PrimitiveInteger
-                + BitAnd<Output = U>
-                + BitOr<Output = U>
-                + BitXor<Output = U>,
-            S: PrimitiveInteger
-                + BitAnd<Output = S>
-                + BitOr<Output = S>
-                + BitXor<Output = S>,
-            F: FnMut(U) -> S,
-            V: FnMut(S) -> U,
+            T: PrimitiveInteger,
+            F: FnOnce(T, T) -> T,
         {
-            let result = match op {
-                Op::Add => lhs.wrapping_add(rhs),
-                Op::Sub => lhs.wrapping_sub(rhs),
-                Op::Mul => lhs.wrapping_mul(rhs),
-                Op::Sdiv => s2u(u2s(lhs).checked_div(u2s(rhs))?),
-                Op::Srem => s2u(u2s(lhs).checked_rem(u2s(rhs))?),
-                Op::Udiv => lhs.checked_div(rhs)?,
-                Op::Urem => lhs.checked_rem(rhs)?,
-                Op::And => lhs & rhs,
-                Op::Or => lhs | rhs,
-                Op::Xor => lhs ^ rhs,
-                _ => unimplemented!(),
-            };
-            Ok(result)
+            f(T::from_reg(lhs), T::from_reg(rhs)).into_reg()
         }
-        let result = match self.ty() {
-            IntType::I8 => {
-                let lhs = lhs as u8;
-                let rhs = rhs as u8;
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i8, |s| s as u8)?;
-                result as u64
-            }
-            IntType::I16 => {
-                let lhs = lhs as u16;
-                let rhs = rhs as u16;
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i16, |s| s as u16)?;
-                result as u64
-            }
-            IntType::I32 => {
-                let lhs = lhs as u32;
-                let rhs = rhs as u32;
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i32, |s| s as u32)?;
-                result as u64
-            }
-            IntType::I64 => {
-                let result =
-                    compute(self.op(), lhs, rhs, |u| u as i64, |s| s as u64)?;
-                result as u64
-            }
+        fn compute_checked<T, F>(lhs: u64, rhs: u64, f: F) -> Result<u64, InterpretationError>
+        where
+            T: PrimitiveInteger,
+            F: FnOnce(T, T) -> Result<T, InterpretationError>,
+        {
+            Ok(f(T::from_reg(lhs), T::from_reg(rhs))?.into_reg())
+        }
+        fn compute_shift<T, F>(lhs: u64, rhs: u64, f: F) -> u64
+        where
+            T: PrimitiveInteger,
+            F: FnOnce(T, u32) -> T,
+        {
+            f(T::from_reg(lhs), rhs as u32).into_reg()
+        }
+        let result = match (self.op(), self.ty()) {
+            (Op::Add, I8) => compute(lhs, rhs, u8::wrapping_add),
+            (Op::Add, I16) => compute(lhs, rhs, u16::wrapping_add),
+            (Op::Add, I32) => compute(lhs, rhs, u32::wrapping_add),
+            (Op::Add, I64) => compute(lhs, rhs, u64::wrapping_add),
+            (Op::Sub, I8) => compute(lhs, rhs, u8::wrapping_sub),
+            (Op::Sub, I16) => compute(lhs, rhs, u16::wrapping_sub),
+            (Op::Sub, I32) => compute(lhs, rhs, u32::wrapping_sub),
+            (Op::Sub, I64) => compute(lhs, rhs, u64::wrapping_sub),
+            (Op::Mul, I8) => compute(lhs, rhs, u8::wrapping_mul),
+            (Op::Mul, I16) => compute(lhs, rhs, u16::wrapping_mul),
+            (Op::Mul, I32) => compute(lhs, rhs, u32::wrapping_mul),
+            (Op::Mul, I64) => compute(lhs, rhs, u64::wrapping_mul),
+            (Op::Sdiv, I8) => compute_checked(lhs, rhs, <i8 as PrimitiveInteger>::checked_div)?,
+            (Op::Sdiv, I16) => compute_checked(lhs, rhs, <i16 as PrimitiveInteger>::checked_div)?,
+            (Op::Sdiv, I32) => compute_checked(lhs, rhs, <i32 as PrimitiveInteger>::checked_div)?,
+            (Op::Sdiv, I64) => compute_checked(lhs, rhs, <i64 as PrimitiveInteger>::checked_div)?,
+            (Op::Udiv, I8) => compute_checked(lhs, rhs, <u8 as PrimitiveInteger>::checked_div)?,
+            (Op::Udiv, I16) => compute_checked(lhs, rhs, <u16 as PrimitiveInteger>::checked_div)?,
+            (Op::Udiv, I32) => compute_checked(lhs, rhs, <u32 as PrimitiveInteger>::checked_div)?,
+            (Op::Udiv, I64) => compute_checked(lhs, rhs, <u64 as PrimitiveInteger>::checked_div)?,
+            (Op::Srem, I8) => compute_checked(lhs, rhs, <i8 as PrimitiveInteger>::checked_rem)?,
+            (Op::Srem, I16) => compute_checked(lhs, rhs, <i16 as PrimitiveInteger>::checked_rem)?,
+            (Op::Srem, I32) => compute_checked(lhs, rhs, <i32 as PrimitiveInteger>::checked_rem)?,
+            (Op::Srem, I64) => compute_checked(lhs, rhs, <i64 as PrimitiveInteger>::checked_rem)?,
+            (Op::Urem, I8) => compute_checked(lhs, rhs, <u8 as PrimitiveInteger>::checked_rem)?,
+            (Op::Urem, I16) => compute_checked(lhs, rhs, <u16 as PrimitiveInteger>::checked_rem)?,
+            (Op::Urem, I32) => compute_checked(lhs, rhs, <u32 as PrimitiveInteger>::checked_rem)?,
+            (Op::Urem, I64) => compute_checked(lhs, rhs, <u64 as PrimitiveInteger>::checked_rem)?,
+            (Op::And, I8) => compute(lhs, rhs, u8::bitand),
+            (Op::And, I16) => compute(lhs, rhs, u16::bitand),
+            (Op::And, I32) => compute(lhs, rhs, u32::bitand),
+            (Op::And, I64) => compute(lhs, rhs, u64::bitand),
+            (Op::Or, I8) => compute(lhs, rhs, u8::bitor),
+            (Op::Or, I16) => compute(lhs, rhs, u16::bitor),
+            (Op::Or, I32) => compute(lhs, rhs, u32::bitor),
+            (Op::Or, I64) => compute(lhs, rhs, u64::bitor),
+            (Op::Xor, I8) => compute(lhs, rhs, u8::bitxor),
+            (Op::Xor, I16) => compute(lhs, rhs, u16::bitxor),
+            (Op::Xor, I32) => compute(lhs, rhs, u32::bitxor),
+            (Op::Xor, I64) => compute(lhs, rhs, u64::bitxor),
+            (Op::Shl, I8) => compute_shift(lhs, rhs, u8::wrapping_shl),
+            (Op::Shl, I16) => compute_shift(lhs, rhs, u16::wrapping_shl),
+            (Op::Shl, I32) => compute_shift(lhs, rhs, u32::wrapping_shl),
+            (Op::Shl, I64) => compute_shift(lhs, rhs, u64::wrapping_shl),
+            (Op::Sshr, I8) => compute_shift(lhs, rhs, i8::wrapping_shr),
+            (Op::Sshr, I16) => compute_shift(lhs, rhs, i16::wrapping_shr),
+            (Op::Sshr, I32) => compute_shift(lhs, rhs, i32::wrapping_shr),
+            (Op::Sshr, I64) => compute_shift(lhs, rhs, i64::wrapping_shr),
+            (Op::Ushr, I8) => compute_shift(lhs, rhs, u8::wrapping_shr),
+            (Op::Ushr, I16) => compute_shift(lhs, rhs, u16::wrapping_shr),
+            (Op::Ushr, I32) => compute_shift(lhs, rhs, u32::wrapping_shr),
+            (Op::Ushr, I64) => compute_shift(lhs, rhs, u64::wrapping_shr),
+            (Op::Rotl, I8) => compute_shift(lhs, rhs, u8::rotate_left),
+            (Op::Rotl, I16) => compute_shift(lhs, rhs, u16::rotate_left),
+            (Op::Rotl, I32) => compute_shift(lhs, rhs, u32::rotate_left),
+            (Op::Rotl, I64) => compute_shift(lhs, rhs, u64::rotate_left),
+            (Op::Rotr, I8) => compute_shift(lhs, rhs, u8::rotate_right),
+            (Op::Rotr, I16) => compute_shift(lhs, rhs, u16::rotate_right),
+            (Op::Rotr, I32) => compute_shift(lhs, rhs, u32::rotate_right),
+            (Op::Rotr, I64) => compute_shift(lhs, rhs, u64::rotate_right),
         };
         frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
