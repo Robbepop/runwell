@@ -21,7 +21,12 @@ pub mod primitive;
 mod store;
 
 use self::builder::Variable;
-pub use self::{builder::FunctionBuilderError, error::IrError, store::Store};
+pub use self::{
+    builder::FunctionBuilderError,
+    error::IrError,
+    instruction::ImmU32,
+    store::Store,
+};
 
 /// All Runwell IR SSA instructions.
 pub mod instr {
