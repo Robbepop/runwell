@@ -4,8 +4,6 @@ version = "0.1.0"
 authors = ["Robin Freyler <robin.freyler@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 entity = { package = "runwell_entity", path = "../entity" }
 ir = { package = "runwell_ir", path = "../ir" }
