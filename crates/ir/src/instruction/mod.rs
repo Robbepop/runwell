@@ -51,7 +51,7 @@ pub use self::{
         UnaryIntOp,
     },
     memory::{
-        HeapAddr,
+        HeapAddrInstr,
         ImmU32,
         LoadInstr,
         MemoryGrowInstr,
@@ -69,7 +69,7 @@ pub use self::{
         TerminalInstr,
     },
 };
-use super::primitive::Value;
+use super::{primitive::Value, ReplaceValue};
 use derive_more::{Display, From};
 
 /// An SSA instruction from the Runwell IR.
@@ -80,6 +80,7 @@ pub enum Instruction {
     Const(ConstInstr),
     MemoryGrow(MemoryGrowInstr),
     MemorySize(MemorySizeInstr),
+    HeapAddr(HeapAddrInstr),
     Phi(PhiInstr),
     Load(LoadInstr),
     Store(StoreInstr),
@@ -100,15 +101,10 @@ impl Instruction {
     pub fn is_phi(&self) -> bool {
         matches!(self, Self::Phi(_))
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, replace: F) -> bool
+impl ReplaceValue for Instruction {
+    fn replace_value<F>(&mut self, replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -119,6 +115,7 @@ impl Instruction {
             Self::MemoryGrow(instr) => instr.replace_value(replace),
             Self::MemorySize(_instr) => false,
             Self::Phi(instr) => instr.replace_value(replace),
+            Self::HeapAddr(instr) => instr.replace_value(replace),
             Self::Load(instr) => instr.replace_value(replace),
             Self::Store(instr) => instr.replace_value(replace),
             Self::Select(instr) => instr.replace_value(replace),

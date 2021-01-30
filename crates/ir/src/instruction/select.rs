@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{Type, Value};
+use crate::{
+    primitive::{Type, Value},
+    ReplaceValue,
+};
 use derive_more::Display;
 
 /// Choose a value based on a condition without IR-level branching.
@@ -74,15 +77,10 @@ impl SelectInstr {
     pub fn false_value(&self) -> Value {
         self.value_false
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for SelectInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

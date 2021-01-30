@@ -32,6 +32,7 @@ use crate::{
     instruction::Instruction,
     primitive::{Block, BlockEntity, Type, Value, ValueEntity},
     IrError,
+    ReplaceValue,
 };
 use core::{fmt, marker::PhantomData};
 use entity::{ComponentMap, ComponentVec, EntityArena, RawIdx};

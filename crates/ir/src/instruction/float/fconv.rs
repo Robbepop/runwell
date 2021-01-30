@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{FloatType, IntType, Value};
+use crate::{
+    primitive::{FloatType, IntType, Value},
+    ReplaceValue,
+};
 use derive_more::Display;
 
 /// Demotes the source float value from source float type to destination float type.
@@ -59,15 +62,10 @@ impl DemoteFloatInstr {
     pub fn src(&self) -> Value {
         self.src
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for DemoteFloatInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -119,15 +117,10 @@ impl PromoteFloatInstr {
     pub fn src(&self) -> Value {
         self.src
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for PromoteFloatInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -221,15 +214,10 @@ impl FloatToIntInstr {
     pub fn is_saturating(&self) -> bool {
         self.saturating
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for FloatToIntInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

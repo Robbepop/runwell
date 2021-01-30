@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{Mem, Type, Value};
+use crate::{
+    primitive::{Mem, Type, Value},
+    ReplaceValue,
+};
 use derive_more::{Display, From};
 
 /// An immediate `u32` value of a Runwell IR instruction.
@@ -33,13 +36,13 @@ pub struct ImmU32 {
 /// Traps if `ptr..ptr+size` is not within bounds for the target heap memory.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "heap_addr {}[{}..{}+{}]", heap, ptr, ptr, size)]
-pub struct HeapAddr {
+pub struct HeapAddrInstr {
     heap: Mem,
     ptr: Value,
     size: ImmU32,
 }
 
-impl HeapAddr {
+impl HeapAddrInstr {
     /// Creates a new heap addressing instruction.
     pub fn new(heap: Mem, ptr: Value, size: ImmU32) -> Self {
         Self { heap, ptr, size }
@@ -58,6 +61,15 @@ impl HeapAddr {
     /// Returns the size of the area to allow indexing into the linear memory.
     pub fn size(&self) -> ImmU32 {
         self.size
+    }
+}
+
+impl ReplaceValue for HeapAddrInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
+    where
+        F: FnMut(&mut Value) -> bool,
+    {
+        replace(&mut self.ptr)
     }
 }
 
@@ -94,15 +106,10 @@ impl LoadInstr {
     pub fn ty(&self) -> Type {
         self.ty
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for LoadInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -150,15 +157,10 @@ impl StoreInstr {
     pub fn ty(&self) -> Type {
         self.ty
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for StoreInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -181,15 +183,10 @@ impl MemoryGrowInstr {
     pub fn new(memory: Mem, new_pages: Value) -> Self {
         Self { memory, new_pages }
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for MemoryGrowInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

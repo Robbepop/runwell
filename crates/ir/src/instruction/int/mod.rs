@@ -23,7 +23,7 @@ pub use self::{
     iconv::{ExtendIntInstr, IntToFloatInstr, TruncateIntInstr},
     unary::{UnaryIntInstr, UnaryIntOp},
 };
-use crate::primitive::Value;
+use crate::{primitive::Value, ReplaceValue};
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
@@ -37,15 +37,8 @@ pub enum IntInstr {
     Truncate(TruncateIntInstr),
 }
 
-impl IntInstr {
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, replace: F) -> bool
+impl ReplaceValue for IntInstr {
+    fn replace_value<F>(&mut self, replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

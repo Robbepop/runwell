@@ -13,7 +13,10 @@
 // limitations under the License.
 
 use super::CallInstr;
-use crate::primitive::{Block, Func, Value};
+use crate::{
+    primitive::{Block, Func, Value},
+    ReplaceValue,
+};
 use core::fmt::Display;
 use derive_more::{Display, From};
 
@@ -50,15 +53,10 @@ impl TailCallInstr {
     pub fn params(&self) -> &[Value] {
         self.instr.params()
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, replace: F) -> bool
+impl ReplaceValue for TailCallInstr {
+    fn replace_value<F>(&mut self, replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -81,15 +79,8 @@ pub enum TerminalInstr {
     BranchTable(BranchTableInstr),
 }
 
-impl TerminalInstr {
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, replace: F) -> bool
+impl ReplaceValue for TerminalInstr {
+    fn replace_value<F>(&mut self, replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -122,15 +113,10 @@ impl ReturnInstr {
     pub fn return_value(&self) -> Value {
         self.return_value
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for ReturnInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -194,15 +180,10 @@ impl IfThenElseInstr {
     pub fn false_target(&self) -> Block {
         self.br_else
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for IfThenElseInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -245,15 +226,10 @@ impl BranchTableInstr {
     pub fn default_target(&self) -> Block {
         self.default
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for BranchTableInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -292,4 +268,5 @@ impl_from_terminal_instr_for_instr! {
     BranchInstr,
     IfThenElseInstr,
     BranchTableInstr,
+    TailCallInstr,
 }

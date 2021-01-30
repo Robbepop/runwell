@@ -17,7 +17,7 @@ mod fcmp;
 mod fconv;
 mod unary;
 
-use crate::primitive::Value;
+use crate::{primitive::Value, ReplaceValue};
 
 pub use self::{
     binary::{BinaryFloatInstr, BinaryFloatOp},
@@ -38,15 +38,8 @@ pub enum FloatInstr {
     FloatToInt(FloatToIntInstr),
 }
 
-impl FloatInstr {
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, replace: F) -> bool
+impl ReplaceValue for FloatInstr {
+    fn replace_value<F>(&mut self, replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

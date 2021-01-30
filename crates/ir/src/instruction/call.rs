@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{Func, FuncType, Table, Value};
+use crate::{
+    primitive::{Func, FuncType, Table, Value},
+    ReplaceValue,
+};
 use core::{convert::identity, fmt::Display};
 
 /// Calls a function statically.
@@ -45,15 +48,10 @@ impl CallInstr {
     pub fn params(&self) -> &[Value] {
         &self.call_params
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for CallInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {
@@ -112,15 +110,10 @@ impl CallIndirectInstr {
             call_params: call_params.into_iter().collect::<Vec<_>>(),
         }
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for CallIndirectInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

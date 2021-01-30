@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{Block, Value};
+use crate::{
+    primitive::{Block, Value},
+    ReplaceValue,
+};
 use core::{convert::identity, fmt::Display, iter::FusedIterator};
 use std::collections::{btree_map::Iter as BTreeMapIter, BTreeMap};
 
@@ -66,15 +69,10 @@ impl PhiInstr {
     pub fn operand_for(&self, block: Block) -> Option<Value> {
         self.operands.get(&block).copied()
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for PhiInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

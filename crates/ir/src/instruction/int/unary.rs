@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{IntType, Value};
+use crate::{
+    primitive::{IntType, Value},
+    ReplaceValue,
+};
 use core::fmt::Display;
 
 /// Operand for unary integer instructions.
@@ -75,15 +78,10 @@ impl UnaryIntInstr {
     pub fn src(&self) -> Value {
         self.src
     }
+}
 
-    /// Replaces all values in the instruction using the replacer.
-    ///
-    /// Returns `true` if a value has been replaced in the instruction.
-    ///
-    /// # Note
-    ///
-    /// By contract the replacer returns `true` if replacement happened.
-    pub fn replace_value<F>(&mut self, mut replace: F) -> bool
+impl ReplaceValue for UnaryIntInstr {
+    fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
         F: FnMut(&mut Value) -> bool,
     {

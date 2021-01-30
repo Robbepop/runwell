@@ -18,6 +18,7 @@ pub mod builder;
 mod error;
 mod instruction;
 pub mod primitive;
+mod replace_value;
 mod store;
 
 use self::builder::Variable;
@@ -25,6 +26,7 @@ pub use self::{
     builder::FunctionBuilderError,
     error::IrError,
     instruction::ImmU32,
+    replace_value::ReplaceValue,
     store::Store,
 };
 
@@ -57,7 +59,7 @@ pub mod instr {
         ExtendIntInstr,
         FloatInstr,
         FloatToIntInstr,
-        HeapAddr,
+        HeapAddrInstr,
         IfThenElseInstr,
         Instruction,
         IntInstr,

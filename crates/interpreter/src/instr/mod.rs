@@ -96,6 +96,7 @@ impl InterpretInstr for Instruction {
             Self::MemoryGrow(_instr) => unimplemented!(),
             Self::MemorySize(_instr) => unimplemented!(),
             Self::Phi(instr) => instr.interpret_instr(return_value, ctx, frame),
+            Self::HeapAddr(_instr) => unimplemented!(),
             Self::Load(_instr) => unimplemented!(),
             Self::Store(_instr) => unimplemented!(),
             Self::Select(instr) => {
