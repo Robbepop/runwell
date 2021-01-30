@@ -76,10 +76,6 @@ impl DisplayHook for TableEntity {
 #[derive(Debug, Default)]
 pub struct BlockEntity;
 
-/// An SSA value entity of the Runwell IR.
-#[derive(Debug, Default)]
-pub struct ValueEntity;
-
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Block = Idx<BlockEntity>;
 
@@ -88,6 +84,10 @@ impl DisplayHook for BlockEntity {
         write!(f, "bb{}", idx.into_raw())
     }
 }
+
+/// An SSA value entity of the Runwell IR.
+#[derive(Debug, Default)]
+pub struct ValueEntity;
 
 /// The unique index of a value entity of the Runwell IR.
 pub type Value = Idx<ValueEntity>;
