@@ -13,8 +13,7 @@
 // limitations under the License.
 
 use super::{FunctionId, ParseError, Type};
-use core::convert::TryFrom;
-use std::iter::FusedIterator;
+use core::{convert::TryFrom, iter::FusedIterator};
 use wasmparser::{
     BinaryReader,
     FuncValidator,

@@ -17,10 +17,10 @@
 use super::Immutable;
 use crate::{Idx, RawIdx};
 use core::{
+    iter::FusedIterator,
     marker::PhantomData,
     ops::{Index, IndexMut},
 };
-use std::iter::FusedIterator;
 
 /// Container where every entity has a component that is default initialized.
 ///

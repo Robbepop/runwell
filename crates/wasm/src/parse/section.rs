@@ -30,9 +30,8 @@ use crate::{
     builder::{Module, ModuleBuilder},
     Index32,
 };
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 use derive_more::{Display, Error};
-use std::convert::TryInto;
 use wasmparser::{
     Chunk,
     DataSectionReader,
