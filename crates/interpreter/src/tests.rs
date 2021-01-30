@@ -24,9 +24,9 @@
 use crate::EvaluationContext;
 use entity::RawIdx;
 use ir::{
-    builder::{Function, Variable},
+    builder::{Function, FunctionInstrBuilder, Variable},
     instr::operands::CompareIntOp,
-    primitive::{Const, Func, IntConst, IntType, Type},
+    primitive::{Const, Func, IntConst, IntType, Type, Value},
     IrError,
     Store,
 };
@@ -296,8 +296,12 @@ fn simple_loop_works() -> Result<(), IrError> {
     Ok(())
 }
 
-#[test]
-fn ping_pong_calls() -> Result<(), IrError> {
+fn construct_is_even_and_is_odd<F>(
+    mut f: F,
+) -> Result<(Function, Function), IrError>
+where
+    F: FnMut(FunctionInstrBuilder, Func, Value) -> Result<Value, IrError>,
+{
     // Pre declare functions used before they are defined.
 
     let is_even = Func::from_raw(RawIdx::from_u32(0));
@@ -336,7 +340,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
     let v4 = b.read_var(input)?;
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
-    let v7 = b.ins()?.call(is_odd, vec![v6])?;
+    let v7 = f(b.ins()?, is_odd, v6)?;
     b.ins()?.return_value(v7)?;
     b.seal_block()?;
     let is_even_body = b.finalize()?;
@@ -374,13 +378,21 @@ fn ping_pong_calls() -> Result<(), IrError> {
     let v4 = b.read_var(input)?;
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
-    let v7 = b.ins()?.call(is_even, vec![v6])?;
+    let v7 = f(b.ins()?, is_even, v6)?;
     b.ins()?.return_value(v7)?;
     b.seal_block()?;
     let is_odd_body = b.finalize()?;
 
     println!("{}", is_even_body);
     println!("{}", is_odd_body);
+
+    Ok((is_even_body, is_odd_body))
+}
+
+#[test]
+fn ping_pong_calls() -> Result<(), IrError> {
+    let (is_even_body, is_odd_body) =
+        construct_is_even_and_is_odd(|ins, func, v6| ins.call(func, vec![v6]))?;
 
     // Store both constructed functions:
 
@@ -391,6 +403,34 @@ fn ping_pong_calls() -> Result<(), IrError> {
     let mut results = Vec::new();
 
     let input = 1000;
+    ctx.evaluate_function(is_even, vec![input], |result| results.push(result))
+        .unwrap();
+    assert_eq!(results, vec![(input % 2 == 0) as u64]);
+
+    results.clear();
+    ctx.evaluate_function(is_odd, vec![input], |result| results.push(result))
+        .unwrap();
+    assert_eq!(results, vec![(input % 2 == 1) as u64]);
+
+    Ok(())
+}
+
+#[test]
+fn ping_pong_tail_calls() -> Result<(), IrError> {
+    let (is_even_body, is_odd_body) =
+        construct_is_even_and_is_odd(|ins, func, v6| {
+            ins.tail_call(func, vec![v6])
+        })?;
+
+    // Store both constructed functions:
+
+    let mut store = Store::default();
+    let is_even = store.push_function(is_even_body);
+    let is_odd = store.push_function(is_odd_body);
+    let mut ctx = EvaluationContext::new(&store);
+    let mut results = Vec::new();
+
+    let input = 1_000_000;
     ctx.evaluate_function(is_even, vec![input], |result| results.push(result))
         .unwrap();
     assert_eq!(results, vec![(input % 2 == 0) as u64]);
