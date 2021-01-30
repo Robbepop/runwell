@@ -310,7 +310,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
     // is_odd(x):
     //     if x == 0:
     //         return true
-    //     return not is_odd(x - 1)
+    //     return is_odd(x - 1)
 
     let mut b = Function::build()
         .with_inputs(&[IntType::I32.into()])?
@@ -337,10 +337,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
     let v7 = b.ins()?.call(is_odd, vec![v6])?;
-    let v8 = b.ins()?.constant(Const::Bool(true))?;
-    let v9 = b.ins()?.constant(Const::Bool(false))?;
-    let v10 = b.ins()?.select(Type::Bool, v7, v9, v8)?;
-    b.ins()?.return_value(v10)?;
+    b.ins()?.return_value(v7)?;
     b.seal_block()?;
     let is_even_body = b.finalize()?;
 
@@ -351,7 +348,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
     // is_odd(x):
     //     if x == 0:
     //         return false
-    //     return not is_even(x - 1)
+    //     return is_even(x - 1)
 
     let mut b = Function::build()
         .with_inputs(&[IntType::I32.into()])?
@@ -378,10 +375,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
     let v7 = b.ins()?.call(is_even, vec![v6])?;
-    let v8 = b.ins()?.constant(Const::Bool(true))?;
-    let v9 = b.ins()?.constant(Const::Bool(false))?;
-    let v10 = b.ins()?.select(Type::Bool, v7, v9, v8)?;
-    b.ins()?.return_value(v10)?;
+    b.ins()?.return_value(v7)?;
     b.seal_block()?;
     let is_odd_body = b.finalize()?;
 
