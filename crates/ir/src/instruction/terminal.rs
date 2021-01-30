@@ -263,15 +263,15 @@ impl BranchTableInstr {
 
 impl Display for BranchTableInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(
-            f,
-            "br_table source {}, default {}, targets [",
-            self.source, self.default
-        )?;
-        for target in &self.targets {
-            write!(f, "{}", target)?;
+        write!(f, "br_table {} [ ", self.case)?;
+        if let Some((first, rest)) = self.targets.split_first() {
+            write!(f, "0 🠖 {}", first)?;
+            for (n, target) in rest.iter().enumerate() {
+                write!(f, ", {} 🠖 {}", n + 1, target)?;
+            }
         }
-        write!(f, "]")?;
+        write!(f, "_ 🠖 {}", self.default_target())?;
+        write!(f, " ]")?;
         Ok(())
     }
 }
