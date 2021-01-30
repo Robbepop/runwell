@@ -117,7 +117,7 @@ let iterations = 100;
 ctx.evaluate_function(
     func,
     [iterations].iter().copied(),
-    |_, result| results.push(result),
+    |result| results.push(result),
 )
 .unwrap();
 assert_eq!(result[0], iterations);
