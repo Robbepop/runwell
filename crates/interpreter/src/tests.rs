@@ -288,7 +288,7 @@ fn simple_loop_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let iterations = 100_000_000;
+    let iterations = 100_000;
     let results =
         evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
     assert_eq!(results, vec![iterations as u64]);
