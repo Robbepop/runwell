@@ -29,6 +29,7 @@ use crate::{
         ReinterpretInstr,
         ReturnInstr,
         SelectInstr,
+        TailCallInstr,
         TerminalInstr,
     },
     instruction::{BinaryIntOp, CompareIntOp, Instruction},
@@ -91,6 +92,22 @@ impl<'a> FunctionInstrBuilder<'a> {
         P: IntoIterator<Item = Value>,
     {
         let instruction = CallInstr::new(func, params);
+        // We have to query the type of the function `func` in the store.
+        // Currently we simply use `bool` as return type for all functions.
+        let (value, _) =
+            self.append_value_instr(instruction.into(), Type::Bool)?;
+        Ok(value)
+    }
+
+    pub fn tail_call<P>(
+        mut self,
+        func: Func,
+        params: P,
+    ) -> Result<Value, IrError>
+    where
+        P: IntoIterator<Item = Value>,
+    {
+        let instruction = TailCallInstr::new(func, params);
         // We have to query the type of the function `func` in the store.
         // Currently we simply use `bool` as return type for all functions.
         let (value, _) =
