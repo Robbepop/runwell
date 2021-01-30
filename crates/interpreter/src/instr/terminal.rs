@@ -24,6 +24,7 @@ use entity::RawIdx;
 use ir::{
     instr::{
         BranchInstr,
+        BranchTableInstr,
         IfThenElseInstr,
         ReturnInstr,
         TailCallInstr,
@@ -49,7 +50,9 @@ impl InterpretInstr for TerminalInstr {
             Self::TailCall(instr) => {
                 instr.interpret_instr(return_value, ctx, frame)
             }
-            Self::BranchTable(_instr) => unimplemented!(),
+            Self::BranchTable(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
         }
     }
 }
@@ -126,5 +129,23 @@ impl InterpretInstr for TailCallInstr {
         let old_frame = replace(frame, new_frame);
         ctx.release_frame(old_frame);
         Ok(InterpretationFlow::TailCall(self.func()))
+    }
+}
+
+impl InterpretInstr for BranchTableInstr {
+    fn interpret_instr(
+        &self,
+        _return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let case = frame.read_register(self.case());
+        let target = self
+            .targets()
+            .get(case as usize)
+            .copied()
+            .unwrap_or_else(|| self.default_target());
+        frame.switch_to_block(target);
+        Ok(InterpretationFlow::Continue)
     }
 }
