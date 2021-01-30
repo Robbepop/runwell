@@ -265,20 +265,20 @@ fn simple_loop_works() -> Result<(), IrError> {
     b.ins()?.if_then_else(v3, loop_body, loop_exit)?;
 
     b.switch_to_block(loop_body)?;
+    b.seal_block()?;
     let v4 = b.read_var(counter)?;
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.iadd(IntType::I32, v4, v5)?;
     b.write_var(counter, v6)?;
     b.ins()?.br(loop_head)?;
-    b.seal_block()?;
 
     b.switch_to_block(loop_head)?;
     b.seal_block()?;
 
     b.switch_to_block(loop_exit)?;
+    b.seal_block()?;
     let v7 = b.read_var(counter)?;
     b.ins()?.return_value(v7)?;
-    b.seal_block()?;
 
     let function = b.finalize()?;
 
