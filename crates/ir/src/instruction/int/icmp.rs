@@ -44,16 +44,6 @@ pub enum CompareIntOp {
     Sgt,
 }
 
-impl CompareIntOp {
-    fn prefix(&self) -> &str {
-        match self {
-            Self::Eq | Self::Ne => "i",
-            Self::Ule | Self::Ult | Self::Uge | Self::Ugt => "u",
-            Self::Sle | Self::Slt | Self::Sge | Self::Sgt => "s",
-        }
-    }
-}
-
 impl Display for CompareIntOp {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let repr = match self {
@@ -75,7 +65,7 @@ impl Display for CompareIntOp {
 
 /// Instruction to compare two integer values with respect to some comparison operator.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "{}cmp {} {} {} {}", "op.prefix()", ty, op, lhs, rhs)]
+#[display(fmt = "icmp {} {} {} {}", ty, op, lhs, rhs)]
 pub struct CompareIntInstr {
     op: CompareIntOp,
     ty: IntType,
