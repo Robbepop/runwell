@@ -245,6 +245,7 @@ fn simple_loop_works() -> Result<(), IrError> {
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[IntType::I32.into()])?
         .declare_variables(1, IntType::I32.into())?
+        .declare_variables(1, IntType::I32.into())?
         .body();
 
     let loop_head = b.create_block();
@@ -253,9 +254,12 @@ fn simple_loop_works() -> Result<(), IrError> {
 
     let input = Variable::from_raw(RawIdx::from_u32(0));
     let counter = Variable::from_raw(RawIdx::from_u32(1));
+    let one = Variable::from_raw(RawIdx::from_u32(2));
 
     let v0 = b.ins()?.constant(IntConst::I32(0))?;
+    let v0_1 = b.ins()?.constant(IntConst::I32(1))?;
     b.write_var(counter, v0)?;
+    b.write_var(one, v0_1)?;
     b.ins()?.br(loop_head)?;
 
     b.switch_to_block(loop_head)?;
@@ -267,7 +271,7 @@ fn simple_loop_works() -> Result<(), IrError> {
     b.switch_to_block(loop_body)?;
     b.seal_block()?;
     let v4 = b.read_var(counter)?;
-    let v5 = b.ins()?.constant(IntConst::I32(1))?;
+    let v5 = b.read_var(one)?;
     let v6 = b.ins()?.iadd(IntType::I32, v4, v5)?;
     b.write_var(counter, v6)?;
     b.ins()?.br(loop_head)?;
