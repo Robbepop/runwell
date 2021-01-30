@@ -213,22 +213,37 @@ impl IfThenElseInstr {
 /// A branching table mapping indices to branching targets.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BranchTableInstr {
-    source: Value,
+    case: Value,
     default: Block,
     targets: Vec<Block>,
 }
 
 impl BranchTableInstr {
-    /// Creates a new branching table with the given source, default target and targets.
-    pub fn new<I>(source: Value, default: Block, targets: I) -> Self
+    /// Creates a new branching table with the given case, default target and targets.
+    pub fn new<I>(case: Value, default: Block, targets: I) -> Self
     where
         I: IntoIterator<Item = Block>,
     {
         Self {
-            source,
+            case,
             default,
             targets: targets.into_iter().collect::<Vec<_>>(),
         }
+    }
+
+    /// Returns the case value determining where to jump to.
+    pub fn case(&self) -> Value {
+        self.case
+    }
+
+    /// Returns a slice over all target jumps.
+    pub fn targets(&self) -> &[Block] {
+        &self.targets
+    }
+
+    /// Returns the default target to jump to.
+    pub fn default_target(&self) -> Block {
+        self.default
     }
 
     /// Replaces all values in the instruction using the replacer.
@@ -242,7 +257,7 @@ impl BranchTableInstr {
     where
         F: FnMut(&mut Value) -> bool,
     {
-        replace(&mut self.source)
+        replace(&mut self.case)
     }
 }
 
