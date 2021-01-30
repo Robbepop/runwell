@@ -381,6 +381,9 @@ fn ping_pong_calls() -> Result<(), IrError> {
     b.seal_block()?;
     let is_odd_body = b.finalize()?;
 
+    println!("{}", is_even_body);
+    println!("{}", is_odd_body);
+
     // Store both constructed functions:
 
     let mut store = Store::default();
