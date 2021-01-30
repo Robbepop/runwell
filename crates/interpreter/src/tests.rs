@@ -26,7 +26,7 @@ use entity::RawIdx;
 use ir::{
     builder::{Function, Variable},
     instr::operands::CompareIntOp,
-    primitive::{Const, IntConst, IntType},
+    primitive::{Const, Func, IntConst, IntType, Type},
     IrError,
     Store,
 };
@@ -288,6 +288,116 @@ fn simple_loop_works() -> Result<(), IrError> {
     let results =
         evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
     assert_eq!(results, vec![iterations as u64]);
+
+    Ok(())
+}
+
+#[test]
+fn ping_pong_calls() -> Result<(), IrError> {
+    // Pre declare functions used before they are defined.
+
+    let is_even = Func::from_raw(RawIdx::from_u32(0));
+    let is_odd = Func::from_raw(RawIdx::from_u32(1));
+
+    // Create Function: is_even
+    //
+    // Encodes `is_even` as follows:
+    //
+    // is_odd(x):
+    //     if x == 0:
+    //         return true
+    //     return not is_odd(x - 1)
+
+    let mut b = Function::build()
+        .with_inputs(&[IntType::I32.into()])?
+        .with_outputs(&[Type::Bool])?
+        .body();
+
+    let if_zero = b.create_block();
+    let if_not_zero = b.create_block();
+
+    let input = Variable::from_raw(RawIdx::from_u32(0));
+
+    let v0 = b.read_var(input)?;
+    let v1 = b.ins()?.constant(IntConst::I32(0))?;
+    let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Eq, v0, v1)?;
+    b.ins()?.if_then_else(v2, if_zero, if_not_zero)?;
+
+    b.switch_to_block(if_zero)?;
+    let v3 = b.ins()?.constant(Const::Bool(true))?;
+    b.ins()?.return_value(v3)?;
+    b.seal_block()?;
+
+    b.switch_to_block(if_not_zero)?;
+    let v4 = b.read_var(input)?;
+    let v5 = b.ins()?.constant(IntConst::I32(1))?;
+    let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
+    let v7 = b.ins()?.call(is_odd, vec![v6])?;
+    let v8 = b.ins()?.constant(Const::Bool(true))?;
+    let v9 = b.ins()?.constant(Const::Bool(false))?;
+    let v10 = b.ins()?.select(Type::Bool, v7, v9, v8)?;
+    b.ins()?.return_value(v10)?;
+    b.seal_block()?;
+    let is_even_body = b.finalize()?;
+
+    // Create Function: is_odd
+    //
+    // Encodes `is_odd` as follows:
+    //
+    // is_odd(x):
+    //     if x == 0:
+    //         return false
+    //     return not is_even(x - 1)
+
+    let mut b = Function::build()
+        .with_inputs(&[IntType::I32.into()])?
+        .with_outputs(&[Type::Bool])?
+        .body();
+
+    let if_zero = b.create_block();
+    let if_not_zero = b.create_block();
+
+    let input = Variable::from_raw(RawIdx::from_u32(0));
+
+    let v0 = b.read_var(input)?;
+    let v1 = b.ins()?.constant(IntConst::I32(0))?;
+    let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Eq, v0, v1)?;
+    b.ins()?.if_then_else(v2, if_zero, if_not_zero)?;
+
+    b.switch_to_block(if_zero)?;
+    let v3 = b.ins()?.constant(Const::Bool(false))?;
+    b.ins()?.return_value(v3)?;
+    b.seal_block()?;
+
+    b.switch_to_block(if_not_zero)?;
+    let v4 = b.read_var(input)?;
+    let v5 = b.ins()?.constant(IntConst::I32(1))?;
+    let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
+    let v7 = b.ins()?.call(is_even, vec![v6])?;
+    let v8 = b.ins()?.constant(Const::Bool(true))?;
+    let v9 = b.ins()?.constant(Const::Bool(false))?;
+    let v10 = b.ins()?.select(Type::Bool, v7, v9, v8)?;
+    b.ins()?.return_value(v10)?;
+    b.seal_block()?;
+    let is_odd_body = b.finalize()?;
+
+    // Store both constructed functions:
+
+    let mut store = Store::default();
+    let is_even = store.push_function(is_even_body);
+    let is_odd = store.push_function(is_odd_body);
+    let mut ctx = EvaluationContext::new(&store);
+    let mut results = Vec::new();
+
+    let input = 1000;
+    ctx.evaluate_function(is_even, vec![input], |result| results.push(result))
+        .unwrap();
+    assert_eq!(results, vec![(input % 2 == 0) as u64]);
+
+    results.clear();
+    ctx.evaluate_function(is_odd, vec![input], |result| results.push(result))
+        .unwrap();
+    assert_eq!(results, vec![(input % 2 == 1) as u64]);
 
     Ok(())
 }
