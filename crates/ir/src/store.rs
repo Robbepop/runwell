@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{builder::Function, primitive::Func};
+use crate::{function::Function, primitive::Func};
 use entity::EntityArena;
 
 /// Holds all data that is immutable during a function evaluation.

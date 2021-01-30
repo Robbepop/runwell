@@ -19,7 +19,7 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
-use crate::builder::Function;
+use crate::function::Function;
 use core::fmt;
 use derive_more::{Display, From};
 use entity::{DisplayHook, Idx};
