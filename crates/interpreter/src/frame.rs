@@ -16,7 +16,7 @@ use super::InterpretationError;
 use core::mem::replace;
 use entity::{DefaultComponentVec, RawIdx};
 use ir::{
-    builder::Function,
+    function::Function,
     primitive::{Block, Value},
 };
 

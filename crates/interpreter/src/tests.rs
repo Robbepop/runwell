@@ -24,7 +24,7 @@
 use crate::EvaluationContext;
 use entity::RawIdx;
 use ir::{
-    builder::{Function, FunctionInstrBuilder, Variable},
+    function::{Function, FunctionInstrBuilder, Variable},
     instr::operands::CompareIntOp,
     primitive::{Const, Func, IntConst, IntType, Type, Value},
     IrError,

@@ -18,7 +18,7 @@ mod terminal;
 
 use super::{EvaluationContext, Func, FunctionFrame, InterpretationError};
 use ir::{
-    builder::Function,
+    function::Function,
     instr::{
         CallInstr,
         ConstInstr,

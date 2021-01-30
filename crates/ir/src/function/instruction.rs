@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::{
-    function::ValueAssoc,
+    builder::ValueAssoc,
     state,
     FunctionBuilder,
     FunctionBuilderError,

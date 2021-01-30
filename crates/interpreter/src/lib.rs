@@ -28,7 +28,7 @@ use self::{
 };
 use entity::RawIdx;
 use ir::{
-    builder::Function,
+    function::Function,
     primitive::{Func, Value},
     Store,
 };
