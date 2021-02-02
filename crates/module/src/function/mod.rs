@@ -53,12 +53,12 @@ pub struct Function {
     /// has no SSA value association.
     instr_value: ComponentMap<Instr, Value>,
     /// Types for all values.
-    pub(crate) value_type: ComponentVec<Value, Type>,
+    value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
     ///
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
-    pub(crate) value_assoc: ComponentVec<Value, ValueAssoc>,
+    value_assoc: ComponentVec<Value, ValueAssoc>,
     /// The types of the input values of the constructed function.
     ///
     /// Used in order to check upon evaluating the function.
