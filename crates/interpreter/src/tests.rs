@@ -27,7 +27,7 @@ use ir::{
     instr::operands::CompareIntOp,
     primitive::{Const, Func, IntConst, IntType, Type, Value},
 };
-use module::{Function, FunctionInstrBuilder, IrError, Store, Variable};
+use module::{Function, InstructionBuilder, IrError, Store, Variable};
 
 /// Evaluates the function given the inputs and returns the results.
 fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
@@ -298,7 +298,7 @@ fn construct_is_even_and_is_odd<F>(
     mut f: F,
 ) -> Result<(Function, Function), IrError>
 where
-    F: FnMut(FunctionInstrBuilder, Func, Value) -> Result<Value, IrError>,
+    F: FnMut(InstructionBuilder, Func, Value) -> Result<Value, IrError>,
 {
     // Pre declare functions used before they are defined.
 

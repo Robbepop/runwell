@@ -31,7 +31,7 @@ pub use self::{
         Function,
         FunctionBuilder,
         FunctionBuilderError,
-        FunctionInstrBuilder,
+        InstructionBuilder,
         Variable,
     },
     global_var::{Global, GlobalVariable, GlobalVariableEntity},

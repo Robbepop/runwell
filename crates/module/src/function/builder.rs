@@ -22,7 +22,7 @@
 //! its predecessors as all predecessors are known.
 
 use super::{
-    instruction::{FunctionInstrBuilder, Instr},
+    instruction::{InstructionBuilder, Instr},
     variable::Variable,
     Function,
     FunctionBuilderError,
@@ -365,7 +365,7 @@ impl FunctionBuilder<state::Body> {
     /// # Errors
     ///
     /// If the current block is already filled.
-    pub fn ins(&mut self) -> Result<FunctionInstrBuilder, IrError> {
+    pub fn ins(&mut self) -> Result<InstructionBuilder, IrError> {
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled[block];
         if already_filled {
@@ -374,7 +374,7 @@ impl FunctionBuilder<state::Body> {
             })
             .map_err(Into::into)
         }
-        Ok(FunctionInstrBuilder::new(self))
+        Ok(InstructionBuilder::new(self))
     }
 
     /// Assignes the value to the variable for the current basic block.
