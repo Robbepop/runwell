@@ -22,7 +22,7 @@
 //! its predecessors as all predecessors are known.
 
 use super::{
-    instruction::{InstructionBuilder, Instr},
+    instruction::{Instr, InstructionBuilder},
     variable::Variable,
     Function,
     FunctionBuilderError,

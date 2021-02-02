@@ -21,7 +21,7 @@ use self::builder::state;
 pub use self::{
     builder::{FunctionBuilder, FunctionBuilderContext, ValueAssoc},
     error::{FunctionBuilderError, VariableAccess},
-    instruction::{InstructionBuilder, Instr},
+    instruction::{Instr, InstructionBuilder},
     variable::{Variable, VariableTranslator},
 };
 use core::fmt;
