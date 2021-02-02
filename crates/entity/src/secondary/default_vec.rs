@@ -94,6 +94,18 @@ impl<K, V> DefaultComponentVec<Idx<K>, V>
 where
     V: Default,
 {
+    /// Reserves the minimum capacity for exactly `additional` more elements to be
+    /// inserted in the component data structure.
+    ///
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve_exact(&mut self, additional: u32) {
+        assert!(
+            additional as usize + self.components.capacity()
+                <= RawIdx::MAX_U32 as usize
+        );
+        self.components.reserve_exact(additional as usize);
+    }
+
     /// Converts the given key to the associated index.
     fn key_to_index(key: Idx<K>) -> usize {
         key.into_raw().into_u32() as usize

@@ -94,6 +94,18 @@ impl<K, V> DefaultComponentMap<Idx<K>, V>
 where
     V: Default,
 {
+    /// Reserves the minimum capacity for exactly `additional` more elements to be
+    /// inserted in the component data structure.
+    ///
+    /// Does nothing if capacity is already sufficient.
+    pub fn reserve_exact(&mut self, additional: u32) {
+        assert!(
+            additional as usize + self.components.capacity()
+                <= RawIdx::MAX_U32 as usize
+        );
+        self.components.reserve(additional as usize);
+    }
+
     /// Returns a shared reference to the entity at the key.
     fn get(&self, key: Idx<K>) -> &V {
         self.components
