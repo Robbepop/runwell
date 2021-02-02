@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{function::Function, primitive::Func};
-use entity::EntityArena;
+use crate::{
+    function::Function,
+    primitive::{Func, FunctionEntity},
+};
+use entity::{ComponentVec, EntityArena};
 
 /// Holds all data that is immutable during a function evaluation.
 ///
@@ -21,13 +24,16 @@ use entity::EntityArena;
 /// linear memories, tables, global variables etc.
 #[derive(Debug, Default)]
 pub struct Store {
-    functions: EntityArena<Function>,
+    function_entities: EntityArena<FunctionEntity>,
+    functions: ComponentVec<Func, Function>,
 }
 
 impl Store {
     /// Pushes a function to the store and returns its key.
     pub fn push_function(&mut self, function: Function) -> Func {
-        self.functions.alloc(function)
+        let func = self.function_entities.alloc(Default::default());
+        self.functions.insert(func, function);
+        func
     }
 
     /// Returns a shared reference to the function associated to the given index.

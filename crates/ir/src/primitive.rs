@@ -19,15 +19,18 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
-use crate::function::Function;
 use core::fmt;
 use derive_more::{Display, From};
 use entity::{DisplayHook, Idx};
 
-/// A function index.
-pub type Func = Idx<Function>;
+/// A function entity of the Runwell IR.
+#[derive(Debug, Default)]
+pub struct FunctionEntity;
 
-impl DisplayHook for Function {
+/// A function index.
+pub type Func = Idx<FunctionEntity>;
+
+impl DisplayHook for FunctionEntity {
     fn fmt(idx: Func, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "func({})", idx.into_raw())
     }
