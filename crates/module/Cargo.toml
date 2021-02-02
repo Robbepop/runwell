@@ -1,0 +1,15 @@
+[package]
+name = "runwell_module"
+version = "0.1.0"
+authors = ["Robin Freyler <robin.freyler@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+entity = { package = "runwell_entity", path = "../entity" }
+ir = { package = "runwell_ir", path = "../ir" }
+derive_more = "0.99.2"
+
+[features]
+default = ["std"]
+bench = ["std"]
+std = []
