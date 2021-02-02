@@ -28,7 +28,7 @@ use self::{
 };
 use entity::RawIdx;
 use ir::primitive::{Func, Value};
-use module::{function::Function, Store};
+use module::{Function, Store};
 
 /// The evaluation context for the entire virtual machine.
 ///

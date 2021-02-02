@@ -18,25 +18,26 @@ use super::{
     FunctionBuilder,
     FunctionBuilderError,
 };
-use crate::{
+use crate::IrError;
+use entity::Idx;
+use ir::{
     instr::{
+        operands::{BinaryIntOp, CompareIntOp},
         BinaryIntInstr,
         BranchInstr,
         CallInstr,
         CompareIntInstr,
         ConstInstr,
         IfThenElseInstr,
+        Instruction,
         ReinterpretInstr,
         ReturnInstr,
         SelectInstr,
         TailCallInstr,
         TerminalInstr,
     },
-    instruction::{BinaryIntOp, CompareIntOp, Instruction},
     primitive::{Block, Const, Func, IntType, Type, Value},
-    IrError,
 };
-use entity::Idx;
 
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Instr = Idx<Instruction>;

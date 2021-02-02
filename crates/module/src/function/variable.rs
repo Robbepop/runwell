@@ -13,11 +13,7 @@
 // limitations under the License.
 
 use super::VariableAccess;
-use crate::{
-    primitive::{Block, Type, Value},
-    FunctionBuilderError,
-    IrError,
-};
+use crate::{FunctionBuilderError, IrError};
 use core::fmt;
 use derive_more::From;
 use entity::{
@@ -28,6 +24,7 @@ use entity::{
     Idx,
     RawIdx,
 };
+use ir::primitive::{Block, Type, Value};
 
 /// A variable entity of the Runwell IR.
 ///

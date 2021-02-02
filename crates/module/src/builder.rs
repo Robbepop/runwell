@@ -15,6 +15,7 @@
 use std::collections::HashSet;
 
 use crate::{
+    function::Function,
     FunctionType,
     Global,
     GlobalVariable,
@@ -27,18 +28,15 @@ use crate::{
     TableInit,
 };
 use entity::{ComponentMap, ComponentVec, DefaultComponentVec, EntityArena};
-use ir::{
-    function::Function,
-    primitive::{
-        Func,
-        FuncType,
-        FuncTypeEntity,
-        FunctionEntity,
-        LinearMemoryEntity,
-        Mem,
-        Table,
-        TableEntity,
-    },
+use ir::primitive::{
+    Func,
+    FuncType,
+    FuncTypeEntity,
+    FunctionEntity,
+    LinearMemoryEntity,
+    Mem,
+    Table,
+    TableEntity,
 };
 
 /// A module builder to incrementally build up a Runwell module.

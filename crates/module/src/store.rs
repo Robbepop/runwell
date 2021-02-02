@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    function::Function,
-    primitive::{Func, FunctionEntity},
-};
+use crate::function::Function;
 use entity::{ComponentVec, EntityArena};
+use ir::primitive::{Func, FunctionEntity};
 
 /// Holds all data that is immutable during a function evaluation.
 ///

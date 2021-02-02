@@ -15,10 +15,8 @@
 use super::InterpretationError;
 use core::mem::replace;
 use entity::{DefaultComponentVec, RawIdx};
-use ir::{
-    function::Function,
-    primitive::{Block, Value},
-};
+use ir::primitive::{Block, Value};
+use module::Function;
 
 /// The evaluation context for a single function call.
 ///

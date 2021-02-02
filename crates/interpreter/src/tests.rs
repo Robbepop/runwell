@@ -24,12 +24,10 @@
 use crate::EvaluationContext;
 use entity::RawIdx;
 use ir::{
-    function::{Function, FunctionInstrBuilder, Variable},
     instr::operands::CompareIntOp,
     primitive::{Const, Func, IntConst, IntType, Type, Value},
-    IrError,
-    Store,
 };
+use module::{Function, FunctionInstrBuilder, IrError, Store, Variable};
 
 /// Evaluates the function given the inputs and returns the results.
 fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {

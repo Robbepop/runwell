@@ -24,12 +24,12 @@ pub use self::{
     instruction::{FunctionInstrBuilder, Instr},
     variable::{Variable, VariableTranslator},
 };
-use crate::{
-    instruction::Instruction,
-    primitive::{Block, BlockEntity, Type, Value, ValueEntity},
-};
 use core::fmt;
 use entity::{ComponentMap, ComponentVec, EntityArena, RawIdx};
+use ir::{
+    instr::Instruction,
+    primitive::{Block, BlockEntity, Type, Value, ValueEntity},
+};
 
 /// A virtual, verified Runwell IR function.
 #[derive(Debug)]

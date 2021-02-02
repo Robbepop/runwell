@@ -18,7 +18,6 @@ mod terminal;
 
 use super::{EvaluationContext, Func, FunctionFrame, InterpretationError};
 use ir::{
-    function::Function,
     instr::{
         CallInstr,
         ConstInstr,
@@ -29,6 +28,7 @@ use ir::{
     },
     primitive::Value,
 };
+use module::Function;
 
 /// Implemented by Runwell IR instructions to make them interpretable.
 pub trait InterpretInstr {

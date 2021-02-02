@@ -28,15 +28,14 @@ use super::{
     FunctionBuilderError,
     VariableTranslator,
 };
-use crate::{
-    instr::PhiInstr,
-    instruction::Instruction,
-    primitive::{Block, BlockEntity, Type, Value, ValueEntity},
-    IrError,
-    ReplaceValue,
-};
+use crate::IrError;
 use core::marker::PhantomData;
 use entity::{ComponentMap, ComponentVec, EntityArena, RawIdx};
+use ir::{
+    instr::{Instruction, PhiInstr},
+    primitive::{Block, BlockEntity, Type, Value, ValueEntity},
+    ReplaceValue,
+};
 use std::collections::HashSet;
 
 impl Function {

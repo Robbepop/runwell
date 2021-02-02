@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    primitive::{Block, Type, Value},
-    Variable,
-};
+use crate::function::Variable;
 use derive_more::{Display, Error};
+use ir::primitive::{Block, Type, Value};
 
 /// Errors that might occure upon building up a Runwell IR function.
 #[derive(Debug, Display, Error, PartialEq, Eq)]

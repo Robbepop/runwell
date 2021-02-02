@@ -18,10 +18,7 @@ mod instruction;
 pub mod primitive;
 mod replace_value;
 
-pub use self::{
-    instruction::ImmU32,
-    replace_value::ReplaceValue,
-};
+pub use self::{instruction::ImmU32, replace_value::ReplaceValue};
 
 /// All Runwell IR SSA instructions.
 pub mod instr {

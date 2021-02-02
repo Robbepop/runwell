@@ -13,20 +13,32 @@
 // limitations under the License.
 
 mod builder;
+mod error;
 mod func_type;
+mod function;
 mod global_var;
 mod import_name;
 mod init_expr;
 mod linear_memory;
+mod store;
 mod table;
 
 pub use self::{
     builder::ModuleBuilder,
+    error::{IrError, IrErrorKind},
     func_type::{FunctionType, FunctionTypeBuilder},
+    function::{
+        Function,
+        FunctionBuilder,
+        FunctionBuilderError,
+        FunctionInstrBuilder,
+        Variable,
+    },
     global_var::{Global, GlobalVariable, GlobalVariableEntity},
     import_name::ImportName,
     init_expr::InitExpr,
     linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
+    store::Store,
     table::{ElementSegmentIter, TableDecl, TableInit},
 };
 
