@@ -286,7 +286,7 @@ fn simple_loop_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let iterations = 100_000;
+    let iterations = 100;
     let results =
         evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
     assert_eq!(results, vec![iterations as u64]);
@@ -400,7 +400,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
     let mut ctx = EvaluationContext::new(&store);
     let mut results = Vec::new();
 
-    let input = 1000;
+    let input = 100;
     ctx.evaluate_function(is_even, vec![input], |result| results.push(result))
         .unwrap();
     assert_eq!(results, vec![(input % 2 == 0) as u64]);
@@ -428,7 +428,7 @@ fn ping_pong_tail_calls() -> Result<(), IrError> {
     let mut ctx = EvaluationContext::new(&store);
     let mut results = Vec::new();
 
-    let input = 1_000_000;
+    let input = 100;
     ctx.evaluate_function(is_even, vec![input], |result| results.push(result))
         .unwrap();
     assert_eq!(results, vec![(input % 2 == 0) as u64]);
