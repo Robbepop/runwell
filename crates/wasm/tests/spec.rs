@@ -105,7 +105,7 @@ fn collect_test_inputs() -> Vec<TestInput> {
     collect_test_inputs_into("testsuite".as_ref(), &mut ret).expect(
         "encountered problem while collecting Wasm spec testsuite inputs",
     );
-    return ret
+    ret
 }
 
 #[test]
