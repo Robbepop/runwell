@@ -24,6 +24,7 @@ use crate::{
     InitExpr,
     LinearMemoryDecl,
     LinearMemoryInit,
+    Module,
     TableDecl,
     TableInit,
 };
@@ -52,7 +53,7 @@ pub struct ModuleBuilder {
 
 /// Module builder resource to incrementally build up a Runwell module.
 #[derive(Debug, Default)]
-struct ModuleResources {
+pub(crate) struct ModuleResources {
     /// Function type entities.
     type_entities: EntityArena<FuncTypeEntity>,
     /// Function entities.
@@ -152,6 +153,32 @@ impl ModuleResources {
             ))
         }
         Ok(())
+    }
+
+    /// Shrinks all data structures to fit their minimum space needed.
+    ///
+    /// This may costly reallocate some of the data structures.
+    fn shrink_to_fit(&mut self) {
+        self.type_entities.shrink_to_fit();
+        self.function_entities.shrink_to_fit();
+        self.global_entities.shrink_to_fit();
+        self.memory_entities.shrink_to_fit();
+        self.table_entities.shrink_to_fit();
+        self.types.shrink_to_fit();
+        self.function_decls.shrink_to_fit();
+        self.function_import.shrink_to_fit();
+        self.function_export.shrink_to_fit();
+        self.global_decls.shrink_to_fit();
+        self.global_inits.shrink_to_fit();
+        self.global_export.shrink_to_fit();
+        self.memory_decls.shrink_to_fit();
+        self.memory_inits.shrink_to_fit();
+        self.memory_import.shrink_to_fit();
+        self.memory_export.shrink_to_fit();
+        self.table_decls.shrink_to_fit();
+        self.table_inits.shrink_to_fit();
+        self.table_import.shrink_to_fit();
+        self.table_export.shrink_to_fit();
     }
 }
 
@@ -262,6 +289,29 @@ impl ModuleBuilder {
         let module_view = ModuleView { res };
         let builder = ModuleFunctionBodiesBuilder { res, bodies };
         Ok((module_view, builder))
+    }
+
+    /// Finalizes the construction of the module.
+    ///
+    /// # Errors
+    ///
+    /// If there are missing function bodies for declared internal functions.
+    pub fn finalize(mut self) -> Result<Module, String> {
+        let len_func_decls = self.res.function_decls.len();
+        let len_func_bodies = self.bodies.len();
+        if len_func_decls != len_func_bodies {
+            return Err(format!(
+                "encountered mismatch with {} function bodies for {} function declarations",
+                len_func_decls,
+                len_func_bodies,
+            ))
+        }
+        self.res.shrink_to_fit();
+        self.bodies.shrink_to_fit();
+        Ok(Module {
+            res: self.res,
+            bodies: self.bodies,
+        })
     }
 }
 

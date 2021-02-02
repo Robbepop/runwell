@@ -23,6 +23,10 @@ mod linear_memory;
 mod store;
 mod table;
 
+use builder::ModuleResources;
+use entity::ComponentVec;
+use ir::primitive::Func;
+
 pub use self::{
     builder::ModuleBuilder,
     error::{IrError, IrErrorKind},
@@ -44,7 +48,12 @@ pub use self::{
 
 /// A constructed and validated Runwell module.
 #[derive(Debug)]
-pub struct Module {}
+pub struct Module {
+    /// The internal resources of the constructed module.
+    res: ModuleResources,
+    /// The bodies (implementations) of the internal functions.
+    bodies: ComponentVec<Func, Function>,
+}
 
 impl Module {
     /// Creates a new module builder.
