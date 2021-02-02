@@ -177,7 +177,10 @@ impl InterpretInstr for CallInstr {
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let mut new_frame = ctx.create_frame();
-        let function = ctx.store.get_fn(self.func());
+        let (_function_type, function) = ctx
+            .module
+            .get_function(self.func())
+            .expect("encountered invalid function index");
         new_frame.initialize(
             function,
             self.params()

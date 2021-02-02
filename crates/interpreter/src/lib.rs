@@ -28,24 +28,24 @@ use self::{
 };
 use entity::RawIdx;
 use ir::primitive::{Func, Value};
-use module::{Function, Store};
+use module::{Function, Module};
 
 /// The evaluation context for the entire virtual machine.
 ///
 /// This holds all the mutable data such as the actual linear memory.
 #[derive(Debug)]
 pub struct EvaluationContext<'a> {
-    /// The store that holds immutable data.
-    pub store: &'a Store,
+    /// The module that holds immutable data.
+    pub module: &'a Module,
     /// Cached function frames to reuse memory allocations.
     cached_frames: Vec<FunctionFrame>,
 }
 
 impl<'a> EvaluationContext<'a> {
     /// Creates a new evaluation context from the given shared reference to the store.
-    pub fn new(store: &'a Store) -> Self {
+    pub fn new(module: &'a Module) -> Self {
         Self {
-            store,
+            module,
             cached_frames: Vec::new(),
         }
     }
@@ -70,7 +70,10 @@ impl<'a> EvaluationContext<'a> {
         O: FnMut(u64),
     {
         let mut frame = self.create_frame();
-        let function = self.store.get_fn(func);
+        let (_function_type, function) = self
+            .module
+            .get_function(func)
+            .expect("encountered invalid function index");
         frame.initialize(function, inputs)?;
         self.evaluate_function_frame(function, &mut frame, outputs)?;
         self.release_frame(frame);
@@ -99,7 +102,11 @@ impl<'a> EvaluationContext<'a> {
                 InterpretationFlow::Continue => continue,
                 InterpretationFlow::Return => break,
                 InterpretationFlow::TailCall(func) => {
-                    function = &self.store.get_fn(func);
+                    let (_function_type, called_function) = &self
+                        .module
+                        .get_function(func)
+                        .expect("encountered invalid function index");
+                    function = called_function;
                 }
             }
         }

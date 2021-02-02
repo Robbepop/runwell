@@ -157,7 +157,8 @@ impl ModuleResources {
 
     /// Returns the function type of the function if the function exists in the module.
     pub fn get_func_type(&self, func: Func) -> Option<&FunctionType> {
-        self.function_decls.get(func)
+        self.function_decls
+            .get(func)
             .map(|&func_type| &self.types[func_type])
     }
 

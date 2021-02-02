@@ -20,7 +20,6 @@ mod global_var;
 mod import_name;
 mod init_expr;
 mod linear_memory;
-mod store;
 mod table;
 
 use builder::ModuleResources;
@@ -42,7 +41,6 @@ pub use self::{
     import_name::ImportName,
     init_expr::InitExpr,
     linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
-    store::Store,
     table::{ElementSegmentIter, TableDecl, TableInit},
 };
 
@@ -62,11 +60,13 @@ impl Module {
     }
 
     /// Returns the function signature and body for the given function index if any.
-    pub fn get_function(&self, func: Func) -> Option<(&FunctionType, &Function)> {
-        self.res.get_func_type(func)
-            .map(|func_type| {
-                let body = &self.bodies[func];
-                (func_type, body)
-            })
+    pub fn get_function(
+        &self,
+        func: Func,
+    ) -> Option<(&FunctionType, &Function)> {
+        self.res.get_func_type(func).map(|func_type| {
+            let body = &self.bodies[func];
+            (func_type, body)
+        })
     }
 }

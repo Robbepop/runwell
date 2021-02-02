@@ -27,13 +27,31 @@ use ir::{
     instr::operands::CompareIntOp,
     primitive::{Const, Func, IntConst, IntType, Type, Value},
 };
-use module::{Function, InstructionBuilder, IrError, Store, Variable};
+use module::{
+    Function,
+    FunctionType,
+    InstructionBuilder,
+    IrError,
+    Module,
+    Variable,
+};
 
 /// Evaluates the function given the inputs and returns the results.
 fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
+    let mut builder = Module::build();
+    let mut type_builder = builder.types().unwrap();
+    let func_type = type_builder.push_type({
+        let mut b = FunctionType::build();
+        b.push_output(IntType::I32);
+        b.finalize()
+    });
+    let mut function_builder = builder.functions().unwrap();
+    let func = function_builder.push_function(func_type).unwrap();
+    let (_view, mut body_builder) = builder.function_bodies().unwrap();
+    body_builder.push_body(func, function).unwrap();
+    let module = builder.finalize().unwrap();
+
+    let mut ctx = EvaluationContext::new(&module);
     let mut results = Vec::new();
     ctx.evaluate_function(
         func,
@@ -183,6 +201,20 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
 
 #[test]
 fn simple_gvn_if_works() -> Result<(), IrError> {
+    // Setup module.
+    let mut builder = Module::build();
+    let mut type_builder = builder.types().unwrap();
+    let func_type = type_builder.push_type({
+        let mut b = FunctionType::build();
+        b.push_input(IntType::I32);
+        b.push_output(IntType::I32);
+        b.finalize()
+    });
+    let mut function_builder = builder.functions().unwrap();
+    let func = function_builder.push_function(func_type).unwrap();
+    let (_view, mut body_builder) = builder.function_bodies().unwrap();
+
+    // Construct function body.
     let mut b = Function::build()
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[IntType::I32.into()])?
@@ -222,9 +254,10 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
 
     println!("{}", function);
 
-    let mut store = Store::default();
-    let func = store.push_function(function);
-    let mut ctx = EvaluationContext::new(&store);
+    body_builder.push_body(func, function).unwrap();
+    let module = builder.finalize().unwrap();
+
+    let mut ctx = EvaluationContext::new(&module);
     let mut results = Vec::new();
     ctx.evaluate_function(func, vec![0], |result| results.push(result))
         .unwrap();
@@ -296,14 +329,23 @@ fn simple_loop_works() -> Result<(), IrError> {
 
 fn construct_is_even_and_is_odd<F>(
     mut f: F,
-) -> Result<(Function, Function), IrError>
+) -> Result<(Module, Func, Func), IrError>
 where
     F: FnMut(InstructionBuilder, Func, Value) -> Result<Value, IrError>,
 {
+    // Setup module.
+    let mut builder = Module::build();
+    let mut type_builder = builder.types().unwrap();
+    let func_type = type_builder.push_type({
+        let mut b = FunctionType::build();
+        b.push_input(IntType::I32);
+        b.push_output(Type::Bool);
+        b.finalize()
+    });
     // Pre declare functions used before they are defined.
-
-    let is_even = Func::from_raw(RawIdx::from_u32(0));
-    let is_odd = Func::from_raw(RawIdx::from_u32(1));
+    let mut function_builder = builder.functions().unwrap();
+    let is_even = function_builder.push_function(func_type).unwrap();
+    let is_odd = function_builder.push_function(func_type).unwrap();
 
     // Create Function: is_even
     //
@@ -384,20 +426,20 @@ where
     println!("{}", is_even_body);
     println!("{}", is_odd_body);
 
-    Ok((is_even_body, is_odd_body))
+    let (_view, mut body_builder) = builder.function_bodies().unwrap();
+    body_builder.push_body(is_even, is_even_body).unwrap();
+    body_builder.push_body(is_odd, is_odd_body).unwrap();
+    let module = builder.finalize().unwrap();
+
+    Ok((module, is_even, is_odd))
 }
 
 #[test]
 fn ping_pong_calls() -> Result<(), IrError> {
-    let (is_even_body, is_odd_body) =
+    let (module, is_even, is_odd) =
         construct_is_even_and_is_odd(|ins, func, v6| ins.call(func, vec![v6]))?;
 
-    // Store both constructed functions:
-
-    let mut store = Store::default();
-    let is_even = store.push_function(is_even_body);
-    let is_odd = store.push_function(is_odd_body);
-    let mut ctx = EvaluationContext::new(&store);
+    let mut ctx = EvaluationContext::new(&module);
     let mut results = Vec::new();
 
     let input = 100;
@@ -415,17 +457,12 @@ fn ping_pong_calls() -> Result<(), IrError> {
 
 #[test]
 fn ping_pong_tail_calls() -> Result<(), IrError> {
-    let (is_even_body, is_odd_body) =
+    let (module, is_even, is_odd) =
         construct_is_even_and_is_odd(|ins, func, v6| {
             ins.tail_call(func, vec![v6])
         })?;
 
-    // Store both constructed functions:
-
-    let mut store = Store::default();
-    let is_even = store.push_function(is_even_body);
-    let is_odd = store.push_function(is_odd_body);
-    let mut ctx = EvaluationContext::new(&store);
+    let mut ctx = EvaluationContext::new(&module);
     let mut results = Vec::new();
 
     let input = 100;
