@@ -24,18 +24,18 @@ pub struct CallInstr {
     /// The index of the called function.
     func: Func,
     /// The parameters of the function call.
-    call_params: Vec<Value>,
+    params: Vec<Value>,
 }
 
 impl CallInstr {
     /// Creates a new call instruction to call the indexed function using the given parameters.
-    pub fn new<I>(func: Func, call_params: I) -> Self
+    pub fn new<I>(func: Func, params: I) -> Self
     where
         I: IntoIterator<Item = Value>,
     {
         Self {
             func,
-            call_params: call_params.into_iter().collect::<Vec<_>>(),
+            params: params.into_iter().collect::<Vec<_>>(),
         }
     }
 
@@ -46,7 +46,7 @@ impl CallInstr {
 
     /// Returns the function call parameters.
     pub fn params(&self) -> &[Value] {
-        &self.call_params
+        &self.params
     }
 }
 
@@ -55,7 +55,7 @@ impl ReplaceValue for CallInstr {
     where
         F: FnMut(&mut Value) -> bool,
     {
-        self.call_params
+        self.params
             .iter_mut()
             .map(|param| replace(param))
             .any(identity)
@@ -89,7 +89,7 @@ pub struct CallIndirectInstr {
     /// The index of the function in the table that is indirectly called.
     index: Value,
     /// The parameters given to the indirectly called function.
-    call_params: Vec<Value>,
+    params: Vec<Value>,
 }
 
 impl CallIndirectInstr {
@@ -98,7 +98,7 @@ impl CallIndirectInstr {
         table: Table,
         func_type: FuncType,
         index: Value,
-        call_params: I,
+        params: I,
     ) -> Self
     where
         I: IntoIterator<Item = Value>,
@@ -107,7 +107,7 @@ impl CallIndirectInstr {
             table,
             func_type,
             index,
-            call_params: call_params.into_iter().collect::<Vec<_>>(),
+            params: params.into_iter().collect::<Vec<_>>(),
         }
     }
 }
@@ -119,7 +119,7 @@ impl ReplaceValue for CallIndirectInstr {
     {
         replace(&mut self.index)
             && self
-                .call_params
+                .params
                 .iter_mut()
                 .map(|param| replace(param))
                 .any(identity)
@@ -128,18 +128,15 @@ impl ReplaceValue for CallIndirectInstr {
 
 impl Display for CallIndirectInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(
-            f,
-            "call.indirect table {}, func_type {}, index {}, params: [",
-            self.table, self.func_type, self.index
-        )?;
-        if let Some((fst, rest)) = self.call_params.split_first() {
-            write!(f, "{}", fst)?;
+        write!(f, "call_indirect {}[{}] [ ", self.table, self.index)?;
+        if let Some((first, rest)) = self.params.split_first() {
+            write!(f, "{}", first)?;
             for param in rest {
                 write!(f, ", {}", param)?;
             }
         }
-        write!(f, "]")?;
+        write!(f, " ]: ")?;
+        write!(f, "{}", self.func_type)?;
         Ok(())
     }
 }
