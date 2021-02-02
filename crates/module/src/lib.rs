@@ -60,4 +60,13 @@ impl Module {
     pub fn build() -> ModuleBuilder {
         ModuleBuilder::new()
     }
+
+    /// Returns the function signature and body for the given function index if any.
+    pub fn get_function(&self, func: Func) -> Option<(&FunctionType, &Function)> {
+        self.res.get_func_type(func)
+            .map(|func_type| {
+                let body = &self.bodies[func];
+                (func_type, body)
+            })
+    }
 }
