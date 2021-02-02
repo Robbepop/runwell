@@ -14,20 +14,13 @@
 
 //! Runwell IR data structures, SSA builder and IR interpreter.
 
-mod error;
-pub mod function;
 mod instruction;
 pub mod primitive;
 mod replace_value;
-mod store;
 
-use self::function::Variable;
 pub use self::{
-    error::IrError,
-    function::FunctionBuilderError,
     instruction::ImmU32,
     replace_value::ReplaceValue,
-    store::Store,
 };
 
 /// All Runwell IR SSA instructions.

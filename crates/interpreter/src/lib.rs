@@ -27,11 +27,8 @@ use self::{
     instr::{InterpretInstr, InterpretationFlow},
 };
 use entity::RawIdx;
-use ir::{
-    function::Function,
-    primitive::{Func, Value},
-    Store,
-};
+use ir::primitive::{Func, Value};
+use module::{function::Function, Store};
 
 /// The evaluation context for the entire virtual machine.
 ///
