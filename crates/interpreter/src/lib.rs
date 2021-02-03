@@ -75,7 +75,12 @@ impl<'a> EvaluationContext<'a> {
             .get_function(func)
             .expect("encountered invalid function index");
         frame.initialize(function_type, function, inputs)?;
-        self.evaluate_function_frame(function_type, function, &mut frame, outputs)?;
+        self.evaluate_function_frame(
+            function_type,
+            function,
+            &mut frame,
+            outputs,
+        )?;
         self.release_frame(frame);
         Ok(())
     }
