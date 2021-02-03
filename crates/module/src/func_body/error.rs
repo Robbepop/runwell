@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::function::Variable;
+use crate::func_body::Variable;
 use derive_more::{Display, Error};
 use ir::primitive::{Block, Type, Value};
 

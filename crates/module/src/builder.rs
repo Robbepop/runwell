@@ -15,7 +15,7 @@
 use std::collections::HashSet;
 
 use crate::{
-    function::FunctionBody,
+    func_body::FunctionBody,
     FunctionType,
     Global,
     GlobalVariable,

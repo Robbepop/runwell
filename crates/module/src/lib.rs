@@ -16,8 +16,8 @@
 
 mod builder;
 mod error;
+mod func_body;
 mod func_type;
-mod function;
 mod global_var;
 mod import_name;
 mod init_expr;
@@ -33,14 +33,14 @@ use ir::primitive::{Func, Type, Value};
 pub use self::{
     builder::ModuleBuilder,
     error::{IrError, IrErrorKind},
-    func_type::{FunctionType, FunctionTypeBuilder},
-    function::{
+    func_body::{
         FunctionBody,
         FunctionBuilder,
         FunctionBuilderError,
         InstructionBuilder,
         Variable,
     },
+    func_type::{FunctionType, FunctionTypeBuilder},
     global_var::{Global, GlobalVariable, GlobalVariableEntity},
     import_name::ImportName,
     init_expr::InitExpr,
