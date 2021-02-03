@@ -16,7 +16,7 @@ use super::InterpretationError;
 use core::mem::replace;
 use entity::{DefaultComponentVec, RawIdx};
 use ir::primitive::{Block, Value};
-use module::Function;
+use module::{Function, FunctionType};
 
 /// The evaluation context for a single function call.
 ///
@@ -68,6 +68,7 @@ impl FunctionFrame {
     /// If too many or too few function inputs have been given.
     pub fn initialize<I>(
         &mut self,
+        fun_type: &FunctionType,
         fun: &Function,
         inputs: I,
     ) -> Result<(), InterpretationError>
@@ -85,7 +86,7 @@ impl FunctionFrame {
             len_inputs += 1;
         }
         let given_inputs = len_inputs as usize;
-        let required_inputs = fun.inputs().len();
+        let required_inputs = fun_type.inputs().len();
         if given_inputs != required_inputs {
             return Err(InterpretationError::UnmatchingInputValues {
                 given_inputs,

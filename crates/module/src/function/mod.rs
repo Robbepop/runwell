@@ -73,16 +73,6 @@ impl Function {
         Block::from_raw(RawIdx::from_u32(0))
     }
 
-    /// Returns the expected input types of the function.
-    pub fn inputs(&self) -> &[Type] {
-        &self.input_types
-    }
-
-    /// Returns the asserted output types of the function.
-    pub fn outputs(&self) -> &[Type] {
-        &self.output_types
-    }
-
     /// Returns the n-th instruction of the block and its assoc value if any.
     pub fn instruction_and_value(
         &self,

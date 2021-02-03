@@ -177,18 +177,19 @@ impl InterpretInstr for CallInstr {
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let mut new_frame = ctx.create_frame();
-        let (_function_type, function) = ctx
+        let (function_type, function) = ctx
             .module
             .get_function(self.func())
             .expect("encountered invalid function index");
         new_frame.initialize(
+            function_type,
             function,
             self.params()
                 .iter()
                 .copied()
                 .map(|param| frame.read_register(param)),
         )?;
-        ctx.evaluate_function_frame(function, &mut new_frame, |result| {
+        ctx.evaluate_function_frame(function_type, function, &mut new_frame, |result| {
             // Actually this is wrong and we ideally should write
             // the return value into `return_value` parameter.
             // However, there is only one `return_value` parameter
