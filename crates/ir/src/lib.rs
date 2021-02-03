@@ -14,6 +14,8 @@
 
 //! Runwell IR data structures, SSA builder and IR interpreter.
 
+#![forbid(unsafe_code)]
+
 mod instruction;
 pub mod primitive;
 mod replace_value;

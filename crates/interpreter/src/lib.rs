@@ -14,6 +14,8 @@
 
 //! Allows to interpret the Runwell IR.
 
+#![forbid(unsafe_code)]
+
 mod error;
 mod frame;
 mod instr;
