@@ -18,17 +18,12 @@ mod builder;
 mod error;
 mod func_body;
 mod func_type;
+mod function;
 mod global_var;
 mod import_name;
 mod init_expr;
 mod linear_memory;
 mod table;
-
-use core::fmt;
-
-use builder::ModuleResources;
-use entity::{ComponentVec, RawIdx};
-use ir::primitive::{Func, Type, Value};
 
 pub use self::{
     builder::ModuleBuilder,
@@ -41,12 +36,16 @@ pub use self::{
         Variable,
     },
     func_type::{FunctionType, FunctionTypeBuilder},
+    function::Function,
     global_var::{Global, GlobalVariable, GlobalVariableEntity},
     import_name::ImportName,
     init_expr::InitExpr,
     linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
     table::{ElementSegmentIter, TableDecl, TableInit},
 };
+use builder::ModuleResources;
+use entity::ComponentVec;
+use ir::primitive::Func;
 
 /// A constructed and validated Runwell module.
 #[derive(Debug)]
@@ -55,90 +54,6 @@ pub struct Module {
     res: ModuleResources,
     /// The bodies (implementations) of the internal functions.
     bodies: ComponentVec<Func, FunctionBody>,
-}
-
-/// A Runwell function.
-///
-/// Includes the function's unique index, signature and body.
-///
-/// This is a short-lived composite type used as merge point for
-/// all information regarding a single Runwell function.
-#[derive(Debug, Copy, Clone)]
-pub struct Function<'a> {
-    func: Func,
-    func_type: &'a FunctionType,
-    body: &'a FunctionBody,
-}
-
-impl<'a> Function<'a> {
-    /// Returns the function's unique index.
-    #[inline]
-    pub fn idx(&self) -> Func {
-        self.func
-    }
-
-    /// Returns the function's signature.
-    #[inline]
-    pub fn ty(&self) -> &'a FunctionType {
-        &self.func_type
-    }
-
-    /// Returns the function's input types.
-    #[inline]
-    pub fn inputs(&self) -> &'a [Type] {
-        self.func_type.inputs()
-    }
-
-    /// Returns the function's output types.
-    #[inline]
-    pub fn outputs(&self) -> &'a [Type] {
-        self.func_type.outputs()
-    }
-
-    /// Returns the function body.
-    #[inline]
-    pub fn body(&self) -> &'a FunctionBody {
-        &self.body
-    }
-}
-
-impl<'a> fmt::Display for Function<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let inputs = self
-            .inputs()
-            .iter()
-            .enumerate()
-            .map(|(n, ty)| {
-                let val = Value::from_raw(RawIdx::from_u32(n as u32));
-                (val, ty)
-            })
-            .collect::<Vec<_>>();
-        write!(f, "{} (", self.idx())?;
-        if let Some(((first_value, first_type), rest)) = inputs.split_first() {
-            write!(f, "{}: {}", first_value, first_type)?;
-            for (rest_value, rest_type) in rest {
-                write!(f, ", {}: {}", rest_value, rest_type)?;
-            }
-        }
-        write!(f, ")")?;
-        if let Some((first_output, rest)) = self.outputs().split_first() {
-            write!(f, " -> ")?;
-            let just_one_output = self.outputs().len() == 1;
-            if !just_one_output {
-                write!(f, "[")?;
-            }
-            write!(f, "{}", first_output)?;
-            for rest_output in rest {
-                write!(f, ", {}", rest_output)?;
-            }
-            if !just_one_output {
-                write!(f, "]")?;
-            }
-        }
-        writeln!(f)?;
-        writeln!(f, "{}", self.body())?;
-        Ok(())
-    }
 }
 
 impl Module {
@@ -150,12 +65,8 @@ impl Module {
     /// Returns the function signature and body for the given function index if any.
     pub fn get_function(&self, func: Func) -> Option<Function> {
         self.res.get_func_type(func).map(|func_type| {
-            let body = &self.bodies[func];
-            Function {
-                func,
-                func_type,
-                body,
-            }
+            let func_body = &self.bodies[func];
+            Function::new(func, func_type, func_body)
         })
     }
 }
