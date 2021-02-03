@@ -16,7 +16,7 @@ use super::InterpretationError;
 use core::mem::replace;
 use entity::{DefaultComponentVec, RawIdx};
 use ir::primitive::{Block, Value};
-use module::{Function, FunctionType};
+use module::Function;
 
 /// The evaluation context for a single function call.
 ///
@@ -68,15 +68,14 @@ impl FunctionFrame {
     /// If too many or too few function inputs have been given.
     pub fn initialize<I>(
         &mut self,
-        fun_type: &FunctionType,
-        fun: &Function,
+        fun: Function,
         inputs: I,
     ) -> Result<(), InterpretationError>
     where
         I: IntoIterator<Item = u64>,
     {
         self.reset();
-        self.current_block = fun.entry_block();
+        self.current_block = fun.body().entry_block();
         let mut len_inputs = 0;
         for input in inputs.into_iter() {
             debug_assert!(len_inputs < u32::MAX as usize);
@@ -86,7 +85,7 @@ impl FunctionFrame {
             len_inputs += 1;
         }
         let given_inputs = len_inputs as usize;
-        let required_inputs = fun_type.inputs().len();
+        let required_inputs = fun.inputs().len();
         if given_inputs != required_inputs {
             return Err(InterpretationError::UnmatchingInputValues {
                 given_inputs,

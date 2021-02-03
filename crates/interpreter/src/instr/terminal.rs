@@ -118,12 +118,11 @@ impl InterpretInstr for TailCallInstr {
         //
         // Since function frames are cached reusing them is very cheap.
         let mut new_frame = ctx.create_frame();
-        let (function_type, function) = ctx
+        let function = ctx
             .module
             .get_function(self.func())
             .expect("encountered invalid function index");
         new_frame.initialize(
-            function_type,
             function,
             self.params()
                 .iter()

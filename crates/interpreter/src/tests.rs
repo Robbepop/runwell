@@ -28,7 +28,7 @@ use ir::{
     primitive::{Const, Func, IntConst, IntType, Type, Value},
 };
 use module::{
-    Function,
+    FunctionBody,
     FunctionType,
     InstructionBuilder,
     IrError,
@@ -37,7 +37,7 @@ use module::{
 };
 
 /// Evaluates the function given the inputs and returns the results.
-fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
+fn evaluate_function(function: FunctionBody, inputs: &[Const]) -> Vec<u64> {
     let mut builder = Module::build();
     let mut type_builder = builder.types().unwrap();
     let func_type = type_builder.push_type({
@@ -54,6 +54,8 @@ fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
     body_builder.push_body(func, function).unwrap();
     let module = builder.finalize().unwrap();
 
+    println!("{}", module.get_function(func).unwrap());
+
     let mut ctx = EvaluationContext::new(&module);
     let mut results = Vec::new();
     ctx.evaluate_function(
@@ -67,15 +69,13 @@ fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
 
 #[test]
 fn ret_const_works() -> Result<(), IrError> {
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[])?
         .with_outputs(&[IntType::I32.into()])?
         .body();
     let c = b.ins()?.constant(IntConst::I32(42))?;
     b.ins()?.return_value(c)?;
     let function = b.finalize()?;
-
-    println!("{}", function);
 
     let results = evaluate_function(function, &[]);
     assert_eq!(results, vec![42]);
@@ -85,7 +85,7 @@ fn ret_const_works() -> Result<(), IrError> {
 
 #[test]
 fn simple_block_works() -> Result<(), IrError> {
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[])?
         .with_outputs(&[IntType::I32.into()])?
         .body();
@@ -96,8 +96,6 @@ fn simple_block_works() -> Result<(), IrError> {
     b.ins()?.return_value(v3)?;
     let function = b.finalize()?;
 
-    println!("{}", function);
-
     let results = evaluate_function(function, &[]);
     assert_eq!(results, vec![9]);
 
@@ -106,7 +104,7 @@ fn simple_block_works() -> Result<(), IrError> {
 
 #[test]
 fn if_then_else_works() -> Result<(), IrError> {
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[])?
         .with_outputs(&[IntType::I32.into()])?
         .body();
@@ -126,8 +124,6 @@ fn if_then_else_works() -> Result<(), IrError> {
     b.seal_block()?;
     let function = b.finalize()?;
 
-    println!("{}", function);
-
     let results = evaluate_function(function, &[]);
     assert_eq!(results, vec![10]);
 
@@ -136,7 +132,7 @@ fn if_then_else_works() -> Result<(), IrError> {
 
 #[test]
 fn simple_variable() -> Result<(), IrError> {
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[])?
         .with_outputs(&[IntType::I32.into()])?
         .declare_variables(1, IntType::I32.into())?
@@ -149,8 +145,6 @@ fn simple_variable() -> Result<(), IrError> {
     b.ins()?.return_value(v3)?;
     let function = b.finalize()?;
 
-    println!("{}", function);
-
     let results = evaluate_function(function, &[]);
     assert_eq!(results, vec![2]);
 
@@ -159,7 +153,7 @@ fn simple_variable() -> Result<(), IrError> {
 
 #[test]
 fn simple_input() -> Result<(), IrError> {
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[IntType::I32.into()])?
         .body();
@@ -169,8 +163,6 @@ fn simple_input() -> Result<(), IrError> {
     b.ins()?.return_value(v1)?;
     let function = b.finalize()?;
 
-    println!("{}", function);
-
     let results = evaluate_function(function, &[Const::Int(IntConst::I32(11))]);
     assert_eq!(results, vec![22]);
 
@@ -179,7 +171,7 @@ fn simple_input() -> Result<(), IrError> {
 
 #[test]
 fn simple_gvn_var_read() -> Result<(), IrError> {
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[IntType::I32.into()])?
         .body();
@@ -193,8 +185,6 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
     b.ins()?.return_value(v0)?;
     b.seal_block()?;
     let function = b.finalize()?;
-
-    println!("{}", function);
 
     let results = evaluate_function(function, &[Const::Int(IntConst::I32(42))]);
     assert_eq!(results, vec![1]);
@@ -218,7 +208,7 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
     let (_view, mut body_builder) = builder.function_bodies().unwrap();
 
     // Construct function body.
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[IntType::I32.into()])?
         .declare_variables(1, IntType::I32.into())?
@@ -255,10 +245,10 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
 
     let function = b.finalize()?;
 
-    println!("{}", function);
-
     body_builder.push_body(func, function).unwrap();
     let module = builder.finalize().unwrap();
+
+    println!("{}", module.get_function(func).unwrap());
 
     let mut ctx = EvaluationContext::new(&module);
     let mut results = Vec::new();
@@ -275,7 +265,7 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
 
 #[test]
 fn simple_loop_works() -> Result<(), IrError> {
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[IntType::I32.into()])?
         .declare_variables(1, IntType::I32.into())?
@@ -320,9 +310,7 @@ fn simple_loop_works() -> Result<(), IrError> {
 
     let function = b.finalize()?;
 
-    println!("{}", function);
-
-    let iterations = 100;
+    let iterations = 100_000_000;
     let results =
         evaluate_function(function, &[Const::Int(IntConst::I32(iterations))]);
     assert_eq!(results, vec![iterations as u64]);
@@ -359,7 +347,7 @@ where
     //         return true
     //     return is_odd(x - 1)
 
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[Type::Bool])?
         .body();
@@ -397,7 +385,7 @@ where
     //         return false
     //     return is_even(x - 1)
 
-    let mut b = Function::build()
+    let mut b = FunctionBody::build()
         .with_inputs(&[IntType::I32.into()])?
         .with_outputs(&[Type::Bool])?
         .body();
@@ -426,13 +414,13 @@ where
     b.seal_block()?;
     let is_odd_body = b.finalize()?;
 
-    println!("{}", is_even_body);
-    println!("{}", is_odd_body);
-
     let (_view, mut body_builder) = builder.function_bodies().unwrap();
     body_builder.push_body(is_even, is_even_body).unwrap();
     body_builder.push_body(is_odd, is_odd_body).unwrap();
     let module = builder.finalize().unwrap();
+
+    println!("{}", module.get_function(is_even).unwrap());
+    println!("{}", module.get_function(is_odd).unwrap());
 
     Ok((module, is_even, is_odd))
 }

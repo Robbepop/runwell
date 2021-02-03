@@ -24,7 +24,7 @@
 use super::{
     instruction::{Instr, InstructionBuilder},
     variable::Variable,
-    Function,
+    FunctionBody,
     FunctionBuilderError,
     VariableTranslator,
 };
@@ -38,7 +38,7 @@ use ir::{
 };
 use std::collections::HashSet;
 
-impl Function {
+impl FunctionBody {
     /// Creates a function builder to incrementally construct the function.
     pub fn build() -> FunctionBuilder<state::Inputs> {
         FunctionBuilder {
@@ -566,7 +566,7 @@ impl FunctionBuilder<state::Body> {
     /// # Errors
     ///
     /// If not all basic blocks in the function are sealed and filled.
-    pub fn finalize(mut self) -> Result<Function, IrError> {
+    pub fn finalize(mut self) -> Result<FunctionBody, IrError> {
         let unsealed_blocks = self
             .ctx
             .block_sealed
@@ -612,7 +612,7 @@ impl FunctionBuilder<state::Body> {
             block_instrs.insert(block, instructions);
         }
         block_instrs.shrink_to_fit();
-        Ok(Function {
+        Ok(FunctionBody {
             blocks: self.ctx.blocks,
             values: self.ctx.values,
             instrs: self.ctx.instrs,
@@ -620,8 +620,6 @@ impl FunctionBuilder<state::Body> {
             instr_value: self.ctx.instr_value,
             value_type: self.ctx.value_type,
             value_assoc: self.ctx.value_assoc,
-            input_types: self.ctx.input_types,
-            output_types: self.ctx.output_types,
         })
     }
 }

@@ -33,7 +33,7 @@ use ir::{
 
 /// A virtual, verified Runwell IR function.
 #[derive(Debug)]
-pub struct Function {
+pub struct FunctionBody {
     /// Arena for all block entities.
     blocks: EntityArena<BlockEntity>,
     /// Arena for all SSA value entities.
@@ -59,15 +59,9 @@ pub struct Function {
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
     value_assoc: ComponentVec<Value, ValueAssoc>,
-    /// The types of the input values of the constructed function.
-    ///
-    /// Used in order to check upon evaluating the function.
-    input_types: Vec<Type>,
-    /// The types of the output values of the constructed function.
-    output_types: Vec<Type>,
 }
 
-impl Function {
+impl FunctionBody {
     /// Returns the entry block of the function.
     pub fn entry_block(&self) -> Block {
         Block::from_raw(RawIdx::from_u32(0))
@@ -90,46 +84,8 @@ impl Function {
     }
 }
 
-impl fmt::Display for Function {
+impl fmt::Display for FunctionBody {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut inputs = self
-            .value_assoc
-            .iter()
-            .filter_map(|(value, assoc)| {
-                if let ValueAssoc::Input(idx) = *assoc {
-                    Some((idx, value))
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-        inputs.sort_by(|(lpos, _), (rpos, _)| lpos.cmp(rpos));
-        write!(f, "fn (")?;
-        if let Some(((_, first_input), rest_input)) = inputs.split_first() {
-            let value_type = self.value_type[*first_input];
-            write!(f, "{}: {}", first_input, value_type)?;
-            for (_, rest_input) in rest_input {
-                let value_type = self.value_type[*rest_input];
-                write!(f, ", {}: {}", rest_input, value_type)?;
-            }
-        }
-        write!(f, ")")?;
-        if let Some((first_output, rest_outputs)) =
-            self.output_types.split_first()
-        {
-            write!(f, " -> ")?;
-            if !rest_outputs.is_empty() {
-                write!(f, "[")?;
-            }
-            write!(f, "{}", first_output)?;
-            for rest_output in rest_outputs {
-                write!(f, ", {}", rest_output)?;
-            }
-            if !rest_outputs.is_empty() {
-                write!(f, "]")?;
-            }
-        }
-        writeln!(f)?;
         for block in self.blocks.indices() {
             writeln!(f, "{}:", block)?;
             for &instr in &self.block_instrs[block] {

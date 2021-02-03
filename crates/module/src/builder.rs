@@ -15,7 +15,7 @@
 use std::collections::HashSet;
 
 use crate::{
-    function::Function,
+    function::FunctionBody,
     FunctionType,
     Global,
     GlobalVariable,
@@ -48,7 +48,7 @@ pub struct ModuleBuilder {
     /// The internal resources of the constructed module.
     res: ModuleResources,
     /// The bodies (implementations) of the internal functions.
-    bodies: ComponentVec<Func, Function>,
+    bodies: ComponentVec<Func, FunctionBody>,
 }
 
 /// Module builder resource to incrementally build up a Runwell module.
@@ -666,7 +666,7 @@ pub struct ModuleView<'a> {
 #[derive(Debug)]
 pub struct ModuleFunctionBodiesBuilder<'a> {
     res: &'a ModuleResources,
-    bodies: &'a mut ComponentVec<Func, Function>,
+    bodies: &'a mut ComponentVec<Func, FunctionBody>,
 }
 
 impl<'a> ModuleFunctionBodiesBuilder<'a> {
@@ -674,7 +674,7 @@ impl<'a> ModuleFunctionBodiesBuilder<'a> {
     pub fn push_body(
         &mut self,
         func: Func,
-        body: Function,
+        body: FunctionBody,
     ) -> Result<(), String> {
         if !self.res.function_entities.contains_key(func) {
             return Err(format!(

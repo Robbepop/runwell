@@ -30,7 +30,7 @@ use self::{
 };
 use entity::RawIdx;
 use ir::primitive::{Func, Value};
-use module::{Function, FunctionType, Module};
+use module::{Function, Module};
 
 /// The evaluation context for the entire virtual machine.
 ///
@@ -72,17 +72,12 @@ impl<'a> EvaluationContext<'a> {
         O: FnMut(u64),
     {
         let mut frame = self.create_frame();
-        let (function_type, function) = self
+        let function = self
             .module
             .get_function(func)
             .expect("encountered invalid function index");
-        frame.initialize(function_type, function, inputs)?;
-        self.evaluate_function_frame(
-            function_type,
-            function,
-            &mut frame,
-            outputs,
-        )?;
+        frame.initialize(function, inputs)?;
+        self.evaluate_function_frame(function, &mut frame, outputs)?;
         self.release_frame(frame);
         Ok(())
     }
@@ -97,8 +92,7 @@ impl<'a> EvaluationContext<'a> {
     /// This API is for use internally to the interpreter.
     fn evaluate_function_frame<O>(
         &mut self,
-        function_type: &'a FunctionType,
-        mut function: &'a Function,
+        mut function: Function<'a>,
         frame: &mut FunctionFrame,
         mut outputs: O,
     ) -> Result<(), InterpretationError>
@@ -106,11 +100,11 @@ impl<'a> EvaluationContext<'a> {
         O: FnMut(u64),
     {
         loop {
-            match function.interpret_instr(None, self, frame)? {
+            match function.body().interpret_instr(None, self, frame)? {
                 InterpretationFlow::Continue => continue,
                 InterpretationFlow::Return => break,
                 InterpretationFlow::TailCall(func) => {
-                    let (_function_type, called_function) = &self
+                    let called_function = self
                         .module
                         .get_function(func)
                         .expect("encountered invalid function index");
@@ -118,7 +112,7 @@ impl<'a> EvaluationContext<'a> {
                 }
             }
         }
-        for (n, _) in function_type.outputs().iter().enumerate() {
+        for (n, _) in function.outputs().iter().enumerate() {
             let result_value = Value::from_raw(RawIdx::from_u32(n as u32));
             let result = frame.read_register(result_value);
             outputs(result)
