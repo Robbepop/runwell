@@ -42,6 +42,9 @@ fn evaluate_function(function: Function, inputs: &[Const]) -> Vec<u64> {
     let mut type_builder = builder.types().unwrap();
     let func_type = type_builder.push_type({
         let mut b = FunctionType::build();
+        for input in inputs {
+            b.push_input(input.ty());
+        }
         b.push_output(IntType::I32);
         b.finalize()
     });
