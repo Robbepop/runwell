@@ -58,7 +58,8 @@ impl RawIdx {
     }
 
     /// Converts the raw index into its underlying `u32` value.
-    pub(super) fn into_u32(self) -> u32 {
+    #[inline]
+    pub fn into_u32(self) -> u32 {
         self.index.get().wrapping_sub(1)
     }
 }
