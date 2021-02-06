@@ -59,9 +59,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let func_type = res
             .get_func_type(func)
             .expect("encountered invalid function reference");
-        let mut builder = FunctionBody::build()
-            .with_inputs(func_type.inputs())?
-            .with_outputs(func_type.outputs())?;
+        let mut builder = FunctionBody::build();
+        builder.with_inputs(func_type.inputs())?;
+        builder.with_outputs(func_type.outputs())?;
         let mut reader = wasm_body.get_binary_reader();
         let count_locals = reader.read_var_u32()?;
         for _ in 0..count_locals {
@@ -72,7 +72,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             let ty = Type::try_from(ty)?.into_inner();
             builder.declare_variables(count, ty)?;
         }
-        let builder = builder.body();
-        Ok(builder.finalize()?)
+        builder.body()?;
+        let body = builder.finalize()?;
+        Ok(body)
     }
 }
