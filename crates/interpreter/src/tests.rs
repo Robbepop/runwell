@@ -39,7 +39,7 @@ use module::{
 /// Evaluates the function given the inputs and returns the results.
 fn evaluate_function(function: FunctionBody, inputs: &[Const]) -> Vec<u64> {
     let mut builder = Module::build();
-    let mut type_builder = builder.types().unwrap();
+    let mut type_builder = builder.type_section().unwrap();
     let func_type = type_builder.push_type({
         let mut b = FunctionType::build();
         for input in inputs {
@@ -48,9 +48,9 @@ fn evaluate_function(function: FunctionBody, inputs: &[Const]) -> Vec<u64> {
         b.push_output(IntType::I32);
         b.finalize()
     });
-    let mut function_builder = builder.functions().unwrap();
+    let mut function_builder = builder.function_section().unwrap();
     let func = function_builder.push_function(func_type).unwrap();
-    let (_view, mut body_builder) = builder.function_bodies().unwrap();
+    let (_view, mut body_builder) = builder.code_section().unwrap();
     body_builder.push_body(func, function).unwrap();
     let module = builder.finalize().unwrap();
 
@@ -196,16 +196,16 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
 fn simple_gvn_if_works() -> Result<(), IrError> {
     // Setup module.
     let mut builder = Module::build();
-    let mut type_builder = builder.types().unwrap();
+    let mut type_builder = builder.type_section().unwrap();
     let func_type = type_builder.push_type({
         let mut b = FunctionType::build();
         b.push_input(IntType::I32);
         b.push_output(IntType::I32);
         b.finalize()
     });
-    let mut function_builder = builder.functions().unwrap();
+    let mut function_builder = builder.function_section().unwrap();
     let func = function_builder.push_function(func_type).unwrap();
-    let (_view, mut body_builder) = builder.function_bodies().unwrap();
+    let (_view, mut body_builder) = builder.code_section().unwrap();
 
     // Construct function body.
     let mut b = FunctionBody::build()
@@ -326,7 +326,7 @@ where
 {
     // Setup module.
     let mut builder = Module::build();
-    let mut type_builder = builder.types().unwrap();
+    let mut type_builder = builder.type_section().unwrap();
     let func_type = type_builder.push_type({
         let mut b = FunctionType::build();
         b.push_input(IntType::I32);
@@ -334,7 +334,7 @@ where
         b.finalize()
     });
     // Pre declare functions used before they are defined.
-    let mut function_builder = builder.functions().unwrap();
+    let mut function_builder = builder.function_section().unwrap();
     let is_even = function_builder.push_function(func_type).unwrap();
     let is_odd = function_builder.push_function(func_type).unwrap();
 
@@ -414,7 +414,7 @@ where
     b.seal_block()?;
     let is_odd_body = b.finalize()?;
 
-    let (_view, mut body_builder) = builder.function_bodies().unwrap();
+    let (_view, mut body_builder) = builder.code_section().unwrap();
     body_builder.push_body(is_even, is_even_body).unwrap();
     body_builder.push_body(is_odd, is_odd_body).unwrap();
     let module = builder.finalize().unwrap();

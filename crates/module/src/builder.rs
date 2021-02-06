@@ -230,43 +230,45 @@ impl ModuleBuilder {
     }
 
     /// Returns a module types builder.
-    pub fn types(&mut self) -> Result<ModuleTypesBuilder, String> {
+    pub fn type_section(&mut self) -> Result<ModuleTypesBuilder, String> {
         self.ensure_section_in_order(ModuleSection::Types)?;
         Ok(ModuleTypesBuilder { res: &mut self.res })
     }
 
     /// Returns a module imports builder.
-    pub fn imports(&mut self) -> Result<ModuleImportsBuilder, String> {
+    pub fn import_section(&mut self) -> Result<ModuleImportsBuilder, String> {
         self.ensure_section_in_order(ModuleSection::Imports)?;
         Ok(ModuleImportsBuilder { res: &mut self.res })
     }
 
     /// Returns a module function declaration builder.
-    pub fn functions(&mut self) -> Result<ModuleFunctionsBuilder, String> {
+    pub fn function_section(
+        &mut self,
+    ) -> Result<ModuleFunctionsBuilder, String> {
         self.ensure_section_in_order(ModuleSection::Functions)?;
         Ok(ModuleFunctionsBuilder { res: &mut self.res })
     }
 
     /// Returns a module table declaration builder.
-    pub fn tables(&mut self) -> Result<ModuleTablesBuilder, String> {
+    pub fn table_section(&mut self) -> Result<ModuleTablesBuilder, String> {
         self.ensure_section_in_order(ModuleSection::Tables)?;
         Ok(ModuleTablesBuilder { res: &mut self.res })
     }
 
     /// Returns a module linear memory declaration builder.
-    pub fn memories(&mut self) -> Result<ModuleMemoriesBuilder, String> {
+    pub fn memory_section(&mut self) -> Result<ModuleMemoriesBuilder, String> {
         self.ensure_section_in_order(ModuleSection::Memories)?;
         Ok(ModuleMemoriesBuilder { res: &mut self.res })
     }
 
     /// Returns a module global variable builder.
-    pub fn globals(&mut self) -> Result<ModuleGlobalsBuilder, String> {
+    pub fn global_section(&mut self) -> Result<ModuleGlobalsBuilder, String> {
         self.ensure_section_in_order(ModuleSection::Globals)?;
         Ok(ModuleGlobalsBuilder { res: &mut self.res })
     }
 
     /// Returns a module export builder.
-    pub fn exports(&mut self) -> Result<ModuleExportsBuilder, String> {
+    pub fn export_section(&mut self) -> Result<ModuleExportsBuilder, String> {
         self.ensure_section_in_order(ModuleSection::Exports)?;
         Ok(ModuleExportsBuilder {
             res: &mut self.res,
@@ -294,7 +296,7 @@ impl ModuleBuilder {
     }
 
     /// Returns a module table elements builder.
-    pub fn table_elements(
+    pub fn table_element_section(
         &mut self,
     ) -> Result<ModuleTableElementsBuilder, String> {
         self.ensure_section_in_order(ModuleSection::TableElements)?;
@@ -302,13 +304,15 @@ impl ModuleBuilder {
     }
 
     /// Returns a module memory data builder.
-    pub fn memory_data(&mut self) -> Result<ModuleMemoryDataBuilder, String> {
+    pub fn memory_data_section(
+        &mut self,
+    ) -> Result<ModuleMemoryDataBuilder, String> {
         self.ensure_section_in_order(ModuleSection::MemoryData)?;
         Ok(ModuleMemoryDataBuilder { res: &mut self.res })
     }
 
     /// Returns a module function bodies builder.
-    pub fn function_bodies(
+    pub fn code_section(
         &mut self,
     ) -> Result<(ModuleView, ModuleFunctionBodiesBuilder), String> {
         self.ensure_section_in_order(ModuleSection::FunctionBodies)?;
