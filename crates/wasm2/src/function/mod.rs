@@ -14,16 +14,17 @@
 
 //! Utilities to translate a Wasm function body into a Runwell function body.
 
-use crate::Error;
+use crate::{Error, Type};
+use core::convert::TryFrom as _;
 use ir::primitive::Func;
-use module::{builders::ModuleView, FunctionBody};
+use module::{FunctionBody, ModuleResources};
 use wasmparser::{FuncValidator, ValidatorResources};
 
 pub fn translate_function_body<'a>(
     buffer: Vec<u8>,
     validator: FuncValidator<ValidatorResources>,
     func: Func,
-    res: ModuleView<'a>,
+    res: &'a ModuleResources,
 ) -> Result<FunctionBody, Error> {
     let wasm_body = wasmparser::FunctionBody::new(0, &buffer[..]);
     let translator = FunctionBodyTranslator {
@@ -44,19 +45,34 @@ pub struct FunctionBodyTranslator<'a, 'b> {
     /// The unique function index associated to the translated function body.
     func: Func,
     /// The immutable module resources required to translate the function body.
-    res: ModuleView<'b>,
+    res: &'b ModuleResources,
 }
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn translate(self) -> Result<FunctionBody, Error> {
-        let builder = FunctionBody::build()
-            .with_inputs(&[])?
-            .with_outputs(&[])?
-            .body();
-        let _wasm_body = self.wasm_body;
-        let _validator = self.validator;
-        let _func = self.func;
-        let _res = self.res;
+        let Self {
+            wasm_body,
+            mut validator,
+            func,
+            res,
+        } = self;
+        let func_type = res
+            .get_func_type(func)
+            .expect("encountered invalid function reference");
+        let mut builder = FunctionBody::build()
+            .with_inputs(func_type.inputs())?
+            .with_outputs(func_type.outputs())?;
+        let mut reader = wasm_body.get_binary_reader();
+        let count_locals = reader.read_var_u32()?;
+        for _ in 0..count_locals {
+            let offset = reader.original_position();
+            let count = reader.read_var_u32()?;
+            let ty = reader.read_type()?;
+            validator.define_locals(offset, count, ty)?;
+            let ty = Type::try_from(ty)?.into_inner();
+            builder.declare_variables(count, ty)?;
+        }
+        let builder = builder.body();
         Ok(builder.finalize()?)
     }
 }
