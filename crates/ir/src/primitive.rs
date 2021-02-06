@@ -280,6 +280,12 @@ impl From<f32> for F32 {
     }
 }
 
+impl From<F32> for Const {
+    fn from(value: F32) -> Self {
+        Const::Float(FloatConst::F32(value))
+    }
+}
+
 /// A `f64` (64-bit floating point) value.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[display(fmt = "{}", "f64::from_le_bytes(bits.to_le_bytes())")]
@@ -304,5 +310,11 @@ impl From<f64> for F64 {
         Self {
             bits: u64::from_le_bytes(value.to_le_bytes()),
         }
+    }
+}
+
+impl From<F64> for Const {
+    fn from(value: F64) -> Self {
+        Const::Float(FloatConst::F64(value))
     }
 }
