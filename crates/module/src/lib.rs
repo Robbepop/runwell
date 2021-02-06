@@ -47,6 +47,23 @@ use builder::ModuleResources;
 use entity::ComponentVec;
 use ir::primitive::Func;
 
+/// Module section builder types.
+pub mod builders {
+    pub use super::builder::{
+        ModuleTypesBuilder,
+        ModuleImportsBuilder,
+        ModuleFunctionsBuilder,
+        ModuleTablesBuilder,
+        ModuleMemoriesBuilder,
+        ModuleGlobalsBuilder,
+        ModuleExportsBuilder,
+        ModuleTableElementsBuilder,
+        ModuleMemoryDataBuilder,
+        ModuleView,
+        ModuleFunctionBodiesBuilder,
+    };
+}
+
 /// A constructed and validated Runwell module.
 #[derive(Debug)]
 pub struct Module {
