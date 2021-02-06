@@ -20,11 +20,11 @@ use ir::primitive::Func;
 use module::{FunctionBody, ModuleResources};
 use wasmparser::{FuncValidator, ValidatorResources};
 
-pub fn translate_function_body<'a>(
+pub fn translate_function_body(
     buffer: Vec<u8>,
     validator: FuncValidator<ValidatorResources>,
     func: Func,
-    res: &'a ModuleResources,
+    res: &ModuleResources,
 ) -> Result<FunctionBody, Error> {
     let wasm_body = wasmparser::FunctionBody::new(0, &buffer[..]);
     let translator = FunctionBodyTranslator {
