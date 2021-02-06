@@ -691,6 +691,11 @@ pub struct ModuleFunctionBodiesBuilder<'a> {
 }
 
 impl<'a> ModuleFunctionBodiesBuilder<'a> {
+    /// Reserves space for `additional` function bodies.
+    pub fn reserve(&mut self, additional: u32) {
+        self.bodies.reserve_exact(additional);
+    }
+
     /// Registers the function body for the given function.
     pub fn push_body(
         &mut self,
