@@ -126,9 +126,7 @@ pub enum ErrorKind {
     Table(TableError),
     Read(ReadError),
     Section(SectionError),
-    Module {
-        message: String,
-    },
+    Module { message: String },
     Ir(IrError),
     Wasmparser(wasmparser::BinaryReaderError),
 }

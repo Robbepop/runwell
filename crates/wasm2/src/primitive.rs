@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::Error;
 use core::convert::TryFrom;
 use derive_more::{Display, Error, From};
 use ir::primitive as runwell;
-use super::Error;
 
 /// An error that occured while operating on Wasm primitives.
 #[derive(Debug, Display, Error, From, PartialEq, Eq, Hash)]

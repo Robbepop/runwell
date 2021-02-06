@@ -54,7 +54,10 @@ impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
         memory_type: wasmparser::MemoryType,
     ) -> Result<Self, Self::Error> {
         match memory_type {
-            wasmparser::MemoryType::M32 { limits, shared: false } => {
+            wasmparser::MemoryType::M32 {
+                limits,
+                shared: false,
+            } => {
                 let initial_pages = limits.initial;
                 let maximum_pages = limits.maximum;
                 Ok(Self {
@@ -65,10 +68,8 @@ impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
                 })
             }
             wasmparser::MemoryType::M32 { shared: true, .. } => {
-                return Err(MemoryError::UnsupportedSharedMemory(
-                    memory_type,
-                ))
-                .map_err(Into::into)
+                return Err(MemoryError::UnsupportedSharedMemory(memory_type))
+                    .map_err(Into::into)
             }
             wasmparser::MemoryType::M64 { .. } => {
                 Err(MemoryError::Unsupported64BitMemory(memory_type))

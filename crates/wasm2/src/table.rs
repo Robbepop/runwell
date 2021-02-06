@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use entity::RawIdx;
-use ir::primitive::{Func, Table};
-use super::{InitExpr, Error};
+use super::{Error, InitExpr};
 use core::convert::TryFrom;
 use derive_more::Display;
+use entity::RawIdx;
+use ir::primitive::{Func, Table};
 
 /// An error that might occure while parsing or validating tables or table elements.
 #[derive(Debug, Display, PartialEq, Eq)]
@@ -62,7 +62,7 @@ impl TryFrom<wasmparser::TableType> for TableDecl {
         let initial_size = table_type.limits.initial;
         let maximum_size = table_type.limits.maximum;
         Ok(Self {
-            inner: module::TableDecl::new(initial_size, maximum_size)
+            inner: module::TableDecl::new(initial_size, maximum_size),
         })
     }
 }

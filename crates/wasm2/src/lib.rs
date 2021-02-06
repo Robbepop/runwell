@@ -38,6 +38,12 @@ pub use self::{
     memory::{LinearMemoryDecl, MemoryDataInit, MemoryError},
     primitive::{PrimitiveError, Type, Value},
     read::{Read, ReadError},
-    section::{SectionError, UnexpectedWasmPayload, UnsupportedTypeDef, UnsupportedWasmSection, parse},
+    section::{
+        parse,
+        SectionError,
+        UnexpectedWasmPayload,
+        UnsupportedTypeDef,
+        UnsupportedWasmSection,
+    },
     table::{TableDecl, TableError},
 };
