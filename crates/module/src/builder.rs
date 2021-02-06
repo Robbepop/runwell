@@ -53,7 +53,7 @@ pub struct ModuleBuilder {
 
 /// Module builder resource to incrementally build up a Runwell module.
 #[derive(Debug, Default)]
-pub(crate) struct ModuleResources {
+pub struct ModuleResources {
     /// The module's start function, if any.
     start_func: Option<Func>,
     /// Function type entities.
@@ -314,13 +314,12 @@ impl ModuleBuilder {
     /// Returns a module function bodies builder.
     pub fn code_section(
         &mut self,
-    ) -> Result<(ModuleView, ModuleFunctionBodiesBuilder), String> {
+    ) -> Result<(&ModuleResources, ModuleFunctionBodiesBuilder), String> {
         self.ensure_section_in_order(ModuleSection::FunctionBodies)?;
         let Self { res, bodies, .. } = self;
         let res = &*res;
-        let module_view = ModuleView { res };
         let builder = ModuleFunctionBodiesBuilder { res, bodies };
-        Ok((module_view, builder))
+        Ok((res, builder))
     }
 
     /// Finalizes the construction of the module.
@@ -673,18 +672,6 @@ impl<'a> ModuleMemoryDataBuilder<'a> {
         self.res.memory_inits[idx].push_data(offset, bytes);
         Ok(())
     }
-}
-
-/// Allow safe access to a partially constructed module.
-///
-/// Contains all of a module but the memory data and function bodies.
-/// Used to inspect module state upon constructing function bodies.
-///
-/// Defines a clean API to access the module resources.
-/// Can be duplicated to allow for parallel function construction.
-#[derive(Debug, Copy, Clone)]
-pub struct ModuleView<'a> {
-    res: &'a ModuleResources,
 }
 
 /// Constructs module function bodies.

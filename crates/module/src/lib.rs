@@ -26,7 +26,7 @@ mod linear_memory;
 mod table;
 
 pub use self::{
-    builder::ModuleBuilder,
+    builder::{ModuleBuilder, ModuleResources},
     error::{IrError, IrErrorKind},
     func_body::{
         FunctionBody,
@@ -43,24 +43,22 @@ pub use self::{
     linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
     table::{ElementSegmentIter, TableDecl, TableInit},
 };
-use builder::ModuleResources;
 use entity::ComponentVec;
 use ir::primitive::Func;
 
 /// Module section builder types.
 pub mod builders {
     pub use super::builder::{
-        ModuleTypesBuilder,
-        ModuleImportsBuilder,
-        ModuleFunctionsBuilder,
-        ModuleTablesBuilder,
-        ModuleMemoriesBuilder,
-        ModuleGlobalsBuilder,
         ModuleExportsBuilder,
-        ModuleTableElementsBuilder,
-        ModuleMemoryDataBuilder,
-        ModuleView,
         ModuleFunctionBodiesBuilder,
+        ModuleFunctionsBuilder,
+        ModuleGlobalsBuilder,
+        ModuleImportsBuilder,
+        ModuleMemoriesBuilder,
+        ModuleMemoryDataBuilder,
+        ModuleTableElementsBuilder,
+        ModuleTablesBuilder,
+        ModuleTypesBuilder,
     };
 }
 
