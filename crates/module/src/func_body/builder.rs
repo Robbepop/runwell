@@ -229,10 +229,7 @@ impl FunctionBuilder {
     }
 
     /// Declares the inputs parameters and their types for the function.
-    pub fn with_inputs(
-        &mut self,
-        inputs: &[Type],
-    ) -> Result<(), IrError> {
+    pub fn with_inputs(&mut self, inputs: &[Type]) -> Result<(), IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Inputs)?;
         let entry_block = self.create_entry_block();
         for (n, input_type) in inputs.iter().copied().enumerate() {
@@ -257,10 +254,7 @@ impl FunctionBuilder {
     /// # Note
     ///
     /// The function is required to return the same amount and type as declared here.
-    pub fn with_outputs(
-        &mut self,
-        outputs: &[Type],
-    ) -> Result<(), IrError> {
+    pub fn with_outputs(&mut self, outputs: &[Type]) -> Result<(), IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Outputs)?;
         self.ctx.output_types.extend_from_slice(outputs);
         Ok(())
@@ -277,7 +271,9 @@ impl FunctionBuilder {
         amount: u32,
         ty: Type,
     ) -> Result<(), IrError> {
-        self.ensure_construction_in_order(FunctionBuilderState::LocalVariables)?;
+        self.ensure_construction_in_order(
+            FunctionBuilderState::LocalVariables,
+        )?;
         self.ctx.vars.declare_vars(amount, ty)?;
         Ok(())
     }

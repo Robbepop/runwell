@@ -18,7 +18,12 @@ mod instruction;
 mod variable;
 
 pub use self::{
-    builder::{FunctionBuilder, FunctionBuilderContext, ValueAssoc, FunctionBuilderState},
+    builder::{
+        FunctionBuilder,
+        FunctionBuilderContext,
+        FunctionBuilderState,
+        ValueAssoc,
+    },
     error::{FunctionBuilderError, VariableAccess},
     instruction::{Instr, InstructionBuilder},
     variable::{Variable, VariableTranslator},

@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{
-    builder::ValueAssoc,
-    FunctionBuilder,
-    FunctionBuilderError,
-};
+use super::{builder::ValueAssoc, FunctionBuilder, FunctionBuilderError};
 use crate::IrError;
 use entity::Idx;
 use ir::{
