@@ -69,10 +69,10 @@ fn evaluate_function(function: FunctionBody, inputs: &[Const]) -> Vec<u64> {
 
 #[test]
 fn ret_const_works() -> Result<(), IrError> {
-    let mut b = FunctionBody::build()
-        .with_inputs(&[])?
-        .with_outputs(&[IntType::I32.into()])?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.body()?;
     let c = b.ins()?.constant(IntConst::I32(42))?;
     b.ins()?.return_value(c)?;
     let function = b.finalize()?;
@@ -85,10 +85,10 @@ fn ret_const_works() -> Result<(), IrError> {
 
 #[test]
 fn simple_block_works() -> Result<(), IrError> {
-    let mut b = FunctionBody::build()
-        .with_inputs(&[])?
-        .with_outputs(&[IntType::I32.into()])?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.body()?;
     let v1 = b.ins()?.constant(IntConst::I32(1))?;
     let v2 = b.ins()?.constant(IntConst::I32(2))?;
     let v3 = b.ins()?.iadd(IntType::I32, v1, v2)?;
@@ -104,12 +104,12 @@ fn simple_block_works() -> Result<(), IrError> {
 
 #[test]
 fn if_then_else_works() -> Result<(), IrError> {
-    let mut b = FunctionBody::build()
-        .with_inputs(&[])?
-        .with_outputs(&[IntType::I32.into()])?
-        .body();
-    let then_block = b.create_block();
-    let else_block = b.create_block();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.body()?;
+    let then_block = b.create_block()?;
+    let else_block = b.create_block()?;
     let v1 = b.ins()?.constant(IntConst::I32(1))?;
     let v2 = b.ins()?.constant(IntConst::I32(2))?;
     let v3 = b.ins()?.icmp(IntType::I32, CompareIntOp::Ule, v1, v2)?;
@@ -132,11 +132,11 @@ fn if_then_else_works() -> Result<(), IrError> {
 
 #[test]
 fn simple_variable() -> Result<(), IrError> {
-    let mut b = FunctionBody::build()
-        .with_inputs(&[])?
-        .with_outputs(&[IntType::I32.into()])?
-        .declare_variables(1, IntType::I32.into())?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.declare_variables(1, IntType::I32.into())?;
+    b.body()?;
     let var = Variable::from_raw(RawIdx::from_u32(0));
     let v1 = b.ins()?.constant(IntConst::I32(1))?;
     b.write_var(var, v1)?;
@@ -153,10 +153,10 @@ fn simple_variable() -> Result<(), IrError> {
 
 #[test]
 fn simple_input() -> Result<(), IrError> {
-    let mut b = FunctionBody::build()
-        .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[IntType::I32.into()])?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[IntType::I32.into()])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.body()?;
     let input = Variable::from_raw(RawIdx::from_u32(0));
     let v0 = b.read_var(input)?;
     let v1 = b.ins()?.iadd(IntType::I32, v0, v0)?;
@@ -171,14 +171,14 @@ fn simple_input() -> Result<(), IrError> {
 
 #[test]
 fn simple_gvn_var_read() -> Result<(), IrError> {
-    let mut b = FunctionBody::build()
-        .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[IntType::I32.into()])?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[IntType::I32.into()])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.body()?;
     let var = Variable::from_raw(RawIdx::from_u32(0));
     let v0 = b.ins()?.constant(IntConst::I32(1))?;
     b.write_var(var, v0)?;
-    let exit_block = b.create_block();
+    let exit_block = b.create_block()?;
     b.ins()?.br(exit_block)?;
     b.switch_to_block(exit_block)?;
     let v0 = b.read_var(var)?;
@@ -208,15 +208,15 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
     let (_view, mut body_builder) = builder.code_section().unwrap();
 
     // Construct function body.
-    let mut b = FunctionBody::build()
-        .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[IntType::I32.into()])?
-        .declare_variables(1, IntType::I32.into())?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[IntType::I32.into()])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.declare_variables(1, IntType::I32.into())?;
+    b.body()?;
 
-    let then_block = b.create_block();
-    let else_block = b.create_block();
-    let exit_block = b.create_block();
+    let then_block = b.create_block()?;
+    let else_block = b.create_block()?;
+    let exit_block = b.create_block()?;
 
     let input = Variable::from_raw(RawIdx::from_u32(0));
     let var = Variable::from_raw(RawIdx::from_u32(1));
@@ -265,16 +265,16 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
 
 #[test]
 fn simple_loop_works() -> Result<(), IrError> {
-    let mut b = FunctionBody::build()
-        .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[IntType::I32.into()])?
-        .declare_variables(1, IntType::I32.into())?
-        .declare_variables(1, IntType::I32.into())?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[IntType::I32.into()])?;
+    b.with_outputs(&[IntType::I32.into()])?;
+    b.declare_variables(1, IntType::I32.into())?;
+    b.declare_variables(1, IntType::I32.into())?;
+    b.body()?;
 
-    let loop_head = b.create_block();
-    let loop_body = b.create_block();
-    let loop_exit = b.create_block();
+    let loop_head = b.create_block()?;
+    let loop_body = b.create_block()?;
+    let loop_exit = b.create_block()?;
 
     let input = Variable::from_raw(RawIdx::from_u32(0));
     let counter = Variable::from_raw(RawIdx::from_u32(1));
@@ -347,13 +347,13 @@ where
     //         return true
     //     return is_odd(x - 1)
 
-    let mut b = FunctionBody::build()
-        .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[Type::Bool])?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[IntType::I32.into()])?;
+    b.with_outputs(&[Type::Bool])?;
+    b.body()?;
 
-    let if_zero = b.create_block();
-    let if_not_zero = b.create_block();
+    let if_zero = b.create_block()?;
+    let if_not_zero = b.create_block()?;
 
     let input = Variable::from_raw(RawIdx::from_u32(0));
 
@@ -385,13 +385,13 @@ where
     //         return false
     //     return is_even(x - 1)
 
-    let mut b = FunctionBody::build()
-        .with_inputs(&[IntType::I32.into()])?
-        .with_outputs(&[Type::Bool])?
-        .body();
+    let mut b = FunctionBody::build();
+    b.with_inputs(&[IntType::I32.into()])?;
+    b.with_outputs(&[Type::Bool])?;
+    b.body()?;
 
-    let if_zero = b.create_block();
-    let if_not_zero = b.create_block();
+    let if_zero = b.create_block()?;
+    let if_not_zero = b.create_block()?;
 
     let input = Variable::from_raw(RawIdx::from_u32(0));
 
