@@ -54,6 +54,8 @@ pub struct ModuleBuilder {
 /// Module builder resource to incrementally build up a Runwell module.
 #[derive(Debug, Default)]
 pub(crate) struct ModuleResources {
+    /// The module's start function, if any.
+    start_func: Option<Func>,
     /// Function type entities.
     type_entities: EntityArena<FuncTypeEntity>,
     /// Function entities.
@@ -270,6 +272,25 @@ impl ModuleBuilder {
             res: &mut self.res,
             used_names: Default::default(),
         })
+    }
+
+    /// Sets the start function of the module.
+    ///
+    /// The start function is executed before actual execution of the module.
+    /// It is used to initialize certain structures before actual execution
+    /// takes place.
+    pub fn set_start_func(&mut self, start_func: Func) -> Result<(), String> {
+        if let Some(old_start_func) = self.res.start_func {
+            return Err(
+                format!(
+                    "tried to set start function to {:?} while the module already has a start function {:?}",
+                    start_func,
+                    old_start_func,
+                )
+            )
+        }
+        self.res.start_func = Some(start_func);
+        Ok(())
     }
 
     /// Returns a module table elements builder.
