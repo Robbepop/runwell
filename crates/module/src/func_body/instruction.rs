@@ -14,7 +14,6 @@
 
 use super::{
     builder::ValueAssoc,
-    state,
     FunctionBuilder,
     FunctionBuilderError,
 };
@@ -45,12 +44,12 @@ pub type Instr = Idx<Instruction>;
 /// Builder guiding the construction of Runwell IR instructions.
 #[derive(Debug)]
 pub struct InstructionBuilder<'a> {
-    builder: &'a mut FunctionBuilder<state::Body>,
+    builder: &'a mut FunctionBuilder,
 }
 
 impl<'a> InstructionBuilder<'a> {
     /// Creates a new function instruction builder.
-    pub(super) fn new(builder: &'a mut FunctionBuilder<state::Body>) -> Self {
+    pub(super) fn new(builder: &'a mut FunctionBuilder) -> Self {
         Self { builder }
     }
 

@@ -29,7 +29,7 @@ use super::{
     VariableTranslator,
 };
 use crate::IrError;
-use core::marker::PhantomData;
+use derive_more::Display;
 use entity::{ComponentMap, ComponentVec, EntityArena, RawIdx};
 use ir::{
     instr::{Instruction, PhiInstr},
@@ -40,19 +40,19 @@ use std::collections::HashSet;
 
 impl FunctionBody {
     /// Creates a function builder to incrementally construct the function.
-    pub fn build() -> FunctionBuilder<state::Inputs> {
+    pub fn build() -> FunctionBuilder {
         FunctionBuilder {
             ctx: Default::default(),
-            state: Default::default(),
+            state: FunctionBuilderState::Inputs,
         }
     }
 }
 
 /// Incrementally guides the construction process to build a Runwell IR function.
-#[derive(Debug, Default)]
-pub struct FunctionBuilder<S> {
+#[derive(Debug)]
+pub struct FunctionBuilder {
     pub(super) ctx: FunctionBuilderContext,
-    state: PhantomData<fn() -> S>,
+    state: FunctionBuilderState,
 }
 
 /// The context that is built during IR function construction.
@@ -171,33 +171,48 @@ pub enum ValueAssoc {
     Instr(Instr),
 }
 
-/// Type states for the function builder.
-pub(crate) mod state {
-    /// State to declare the inputs to the function.
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub enum Inputs {}
-    /// State to declare the output of the function.
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub enum Outputs {}
-    /// State to declare all the function local variables of the function.
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub enum DeclareVariables {}
-    /// State to declare all the function local variables of the function.
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub enum Body {}
-
-    /// Type states for the function builder.
-    pub trait State {}
-
-    impl State for Inputs {}
-    impl State for Outputs {}
-    impl State for DeclareVariables {}
-    impl State for Body {}
+/// The current state of the function body construction.
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FunctionBuilderState {
+    /// Declare input types.
+    #[display(fmt = "inputs")]
+    Inputs = 0,
+    /// Declare output types.
+    #[display(fmt = "outputs")]
+    Outputs = 1,
+    /// Declare local variables used in the function body.
+    #[display(fmt = "local variables")]
+    LocalVariables = 2,
+    /// Define the function body.
+    #[display(fmt = "function body")]
+    Body = 3,
 }
 
-impl FunctionBuilder<state::Inputs> {
+impl FunctionBuilder {
+    /// Ensures that the function body construction happens in the correct order.
+    ///
+    /// Updates the current function body construction state if in order.
+    fn ensure_construction_in_order(
+        &mut self,
+        next: FunctionBuilderState,
+    ) -> Result<(), FunctionBuilderError> {
+        let current = self.state;
+        if current > next {
+            return Err(FunctionBuilderError::IncorrectOrder {
+                last_state: current,
+                fail_state: next,
+            })
+        }
+        self.state = next;
+        Ok(())
+    }
+
     /// Creates the entry block of the constructed function.
     fn create_entry_block(&mut self) -> Block {
+        if !self.ctx.blocks.is_empty() {
+            // Do not create an entry block if there is already one.
+            return self.ctx.current
+        }
         let entry_block = self.ctx.blocks.alloc(Default::default());
         self.ctx.block_preds.insert(entry_block, Default::default());
         self.ctx.block_sealed.insert(entry_block, true);
@@ -215,9 +230,10 @@ impl FunctionBuilder<state::Inputs> {
 
     /// Declares the inputs parameters and their types for the function.
     pub fn with_inputs(
-        mut self,
+        &mut self,
         inputs: &[Type],
-    ) -> Result<FunctionBuilder<state::Outputs>, IrError> {
+    ) -> Result<(), IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Inputs)?;
         let entry_block = self.create_entry_block();
         for (n, input_type) in inputs.iter().copied().enumerate() {
             let val = self.ctx.values.alloc(Default::default());
@@ -233,32 +249,23 @@ impl FunctionBuilder<state::Inputs> {
                 .write_var(input_var, val, entry_block, || input_type)?;
         }
         self.ctx.input_types.extend_from_slice(inputs);
-        Ok(FunctionBuilder {
-            ctx: self.ctx,
-            state: Default::default(),
-        })
+        Ok(())
     }
-}
 
-impl FunctionBuilder<state::Outputs> {
     /// Declares the output types of the function.
     ///
     /// # Note
     ///
     /// The function is required to return the same amount and type as declared here.
     pub fn with_outputs(
-        mut self,
+        &mut self,
         outputs: &[Type],
-    ) -> Result<FunctionBuilder<state::DeclareVariables>, IrError> {
+    ) -> Result<(), IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Outputs)?;
         self.ctx.output_types.extend_from_slice(outputs);
-        Ok(FunctionBuilder {
-            ctx: self.ctx,
-            state: Default::default(),
-        })
+        Ok(())
     }
-}
 
-impl FunctionBuilder<state::DeclareVariables> {
     /// Declares all function local variables that the function is going to require for execution.
     ///
     /// # Note
@@ -266,33 +273,28 @@ impl FunctionBuilder<state::DeclareVariables> {
     /// This includes variables that are artifacts of translation from the original source
     /// language to whatever input source is fed into Runwell IR.
     pub fn declare_variables(
-        mut self,
+        &mut self,
         amount: u32,
         ty: Type,
-    ) -> Result<Self, IrError> {
+    ) -> Result<(), IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::LocalVariables)?;
         self.ctx.vars.declare_vars(amount, ty)?;
-        Ok(FunctionBuilder {
-            ctx: self.ctx,
-            state: Default::default(),
-        })
+        Ok(())
     }
 
     /// Start defining the body of the function with its basic blocks and instructions.
-    pub fn body(self) -> FunctionBuilder<state::Body> {
-        FunctionBuilder {
-            ctx: self.ctx,
-            state: Default::default(),
-        }
+    pub fn body(&mut self) -> Result<(), IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        Ok(())
     }
-}
 
-impl FunctionBuilder<state::Body> {
     /// Creates a new basic block for the function and returns a reference to it.
     ///
     /// # Note
     ///
     /// After this operation the current block will reference the new basic block.
-    pub fn create_block(&mut self) -> Block {
+    pub fn create_block(&mut self) -> Result<Block, IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc(Default::default());
         self.ctx.block_preds.insert(new_block, Default::default());
         self.ctx.block_sealed.insert(new_block, false);
@@ -302,7 +304,7 @@ impl FunctionBuilder<state::Body> {
         self.ctx
             .incomplete_phis
             .insert(new_block, Default::default());
-        new_block
+        Ok(new_block)
     }
 
     /// Returns a reference to the current basic block if any.
@@ -310,7 +312,8 @@ impl FunctionBuilder<state::Body> {
     /// # Errors
     ///
     /// If no basic blocks exist.
-    pub fn current_block(&self) -> Result<Block, IrError> {
+    pub fn current_block(&mut self) -> Result<Block, IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         Ok(self.ctx.current)
     }
 
@@ -320,6 +323,7 @@ impl FunctionBuilder<state::Body> {
     ///
     /// If the basic block does not exist in this function.
     pub fn switch_to_block(&mut self, block: Block) -> Result<(), IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         if !self.ctx.blocks.contains_key(block) {
             return Err(FunctionBuilderError::InvalidBasicBlock { block })
                 .map_err(Into::into)
@@ -336,6 +340,7 @@ impl FunctionBuilder<state::Body> {
     ///
     /// If the current basic block has already been sealed.
     pub fn seal_block(&mut self) -> Result<(), IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let already_sealed = self
             .ctx
@@ -366,6 +371,7 @@ impl FunctionBuilder<state::Body> {
     ///
     /// If the current block is already filled.
     pub fn ins(&mut self) -> Result<InstructionBuilder, IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled[block];
         if already_filled {
@@ -388,6 +394,7 @@ impl FunctionBuilder<state::Body> {
         var: Variable,
         value: Value,
     ) -> Result<(), IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let FunctionBuilderContext {
             vars, value_type, ..
@@ -555,6 +562,7 @@ impl FunctionBuilder<state::Body> {
     ///
     /// - If the variable has not beed declared.
     pub fn read_var(&mut self, var: Variable) -> Result<Value, IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let current = self.current_block()?;
         self.read_var_in_block(var, current)
     }
@@ -567,6 +575,7 @@ impl FunctionBuilder<state::Body> {
     ///
     /// If not all basic blocks in the function are sealed and filled.
     pub fn finalize(mut self) -> Result<FunctionBody, IrError> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let unsealed_blocks = self
             .ctx
             .block_sealed

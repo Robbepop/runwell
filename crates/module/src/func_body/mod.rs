@@ -17,9 +17,8 @@ mod error;
 mod instruction;
 mod variable;
 
-use self::builder::state;
 pub use self::{
-    builder::{FunctionBuilder, FunctionBuilderContext, ValueAssoc},
+    builder::{FunctionBuilder, FunctionBuilderContext, ValueAssoc, FunctionBuilderState},
     error::{FunctionBuilderError, VariableAccess},
     instruction::{Instr, InstructionBuilder},
     variable::{Variable, VariableTranslator},

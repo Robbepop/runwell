@@ -15,10 +15,20 @@
 use crate::func_body::Variable;
 use derive_more::{Display, Error};
 use ir::primitive::{Block, Type, Value};
+use super::FunctionBuilderState;
 
 /// Errors that might occure upon building up a Runwell IR function.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum FunctionBuilderError {
+    #[display(
+        fmt = "tried to initialize {} after {} has/have already been declared in function body",
+        fail_state,
+        last_state
+    )]
+    IncorrectOrder {
+        last_state: FunctionBuilderState,
+        fail_state: FunctionBuilderState,
+    },
     #[display(
         fmt = "encountered invalid reinterpretation of {} from types with width {} to type with width {}",
         src,
