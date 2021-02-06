@@ -21,6 +21,7 @@ use super::{
     ReadError,
     SectionError,
     TableError,
+    TranslateError,
 };
 use core::fmt::Display;
 use derive_more::{Display, Error, From};
@@ -128,5 +129,6 @@ pub enum ErrorKind {
     Section(SectionError),
     Module { message: String },
     Ir(IrError),
+    Translate(TranslateError),
     Wasmparser(wasmparser::BinaryReaderError),
 }
