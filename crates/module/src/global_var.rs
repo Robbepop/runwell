@@ -24,6 +24,11 @@ pub struct GlobalVariable {
 }
 
 impl GlobalVariable {
+    /// Creates a new global variable declaration.
+    pub fn new(ty: Type, is_mutable: bool) -> Self {
+        Self { ty, is_mutable }
+    }
+
     /// The type of the global variable.
     pub fn ty(&self) -> Type {
         self.ty
