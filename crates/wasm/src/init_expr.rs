@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{Error, Const};
+use super::{Const, Error};
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use entity::RawIdx;
