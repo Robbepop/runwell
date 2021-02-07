@@ -25,7 +25,7 @@ use crate::{Const as WasmConst, Error, Type};
 use core::convert::TryFrom as _;
 use entity::RawIdx;
 use ir::{
-    instr::operands::CompareIntOp,
+    instr::operands::{CompareFloatOp, CompareIntOp},
     primitive as runwell,
     primitive::{FloatType, Func, IntConst, IntType},
 };
@@ -146,7 +146,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: wasmparser::Operator,
     ) -> Result<(), Error> {
         use wasmparser::Operator as Op;
+        use CompareFloatOp as CmpFloatOp;
         use CompareIntOp as CmpIntOp;
+        use FloatType::{F32, F64};
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
@@ -266,18 +268,18 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64LeU => self.translate_icmp_op(CmpIntOp::Ule, 64)?,
             Op::I64GeS => self.translate_icmp_op(CmpIntOp::Sge, 64)?,
             Op::I64GeU => self.translate_icmp_op(CmpIntOp::Uge, 64)?,
-            Op::F32Eq => {}
-            Op::F32Ne => {}
-            Op::F32Lt => {}
-            Op::F32Gt => {}
-            Op::F32Le => {}
-            Op::F32Ge => {}
-            Op::F64Eq => {}
-            Op::F64Ne => {}
-            Op::F64Lt => {}
-            Op::F64Gt => {}
-            Op::F64Le => {}
-            Op::F64Ge => {}
+            Op::F32Eq => self.translate_fcmp_op(CmpFloatOp::Eq, F32)?,
+            Op::F32Ne => self.translate_fcmp_op(CmpFloatOp::Ne, F32)?,
+            Op::F32Lt => self.translate_fcmp_op(CmpFloatOp::Lt, F32)?,
+            Op::F32Gt => self.translate_fcmp_op(CmpFloatOp::Gt, F32)?,
+            Op::F32Le => self.translate_fcmp_op(CmpFloatOp::Le, F32)?,
+            Op::F32Ge => self.translate_fcmp_op(CmpFloatOp::Lt, F32)?,
+            Op::F64Eq => self.translate_fcmp_op(CmpFloatOp::Eq, F64)?,
+            Op::F64Ne => self.translate_fcmp_op(CmpFloatOp::Ne, F64)?,
+            Op::F64Lt => self.translate_fcmp_op(CmpFloatOp::Lt, F64)?,
+            Op::F64Gt => self.translate_fcmp_op(CmpFloatOp::Gt, F64)?,
+            Op::F64Le => self.translate_fcmp_op(CmpFloatOp::Le, F64)?,
+            Op::F64Ge => self.translate_fcmp_op(CmpFloatOp::Ge, F64)?,
             Op::I32Clz => {}
             Op::I32Ctz => {}
             Op::I32Popcnt => {}
@@ -462,6 +464,24 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             .builder
             .ins()?
             .icmp(int_type, op, lhs.value, rhs.value)?;
+        self.stack.push(result, runwell::Type::Bool);
+        Ok(())
+    }
+
+    /// Translates a Wasm floating point number compare operator.
+    fn translate_fcmp_op(
+        &mut self,
+        op: CompareFloatOp,
+        float_ty: FloatType,
+    ) -> Result<(), Error> {
+        let (lhs, rhs) = self.stack.pop2()?;
+        assert_eq!(lhs.ty, rhs.ty);
+        assert_eq!(lhs.ty, float_ty.into());
+        let int_type = Self::extract_int_type(lhs.ty);
+        let result = self
+            .builder
+            .ins()?
+            .fcmp(float_ty, op, lhs.value, rhs.value)?;
         self.stack.push(result, runwell::Type::Bool);
         Ok(())
     }
