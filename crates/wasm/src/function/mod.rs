@@ -30,6 +30,7 @@ use ir::{
         BinaryIntOp,
         CompareFloatOp,
         CompareIntOp,
+        UnaryFloatOp,
     },
     primitive as runwell,
     primitive::{FloatType, Func, IntConst, IntType},
@@ -315,13 +316,23 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64ShrU => {}
             Op::I64Rotl => {}
             Op::I64Rotr => {}
-            Op::F32Abs => {}
-            Op::F32Neg => {}
-            Op::F32Ceil => {}
-            Op::F32Floor => {}
-            Op::F32Trunc => {}
-            Op::F32Nearest => {}
-            Op::F32Sqrt => {}
+            Op::F32Abs => self.translate_float_unop(F32, UnaryFloatOp::Abs)?,
+            Op::F32Neg => self.translate_float_unop(F32, UnaryFloatOp::Neg)?,
+            Op::F32Ceil => {
+                self.translate_float_unop(F32, UnaryFloatOp::Ceil)?
+            }
+            Op::F32Floor => {
+                self.translate_float_unop(F32, UnaryFloatOp::Floor)?
+            }
+            Op::F32Trunc => {
+                self.translate_float_unop(F32, UnaryFloatOp::Truncate)?
+            }
+            Op::F32Nearest => {
+                self.translate_float_unop(F32, UnaryFloatOp::Nearest)?
+            }
+            Op::F32Sqrt => {
+                self.translate_float_unop(F32, UnaryFloatOp::Sqrt)?
+            }
             Op::F32Add => self.translate_float_binop(F32, BinFloatOp::Add)?,
             Op::F32Sub => self.translate_float_binop(F32, BinFloatOp::Sub)?,
             Op::F32Mul => self.translate_float_binop(F32, BinFloatOp::Mul)?,
@@ -331,13 +342,23 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F32Copysign => {
                 self.translate_float_binop(F32, BinFloatOp::CopySign)?
             }
-            Op::F64Abs => {}
-            Op::F64Neg => {}
-            Op::F64Ceil => {}
-            Op::F64Floor => {}
-            Op::F64Trunc => {}
-            Op::F64Nearest => {}
-            Op::F64Sqrt => {}
+            Op::F64Abs => self.translate_float_unop(F64, UnaryFloatOp::Abs)?,
+            Op::F64Neg => self.translate_float_unop(F64, UnaryFloatOp::Neg)?,
+            Op::F64Ceil => {
+                self.translate_float_unop(F64, UnaryFloatOp::Ceil)?
+            }
+            Op::F64Floor => {
+                self.translate_float_unop(F64, UnaryFloatOp::Floor)?
+            }
+            Op::F64Trunc => {
+                self.translate_float_unop(F64, UnaryFloatOp::Truncate)?
+            }
+            Op::F64Nearest => {
+                self.translate_float_unop(F64, UnaryFloatOp::Nearest)?
+            }
+            Op::F64Sqrt => {
+                self.translate_float_unop(F64, UnaryFloatOp::Sqrt)?
+            }
             Op::F64Add => self.translate_float_binop(F64, BinFloatOp::Add)?,
             Op::F64Sub => self.translate_float_binop(F64, BinFloatOp::Sub)?,
             Op::F64Mul => self.translate_float_binop(F64, BinFloatOp::Mul)?,
@@ -424,6 +445,30 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 panic!("expected float type due to Wasm validation but found bool type.")
             }
         }
+    }
+
+    /// Translate a Wasm unary float operator into Runwell IR.
+    fn translate_float_unop(
+        &mut self,
+        float_type: FloatType,
+        op: UnaryFloatOp,
+    ) -> Result<(), Error> {
+        let source = self.stack.pop1()?;
+        let actual_float_type = Self::extract_float_type(source.ty);
+        assert_eq!(actual_float_type, float_type);
+        let source = source.value;
+        let ins = self.builder.ins()?;
+        let result = match op {
+            UnaryFloatOp::Abs => ins.fabs(float_type, source)?,
+            UnaryFloatOp::Neg => ins.fneg(float_type, source)?,
+            UnaryFloatOp::Sqrt => ins.fsqrt(float_type, source)?,
+            UnaryFloatOp::Ceil => ins.fceil(float_type, source)?,
+            UnaryFloatOp::Floor => ins.ffloor(float_type, source)?,
+            UnaryFloatOp::Truncate => ins.ftruncate(float_type, source)?,
+            UnaryFloatOp::Nearest => ins.fnearest(float_type, source)?,
+        };
+        self.stack.push(result, float_type.into());
+        Ok(())
     }
 
     /// Translate a Wasm binary float operator into Runwell IR.
