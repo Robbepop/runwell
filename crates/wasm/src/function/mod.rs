@@ -360,14 +360,40 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F64Copysign => {
                 self.translate_float_binop(F64, BinFloatOp::CopySign)?
             }
-            Op::I32TruncF32S => {}
-            Op::I32TruncF32U => {}
-            Op::I32TruncF64S => {}
-            Op::I32TruncF64U => {}
-            Op::I64TruncF32S => {}
-            Op::I64TruncF32U => {}
-            Op::I64TruncF64S => {}
-            Op::I64TruncF64U => {}
+            Op::I32TruncF32S => {
+                let src_type = FloatType::F32;
+                let dst_type = IntType::I32;
+                let dst_signed = true;
+                let saturating = false;
+                let source = self.stack.pop1()?;
+                assert_eq!(source.ty, src_type.into());
+                let source = source.value;
+                let result = self.builder.ins()?.float_to_int(
+                    src_type, dst_type, dst_signed, source, saturating,
+                )?;
+                self.stack.push(result, dst_type.into());
+            }
+            Op::I32TruncF32U => {
+                self.translate_float_to_int(F32, I32, false, false)?
+            }
+            Op::I32TruncF64S => {
+                self.translate_float_to_int(F64, I32, true, false)?
+            }
+            Op::I32TruncF64U => {
+                self.translate_float_to_int(F64, I32, false, false)?
+            }
+            Op::I64TruncF32S => {
+                self.translate_float_to_int(F32, I64, true, false)?
+            }
+            Op::I64TruncF32U => {
+                self.translate_float_to_int(F32, I64, false, false)?
+            }
+            Op::I64TruncF64S => {
+                self.translate_float_to_int(F64, I64, true, false)?
+            }
+            Op::I64TruncF64U => {
+                self.translate_float_to_int(F64, I64, false, false)?
+            }
             Op::F32ConvertI32S => {}
             Op::F32ConvertI32U => {}
             Op::F32ConvertI64S => {}
@@ -396,6 +422,31 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     .map_err(Into::into)
             }
         }
+        Ok(())
+    }
+
+    /// Translates a Wasm float to integer conversion.
+    fn translate_float_to_int<SrcType, DstType>(
+        &mut self,
+        src_type: SrcType,
+        dst_type: DstType,
+        dst_signed: bool,
+        saturating: bool,
+    ) -> Result<(), Error>
+    where
+        SrcType: Into<FloatType>,
+        DstType: Into<IntType>,
+    {
+        let src_type = src_type.into();
+        let dst_type = dst_type.into();
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty, src_type.into());
+        let source = source.value;
+        let result = self
+            .builder
+            .ins()?
+            .float_to_int(src_type, dst_type, dst_signed, source, saturating)?;
+        self.stack.push(result, dst_type.into());
         Ok(())
     }
 
