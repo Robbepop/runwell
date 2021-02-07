@@ -157,6 +157,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use CompareIntOp as CmpIntOp;
         use FloatType::{F32, F64};
         use IntType::{I32, I64};
+        use UnaryFloatOp as FloatUnop;
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
@@ -316,23 +317,17 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64ShrU => {}
             Op::I64Rotl => {}
             Op::I64Rotr => {}
-            Op::F32Abs => self.translate_float_unop(F32, UnaryFloatOp::Abs)?,
-            Op::F32Neg => self.translate_float_unop(F32, UnaryFloatOp::Neg)?,
-            Op::F32Ceil => {
-                self.translate_float_unop(F32, UnaryFloatOp::Ceil)?
-            }
-            Op::F32Floor => {
-                self.translate_float_unop(F32, UnaryFloatOp::Floor)?
-            }
+            Op::F32Abs => self.translate_float_unop(F32, FloatUnop::Abs)?,
+            Op::F32Neg => self.translate_float_unop(F32, FloatUnop::Neg)?,
+            Op::F32Ceil => self.translate_float_unop(F32, FloatUnop::Ceil)?,
+            Op::F32Floor => self.translate_float_unop(F32, FloatUnop::Floor)?,
             Op::F32Trunc => {
-                self.translate_float_unop(F32, UnaryFloatOp::Truncate)?
+                self.translate_float_unop(F32, FloatUnop::Truncate)?
             }
             Op::F32Nearest => {
-                self.translate_float_unop(F32, UnaryFloatOp::Nearest)?
+                self.translate_float_unop(F32, FloatUnop::Nearest)?
             }
-            Op::F32Sqrt => {
-                self.translate_float_unop(F32, UnaryFloatOp::Sqrt)?
-            }
+            Op::F32Sqrt => self.translate_float_unop(F32, FloatUnop::Sqrt)?,
             Op::F32Add => self.translate_float_binop(F32, BinFloatOp::Add)?,
             Op::F32Sub => self.translate_float_binop(F32, BinFloatOp::Sub)?,
             Op::F32Mul => self.translate_float_binop(F32, BinFloatOp::Mul)?,
@@ -342,23 +337,17 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F32Copysign => {
                 self.translate_float_binop(F32, BinFloatOp::CopySign)?
             }
-            Op::F64Abs => self.translate_float_unop(F64, UnaryFloatOp::Abs)?,
-            Op::F64Neg => self.translate_float_unop(F64, UnaryFloatOp::Neg)?,
-            Op::F64Ceil => {
-                self.translate_float_unop(F64, UnaryFloatOp::Ceil)?
-            }
-            Op::F64Floor => {
-                self.translate_float_unop(F64, UnaryFloatOp::Floor)?
-            }
+            Op::F64Abs => self.translate_float_unop(F64, FloatUnop::Abs)?,
+            Op::F64Neg => self.translate_float_unop(F64, FloatUnop::Neg)?,
+            Op::F64Ceil => self.translate_float_unop(F64, FloatUnop::Ceil)?,
+            Op::F64Floor => self.translate_float_unop(F64, FloatUnop::Floor)?,
             Op::F64Trunc => {
-                self.translate_float_unop(F64, UnaryFloatOp::Truncate)?
+                self.translate_float_unop(F64, FloatUnop::Truncate)?
             }
             Op::F64Nearest => {
-                self.translate_float_unop(F64, UnaryFloatOp::Nearest)?
+                self.translate_float_unop(F64, FloatUnop::Nearest)?
             }
-            Op::F64Sqrt => {
-                self.translate_float_unop(F64, UnaryFloatOp::Sqrt)?
-            }
+            Op::F64Sqrt => self.translate_float_unop(F64, FloatUnop::Sqrt)?,
             Op::F64Add => self.translate_float_binop(F64, BinFloatOp::Add)?,
             Op::F64Sub => self.translate_float_binop(F64, BinFloatOp::Sub)?,
             Op::F64Mul => self.translate_float_binop(F64, BinFloatOp::Mul)?,
