@@ -46,6 +46,8 @@ pub use self::{
         ExtendIntInstr,
         IntInstr,
         IntToFloatInstr,
+        ShiftIntInstr,
+        ShiftIntOp,
         TruncateIntInstr,
         UnaryIntInstr,
         UnaryIntOp,

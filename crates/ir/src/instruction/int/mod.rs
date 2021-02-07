@@ -15,12 +15,14 @@
 mod binary;
 mod icmp;
 mod iconv;
+mod shift;
 mod unary;
 
 pub use self::{
     binary::{BinaryIntInstr, BinaryIntOp},
     icmp::{CompareIntInstr, CompareIntOp},
     iconv::{ExtendIntInstr, IntToFloatInstr, TruncateIntInstr},
+    shift::{ShiftIntInstr, ShiftIntOp},
     unary::{UnaryIntInstr, UnaryIntOp},
 };
 use crate::{primitive::Value, ReplaceValue};
@@ -35,6 +37,7 @@ pub enum IntInstr {
     Extend(ExtendIntInstr),
     IntToFloat(IntToFloatInstr),
     Truncate(TruncateIntInstr),
+    Shift(ShiftIntInstr),
 }
 
 impl ReplaceValue for IntInstr {
@@ -49,6 +52,7 @@ impl ReplaceValue for IntInstr {
             Self::Extend(instr) => instr.replace_value(replace),
             Self::IntToFloat(instr) => instr.replace_value(replace),
             Self::Truncate(instr) => instr.replace_value(replace),
+            Self::Shift(instr) => instr.replace_value(replace),
         }
     }
 }
@@ -71,4 +75,5 @@ impl_from_int_instr_for_instr! {
     TruncateIntInstr,
     IntToFloatInstr,
     ExtendIntInstr,
+    ShiftIntInstr,
 }

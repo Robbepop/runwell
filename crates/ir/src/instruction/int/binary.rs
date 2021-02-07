@@ -59,24 +59,6 @@ pub enum BinaryIntOp {
     Or,
     /// Computes the bitwise xor for two integer value.
     Xor,
-    /// Shifts the bits of the left-hand side integer to the left by the amount of the right-hand side integer value.
-    Shl,
-    /// Shifts the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
-    ///
-    /// # Note
-    ///
-    /// The operation is preserving the sign of the left-hand side integer.
-    Sshr,
-    /// Shifts the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
-    ///
-    /// # Note
-    ///
-    /// The operation is not preserving the sign of the left-hand side integer.
-    Ushr,
-    /// Rotates the bits of the left-hand side integer to the left by the amount of the right-hand side integer value.
-    Rotl,
-    /// Rotates the bits of the left-hand side integer to the right by the amount of the right-hand side integer value.
-    Rotr,
 }
 
 impl Display for BinaryIntOp {
@@ -92,11 +74,6 @@ impl Display for BinaryIntOp {
             Self::And => "iand",
             Self::Or => "ior",
             Self::Xor => "ixor",
-            Self::Shl => "ishl",
-            Self::Sshr => "sshr",
-            Self::Ushr => "ushr",
-            Self::Rotl => "irotl",
-            Self::Rotr => "irotr",
         };
         write!(f, "{}", repr)?;
         Ok(())

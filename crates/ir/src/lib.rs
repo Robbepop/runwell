@@ -32,6 +32,7 @@ pub mod instr {
             BinaryIntOp,
             CompareFloatOp,
             CompareIntOp,
+            ShiftIntOp,
             UnaryFloatOp,
             UnaryIntOp,
         };
@@ -64,6 +65,7 @@ pub mod instr {
         ReinterpretInstr,
         ReturnInstr,
         SelectInstr,
+        ShiftIntInstr,
         StoreInstr,
         TailCallInstr,
         TerminalInstr,
