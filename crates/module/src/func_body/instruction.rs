@@ -33,8 +33,10 @@ use ir::{
         CompareFloatInstr,
         CompareIntInstr,
         ConstInstr,
+        DemoteFloatInstr,
         IfThenElseInstr,
         Instruction,
+        PromoteFloatInstr,
         ReinterpretInstr,
         ReturnInstr,
         SelectInstr,
@@ -648,6 +650,56 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = ReinterpretInstr::new(from_type, to_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), to_type)?;
+        self.register_uses(instr, &[src]);
+        Ok(value)
+    }
+
+    /// Promotes the source float to the other (bigger) float type.
+    ///
+    /// # Errors
+    ///
+    /// If the source type is bigger than the promoted-to type.
+    pub fn promote(
+        mut self,
+        from_type: FloatType,
+        to_type: FloatType,
+        src: Value,
+    ) -> Result<Value, IrError> {
+        if from_type.bit_width() > to_type.bit_width() {
+            return Err(FunctionBuilderError::InvalidPromotion {
+                from_type,
+                to_type,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = PromoteFloatInstr::new(from_type, to_type, src);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), to_type.into())?;
+        self.register_uses(instr, &[src]);
+        Ok(value)
+    }
+
+    /// Demotes the source float to the other (bigger) float type.
+    ///
+    /// # Errors
+    ///
+    /// If the source type is smaller than the demoted-to type.
+    pub fn demote(
+        mut self,
+        from_type: FloatType,
+        to_type: FloatType,
+        src: Value,
+    ) -> Result<Value, IrError> {
+        if from_type.bit_width() < to_type.bit_width() {
+            return Err(FunctionBuilderError::InvalidPromotion {
+                from_type,
+                to_type,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = DemoteFloatInstr::new(from_type, to_type, src);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), to_type.into())?;
         self.register_uses(instr, &[src]);
         Ok(value)
     }

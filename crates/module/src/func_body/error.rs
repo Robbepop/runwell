@@ -15,11 +15,29 @@
 use super::FunctionBuilderState;
 use crate::func_body::Variable;
 use derive_more::{Display, Error};
-use ir::primitive::{Block, Type, Value};
+use ir::primitive::{Block, FloatType, Type, Value};
 
 /// Errors that might occure upon building up a Runwell IR function.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum FunctionBuilderError {
+    #[display(
+        fmt = "tried to promote bigger float of type {} to smaller {}",
+        from_type,
+        to_type
+    )]
+    InvalidPromotion {
+        from_type: FloatType,
+        to_type: FloatType,
+    },
+    #[display(
+        fmt = "tried to demote smaller float of type {} to bigger {}",
+        from_type,
+        to_type
+    )]
+    InvalidDemotion {
+        from_type: FloatType,
+        to_type: FloatType,
+    },
     #[display(
         fmt = "tried to initialize {} after {} has/have already been declared in function body",
         fail_state,
