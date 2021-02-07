@@ -34,8 +34,10 @@ use ir::{
         CompareIntInstr,
         ConstInstr,
         DemoteFloatInstr,
+        FloatToIntInstr,
         IfThenElseInstr,
         Instruction,
+        IntToFloatInstr,
         PromoteFloatInstr,
         ReinterpretInstr,
         ReturnInstr,
@@ -700,6 +702,47 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = DemoteFloatInstr::new(from_type, to_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
+        self.register_uses(instr, &[src]);
+        Ok(value)
+    }
+
+    /// Converts the float value into an integer value.
+    ///
+    /// - The `dst_signed` flag determines if the resulting integer
+    ///   value shall be treated as if the integer is signed.
+    /// - The `saturating` flag determines if the conversion may
+    ///   trap upon failure or simply saturates to integer boundaries.
+    pub fn float_to_int(
+        mut self,
+        src_type: FloatType,
+        dst_type: IntType,
+        dst_signed: bool,
+        src: Value,
+        saturating: bool,
+    ) -> Result<Value, IrError> {
+        let instruction = FloatToIntInstr::new(
+            src_type, dst_type, dst_signed, src, saturating,
+        );
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), dst_type.into())?;
+        self.register_uses(instr, &[src]);
+        Ok(value)
+    }
+
+    /// Converts the integer value into an floating point value.
+    ///
+    /// - The `signed` flag determines if the source integer
+    ///   value shall be treated as if the integer is signed.
+    pub fn int_to_float(
+        mut self,
+        signed: bool,
+        src_type: IntType,
+        dst_type: FloatType,
+        src: Value,
+    ) -> Result<Value, IrError> {
+        let instruction = IntToFloatInstr::new(signed, src_type, dst_type, src);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), dst_type.into())?;
         self.register_uses(instr, &[src]);
         Ok(value)
     }
