@@ -22,12 +22,13 @@ use super::{
 };
 use ir::{
     instr::{
-        operands::{BinaryIntOp, CompareIntOp, UnaryIntOp},
+        operands::{BinaryIntOp, CompareIntOp, ShiftIntOp, UnaryIntOp},
         BinaryIntInstr,
         CompareIntInstr,
         ExtendIntInstr,
         IntInstr,
         IntToFloatInstr,
+        ShiftIntInstr,
         TruncateIntInstr,
         UnaryIntInstr,
     },
@@ -58,6 +59,9 @@ impl InterpretInstr for IntInstr {
                 instr.interpret_instr(return_value, ctx, frame)
             }
             Self::Truncate(instr) => {
+                instr.interpret_instr(return_value, ctx, frame)
+            }
+            Self::Shift(instr) => {
                 instr.interpret_instr(return_value, ctx, frame)
             }
         }
@@ -311,6 +315,52 @@ impl_primitive_integer_for! {
     (u64, reg_to_u64, u64_to_reg),
 }
 
+impl InterpretInstr for ShiftIntInstr {
+    fn interpret_instr(
+        &self,
+        return_value: Option<Value>,
+        _ctx: &mut EvaluationContext,
+        frame: &mut FunctionFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let src = frame.read_register(self.source());
+        let shamt = frame.read_register(self.shift_amount());
+        fn eval_shift<T, F>(lhs: u64, rhs: u64, f: F) -> u64
+        where
+            T: PrimitiveInteger,
+            F: FnOnce(T, u32) -> T,
+        {
+            f(T::from_reg(lhs), rhs as u32).into_reg()
+        }
+        use IntType::{I16, I32, I64, I8};
+        use ShiftIntOp::*;
+        let result = match (self.op(), self.ty()) {
+            (Shl, I8) => eval_shift(src, shamt, u8::wrapping_shl),
+            (Shl, I16) => eval_shift(src, shamt, u16::wrapping_shl),
+            (Shl, I32) => eval_shift(src, shamt, u32::wrapping_shl),
+            (Shl, I64) => eval_shift(src, shamt, u64::wrapping_shl),
+            (Sshr, I8) => eval_shift(src, shamt, i8::wrapping_shr),
+            (Sshr, I16) => eval_shift(src, shamt, i16::wrapping_shr),
+            (Sshr, I32) => eval_shift(src, shamt, i32::wrapping_shr),
+            (Sshr, I64) => eval_shift(src, shamt, i64::wrapping_shr),
+            (Ushr, I8) => eval_shift(src, shamt, u8::wrapping_shr),
+            (Ushr, I16) => eval_shift(src, shamt, u16::wrapping_shr),
+            (Ushr, I32) => eval_shift(src, shamt, u32::wrapping_shr),
+            (Ushr, I64) => eval_shift(src, shamt, u64::wrapping_shr),
+            (Rotl, I8) => eval_shift(src, shamt, u8::rotate_left),
+            (Rotl, I16) => eval_shift(src, shamt, u16::rotate_left),
+            (Rotl, I32) => eval_shift(src, shamt, u32::rotate_left),
+            (Rotl, I64) => eval_shift(src, shamt, u64::rotate_left),
+            (Rotr, I8) => eval_shift(src, shamt, u8::rotate_right),
+            (Rotr, I16) => eval_shift(src, shamt, u16::rotate_right),
+            (Rotr, I32) => eval_shift(src, shamt, u32::rotate_right),
+            (Rotr, I64) => eval_shift(src, shamt, u64::rotate_right),
+        };
+        frame.write_register(return_value, result);
+        Ok(InterpretationFlow::Continue)
+    }
+}
+
 impl InterpretInstr for BinaryIntInstr {
     fn interpret_instr(
         &self,
@@ -342,13 +392,6 @@ impl InterpretInstr for BinaryIntInstr {
             F: FnOnce(T, T) -> Result<T, InterpretationError>,
         {
             Ok(f(T::from_reg(lhs), T::from_reg(rhs))?.into_reg())
-        }
-        fn eval_shift<T, F>(lhs: u64, rhs: u64, f: F) -> u64
-        where
-            T: PrimitiveInteger,
-            F: FnOnce(T, u32) -> T,
-        {
-            f(T::from_reg(lhs), rhs as u32).into_reg()
         }
         let result = match (self.op(), self.ty()) {
             (Add, I8) => eval(lhs, rhs, u8::wrapping_add),
@@ -391,26 +434,6 @@ impl InterpretInstr for BinaryIntInstr {
             (Xor, I16) => eval(lhs, rhs, u16::bitxor),
             (Xor, I32) => eval(lhs, rhs, u32::bitxor),
             (Xor, I64) => eval(lhs, rhs, u64::bitxor),
-            (Shl, I8) => eval_shift(lhs, rhs, u8::wrapping_shl),
-            (Shl, I16) => eval_shift(lhs, rhs, u16::wrapping_shl),
-            (Shl, I32) => eval_shift(lhs, rhs, u32::wrapping_shl),
-            (Shl, I64) => eval_shift(lhs, rhs, u64::wrapping_shl),
-            (Sshr, I8) => eval_shift(lhs, rhs, i8::wrapping_shr),
-            (Sshr, I16) => eval_shift(lhs, rhs, i16::wrapping_shr),
-            (Sshr, I32) => eval_shift(lhs, rhs, i32::wrapping_shr),
-            (Sshr, I64) => eval_shift(lhs, rhs, i64::wrapping_shr),
-            (Ushr, I8) => eval_shift(lhs, rhs, u8::wrapping_shr),
-            (Ushr, I16) => eval_shift(lhs, rhs, u16::wrapping_shr),
-            (Ushr, I32) => eval_shift(lhs, rhs, u32::wrapping_shr),
-            (Ushr, I64) => eval_shift(lhs, rhs, u64::wrapping_shr),
-            (Rotl, I8) => eval_shift(lhs, rhs, u8::rotate_left),
-            (Rotl, I16) => eval_shift(lhs, rhs, u16::rotate_left),
-            (Rotl, I32) => eval_shift(lhs, rhs, u32::rotate_left),
-            (Rotl, I64) => eval_shift(lhs, rhs, u64::rotate_left),
-            (Rotr, I8) => eval_shift(lhs, rhs, u8::rotate_right),
-            (Rotr, I16) => eval_shift(lhs, rhs, u16::rotate_right),
-            (Rotr, I32) => eval_shift(lhs, rhs, u32::rotate_right),
-            (Rotr, I64) => eval_shift(lhs, rhs, u64::rotate_right),
         };
         frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
