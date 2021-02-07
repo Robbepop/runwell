@@ -21,10 +21,11 @@ mod stack;
 
 pub use self::error::TranslateError;
 use self::stack::ValueStack;
-use crate::{Error, Type};
+use crate::{Const as WasmConst, Error, Type};
 use core::convert::TryFrom as _;
 use entity::RawIdx;
 use ir::{
+    instr::operands::CompareIntOp,
     primitive as runwell,
     primitive::{FloatType, Func, IntConst, IntType},
 };
@@ -145,6 +146,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: wasmparser::Operator,
     ) -> Result<(), Error> {
         use wasmparser::Operator as Op;
+        use CompareIntOp as CmpIntOp;
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
@@ -181,11 +183,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.stack.pop1()?;
             }
             Op::Select => {
-                self.translate_select_operator(None)?;
+                self.translate_select_op(None)?;
             }
             Op::TypedSelect { ty } => {
                 let ty = Type::try_from(ty)?.into_inner();
-                self.translate_select_operator(Some(ty))?;
+                self.translate_select_op(Some(ty))?;
             }
             Op::LocalGet { local_index } => {
                 // let var = Variable::from_raw(RawIdx::from_u32(local_index));
@@ -221,49 +223,43 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::MemorySize { mem, mem_byte } => {}
             Op::MemoryGrow { mem, mem_byte } => {}
             Op::I32Const { value } => {
-                let result = self.builder.ins()?.constant(
-                    ir::primitive::Const::Int(IntConst::I32(value)),
-                )?;
-                self.stack.push(result, IntType::I32.into());
+                self.translate_const_op(value, IntType::I32)?;
             }
             Op::I64Const { value } => {
-                let result = self.builder.ins()?.constant(
-                    ir::primitive::Const::Int(IntConst::I64(value)),
-                )?;
-                self.stack.push(result, IntType::I64.into());
+                self.translate_const_op(value, IntType::I64)?;
             }
             Op::F32Const { value } => {
-                let value = crate::Value::from(value).into_inner();
-                let result = self.builder.ins()?.constant(value)?;
-                self.stack.push(result, FloatType::F32.into());
+                self.translate_const_op(value, FloatType::F32)?;
             }
             Op::F64Const { value } => {
-                let value = crate::Value::from(value).into_inner();
-                let result = self.builder.ins()?.constant(value)?;
-                self.stack.push(result, FloatType::F64.into());
+                self.translate_const_op(value, FloatType::F64)?;
             }
-            Op::I32Eqz => {}
-            Op::I32Eq => {}
-            Op::I32Ne => {}
-            Op::I32LtS => {}
-            Op::I32LtU => {}
-            Op::I32GtS => {}
-            Op::I32GtU => {}
-            Op::I32LeS => {}
-            Op::I32LeU => {}
-            Op::I32GeS => {}
-            Op::I32GeU => {}
-            Op::I64Eqz => {}
-            Op::I64Eq => {}
-            Op::I64Ne => {}
-            Op::I64LtS => {}
-            Op::I64LtU => {}
-            Op::I64GtS => {}
-            Op::I64GtU => {}
-            Op::I64LeS => {}
-            Op::I64LeU => {}
-            Op::I64GeS => {}
-            Op::I64GeU => {}
+            Op::I32Eqz => {
+                self.translate_eqz_op(IntType::I32)?;
+            }
+            Op::I32Eq => self.translate_icmp_op(CmpIntOp::Eq, 32)?,
+            Op::I32Ne => self.translate_icmp_op(CmpIntOp::Ne, 32)?,
+            Op::I32LtS => self.translate_icmp_op(CmpIntOp::Slt, 32)?,
+            Op::I32LtU => self.translate_icmp_op(CmpIntOp::Ult, 32)?,
+            Op::I32GtS => self.translate_icmp_op(CmpIntOp::Sgt, 32)?,
+            Op::I32GtU => self.translate_icmp_op(CmpIntOp::Ugt, 32)?,
+            Op::I32LeS => self.translate_icmp_op(CmpIntOp::Sle, 32)?,
+            Op::I32LeU => self.translate_icmp_op(CmpIntOp::Ule, 32)?,
+            Op::I32GeS => self.translate_icmp_op(CmpIntOp::Sge, 32)?,
+            Op::I32GeU => self.translate_icmp_op(CmpIntOp::Uge, 32)?,
+            Op::I64Eqz => {
+                self.translate_eqz_op(IntType::I64)?;
+            }
+            Op::I64Eq => self.translate_icmp_op(CmpIntOp::Eq, 64)?,
+            Op::I64Ne => self.translate_icmp_op(CmpIntOp::Ne, 64)?,
+            Op::I64LtS => self.translate_icmp_op(CmpIntOp::Slt, 64)?,
+            Op::I64LtU => self.translate_icmp_op(CmpIntOp::Ult, 64)?,
+            Op::I64GtS => self.translate_icmp_op(CmpIntOp::Sgt, 64)?,
+            Op::I64GtU => self.translate_icmp_op(CmpIntOp::Ugt, 64)?,
+            Op::I64LeS => self.translate_icmp_op(CmpIntOp::Sle, 64)?,
+            Op::I64LeU => self.translate_icmp_op(CmpIntOp::Ule, 64)?,
+            Op::I64GeS => self.translate_icmp_op(CmpIntOp::Sge, 64)?,
+            Op::I64GeU => self.translate_icmp_op(CmpIntOp::Uge, 64)?,
             Op::F32Eq => {}
             Op::F32Ne => {}
             Op::F32Lt => {}
@@ -379,8 +375,93 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
+    /// Translates a Wasm constant operator.
+    fn translate_const_op<T1, T2>(
+        &mut self,
+        const_value: T1,
+        ty: T2,
+    ) -> Result<(), Error>
+    where
+        T1: Into<WasmConst>,
+        T2: Into<runwell::Type>,
+    {
+        let const_value = const_value.into().into_inner();
+        let ty = ty.into();
+        assert_eq!(const_value.ty(), ty);
+        let result = self.builder.ins()?.constant(const_value)?;
+        self.stack.push(result, ty.into());
+        Ok(())
+    }
+
+    /// Extracts the integer type from the generic Runwell type.
+    ///
+    /// # Note
+    ///
+    /// Use this only when certain due to Wasm validation that the given
+    /// type must be an integer type.
+    ///
+    /// # Panics
+    ///
+    /// If the generic integer type does not contain an integer type.
+    fn extract_int_type(ty: runwell::Type) -> runwell::IntType {
+        match ty {
+            runwell::Type::Int(int_type) => int_type,
+            runwell::Type::Bool => {
+                panic!("expected int type due to Wasm validation but found bool type.")
+            }
+            runwell::Type::Float(float_type) => {
+                panic!("expected int type due to Wasm validation but found {} type.", float_type)
+            }
+        }
+    }
+
+    /// Translates a Wasm integer compare to zero (Eqz) operator.
+    fn translate_eqz_op(&mut self, int_type: IntType) -> Result<(), Error> {
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty.bit_width(), 32);
+        let actual_int_type = Self::extract_int_type(source.ty);
+        assert_eq!(actual_int_type, int_type);
+        let zero_const: runwell::Const = match int_type {
+            IntType::I32 => IntConst::I32(0).into(),
+            IntType::I64 => IntConst::I64(0).into(),
+            unsupported => {
+                panic!(
+                "encountered unsupported integer type {} for Wasm Eqz operator",
+                unsupported
+            )
+            }
+        };
+        let zero = self.builder.ins()?.constant(zero_const)?;
+        let result = self.builder.ins()?.icmp(
+            int_type,
+            CompareIntOp::Eq,
+            source.value,
+            zero,
+        )?;
+        self.stack.push(result, runwell::Type::Bool);
+        Ok(())
+    }
+
+    /// Translates a Wasm integer compare operator.
+    fn translate_icmp_op(
+        &mut self,
+        op: CompareIntOp,
+        bitwidth: u32,
+    ) -> Result<(), Error> {
+        let (lhs, rhs) = self.stack.pop2()?;
+        assert_eq!(lhs.ty, rhs.ty);
+        assert_eq!(lhs.ty.bit_width(), bitwidth);
+        let int_type = Self::extract_int_type(lhs.ty);
+        let result = self
+            .builder
+            .ins()?
+            .icmp(int_type, op, lhs.value, rhs.value)?;
+        self.stack.push(result, runwell::Type::Bool);
+        Ok(())
+    }
+
     /// Translates a Wasm `Select` or `TypedSelect` operator.
-    fn translate_select_operator(
+    fn translate_select_op(
         &mut self,
         required_ty: Option<runwell::Type>,
     ) -> Result<(), Error> {
