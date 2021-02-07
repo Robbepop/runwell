@@ -397,7 +397,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let ty = ty.into();
         assert_eq!(const_value.ty(), ty);
         let result = self.builder.ins()?.constant(const_value)?;
-        self.stack.push(result, ty.into());
+        self.stack.push(result, ty);
         Ok(())
     }
 
