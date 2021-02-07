@@ -375,16 +375,16 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F32ConvertI32U => {}
             Op::F32ConvertI64S => {}
             Op::F32ConvertI64U => {}
-            Op::F32DemoteF64 => {}
+            Op::F32DemoteF64 => self.translate_demote(F64, F32)?,
             Op::F64ConvertI32S => {}
             Op::F64ConvertI32U => {}
             Op::F64ConvertI64S => {}
             Op::F64ConvertI64U => {}
-            Op::F64PromoteF32 => {}
-            Op::I32ReinterpretF32 => {}
-            Op::I64ReinterpretF64 => {}
-            Op::F32ReinterpretI32 => {}
-            Op::F64ReinterpretI64 => {}
+            Op::F64PromoteF32 => self.translate_promote(F32, F64)?,
+            Op::I32ReinterpretF32 => self.translate_reinterpret(I32, F32)?,
+            Op::I64ReinterpretF64 => self.translate_reinterpret(I64, F64)?,
+            Op::F32ReinterpretI32 => self.translate_reinterpret(F32, F32)?,
+            Op::F64ReinterpretI64 => self.translate_reinterpret(F64, I64)?,
             Op::I32Extend8S => {}
             Op::I32Extend16S => {}
             Op::I64Extend8S => {}
@@ -396,6 +396,74 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     .map_err(Into::into)
             }
         }
+        Ok(())
+    }
+
+    /// Translates a Wasm demote operator.
+    fn translate_demote<FromType, ToType>(
+        &mut self,
+        from_type: FromType,
+        to_type: ToType,
+    ) -> Result<(), Error>
+    where
+        FromType: Into<FloatType>,
+        ToType: Into<FloatType>,
+    {
+        let from_type = from_type.into();
+        let to_type = to_type.into();
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty, from_type.into());
+        let result =
+            self.builder
+                .ins()?
+                .demote(from_type, to_type, source.value)?;
+        self.stack.push(result, to_type.into());
+        Ok(())
+    }
+
+    /// Translates a Wasm promote operator.
+    fn translate_promote<FromType, ToType>(
+        &mut self,
+        from_type: FromType,
+        to_type: ToType,
+    ) -> Result<(), Error>
+    where
+        FromType: Into<FloatType>,
+        ToType: Into<FloatType>,
+    {
+        let from_type = from_type.into();
+        let to_type = to_type.into();
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty, from_type.into());
+        let result =
+            self.builder
+                .ins()?
+                .promote(from_type, to_type, source.value)?;
+        self.stack.push(result, to_type.into());
+        Ok(())
+    }
+
+    /// Translates a Wasm reinterpret operator.
+    fn translate_reinterpret<FromType, ToType>(
+        &mut self,
+        from_type: FromType,
+        to_type: ToType,
+    ) -> Result<(), Error>
+    where
+        FromType: Into<runwell::Type>,
+        ToType: Into<runwell::Type>,
+    {
+        let from_type = from_type.into();
+        let to_type = to_type.into();
+        assert_eq!(from_type.bit_width(), to_type.bit_width());
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty, from_type);
+        let result = self.builder.ins()?.reinterpret(
+            from_type,
+            to_type,
+            source.value,
+        )?;
+        self.stack.push(result, to_type);
         Ok(())
     }
 
