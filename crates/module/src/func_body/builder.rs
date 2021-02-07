@@ -563,6 +563,15 @@ impl FunctionBuilder {
         self.read_var_in_block(var, current)
     }
 
+    /// Returns the type of the variable.
+    ///
+    /// # Errors
+    ///
+    /// - If the variable has not beed declared.
+    pub fn var_type(&mut self, var: Variable) -> Result<Type, IrError> {
+        Ok(self.ctx.vars.get(var)?.ty())
+    }
+
     /// Finalizes construction of the built function.
     ///
     /// Returns the built function.
