@@ -25,7 +25,7 @@ use crate::{Const as WasmConst, Error, Type};
 use core::convert::TryFrom as _;
 use entity::RawIdx;
 use ir::{
-    instr::operands::{CompareFloatOp, CompareIntOp},
+    instr::operands::{BinaryIntOp, CompareFloatOp, CompareIntOp},
     primitive as runwell,
     primitive::{FloatType, Func, IntConst, IntType},
 };
@@ -149,6 +149,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use CompareFloatOp as CmpFloatOp;
         use CompareIntOp as CmpIntOp;
         use FloatType::{F32, F64};
+        use IntType::{I32, I64};
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
@@ -234,18 +235,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64Store32 { memarg } => {}
             Op::MemorySize { mem, mem_byte } => {}
             Op::MemoryGrow { mem, mem_byte } => {}
-            Op::I32Const { value } => {
-                self.translate_const_op(value, IntType::I32)?;
-            }
-            Op::I64Const { value } => {
-                self.translate_const_op(value, IntType::I64)?;
-            }
-            Op::F32Const { value } => {
-                self.translate_const_op(value, FloatType::F32)?;
-            }
-            Op::F64Const { value } => {
-                self.translate_const_op(value, FloatType::F64)?;
-            }
+            Op::I32Const { value } => self.translate_const_op(value, I32)?,
+            Op::I64Const { value } => self.translate_const_op(value, I64)?,
+            Op::F32Const { value } => self.translate_const_op(value, F32)?,
+            Op::F64Const { value } => self.translate_const_op(value, F64)?,
             Op::I32Eqz => self.translate_eqz_op(IntType::I32)?,
             Op::I32Eq => self.translate_icmp_op(CmpIntOp::Eq, 32)?,
             Op::I32Ne => self.translate_icmp_op(CmpIntOp::Ne, 32)?,
@@ -283,16 +276,16 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I32Clz => {}
             Op::I32Ctz => {}
             Op::I32Popcnt => {}
-            Op::I32Add => {}
-            Op::I32Sub => {}
-            Op::I32Mul => {}
-            Op::I32DivS => {}
-            Op::I32DivU => {}
-            Op::I32RemS => {}
-            Op::I32RemU => {}
-            Op::I32And => {}
-            Op::I32Or => {}
-            Op::I32Xor => {}
+            Op::I32Add => self.translate_int_binop(I32, BinaryIntOp::Add)?,
+            Op::I32Sub => self.translate_int_binop(I32, BinaryIntOp::Sub)?,
+            Op::I32Mul => self.translate_int_binop(I32, BinaryIntOp::Mul)?,
+            Op::I32DivS => self.translate_int_binop(I32, BinaryIntOp::Sdiv)?,
+            Op::I32DivU => self.translate_int_binop(I32, BinaryIntOp::Udiv)?,
+            Op::I32RemS => self.translate_int_binop(I32, BinaryIntOp::Srem)?,
+            Op::I32RemU => self.translate_int_binop(I32, BinaryIntOp::Urem)?,
+            Op::I32And => self.translate_int_binop(I32, BinaryIntOp::And)?,
+            Op::I32Or => self.translate_int_binop(I32, BinaryIntOp::Or)?,
+            Op::I32Xor => self.translate_int_binop(I32, BinaryIntOp::Xor)?,
             Op::I32Shl => {}
             Op::I32ShrS => {}
             Op::I32ShrU => {}
@@ -301,16 +294,16 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64Clz => {}
             Op::I64Ctz => {}
             Op::I64Popcnt => {}
-            Op::I64Add => {}
-            Op::I64Sub => {}
-            Op::I64Mul => {}
-            Op::I64DivS => {}
-            Op::I64DivU => {}
-            Op::I64RemS => {}
-            Op::I64RemU => {}
-            Op::I64And => {}
-            Op::I64Or => {}
-            Op::I64Xor => {}
+            Op::I64Add => self.translate_int_binop(I64, BinaryIntOp::Add)?,
+            Op::I64Sub => self.translate_int_binop(I64, BinaryIntOp::Sub)?,
+            Op::I64Mul => self.translate_int_binop(I64, BinaryIntOp::Mul)?,
+            Op::I64DivS => self.translate_int_binop(I64, BinaryIntOp::Sdiv)?,
+            Op::I64DivU => self.translate_int_binop(I64, BinaryIntOp::Udiv)?,
+            Op::I64RemS => self.translate_int_binop(I64, BinaryIntOp::Srem)?,
+            Op::I64RemU => self.translate_int_binop(I64, BinaryIntOp::Urem)?,
+            Op::I64And => self.translate_int_binop(I64, BinaryIntOp::And)?,
+            Op::I64Or => self.translate_int_binop(I64, BinaryIntOp::Or)?,
+            Op::I64Xor => self.translate_int_binop(I64, BinaryIntOp::Xor)?,
             Op::I64Shl => {}
             Op::I64ShrS => {}
             Op::I64ShrU => {}
@@ -421,6 +414,40 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 panic!("expected int type due to Wasm validation but found {} type.", float_type)
             }
         }
+    }
+
+    /// Translate a Wasm binary integer operator into Runwell IR.
+    fn translate_int_binop(
+        &mut self,
+        int_ty: IntType,
+        op: BinaryIntOp,
+    ) -> Result<(), Error> {
+        let (lhs, rhs) = self.stack.pop2()?;
+        assert_eq!(lhs.ty, rhs.ty);
+        let actual_int_ty = Self::extract_int_type(lhs.ty);
+        assert_eq!(actual_int_ty, int_ty);
+        let ins = self.builder.ins()?;
+        let lhs = lhs.value;
+        let rhs = rhs.value;
+        let result = match op {
+            BinaryIntOp::Add => ins.iadd(int_ty, lhs, rhs)?,
+            BinaryIntOp::Sub => ins.isub(int_ty, lhs, rhs)?,
+            BinaryIntOp::Mul => ins.imul(int_ty, lhs, rhs)?,
+            BinaryIntOp::Sdiv => ins.sdiv(int_ty, lhs, rhs)?,
+            BinaryIntOp::Udiv => ins.udiv(int_ty, lhs, rhs)?,
+            BinaryIntOp::Srem => ins.srem(int_ty, lhs, rhs)?,
+            BinaryIntOp::Urem => ins.urem(int_ty, lhs, rhs)?,
+            BinaryIntOp::And => ins.iand(int_ty, lhs, rhs)?,
+            BinaryIntOp::Or => ins.ior(int_ty, lhs, rhs)?,
+            BinaryIntOp::Xor => ins.ixor(int_ty, lhs, rhs)?,
+            BinaryIntOp::Shl => unimplemented!(),
+            BinaryIntOp::Sshr => unimplemented!(),
+            BinaryIntOp::Ushr => unimplemented!(),
+            BinaryIntOp::Rotl => unimplemented!(),
+            BinaryIntOp::Rotr => unimplemented!(),
+        };
+        self.stack.push(result, int_ty.into());
+        Ok(())
     }
 
     /// Translates a Wasm integer compare to zero (Eqz) operator.
