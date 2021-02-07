@@ -554,11 +554,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             BinaryIntOp::And => ins.iand(int_ty, lhs, rhs)?,
             BinaryIntOp::Or => ins.ior(int_ty, lhs, rhs)?,
             BinaryIntOp::Xor => ins.ixor(int_ty, lhs, rhs)?,
-            BinaryIntOp::Shl => unimplemented!(),
-            BinaryIntOp::Sshr => unimplemented!(),
-            BinaryIntOp::Ushr => unimplemented!(),
-            BinaryIntOp::Rotl => unimplemented!(),
-            BinaryIntOp::Rotr => unimplemented!(),
         };
         self.stack.push(result, int_ty.into());
         Ok(())
