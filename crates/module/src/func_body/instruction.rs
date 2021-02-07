@@ -17,7 +17,8 @@ use crate::IrError;
 use entity::Idx;
 use ir::{
     instr::{
-        operands::{BinaryIntOp, CompareFloatOp, CompareIntOp},
+        operands::{BinaryFloatOp, BinaryIntOp, CompareFloatOp, CompareIntOp},
+        BinaryFloatInstr,
         BinaryIntInstr,
         BranchInstr,
         CallInstr,
@@ -301,6 +302,93 @@ impl<'a> InstructionBuilder<'a> {
             self.append_value_instr(instruction.into(), Type::Bool)?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
+    }
+
+    /// Convenience function to construct binary float instructions.
+    fn fbinary(
+        mut self,
+        op: BinaryFloatOp,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.expect_type(lhs, ty.into())?;
+        self.expect_type(rhs, ty.into())?;
+        let instruction = BinaryFloatInstr::new(op, ty, lhs, rhs);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), ty.into())?;
+        self.register_uses(instr, &[lhs, rhs]);
+        Ok(value)
+    }
+
+    /// Float addition.
+    pub fn fadd(
+        self,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.fbinary(BinaryFloatOp::Add, ty, lhs, rhs)
+    }
+
+    /// Float subtraction.
+    pub fn fsub(
+        self,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.fbinary(BinaryFloatOp::Sub, ty, lhs, rhs)
+    }
+
+    /// Float multiplication.
+    pub fn fmul(
+        self,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.fbinary(BinaryFloatOp::Mul, ty, lhs, rhs)
+    }
+
+    /// Float division.
+    pub fn fdiv(
+        self,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.fbinary(BinaryFloatOp::Div, ty, lhs, rhs)
+    }
+
+    /// Float minimum element.
+    pub fn fmin(
+        self,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.fbinary(BinaryFloatOp::Min, ty, lhs, rhs)
+    }
+
+    /// Float maximum element.
+    pub fn fmax(
+        self,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.fbinary(BinaryFloatOp::Max, ty, lhs, rhs)
+    }
+
+    /// Float copysign operation.
+    pub fn fcopysign(
+        self,
+        ty: FloatType,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.fbinary(BinaryFloatOp::CopySign, ty, lhs, rhs)
     }
 
     /// Float comparison given a comparator.
