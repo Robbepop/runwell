@@ -384,14 +384,30 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64TruncF64U => {
                 self.translate_float_to_int(F64, I64, false, false)?
             }
-            Op::F32ConvertI32S => {}
-            Op::F32ConvertI32U => {}
-            Op::F32ConvertI64S => {}
-            Op::F32ConvertI64U => {}
-            Op::F64ConvertI32S => {}
-            Op::F64ConvertI32U => {}
-            Op::F64ConvertI64S => {}
-            Op::F64ConvertI64U => {}
+            Op::F32ConvertI32S => {
+                self.translate_int_to_float(I32, F32, true)?
+            }
+            Op::F32ConvertI32U => {
+                self.translate_int_to_float(I32, F32, false)?
+            }
+            Op::F32ConvertI64S => {
+                self.translate_int_to_float(I64, F32, true)?
+            }
+            Op::F32ConvertI64U => {
+                self.translate_int_to_float(I64, F32, false)?
+            }
+            Op::F64ConvertI32S => {
+                self.translate_int_to_float(I32, F64, true)?
+            }
+            Op::F64ConvertI32U => {
+                self.translate_int_to_float(I32, F64, false)?
+            }
+            Op::F64ConvertI64S => {
+                self.translate_int_to_float(I64, F64, true)?
+            }
+            Op::F64ConvertI64U => {
+                self.translate_int_to_float(I64, F64, false)?
+            }
             Op::F32DemoteF64 => self.translate_demote(F64, F32)?,
             Op::F64PromoteF32 => self.translate_promote(F32, F64)?,
             Op::I32ReinterpretF32 => self.translate_reinterpret(I32, F32)?,
@@ -412,6 +428,30 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     .map_err(Into::into)
             }
         }
+        Ok(())
+    }
+
+    /// Translates a Wasm integer to float conversion.
+    fn translate_int_to_float<SrcType, DstType>(
+        &mut self,
+        src_type: SrcType,
+        dst_type: DstType,
+        src_signed: bool,
+    ) -> Result<(), Error>
+    where
+        SrcType: Into<IntType>,
+        DstType: Into<FloatType>,
+    {
+        let src_type = src_type.into();
+        let dst_type = dst_type.into();
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty, src_type.into());
+        let source = source.value;
+        let result = self
+            .builder
+            .ins()?
+            .int_to_float(src_signed, src_type, dst_type, source)?;
+        self.stack.push(result, dst_type.into());
         Ok(())
     }
 
