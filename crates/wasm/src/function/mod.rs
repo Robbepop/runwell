@@ -30,6 +30,7 @@ use ir::{
         BinaryIntOp,
         CompareFloatOp,
         CompareIntOp,
+        ShiftIntOp,
         UnaryFloatOp,
         UnaryIntOp,
     },
@@ -296,11 +297,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I32And => self.translate_int_binop(I32, BinaryIntOp::And)?,
             Op::I32Or => self.translate_int_binop(I32, BinaryIntOp::Or)?,
             Op::I32Xor => self.translate_int_binop(I32, BinaryIntOp::Xor)?,
-            Op::I32Shl => {}
-            Op::I32ShrS => {}
-            Op::I32ShrU => {}
-            Op::I32Rotl => {}
-            Op::I32Rotr => {}
+            Op::I32Shl => self.translate_int_shift(I32, ShiftIntOp::Shl)?,
+            Op::I32ShrS => self.translate_int_shift(I32, ShiftIntOp::Sshr)?,
+            Op::I32ShrU => self.translate_int_shift(I32, ShiftIntOp::Ushr)?,
+            Op::I32Rotl => self.translate_int_shift(I32, ShiftIntOp::Rotl)?,
+            Op::I32Rotr => self.translate_int_shift(I32, ShiftIntOp::Rotr)?,
             Op::I64Clz => self.translate_int_unop(I64, LeadingZeros)?,
             Op::I64Ctz => self.translate_int_unop(I64, TrailingZeros)?,
             Op::I64Popcnt => self.translate_int_unop(I64, PopCount)?,
@@ -314,11 +315,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64And => self.translate_int_binop(I64, BinaryIntOp::And)?,
             Op::I64Or => self.translate_int_binop(I64, BinaryIntOp::Or)?,
             Op::I64Xor => self.translate_int_binop(I64, BinaryIntOp::Xor)?,
-            Op::I64Shl => {}
-            Op::I64ShrS => {}
-            Op::I64ShrU => {}
-            Op::I64Rotl => {}
-            Op::I64Rotr => {}
+            Op::I64Shl => self.translate_int_shift(I64, ShiftIntOp::Shl)?,
+            Op::I64ShrS => self.translate_int_shift(I64, ShiftIntOp::Sshr)?,
+            Op::I64ShrU => self.translate_int_shift(I64, ShiftIntOp::Ushr)?,
+            Op::I64Rotl => self.translate_int_shift(I64, ShiftIntOp::Rotl)?,
+            Op::I64Rotr => self.translate_int_shift(I64, ShiftIntOp::Rotr)?,
             Op::F32Abs => self.translate_float_unop(F32, FloatUnop::Abs)?,
             Op::F32Neg => self.translate_float_unop(F32, FloatUnop::Neg)?,
             Op::F32Ceil => self.translate_float_unop(F32, FloatUnop::Ceil)?,
@@ -508,6 +509,29 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 panic!("expected int type due to Wasm validation but found {} type.", float_type)
             }
         }
+    }
+
+    /// Translate a Wasm integer shift or rotate operator into Runwell IR.
+    fn translate_int_shift(
+        &mut self,
+        int_type: IntType,
+        op: ShiftIntOp,
+    ) -> Result<(), Error> {
+        let (source, shift_amount) = self.stack.pop2()?;
+        assert_eq!(shift_amount.ty, IntType::I32.into());
+        assert_eq!(source.ty, int_type.into());
+        let ins = self.builder.ins()?;
+        let source = source.value;
+        let shift_amount = shift_amount.value;
+        let result = match op {
+            ShiftIntOp::Shl => ins.ishl(int_type, source, shift_amount)?,
+            ShiftIntOp::Sshr => ins.isshr(int_type, source, shift_amount)?,
+            ShiftIntOp::Ushr => ins.iushr(int_type, source, shift_amount)?,
+            ShiftIntOp::Rotl => ins.irotl(int_type, source, shift_amount)?,
+            ShiftIntOp::Rotr => ins.irotr(int_type, source, shift_amount)?,
+        };
+        self.stack.push(result, int_type.into());
+        Ok(())
     }
 
     /// Translate a Wasm unary integer operator into Runwell IR.
