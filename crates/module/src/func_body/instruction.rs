@@ -17,7 +17,13 @@ use crate::IrError;
 use entity::Idx;
 use ir::{
     instr::{
-        operands::{BinaryFloatOp, BinaryIntOp, CompareFloatOp, CompareIntOp},
+        operands::{
+            BinaryFloatOp,
+            BinaryIntOp,
+            CompareFloatOp,
+            CompareIntOp,
+            UnaryFloatOp,
+        },
         BinaryFloatInstr,
         BinaryIntInstr,
         BranchInstr,
@@ -32,6 +38,7 @@ use ir::{
         SelectInstr,
         TailCallInstr,
         TerminalInstr,
+        UnaryFloatInstr,
     },
     primitive::{Block, Const, FloatType, Func, IntType, Type, Value},
 };
@@ -302,6 +309,68 @@ impl<'a> InstructionBuilder<'a> {
             self.append_value_instr(instruction.into(), Type::Bool)?;
         self.register_uses(instr, &[lhs, rhs]);
         Ok(value)
+    }
+
+    /// Convenience function to construct unary float instructions.
+    fn funary(
+        mut self,
+        op: UnaryFloatOp,
+        ty: FloatType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.expect_type(source, ty.into())?;
+        let instruction = UnaryFloatInstr::new(op, ty, source);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), ty.into())?;
+        self.register_uses(instr, &[source]);
+        Ok(value)
+    }
+
+    /// Float absolute value.
+    pub fn fabs(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+        self.funary(UnaryFloatOp::Abs, ty, source)
+    }
+
+    /// Float negate.
+    pub fn fneg(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+        self.funary(UnaryFloatOp::Neg, ty, source)
+    }
+
+    /// Float square root.
+    pub fn fsqrt(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+        self.funary(UnaryFloatOp::Sqrt, ty, source)
+    }
+
+    /// Float round to ceil.
+    pub fn fceil(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+        self.funary(UnaryFloatOp::Ceil, ty, source)
+    }
+
+    /// Float round to floor.
+    pub fn ffloor(
+        self,
+        ty: FloatType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.funary(UnaryFloatOp::Floor, ty, source)
+    }
+
+    /// Float round to next smaller integer.
+    pub fn ftruncate(
+        self,
+        ty: FloatType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.funary(UnaryFloatOp::Truncate, ty, source)
+    }
+
+    /// Float round to nearest integer.
+    pub fn fnearest(
+        self,
+        ty: FloatType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.funary(UnaryFloatOp::Nearest, ty, source)
     }
 
     /// Convenience function to construct binary float instructions.
