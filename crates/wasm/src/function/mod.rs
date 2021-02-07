@@ -244,9 +244,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F64Const { value } => {
                 self.translate_const_op(value, FloatType::F64)?;
             }
-            Op::I32Eqz => {
-                self.translate_eqz_op(IntType::I32)?;
-            }
+            Op::I32Eqz => self.translate_eqz_op(IntType::I32)?,
             Op::I32Eq => self.translate_icmp_op(CmpIntOp::Eq, 32)?,
             Op::I32Ne => self.translate_icmp_op(CmpIntOp::Ne, 32)?,
             Op::I32LtS => self.translate_icmp_op(CmpIntOp::Slt, 32)?,
@@ -257,9 +255,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I32LeU => self.translate_icmp_op(CmpIntOp::Ule, 32)?,
             Op::I32GeS => self.translate_icmp_op(CmpIntOp::Sge, 32)?,
             Op::I32GeU => self.translate_icmp_op(CmpIntOp::Uge, 32)?,
-            Op::I64Eqz => {
-                self.translate_eqz_op(IntType::I64)?;
-            }
+            Op::I64Eqz => self.translate_eqz_op(IntType::I64)?,
             Op::I64Eq => self.translate_icmp_op(CmpIntOp::Eq, 64)?,
             Op::I64Ne => self.translate_icmp_op(CmpIntOp::Ne, 64)?,
             Op::I64LtS => self.translate_icmp_op(CmpIntOp::Slt, 64)?,
