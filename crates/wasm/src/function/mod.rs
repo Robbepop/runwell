@@ -31,6 +31,7 @@ use ir::{
         CompareFloatOp,
         CompareIntOp,
         UnaryFloatOp,
+        UnaryIntOp,
     },
     primitive as runwell,
     primitive::{FloatType, Func, IntConst, IntType},
@@ -158,6 +159,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use FloatType::{F32, F64};
         use IntType::{I32, I64};
         use UnaryFloatOp as FloatUnop;
+        use UnaryIntOp::*;
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
@@ -281,9 +283,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F64Gt => self.translate_fcmp_op(CmpFloatOp::Gt, F64)?,
             Op::F64Le => self.translate_fcmp_op(CmpFloatOp::Le, F64)?,
             Op::F64Ge => self.translate_fcmp_op(CmpFloatOp::Ge, F64)?,
-            Op::I32Clz => {}
-            Op::I32Ctz => {}
-            Op::I32Popcnt => {}
+            Op::I32Clz => self.translate_int_unop(I32, LeadingZeros)?,
+            Op::I32Ctz => self.translate_int_unop(I32, TrailingZeros)?,
+            Op::I32Popcnt => self.translate_int_unop(I32, PopCount)?,
             Op::I32Add => self.translate_int_binop(I32, BinaryIntOp::Add)?,
             Op::I32Sub => self.translate_int_binop(I32, BinaryIntOp::Sub)?,
             Op::I32Mul => self.translate_int_binop(I32, BinaryIntOp::Mul)?,
@@ -299,9 +301,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I32ShrU => {}
             Op::I32Rotl => {}
             Op::I32Rotr => {}
-            Op::I64Clz => {}
-            Op::I64Ctz => {}
-            Op::I64Popcnt => {}
+            Op::I64Clz => self.translate_int_unop(I64, LeadingZeros)?,
+            Op::I64Ctz => self.translate_int_unop(I64, TrailingZeros)?,
+            Op::I64Popcnt => self.translate_int_unop(I64, PopCount)?,
             Op::I64Add => self.translate_int_binop(I64, BinaryIntOp::Add)?,
             Op::I64Sub => self.translate_int_binop(I64, BinaryIntOp::Sub)?,
             Op::I64Mul => self.translate_int_binop(I64, BinaryIntOp::Mul)?,
@@ -506,6 +508,26 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 panic!("expected int type due to Wasm validation but found {} type.", float_type)
             }
         }
+    }
+
+    /// Translate a Wasm unary integer operator into Runwell IR.
+    fn translate_int_unop(
+        &mut self,
+        int_type: IntType,
+        op: UnaryIntOp,
+    ) -> Result<(), Error> {
+        let source = self.stack.pop1()?;
+        let actual_int_ty = Self::extract_int_type(source.ty);
+        assert_eq!(actual_int_ty, int_type);
+        let ins = self.builder.ins()?;
+        let source = source.value;
+        let result = match op {
+            UnaryIntOp::LeadingZeros => ins.iclz(int_type, source)?,
+            UnaryIntOp::TrailingZeros => ins.ictz(int_type, source)?,
+            UnaryIntOp::PopCount => ins.ipopcnt(int_type, source)?,
+        };
+        self.stack.push(result, int_type.into());
+        Ok(())
     }
 
     /// Translate a Wasm binary integer operator into Runwell IR.
