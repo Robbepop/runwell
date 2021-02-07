@@ -29,7 +29,7 @@ use ir::{
     primitive as runwell,
     primitive::{FloatType, Func, IntConst, IntType},
 };
-use module::{FunctionBody, FunctionBuilder, ModuleResources};
+use module::{FunctionBody, FunctionBuilder, ModuleResources, Variable};
 use wasmparser::{BinaryReader, FuncValidator, Range, ValidatorResources};
 
 /// Translate a Wasm function body into a Runwell function body.
@@ -190,11 +190,21 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.translate_select_op(Some(ty))?;
             }
             Op::LocalGet { local_index } => {
-                // let var = Variable::from_raw(RawIdx::from_u32(local_index));
-                // let result = self.builder.read_var(var)?;
+                let var = Variable::from_raw(RawIdx::from_u32(local_index));
+                let result = self.builder.read_var(var)?;
+                let result_type = self.builder.var_type(var)?;
+                self.stack.push(result, result_type);
             }
-            Op::LocalSet { local_index } => {}
-            Op::LocalTee { local_index } => {}
+            Op::LocalSet { local_index } => {
+                let var = Variable::from_raw(RawIdx::from_u32(local_index));
+                let source = self.stack.pop1()?;
+                self.builder.write_var(var, source.value)?;
+            }
+            Op::LocalTee { local_index } => {
+                let var = Variable::from_raw(RawIdx::from_u32(local_index));
+                let source = self.stack.peek1()?;
+                self.builder.write_var(var, source.value)?;
+            }
             Op::GlobalGet { global_index } => {}
             Op::GlobalSet { global_index } => {}
             Op::I32Load { memarg } => {}
