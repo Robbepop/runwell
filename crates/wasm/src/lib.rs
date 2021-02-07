@@ -12,21 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "bench", feature(test))]
-#![allow(dead_code)]
 #![forbid(unsafe_code)]
 
-#[cfg(feature = "bench")]
-extern crate test;
+mod error;
+mod export;
+mod func_type;
+mod function;
+mod global;
+mod import;
+mod init_expr;
+mod memory;
+mod primitive;
+mod read;
+mod section;
+mod table;
 
-#[cfg(not(feature = "std"))]
-extern crate alloc;
-
-#[macro_use]
-mod index;
-pub mod builder;
-mod maybe_std;
-pub mod parse;
-
-pub use self::index::Index32;
+pub use self::{
+    error::{Error, ErrorKind},
+    export::{Export, ExportError, ExportItem, ExportKind},
+    func_type::FunctionType,
+    function::{FunctionBodyTranslator, TranslateError},
+    global::GlobalVariable,
+    import::{ImportError, ImportName},
+    init_expr::{InitExpr, InitExprError},
+    memory::{LinearMemoryDecl, MemoryDataInit, MemoryError},
+    primitive::{PrimitiveError, Type, Value},
+    read::{Read, ReadError},
+    section::{
+        parse,
+        SectionError,
+        UnexpectedWasmPayload,
+        UnsupportedTypeDef,
+        UnsupportedWasmSection,
+    },
+    table::{TableDecl, TableError},
+};

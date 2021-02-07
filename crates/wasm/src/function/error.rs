@@ -12,11 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{entity::EntityError, TypesError};
-use derive_more::{Display, Error, From};
+use derive_more::{Display, Error};
 
-#[derive(Debug, Display, From, Error)]
-pub enum BuilderError {
-    Entity(EntityError),
-    Types(TypesError),
+/// An error that occured while translating from Wasm to Runwell IR.
+#[derive(Debug, Display, Error, PartialEq, Eq)]
+pub enum TranslateError {
+    #[display(fmt = "encountered unsupported Wasm operator at {}", offset)]
+    UnsupportedOperator { offset: usize },
+    #[display(
+        fmt = "missing value in emulation stack. found {} but expected {}.",
+        found,
+        expected
+    )]
+    MissingStackValue { expected: u32, found: u32 },
 }

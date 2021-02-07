@@ -133,8 +133,7 @@ fn parse_works() {
             input.path.file_stem().unwrap().to_str().unwrap(),
             local_test
         );
-        let result =
-            runwell_wasm::parse::parse(&mut &input.wasm[..], &mut buffer);
+        let result = runwell_wasm::parse(&mut &input.wasm[..], &mut buffer);
         match result {
             Ok(_) => {
                 println!("ok");

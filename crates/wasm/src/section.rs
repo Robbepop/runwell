@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{table::Element, FunctionType, InitExpr};
+use crate::{
+    function::translate_function_body,
+    table::Element,
+    FunctionType,
+    InitExpr,
+};
 
 use super::{
     Error,
@@ -271,7 +276,6 @@ impl ParseContext {
                 self.parse_code_section(count, range, parser, reader)?;
             }
             Payload::CodeSectionEntry(_body) => {
-                // self.parse_code_section_entry(body)?;
                 return Err(SectionError::Unexpected(UnexpectedWasmPayload {
                     encountered: PayloadKind::CodeSectionEntry,
                     expected: None,
@@ -601,13 +605,16 @@ impl ParseContext {
                     continue
                 }
                 Chunk::Parsed {
-                    consumed: _,
-                    payload: Payload::CodeSectionEntry(_function_body),
+                    consumed,
+                    payload: Payload::CodeSectionEntry(function_body),
                 } => {
+                    let range = function_body.get_binary_reader().range();
                     let fn_validator = self.validator.code_section_entry()?;
                     let func = Func::from_raw(RawIdx::from_u32(count_bodies));
-                    let fn_buffer = core::mem::replace(&mut buffer, Vec::new());
-                    let func_body = crate::function::translate_function_body(
+                    let new_buffer = buffer.drain(consumed..).collect();
+                    let fn_buffer = core::mem::replace(&mut buffer, new_buffer);
+                    let func_body = translate_function_body(
+                        range,
                         fn_buffer,
                         fn_validator,
                         func,

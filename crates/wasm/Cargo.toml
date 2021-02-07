@@ -5,6 +5,10 @@ authors = ["Robin Freyler <robin.freyler@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+entity = { package = "runwell_entity", path = "../entity" }
+ir = { package = "runwell_ir", path = "../ir" }
+module = { package = "runwell_module", path = "../module" }
+
 wasmparser = { version = "0.74", features = ["deterministic"] }
 derive_more = "0.99.2"
 cfg-if = "1"

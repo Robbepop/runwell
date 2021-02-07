@@ -1,4 +1,4 @@
-// Copyright 2020 Robin Freyler
+// Copyright 2021 Robin Freyler
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
 
 #![allow(dead_code)]
 
-use ir::primitive::{Type, Value};
 use crate::TranslateError;
+use ir::primitive::{Type, Value};
+use std::vec::Drain;
 
 /// Stack of values used for the Wasm emulation stack.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -64,11 +65,30 @@ impl ValueStack {
     /// Pops the last three inserted value from the stack.
     ///
     /// Returns the values in reversed order in which they have been popped.
-    pub fn pop3(&mut self) -> Result<(ValueEntry, ValueEntry, ValueEntry), TranslateError> {
+    pub fn pop3(
+        &mut self,
+    ) -> Result<(ValueEntry, ValueEntry, ValueEntry), TranslateError> {
         let trd = self.pop_impl(3, 0)?;
         let snd = self.pop_impl(3, 1)?;
         let fst = self.pop_impl(3, 2)?;
         Ok((fst, snd, trd))
+    }
+
+    /// Pops the last `n` inserted values from the stack.
+    ///
+    /// The values are popped in the order in which they have been pushed.
+    pub fn pop_n(
+        &mut self,
+        n: usize,
+    ) -> Result<Drain<ValueEntry>, TranslateError> {
+        let len_stack = self.stack.len();
+        if len_stack < n {
+            return Err(TranslateError::MissingStackValue {
+                expected: n as u32,
+                found: len_stack as u32,
+            })
+        }
+        Ok(self.stack.drain((len_stack - n)..))
     }
 
     /// Peeks the last inserted value on the stack.

@@ -20,13 +20,16 @@ mod error;
 mod stack;
 
 pub use self::error::TranslateError;
-use self::stack::{ValueStack};
-use ir::primitive as runwell;
+use self::stack::ValueStack;
 use crate::{Error, Type};
 use core::convert::TryFrom as _;
-use ir::primitive::Func;
+use entity::RawIdx;
+use ir::{
+    primitive as runwell,
+    primitive::{FloatType, Func, IntConst, IntType},
+};
 use module::{FunctionBody, FunctionBuilder, ModuleResources};
-use wasmparser::{BinaryReader, FuncValidator, ValidatorResources};
+use wasmparser::{BinaryReader, FuncValidator, Range, ValidatorResources};
 
 /// Translate a Wasm function body into a Runwell function body.
 ///
@@ -35,12 +38,13 @@ use wasmparser::{BinaryReader, FuncValidator, ValidatorResources};
 /// - The `buffer` contains the binary encoded Wasm function body.
 /// - The Wasm function body is parsed and validated during construction.
 pub fn translate_function_body(
+    range: Range,
     buffer: Vec<u8>,
     validator: FuncValidator<ValidatorResources>,
     func: Func,
     res: &ModuleResources,
 ) -> Result<FunctionBody, Error> {
-    let wasm_body = wasmparser::FunctionBody::new(0, &buffer[..]);
+    let wasm_body = wasmparser::FunctionBody::new(range.start, &buffer[..]);
     let function_body =
         FunctionBodyTranslator::new(wasm_body, validator, func, res)
             .translate()?;
@@ -71,8 +75,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         func: Func,
         res: &'b ModuleResources,
     ) -> Self {
+        let mut reader = wasm_body.get_binary_reader();
+        let _body_size = reader
+            .read_var_u32()
+            .expect("expect function size in bytes");
         Self {
-            reader: wasm_body.get_binary_reader(),
+            reader,
             validator,
             func,
             res,
@@ -138,7 +146,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<(), Error> {
         use wasmparser::Operator as Op;
         match op {
-            Op::Unreachable => {}
+            Op::Unreachable => {
+                self.builder.ins()?.trap()?;
+            }
             Op::Nop => {}
             Op::Block { ty } => {}
             Op::Loop { ty } => {}
@@ -149,7 +159,21 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::BrIf { relative_depth } => {}
             Op::BrTable { table } => {}
             Op::Return => {}
-            Op::Call { function_index } => {}
+            Op::Call { function_index } => {
+                let func = Func::from_raw(RawIdx::from_u32(function_index));
+                let func_type = self
+                    .res
+                    .get_func_type(func)
+                    .expect("function type must exist due to validation");
+                let params = self
+                    .stack
+                    .pop_n(func_type.inputs().len())?
+                    .map(|entry| entry.value);
+                let result = self.builder.ins()?.call(func, params)?;
+                for output_type in func_type.outputs() {
+                    self.stack.push(result, *output_type);
+                }
+            }
             Op::CallIndirect { index, table_index } => {}
             Op::ReturnCall { function_index } => {}
             Op::ReturnCallIndirect { index, table_index } => {}
@@ -163,7 +187,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 let ty = Type::try_from(ty)?.into_inner();
                 self.translate_select_operator(Some(ty))?;
             }
-            Op::LocalGet { local_index } => {}
+            Op::LocalGet { local_index } => {
+                // let var = Variable::from_raw(RawIdx::from_u32(local_index));
+                // let result = self.builder.read_var(var)?;
+            }
             Op::LocalSet { local_index } => {}
             Op::LocalTee { local_index } => {}
             Op::GlobalGet { global_index } => {}
@@ -193,10 +220,28 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64Store32 { memarg } => {}
             Op::MemorySize { mem, mem_byte } => {}
             Op::MemoryGrow { mem, mem_byte } => {}
-            Op::I32Const { value } => {}
-            Op::I64Const { value } => {}
-            Op::F32Const { value } => {}
-            Op::F64Const { value } => {}
+            Op::I32Const { value } => {
+                let result = self.builder.ins()?.constant(
+                    ir::primitive::Const::Int(IntConst::I32(value)),
+                )?;
+                self.stack.push(result, IntType::I32.into());
+            }
+            Op::I64Const { value } => {
+                let result = self.builder.ins()?.constant(
+                    ir::primitive::Const::Int(IntConst::I64(value)),
+                )?;
+                self.stack.push(result, IntType::I64.into());
+            }
+            Op::F32Const { value } => {
+                let value = crate::Value::from(value).into_inner();
+                let result = self.builder.ins()?.constant(value)?;
+                self.stack.push(result, FloatType::F32.into());
+            }
+            Op::F64Const { value } => {
+                let value = crate::Value::from(value).into_inner();
+                let result = self.builder.ins()?.constant(value)?;
+                self.stack.push(result, FloatType::F64.into());
+            }
             Op::I32Eqz => {}
             Op::I32Eq => {}
             Op::I32Ne => {}
@@ -335,7 +380,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm `Select` or `TypedSelect` operator.
-    fn translate_select_operator(&mut self, required_ty: Option<runwell::Type>) -> Result<(), Error> {
+    fn translate_select_operator(
+        &mut self,
+        required_ty: Option<runwell::Type>,
+    ) -> Result<(), Error> {
         let (condition, if_true, if_false) = self.stack.pop3()?;
         assert_eq!(
             if_true.ty, if_false.ty,
