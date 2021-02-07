@@ -361,17 +361,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.translate_float_binop(F64, BinFloatOp::CopySign)?
             }
             Op::I32TruncF32S => {
-                let src_type = FloatType::F32;
-                let dst_type = IntType::I32;
-                let dst_signed = true;
-                let saturating = false;
-                let source = self.stack.pop1()?;
-                assert_eq!(source.ty, src_type.into());
-                let source = source.value;
-                let result = self.builder.ins()?.float_to_int(
-                    src_type, dst_type, dst_signed, source, saturating,
-                )?;
-                self.stack.push(result, dst_type.into());
+                self.translate_float_to_int(F32, I32, true, false)?
             }
             Op::I32TruncF32U => {
                 self.translate_float_to_int(F32, I32, false, false)?
