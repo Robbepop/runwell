@@ -25,7 +25,12 @@ use crate::{Const as WasmConst, Error, Type};
 use core::convert::TryFrom as _;
 use entity::RawIdx;
 use ir::{
-    instr::operands::{BinaryIntOp, CompareFloatOp, CompareIntOp},
+    instr::operands::{
+        BinaryFloatOp,
+        BinaryIntOp,
+        CompareFloatOp,
+        CompareIntOp,
+    },
     primitive as runwell,
     primitive::{FloatType, Func, IntConst, IntType},
 };
@@ -316,13 +321,27 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F32Trunc => {}
             Op::F32Nearest => {}
             Op::F32Sqrt => {}
-            Op::F32Add => {}
-            Op::F32Sub => {}
-            Op::F32Mul => {}
-            Op::F32Div => {}
-            Op::F32Min => {}
-            Op::F32Max => {}
-            Op::F32Copysign => {}
+            Op::F32Add => {
+                self.translate_float_binop(F32, BinaryFloatOp::Add)?
+            }
+            Op::F32Sub => {
+                self.translate_float_binop(F32, BinaryFloatOp::Sub)?
+            }
+            Op::F32Mul => {
+                self.translate_float_binop(F32, BinaryFloatOp::Mul)?
+            }
+            Op::F32Div => {
+                self.translate_float_binop(F32, BinaryFloatOp::Div)?
+            }
+            Op::F32Min => {
+                self.translate_float_binop(F32, BinaryFloatOp::Min)?
+            }
+            Op::F32Max => {
+                self.translate_float_binop(F32, BinaryFloatOp::Max)?
+            }
+            Op::F32Copysign => {
+                self.translate_float_binop(F32, BinaryFloatOp::CopySign)?
+            }
             Op::F64Abs => {}
             Op::F64Neg => {}
             Op::F64Ceil => {}
@@ -330,13 +349,27 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F64Trunc => {}
             Op::F64Nearest => {}
             Op::F64Sqrt => {}
-            Op::F64Add => {}
-            Op::F64Sub => {}
-            Op::F64Mul => {}
-            Op::F64Div => {}
-            Op::F64Min => {}
-            Op::F64Max => {}
-            Op::F64Copysign => {}
+            Op::F64Add => {
+                self.translate_float_binop(F64, BinaryFloatOp::Add)?
+            }
+            Op::F64Sub => {
+                self.translate_float_binop(F64, BinaryFloatOp::Sub)?
+            }
+            Op::F64Mul => {
+                self.translate_float_binop(F64, BinaryFloatOp::Mul)?
+            }
+            Op::F64Div => {
+                self.translate_float_binop(F64, BinaryFloatOp::Div)?
+            }
+            Op::F64Min => {
+                self.translate_float_binop(F64, BinaryFloatOp::Min)?
+            }
+            Op::F64Max => {
+                self.translate_float_binop(F64, BinaryFloatOp::Max)?
+            }
+            Op::F64Copysign => {
+                self.translate_float_binop(F64, BinaryFloatOp::CopySign)?
+            }
             Op::I32WrapI64 => {}
             Op::I32TruncF32S => {}
             Op::I32TruncF32U => {}
@@ -394,6 +427,54 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
+    /// Extracts the float type from the generic Runwell type.
+    ///
+    /// # Note
+    ///
+    /// Use this only when certain due to Wasm validation that the given
+    /// type must be an integer type.
+    ///
+    /// # Panics
+    ///
+    /// If the generic type does not contain an float type.
+    fn extract_float_type(ty: runwell::Type) -> runwell::FloatType {
+        match ty {
+            runwell::Type::Float(float_type) => float_type,
+            runwell::Type::Int(int_type) => {
+                panic!("expected float type due to Wasm validation but found {} type.", int_type)
+            }
+            runwell::Type::Bool => {
+                panic!("expected float type due to Wasm validation but found bool type.")
+            }
+        }
+    }
+
+    /// Translate a Wasm binary float operator into Runwell IR.
+    fn translate_float_binop(
+        &mut self,
+        float_type: FloatType,
+        op: BinaryFloatOp,
+    ) -> Result<(), Error> {
+        let (lhs, rhs) = self.stack.pop2()?;
+        assert_eq!(lhs.ty, rhs.ty);
+        let actual_float_type = Self::extract_float_type(lhs.ty);
+        assert_eq!(actual_float_type, float_type);
+        let ins = self.builder.ins()?;
+        let lhs = lhs.value;
+        let rhs = rhs.value;
+        let result = match op {
+            BinaryFloatOp::Add => ins.fadd(float_type, lhs, rhs)?,
+            BinaryFloatOp::Sub => ins.fsub(float_type, lhs, rhs)?,
+            BinaryFloatOp::Mul => ins.fmul(float_type, lhs, rhs)?,
+            BinaryFloatOp::Div => ins.fdiv(float_type, lhs, rhs)?,
+            BinaryFloatOp::Min => ins.fmin(float_type, lhs, rhs)?,
+            BinaryFloatOp::Max => ins.fmax(float_type, lhs, rhs)?,
+            BinaryFloatOp::CopySign => ins.fcopysign(float_type, lhs, rhs)?,
+        };
+        self.stack.push(result, float_type.into());
+        Ok(())
+    }
+
     /// Extracts the integer type from the generic Runwell type.
     ///
     /// # Note
@@ -403,7 +484,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ///
     /// # Panics
     ///
-    /// If the generic integer type does not contain an integer type.
+    /// If the generic type does not contain an integer type.
     fn extract_int_type(ty: runwell::Type) -> runwell::IntType {
         match ty {
             runwell::Type::Int(int_type) => int_type,
