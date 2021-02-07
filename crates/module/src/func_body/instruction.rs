@@ -23,6 +23,7 @@ use ir::{
             CompareFloatOp,
             CompareIntOp,
             UnaryFloatOp,
+            UnaryIntOp,
         },
         BinaryFloatInstr,
         BinaryIntInstr,
@@ -39,6 +40,7 @@ use ir::{
         TailCallInstr,
         TerminalInstr,
         UnaryFloatInstr,
+        UnaryIntInstr,
     },
     primitive::{Block, Const, FloatType, Func, IntType, Type, Value},
 };
@@ -161,6 +163,48 @@ impl<'a> InstructionBuilder<'a> {
             .map_err(Into::into)
         }
         Ok(())
+    }
+
+    /// Convenience function to construct unary integer instructions.
+    fn iunary(
+        mut self,
+        op: UnaryIntOp,
+        int_type: IntType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.expect_type(source, int_type.into())?;
+        let instruction = UnaryIntInstr::new(op, int_type, source);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), int_type.into())?;
+        self.register_uses(instr, &[source]);
+        Ok(value)
+    }
+
+    /// Integer count leading zeros.
+    pub fn iclz(
+        self,
+        int_type: IntType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.iunary(UnaryIntOp::LeadingZeros, int_type, source)
+    }
+
+    /// Integer count trailing zeros.
+    pub fn ictz(
+        self,
+        int_type: IntType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.iunary(UnaryIntOp::TrailingZeros, int_type, source)
+    }
+
+    /// Integer count ones.
+    pub fn ipopcnt(
+        self,
+        int_type: IntType,
+        source: Value,
+    ) -> Result<Value, IrError> {
+        self.iunary(UnaryIntOp::PopCount, int_type, source)
     }
 
     /// Convenience function to construct binary integer instructions.
