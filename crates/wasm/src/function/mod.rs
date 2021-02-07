@@ -248,27 +248,27 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F32Const { value } => self.translate_const_op(value, F32)?,
             Op::F64Const { value } => self.translate_const_op(value, F64)?,
             Op::I32Eqz => self.translate_eqz_op(IntType::I32)?,
-            Op::I32Eq => self.translate_icmp_op(CmpIntOp::Eq, 32)?,
-            Op::I32Ne => self.translate_icmp_op(CmpIntOp::Ne, 32)?,
-            Op::I32LtS => self.translate_icmp_op(CmpIntOp::Slt, 32)?,
-            Op::I32LtU => self.translate_icmp_op(CmpIntOp::Ult, 32)?,
-            Op::I32GtS => self.translate_icmp_op(CmpIntOp::Sgt, 32)?,
-            Op::I32GtU => self.translate_icmp_op(CmpIntOp::Ugt, 32)?,
-            Op::I32LeS => self.translate_icmp_op(CmpIntOp::Sle, 32)?,
-            Op::I32LeU => self.translate_icmp_op(CmpIntOp::Ule, 32)?,
-            Op::I32GeS => self.translate_icmp_op(CmpIntOp::Sge, 32)?,
-            Op::I32GeU => self.translate_icmp_op(CmpIntOp::Uge, 32)?,
+            Op::I32Eq => self.translate_icmp_op(CmpIntOp::Eq, I32)?,
+            Op::I32Ne => self.translate_icmp_op(CmpIntOp::Ne, I32)?,
+            Op::I32LtS => self.translate_icmp_op(CmpIntOp::Slt, I32)?,
+            Op::I32LtU => self.translate_icmp_op(CmpIntOp::Ult, I32)?,
+            Op::I32GtS => self.translate_icmp_op(CmpIntOp::Sgt, I32)?,
+            Op::I32GtU => self.translate_icmp_op(CmpIntOp::Ugt, I32)?,
+            Op::I32LeS => self.translate_icmp_op(CmpIntOp::Sle, I32)?,
+            Op::I32LeU => self.translate_icmp_op(CmpIntOp::Ule, I32)?,
+            Op::I32GeS => self.translate_icmp_op(CmpIntOp::Sge, I32)?,
+            Op::I32GeU => self.translate_icmp_op(CmpIntOp::Uge, I32)?,
             Op::I64Eqz => self.translate_eqz_op(IntType::I64)?,
-            Op::I64Eq => self.translate_icmp_op(CmpIntOp::Eq, 64)?,
-            Op::I64Ne => self.translate_icmp_op(CmpIntOp::Ne, 64)?,
-            Op::I64LtS => self.translate_icmp_op(CmpIntOp::Slt, 64)?,
-            Op::I64LtU => self.translate_icmp_op(CmpIntOp::Ult, 64)?,
-            Op::I64GtS => self.translate_icmp_op(CmpIntOp::Sgt, 64)?,
-            Op::I64GtU => self.translate_icmp_op(CmpIntOp::Ugt, 64)?,
-            Op::I64LeS => self.translate_icmp_op(CmpIntOp::Sle, 64)?,
-            Op::I64LeU => self.translate_icmp_op(CmpIntOp::Ule, 64)?,
-            Op::I64GeS => self.translate_icmp_op(CmpIntOp::Sge, 64)?,
-            Op::I64GeU => self.translate_icmp_op(CmpIntOp::Uge, 64)?,
+            Op::I64Eq => self.translate_icmp_op(CmpIntOp::Eq, I64)?,
+            Op::I64Ne => self.translate_icmp_op(CmpIntOp::Ne, I64)?,
+            Op::I64LtS => self.translate_icmp_op(CmpIntOp::Slt, I64)?,
+            Op::I64LtU => self.translate_icmp_op(CmpIntOp::Ult, I64)?,
+            Op::I64GtS => self.translate_icmp_op(CmpIntOp::Sgt, I64)?,
+            Op::I64GtU => self.translate_icmp_op(CmpIntOp::Ugt, I64)?,
+            Op::I64LeS => self.translate_icmp_op(CmpIntOp::Sle, I64)?,
+            Op::I64LeU => self.translate_icmp_op(CmpIntOp::Ule, I64)?,
+            Op::I64GeS => self.translate_icmp_op(CmpIntOp::Sge, I64)?,
+            Op::I64GeU => self.translate_icmp_op(CmpIntOp::Uge, I64)?,
             Op::F32Eq => self.translate_fcmp_op(CmpFloatOp::Eq, F32)?,
             Op::F32Ne => self.translate_fcmp_op(CmpFloatOp::Ne, F32)?,
             Op::F32Lt => self.translate_fcmp_op(CmpFloatOp::Lt, F32)?,
@@ -573,12 +573,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn translate_icmp_op(
         &mut self,
         op: CompareIntOp,
-        bitwidth: u32,
+        int_type: IntType,
     ) -> Result<(), Error> {
         let (lhs, rhs) = self.stack.pop2()?;
         assert_eq!(lhs.ty, rhs.ty);
-        assert_eq!(lhs.ty.bit_width(), bitwidth);
-        let int_type = Self::extract_int_type(lhs.ty);
+        let actual_int_type = Self::extract_int_type(lhs.ty);
+        assert_eq!(actual_int_type, int_type);
         let result = self
             .builder
             .ins()?
