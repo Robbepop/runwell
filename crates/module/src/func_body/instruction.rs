@@ -22,6 +22,7 @@ use ir::{
             BinaryIntOp,
             CompareFloatOp,
             CompareIntOp,
+            ShiftIntOp,
             UnaryFloatOp,
             UnaryIntOp,
         },
@@ -37,6 +38,7 @@ use ir::{
         ReinterpretInstr,
         ReturnInstr,
         SelectInstr,
+        ShiftIntInstr,
         TailCallInstr,
         TerminalInstr,
         UnaryFloatInstr,
@@ -205,6 +207,74 @@ impl<'a> InstructionBuilder<'a> {
         source: Value,
     ) -> Result<Value, IrError> {
         self.iunary(UnaryIntOp::PopCount, int_type, source)
+    }
+
+    /// Convenience function to construct integer shift and rotate instructions.
+    fn ishift(
+        mut self,
+        op: ShiftIntOp,
+        int_type: IntType,
+        source: Value,
+        shift_amount: Value,
+    ) -> Result<Value, IrError> {
+        self.expect_type(source, int_type.into())?;
+        self.expect_type(shift_amount, IntType::I32.into())?;
+        let instruction =
+            ShiftIntInstr::new(op, int_type, source, shift_amount);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), int_type.into())?;
+        self.register_uses(instr, &[source, shift_amount]);
+        Ok(value)
+    }
+
+    /// Integer left shift.
+    pub fn ishl(
+        self,
+        int_type: IntType,
+        source: Value,
+        shift_amount: Value,
+    ) -> Result<Value, IrError> {
+        self.ishift(ShiftIntOp::Shl, int_type, source, shift_amount)
+    }
+
+    /// Integer unsigned right shift.
+    pub fn iushr(
+        self,
+        int_type: IntType,
+        source: Value,
+        shift_amount: Value,
+    ) -> Result<Value, IrError> {
+        self.ishift(ShiftIntOp::Ushr, int_type, source, shift_amount)
+    }
+
+    /// Integer signed right shift.
+    pub fn isshr(
+        self,
+        int_type: IntType,
+        source: Value,
+        shift_amount: Value,
+    ) -> Result<Value, IrError> {
+        self.ishift(ShiftIntOp::Sshr, int_type, source, shift_amount)
+    }
+
+    /// Integer rotate left.
+    pub fn irotl(
+        self,
+        int_type: IntType,
+        source: Value,
+        shift_amount: Value,
+    ) -> Result<Value, IrError> {
+        self.ishift(ShiftIntOp::Rotl, int_type, source, shift_amount)
+    }
+
+    /// Integer rotate right.
+    pub fn irotr(
+        self,
+        int_type: IntType,
+        source: Value,
+        shift_amount: Value,
+    ) -> Result<Value, IrError> {
+        self.ishift(ShiftIntOp::Rotr, int_type, source, shift_amount)
     }
 
     /// Convenience function to construct binary integer instructions.
