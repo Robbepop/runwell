@@ -704,6 +704,9 @@ impl<'a> InstructionBuilder<'a> {
         Ok(value)
     }
 
+    /// Appends the instruction onto the current basic block.
+    ///
+    /// Fills the block in case the instruction is a terminal instruction.
     fn append_instr<I>(&mut self, instruction: I) -> Result<Instr, IrError>
     where
         I: Into<Instruction>,
