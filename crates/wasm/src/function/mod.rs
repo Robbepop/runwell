@@ -360,13 +360,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F64Copysign => {
                 self.translate_float_binop(F64, BinFloatOp::CopySign)?
             }
-            Op::I32WrapI64 => {}
             Op::I32TruncF32S => {}
             Op::I32TruncF32U => {}
             Op::I32TruncF64S => {}
             Op::I32TruncF64U => {}
-            Op::I64ExtendI32S => {}
-            Op::I64ExtendI32U => {}
             Op::I64TruncF32S => {}
             Op::I64TruncF32U => {}
             Op::I64TruncF64S => {}
@@ -375,21 +372,24 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F32ConvertI32U => {}
             Op::F32ConvertI64S => {}
             Op::F32ConvertI64U => {}
-            Op::F32DemoteF64 => self.translate_demote(F64, F32)?,
             Op::F64ConvertI32S => {}
             Op::F64ConvertI32U => {}
             Op::F64ConvertI64S => {}
             Op::F64ConvertI64U => {}
+            Op::F32DemoteF64 => self.translate_demote(F64, F32)?,
             Op::F64PromoteF32 => self.translate_promote(F32, F64)?,
             Op::I32ReinterpretF32 => self.translate_reinterpret(I32, F32)?,
             Op::I64ReinterpretF64 => self.translate_reinterpret(I64, F64)?,
             Op::F32ReinterpretI32 => self.translate_reinterpret(F32, F32)?,
             Op::F64ReinterpretI64 => self.translate_reinterpret(F64, I64)?,
+            Op::I32WrapI64 => {}
             Op::I32Extend8S => {}
             Op::I32Extend16S => {}
             Op::I64Extend8S => {}
             Op::I64Extend16S => {}
             Op::I64Extend32S => {}
+            Op::I64ExtendI32S => {}
+            Op::I64ExtendI32U => {}
 
             _unsupported => {
                 return Err(TranslateError::UnsupportedOperator { offset })
