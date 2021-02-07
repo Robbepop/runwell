@@ -17,10 +17,11 @@ use crate::IrError;
 use entity::Idx;
 use ir::{
     instr::{
-        operands::{BinaryIntOp, CompareIntOp},
+        operands::{BinaryIntOp, CompareFloatOp, CompareIntOp},
         BinaryIntInstr,
         BranchInstr,
         CallInstr,
+        CompareFloatInstr,
         CompareIntInstr,
         ConstInstr,
         IfThenElseInstr,
@@ -31,7 +32,7 @@ use ir::{
         TailCallInstr,
         TerminalInstr,
     },
-    primitive::{Block, Const, Func, IntType, Type, Value},
+    primitive::{Block, Const, FloatType, Func, IntType, Type, Value},
 };
 
 /// The unique index of a basic block entity of the Runwell IR.
@@ -296,6 +297,32 @@ impl<'a> InstructionBuilder<'a> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), Type::Bool)?;
+        self.register_uses(instr, &[lhs, rhs]);
+        Ok(value)
+    }
+
+    /// Float comparison given a comparator.
+    ///
+    /// # Comparator Kinds
+    ///
+    /// - `eq`: Tests for bitwise equality.
+    /// - `ne`: Tests for bitwise inequality.
+    /// - `le`: Less-than or equals.
+    /// - `lt`: Less-than.
+    /// - `ge`: Greater-than or equals.
+    /// - `gt`: Greater-than.
+    pub fn fcmp(
+        mut self,
+        ty: FloatType,
+        op: CompareFloatOp,
+        lhs: Value,
+        rhs: Value,
+    ) -> Result<Value, IrError> {
+        self.expect_type(lhs, ty.into())?;
+        self.expect_type(rhs, ty.into())?;
+        let instruction = CompareFloatInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), Type::Bool)?;
         self.register_uses(instr, &[lhs, rhs]);
