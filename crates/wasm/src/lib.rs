@@ -36,7 +36,7 @@ pub use self::{
     import::{ImportError, ImportName},
     init_expr::{InitExpr, InitExprError},
     memory::{LinearMemoryDecl, MemoryDataInit, MemoryError},
-    primitive::{PrimitiveError, Type, Value},
+    primitive::{PrimitiveError, Type, Const},
     read::{Read, ReadError},
     section::{
         parse,

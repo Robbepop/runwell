@@ -62,18 +62,18 @@ impl TryFrom<wasmparser::Type> for Type {
 }
 
 /// A Wasm translated Runwell constant value.
-pub struct Value {
+pub struct Const {
     inner: runwell::Const,
 }
 
-impl Value {
+impl Const {
     /// Returns the runwell constant value.
     pub fn into_inner(self) -> runwell::Const {
         self.inner
     }
 }
 
-impl From<i32> for Value {
+impl From<i32> for Const {
     fn from(value: i32) -> Self {
         Self {
             inner: runwell::IntConst::I32(value).into(),
@@ -81,7 +81,7 @@ impl From<i32> for Value {
     }
 }
 
-impl From<i64> for Value {
+impl From<i64> for Const {
     fn from(value: i64) -> Self {
         Self {
             inner: runwell::IntConst::I64(value).into(),
@@ -89,7 +89,7 @@ impl From<i64> for Value {
     }
 }
 
-impl From<wasmparser::Ieee32> for Value {
+impl From<wasmparser::Ieee32> for Const {
     fn from(value: wasmparser::Ieee32) -> Self {
         Self {
             inner: runwell::F32::from_bits(value.bits()).into(),
@@ -97,7 +97,7 @@ impl From<wasmparser::Ieee32> for Value {
     }
 }
 
-impl From<wasmparser::Ieee64> for Value {
+impl From<wasmparser::Ieee64> for Const {
     fn from(value: wasmparser::Ieee64) -> Self {
         Self {
             inner: runwell::F64::from_bits(value.bits()).into(),

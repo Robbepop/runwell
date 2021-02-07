@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{Error, Value};
+use super::{Error, Const};
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use entity::RawIdx;
@@ -66,10 +66,10 @@ impl<'a> TryFrom<wasmparser::InitExpr<'a>> for InitExpr {
                 module::InitExpr::Const(IntConst::I64(value).into())
             }
             Operator::F32Const { value } => {
-                module::InitExpr::Const(Value::from(value).into_inner())
+                module::InitExpr::Const(Const::from(value).into_inner())
             }
             Operator::F64Const { value } => {
-                module::InitExpr::Const(Value::from(value).into_inner())
+                module::InitExpr::Const(Const::from(value).into_inner())
             }
             Operator::GlobalGet { global_index } => {
                 module::InitExpr::GlobalGet(Global::from_raw(RawIdx::from_u32(
