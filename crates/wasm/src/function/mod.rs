@@ -151,6 +151,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: wasmparser::Operator,
     ) -> Result<(), Error> {
         use wasmparser::Operator as Op;
+        use BinaryFloatOp as BinFloatOp;
         use CompareFloatOp as CmpFloatOp;
         use CompareIntOp as CmpIntOp;
         use FloatType::{F32, F64};
@@ -321,26 +322,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F32Trunc => {}
             Op::F32Nearest => {}
             Op::F32Sqrt => {}
-            Op::F32Add => {
-                self.translate_float_binop(F32, BinaryFloatOp::Add)?
-            }
-            Op::F32Sub => {
-                self.translate_float_binop(F32, BinaryFloatOp::Sub)?
-            }
-            Op::F32Mul => {
-                self.translate_float_binop(F32, BinaryFloatOp::Mul)?
-            }
-            Op::F32Div => {
-                self.translate_float_binop(F32, BinaryFloatOp::Div)?
-            }
-            Op::F32Min => {
-                self.translate_float_binop(F32, BinaryFloatOp::Min)?
-            }
-            Op::F32Max => {
-                self.translate_float_binop(F32, BinaryFloatOp::Max)?
-            }
+            Op::F32Add => self.translate_float_binop(F32, BinFloatOp::Add)?,
+            Op::F32Sub => self.translate_float_binop(F32, BinFloatOp::Sub)?,
+            Op::F32Mul => self.translate_float_binop(F32, BinFloatOp::Mul)?,
+            Op::F32Div => self.translate_float_binop(F32, BinFloatOp::Div)?,
+            Op::F32Min => self.translate_float_binop(F32, BinFloatOp::Min)?,
+            Op::F32Max => self.translate_float_binop(F32, BinFloatOp::Max)?,
             Op::F32Copysign => {
-                self.translate_float_binop(F32, BinaryFloatOp::CopySign)?
+                self.translate_float_binop(F32, BinFloatOp::CopySign)?
             }
             Op::F64Abs => {}
             Op::F64Neg => {}
@@ -349,26 +338,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F64Trunc => {}
             Op::F64Nearest => {}
             Op::F64Sqrt => {}
-            Op::F64Add => {
-                self.translate_float_binop(F64, BinaryFloatOp::Add)?
-            }
-            Op::F64Sub => {
-                self.translate_float_binop(F64, BinaryFloatOp::Sub)?
-            }
-            Op::F64Mul => {
-                self.translate_float_binop(F64, BinaryFloatOp::Mul)?
-            }
-            Op::F64Div => {
-                self.translate_float_binop(F64, BinaryFloatOp::Div)?
-            }
-            Op::F64Min => {
-                self.translate_float_binop(F64, BinaryFloatOp::Min)?
-            }
-            Op::F64Max => {
-                self.translate_float_binop(F64, BinaryFloatOp::Max)?
-            }
+            Op::F64Add => self.translate_float_binop(F64, BinFloatOp::Add)?,
+            Op::F64Sub => self.translate_float_binop(F64, BinFloatOp::Sub)?,
+            Op::F64Mul => self.translate_float_binop(F64, BinFloatOp::Mul)?,
+            Op::F64Div => self.translate_float_binop(F64, BinFloatOp::Div)?,
+            Op::F64Min => self.translate_float_binop(F64, BinFloatOp::Min)?,
+            Op::F64Max => self.translate_float_binop(F64, BinFloatOp::Max)?,
             Op::F64Copysign => {
-                self.translate_float_binop(F64, BinaryFloatOp::CopySign)?
+                self.translate_float_binop(F64, BinFloatOp::CopySign)?
             }
             Op::I32WrapI64 => {}
             Op::I32TruncF32S => {}
