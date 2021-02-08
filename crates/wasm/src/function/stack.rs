@@ -89,6 +89,23 @@ impl ValueStack {
         Ok(self.stack.drain((len_stack - n)..))
     }
 
+    /// Peeks the last `n` inserted values from the stack.
+    ///
+    /// The values are peeked in the order in which they have been pushed.
+    pub fn peek_n(
+        &self,
+        n: usize
+    ) -> Result<impl Iterator<Item = ValueEntry> + Clone + '_, TranslateError> {
+        let len_stack = self.stack.len();
+        if len_stack < n {
+            return Err(TranslateError::MissingStackValue {
+                expected: n as u32,
+                found: len_stack as u32,
+            })
+        }
+        Ok(self.stack[(len_stack - n)..].iter().copied())
+    }
+
     /// Peeks the last inserted value on the stack.
     pub fn peek1(&self) -> Result<ValueEntry, TranslateError> {
         self.stack
