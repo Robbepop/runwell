@@ -451,8 +451,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         self.builder.write_var(var, source.value)?;
         Ok(())
     }
-    /// Translates a Wasm integer to float conversion.
-    fn translate_int_to_float<SrcType, DstType>(
 
     /// Translates a Wasm integer extend operator.
     fn translate_extend<SrcType, DstType>(
