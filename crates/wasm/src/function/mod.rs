@@ -205,11 +205,45 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.builder.ins()?.trap()?;
             }
             Op::Nop => { /* Deliberately do nothing. */ }
-            Op::Block { ty } => {}
+            Op::Block { ty } => {
+                let block = self.builder.create_block()?;
+                let wasm_block = WasmBlock::new(block, ty)?;
+                self.blocks.push_block(wasm_block);
+            }
             Op::Loop { ty } => {}
             Op::If { ty } => {}
             Op::Else => {}
-            Op::End => {}
+            Op::End => {
+                let block = self.blocks.pop_block()?;
+                if self.blocks.is_empty() {
+                    // The popped block was the entry block and thus the
+                    // `End` operator represents the end of the Wasm function.
+                    // Therefore we need to insert a Runwell return statement
+                    // returning all values that are still on the stack and
+                    // check if they are matching the functions return types.
+                    let outputs = self
+                        .res
+                        .get_func_type(self.func)
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "expected function type for {} due to validation",
+                                self.func
+                            )
+                        }).outputs();
+                    let output_values = self.stack.peek_n(outputs.len())?;
+                    for (req_type, entry)  in outputs
+                        .iter()
+                        .copied()
+                        .zip(output_values.clone())
+                    {
+                        assert_eq!(req_type, entry.ty);
+                    }
+                    self.builder.ins()?.return_values(
+                        output_values.map(|entry| entry.value)
+                    )?;
+                    self.stack.pop_n(outputs.len())?;
+                }
+            }
             Op::Br { relative_depth } => {}
             Op::BrIf { relative_depth } => {}
             Op::BrTable { table } => {}
