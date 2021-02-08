@@ -145,8 +145,11 @@ impl<'a> InstructionBuilder<'a> {
     ///
     /// This information is later used to remove trivial phi nodes
     /// recursively and can later be used to down propagate other simplifications.
-    fn register_uses(&mut self, instr: Instr, uses: &[Value]) {
-        for &value in uses {
+    fn register_uses<T>(&mut self, instr: Instr, uses: T)
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        for value in uses {
             self.builder.ctx.value_users[value].insert(instr);
         }
     }
@@ -184,7 +187,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = UnaryIntInstr::new(op, int_type, source);
         let (value, instr) =
             self.append_value_instr(instruction.into(), int_type.into())?;
-        self.register_uses(instr, &[source]);
+        self.register_uses(instr, [source].iter().copied());
         Ok(value)
     }
 
@@ -229,7 +232,7 @@ impl<'a> InstructionBuilder<'a> {
             ShiftIntInstr::new(op, int_type, source, shift_amount);
         let (value, instr) =
             self.append_value_instr(instruction.into(), int_type.into())?;
-        self.register_uses(instr, &[source, shift_amount]);
+        self.register_uses(instr, [source, shift_amount].iter().copied());
         Ok(value)
     }
 
@@ -296,7 +299,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = BinaryIntInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
-        self.register_uses(instr, &[lhs, rhs]);
+        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -427,7 +430,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), Type::Bool)?;
-        self.register_uses(instr, &[lhs, rhs]);
+        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -442,7 +445,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = UnaryFloatInstr::new(op, ty, source);
         let (value, instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
-        self.register_uses(instr, &[source]);
+        self.register_uses(instr, [source].iter().copied());
         Ok(value)
     }
 
@@ -506,7 +509,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = BinaryFloatInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
-        self.register_uses(instr, &[lhs, rhs]);
+        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -602,7 +605,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = CompareFloatInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
             self.append_value_instr(instruction.into(), Type::Bool)?;
-        self.register_uses(instr, &[lhs, rhs]);
+        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -622,7 +625,10 @@ impl<'a> InstructionBuilder<'a> {
         self.expect_type(if_false, ty)?;
         let instruction = SelectInstr::new(condition, ty, if_true, if_false);
         let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
-        self.register_uses(instr, &[condition, if_true, if_false]);
+        self.register_uses(
+            instr,
+            [condition, if_true, if_false].iter().copied(),
+        );
         Ok(value)
     }
 
@@ -654,7 +660,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = ReinterpretInstr::new(from_type, to_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), to_type)?;
-        self.register_uses(instr, &[src]);
+        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -681,7 +687,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = ExtendIntInstr::new(signed, from_type, to_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, &[src]);
+        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -707,7 +713,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = TruncateIntInstr::new(from_type, to_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, &[src]);
+        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -732,7 +738,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = PromoteFloatInstr::new(from_type, to_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, &[src]);
+        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -757,7 +763,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = DemoteFloatInstr::new(from_type, to_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, &[src]);
+        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -780,7 +786,7 @@ impl<'a> InstructionBuilder<'a> {
         );
         let (value, instr) =
             self.append_value_instr(instruction.into(), dst_type.into())?;
-        self.register_uses(instr, &[src]);
+        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -798,7 +804,7 @@ impl<'a> InstructionBuilder<'a> {
         let instruction = IntToFloatInstr::new(signed, src_type, dst_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), dst_type.into())?;
-        self.register_uses(instr, &[src]);
+        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -821,21 +827,26 @@ impl<'a> InstructionBuilder<'a> {
     }
 
     /// Returns the given value to the caller of the function.
-    pub fn return_value(
-        mut self,
-        return_value: Value,
-    ) -> Result<Instr, IrError> {
-        let expected_output = &self.builder.ctx.output_types;
-        let return_type = self.builder.ctx.value_type[return_value];
-        if &[return_type][..] != expected_output {
+    pub fn return_values<T>(mut self, return_values: T) -> Result<Instr, IrError>
+    where
+        T: IntoIterator<Item = Value>,
+        <T as IntoIterator>::IntoIter: Clone,
+    {
+        let return_values = return_values.into_iter();
+        let expected_outputs = self.builder.ctx.output_types.iter().copied();
+        let return_types = return_values
+            .clone()
+            .map(|val| self.builder.ctx.value_type[val]);
+        if !return_types.clone().eq(expected_outputs.clone()) {
             return Err(FunctionBuilderError::UnmatchingFunctionReturnType {
-                returned_types: vec![return_type],
-                expected_types: expected_output.to_vec(),
+                returned_types: return_types.collect(),
+                expected_types: expected_outputs.collect(),
             })
             .map_err(Into::into)
         }
-        let instr = self.append_instr(ReturnInstr::new(return_value))?;
-        self.register_uses(instr, &[return_value]);
+        let ret_instr = ReturnInstr::new(return_values.clone());
+        let instr = self.append_instr(ret_instr)?;
+        self.register_uses(instr, return_values);
         Ok(instr)
     }
 
@@ -869,7 +880,7 @@ impl<'a> InstructionBuilder<'a> {
         ))?;
         self.add_predecessor(then_target, block)?;
         self.add_predecessor(else_target, block)?;
-        self.register_uses(instr, &[condition]);
+        self.register_uses(instr, [condition].iter().copied());
         Ok(instr)
     }
 
