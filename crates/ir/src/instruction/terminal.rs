@@ -17,7 +17,8 @@ use crate::{
     primitive::{Block, Func, Value},
     ReplaceValue,
 };
-use core::fmt::Display;
+use core::fmt::{self, Display};
+use std::convert::identity;
 use derive_more::{Display, From};
 
 /// A tail call instruction.
@@ -96,22 +97,38 @@ impl ReplaceValue for TerminalInstr {
 }
 
 /// Returns the returned value from to the function's caller.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "ret {}", return_value)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ReturnInstr {
-    return_value: Value,
+    return_values: Vec<Value>,
+}
+
+impl fmt::Display for ReturnInstr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ret [")?;
+        for (first, rest) in self.return_values().split_first() {
+            write!(f, "{}", first)?;
+            for return_value in rest {
+                write!(f, ", {}", return_value)?;
+            }
+        }
+        write!(f, "]")?;
+        Ok(())
+    }
 }
 
 impl ReturnInstr {
     /// Creates a new return instruction returning the given value.
-    pub fn new(return_value: Value) -> Self {
-        Self { return_value }
+    pub fn new<T>(return_values: T) -> Self
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        Self { return_values: return_values.into_iter().collect::<Vec<_>>() }
     }
 
     /// Returns the value that is returned by the instruction.
     #[inline]
-    pub fn return_value(&self) -> Value {
-        self.return_value
+    pub fn return_values(&self) -> &[Value] {
+        &self.return_values
     }
 }
 
@@ -120,7 +137,11 @@ impl ReplaceValue for ReturnInstr {
     where
         F: FnMut(&mut Value) -> bool,
     {
-        replace(&mut self.return_value)
+        self
+            .return_values
+            .iter_mut()
+            .map(|return_value| replace(return_value))
+            .any(identity)
     }
 }
 
