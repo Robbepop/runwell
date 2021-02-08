@@ -192,20 +192,13 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.translate_select_op(Some(ty))?;
             }
             Op::LocalGet { local_index } => {
-                let var = Variable::from_raw(RawIdx::from_u32(local_index));
-                let result = self.builder.read_var(var)?;
-                let result_type = self.builder.var_type(var)?;
-                self.stack.push(result, result_type);
+                self.translate_local_get(local_index)?
             }
             Op::LocalSet { local_index } => {
-                let var = Variable::from_raw(RawIdx::from_u32(local_index));
-                let source = self.stack.pop1()?;
-                self.builder.write_var(var, source.value)?;
+                self.translate_local_set(local_index)?
             }
             Op::LocalTee { local_index } => {
-                let var = Variable::from_raw(RawIdx::from_u32(local_index));
-                let source = self.stack.peek1()?;
-                self.builder.write_var(var, source.value)?;
+                self.translate_local_tee(local_index)?
             }
             Op::GlobalGet { global_index } => {}
             Op::GlobalSet { global_index } => {}
@@ -431,6 +424,31 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         for output_type in func_type.outputs() {
             self.stack.push(result, *output_type);
         }
+        Ok(())
+    }
+
+    /// Translates Wasm `local_get` operator.
+    fn translate_local_get(&mut self, local_index: u32) -> Result<(), Error> {
+        let var = Variable::from_raw(RawIdx::from_u32(local_index));
+        let result = self.builder.read_var(var)?;
+        let result_type = self.builder.var_type(var)?;
+        self.stack.push(result, result_type);
+        Ok(())
+    }
+
+    /// Translates Wasm `local_set` operator.
+    fn translate_local_set(&mut self, local_index: u32) -> Result<(), Error> {
+        let var = Variable::from_raw(RawIdx::from_u32(local_index));
+        let source = self.stack.pop1()?;
+        self.builder.write_var(var, source.value)?;
+        Ok(())
+    }
+
+    /// Translates Wasm `local_tee` operator.
+    fn translate_local_tee(&mut self, local_index: u32) -> Result<(), Error> {
+        let var = Variable::from_raw(RawIdx::from_u32(local_index));
+        let source = self.stack.peek1()?;
+        self.builder.write_var(var, source.value)?;
         Ok(())
     }
     /// Translates a Wasm integer to float conversion.
