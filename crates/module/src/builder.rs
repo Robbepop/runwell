@@ -157,6 +157,14 @@ impl ModuleResources {
         Ok(())
     }
 
+    /// Returns the function type at the given index if any.
+    pub fn get_type(&self, func_type: FuncType) -> Option<&FunctionType> {
+        if !self.type_entities.contains_key(func_type) {
+            return None
+        }
+        Some(&self.types[func_type])
+    }
+
     /// Returns the function type of the function if the function exists in the module.
     pub fn get_func_type(&self, func: Func) -> Option<&FunctionType> {
         self.function_decls
