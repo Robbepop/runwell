@@ -148,6 +148,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translate a single Wasm operand into Runwell IR.
+    #[rustfmt::skip]
     fn translate_operator(
         &mut self,
         offset: usize,
@@ -158,14 +159,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use CompareFloatOp as CmpFloatOp;
         use CompareIntOp as CmpIntOp;
         use FloatType::{F32, F64};
-        use IntType::{I32, I64};
+        use IntType::{I16, I32, I64, I8};
         use UnaryFloatOp as FloatUnop;
         use UnaryIntOp::*;
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
             }
-            Op::Nop => {}
+            Op::Nop => { /* Deliberately do nothing. */ }
             Op::Block { ty } => {}
             Op::Loop { ty } => {}
             Op::If { ty } => {}
@@ -184,9 +185,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::Drop => {
                 self.stack.pop1()?;
             }
-            Op::Select => {
-                self.translate_select_op(None)?;
-            }
+            Op::Select => self.translate_select_op(None)?,
             Op::TypedSelect { ty } => {
                 let ty = Type::try_from(ty)?.into_inner();
                 self.translate_select_op(Some(ty))?;
