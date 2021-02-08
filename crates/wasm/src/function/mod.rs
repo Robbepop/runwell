@@ -109,6 +109,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn translate(mut self) -> Result<FunctionBody, Error> {
         self.translate_inputs_outputs()?;
         self.translate_local_variables()?;
+        self.initialize_entry_block()?;
         self.translate_operators()?;
         let body = self.builder.finalize()?;
         Ok(body)
@@ -137,6 +138,23 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             let ty = Type::try_from(ty)?.into_inner();
             self.builder.declare_variables(count, ty)?;
         }
+        Ok(())
+    }
+
+    /// Initializes the stack of blocks to contain the Runwell entry block.
+    fn initialize_entry_block(&mut self) -> Result<(), Error> {
+        let entry_block_type =
+            self.res.get_raw_func_type(self.func).unwrap_or_else(|| {
+                panic!(
+                    "expected function type for {} due to validation",
+                    self.func
+                )
+            });
+        let entry_block = WasmBlock::with_func_type(
+            self.builder.current_block()?,
+            entry_block_type,
+        );
+        self.blocks.push_block(entry_block);
         Ok(())
     }
 
