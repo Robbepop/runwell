@@ -1003,7 +1003,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         required_ty: Option<runwell::Type>,
     ) -> Result<(), Error> {
-        let (condition, if_true, if_false) = self.stack.pop3()?;
+        let (if_true, if_false, condition) = self.stack.pop3()?;
         assert_eq!(
             if_true.ty, if_false.ty,
             "due to validation both types must be equal"
