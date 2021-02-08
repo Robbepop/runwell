@@ -658,6 +658,59 @@ impl<'a> InstructionBuilder<'a> {
         Ok(value)
     }
 
+    /// Extends the source integer to the destination integer type.
+    ///
+    /// # Errors
+    ///
+    /// If the destination integer type does not have a bitwidth greater than or equal
+    /// to the source type.
+    pub fn iextend(
+        mut self,
+        from_type: IntType,
+        to_type: IntType,
+        src: Value,
+        signed: bool,
+    ) -> Result<Value, IrError> {
+        if from_type.bit_width() > to_type.bit_width() {
+            return Err(FunctionBuilderError::InvalidExtension {
+                from_type,
+                to_type,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = ExtendIntInstr::new(signed, from_type, to_type, src);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), to_type.into())?;
+        self.register_uses(instr, &[src]);
+        Ok(value)
+    }
+
+    /// Truncates the source integer to the destination integer type.
+    ///
+    /// # Errors
+    ///
+    /// If the destination integer type does not have a bitwidth greater than or equal
+    /// to the source type.
+    pub fn itruncate(
+        mut self,
+        from_type: IntType,
+        to_type: IntType,
+        src: Value,
+    ) -> Result<Value, IrError> {
+        if to_type.bit_width() > from_type.bit_width() {
+            return Err(FunctionBuilderError::InvalidTruncation {
+                from_type,
+                to_type,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = TruncateIntInstr::new(from_type, to_type, src);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), to_type.into())?;
+        self.register_uses(instr, &[src]);
+        Ok(value)
+    }
+
     /// Promotes the source float to the other (bigger) float type.
     ///
     /// # Errors
