@@ -105,7 +105,7 @@ pub struct ReturnInstr {
 impl fmt::Display for ReturnInstr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ret [")?;
-        for (first, rest) in self.return_values().split_first() {
+        if let Some((first, rest)) = self.return_values().split_first() {
             write!(f, "{}", first)?;
             for return_value in rest {
                 write!(f, ", {}", return_value)?;
