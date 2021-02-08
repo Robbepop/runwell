@@ -378,14 +378,29 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64ReinterpretF64 => self.translate_reinterpret(I64, F64)?,
             Op::F32ReinterpretI32 => self.translate_reinterpret(F32, F32)?,
             Op::F64ReinterpretI64 => self.translate_reinterpret(F64, I64)?,
-            Op::I32WrapI64 => {}
-            Op::I32Extend8S => {}
-            Op::I32Extend16S => {}
-            Op::I64Extend8S => {}
-            Op::I64Extend16S => {}
-            Op::I64Extend32S => {}
-            Op::I64ExtendI32S => {}
-            Op::I64ExtendI32U => {}
+            Op::I32WrapI64 => self.translate_truncate(I64, I32)?,
+            Op::I64ExtendI32S => self.translate_extend(I32, I64, true)?,
+            Op::I64ExtendI32U => self.translate_extend(I32, I64, false)?,
+            Op::I32Extend8S => {
+                self.translate_truncate(I32, I8)?;
+                self.translate_extend(I8, I32, true)?;
+            }
+            Op::I32Extend16S => {
+                self.translate_truncate(I32, I16)?;
+                self.translate_extend(I16, I32, true)?;
+            }
+            Op::I64Extend8S => {
+                self.translate_truncate(I64, I8)?;
+                self.translate_extend(I8, I64, true)?;
+            }
+            Op::I64Extend16S => {
+                self.translate_truncate(I64, I16)?;
+                self.translate_extend(I16, I64, true)?;
+            }
+            Op::I64Extend32S => {
+                self.translate_truncate(I64, I32)?;
+                self.translate_extend(I32, I64, true)?;
+            }
 
             _unsupported => {
                 return Err(TranslateError::UnsupportedOperator { offset })
@@ -420,6 +435,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
     /// Translates a Wasm integer to float conversion.
     fn translate_int_to_float<SrcType, DstType>(
+
+    /// Translates a Wasm integer extend operator.
+    fn translate_extend<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
@@ -427,7 +445,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<(), Error>
     where
         SrcType: Into<IntType>,
-        DstType: Into<FloatType>,
+        DstType: Into<IntType>,
     {
         let src_type = src_type.into();
         let dst_type = dst_type.into();
@@ -437,25 +455,32 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let result = self
             .builder
             .ins()?
-            .int_to_float(src_signed, src_type, dst_type, source)?;
+            .iextend(src_type, dst_type, source, src_signed)?;
         self.stack.push(result, dst_type.into());
         Ok(())
     }
 
-    /// Translates a Wasm float to integer conversion.
-    fn translate_float_to_int<SrcType, DstType>(
+    /// Translates a Wasm integer truncate operator.
+    fn translate_truncate<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
-        dst_signed: bool,
-        saturating: bool,
     ) -> Result<(), Error>
     where
-        SrcType: Into<FloatType>,
+        SrcType: Into<IntType>,
         DstType: Into<IntType>,
     {
         let src_type = src_type.into();
         let dst_type = dst_type.into();
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty, src_type.into());
+        let source = source.value;
+        let result =
+            self.builder.ins()?.itruncate(src_type, dst_type, source)?;
+        self.stack.push(result, dst_type.into());
+        Ok(())
+    }
+
     /// Translates a Wasm integer to float conversion.
     fn translate_int_to_float<SrcType, DstType>(
         &mut self,
