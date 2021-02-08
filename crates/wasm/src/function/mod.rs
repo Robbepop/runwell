@@ -16,11 +16,15 @@
 
 #![allow(unused_variables)]
 
+mod blocks;
 mod error;
 mod stack;
 
 pub use self::error::TranslateError;
-use self::stack::ValueStack;
+use self::{
+    blocks::{Blocks, WasmBlock},
+    stack::ValueStack,
+};
 use crate::{Const as WasmConst, Error, Type};
 use core::convert::TryFrom as _;
 use entity::RawIdx;
@@ -74,6 +78,8 @@ pub struct FunctionBodyTranslator<'a, 'b> {
     builder: FunctionBuilder,
     /// The emulated Wasm stack to translate the Wasm stack machine.
     stack: ValueStack,
+    /// The emulated Wasm stack of control blocks.
+    blocks: Blocks,
 }
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
@@ -95,6 +101,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             res,
             builder: FunctionBody::build(),
             stack: Default::default(),
+            blocks: Default::default(),
         }
     }
 
