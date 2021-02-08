@@ -15,7 +15,7 @@
 use super::FunctionBuilderState;
 use crate::func_body::Variable;
 use derive_more::{Display, Error};
-use ir::primitive::{Block, FloatType, Type, Value};
+use ir::primitive::{Block, FloatType, IntType, Type, Value};
 
 /// Errors that might occure upon building up a Runwell IR function.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
@@ -30,6 +30,15 @@ pub enum FunctionBuilderError {
         to_type: FloatType,
     },
     #[display(
+        fmt = "tried to extend bigger integer of type {} to smaller {}",
+        from_type,
+        to_type
+    )]
+    InvalidExtension {
+        from_type: IntType,
+        to_type: IntType,
+    },
+    #[display(
         fmt = "tried to demote smaller float of type {} to bigger {}",
         from_type,
         to_type
@@ -37,6 +46,15 @@ pub enum FunctionBuilderError {
     InvalidDemotion {
         from_type: FloatType,
         to_type: FloatType,
+    },
+    #[display(
+        fmt = "tried to demote smaller integer of type {} to bigger {}",
+        from_type,
+        to_type
+    )]
+    InvalidTruncation {
+        from_type: IntType,
+        to_type: IntType,
     },
     #[display(
         fmt = "tried to initialize {} after {} has/have already been declared in function body",
