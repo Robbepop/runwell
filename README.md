@@ -1,8 +1,8 @@
-# The `runwell` WebAssembly JIT Compiler
+# The `runwell` WebAssembly Virtual Machine
 
-A non-bombable, optimizing WebAssembly (Wasm) JIT compiler with deterministic behaviour.
+An attempt for a non-bombable, optimizing WebAssembly (Wasm) JIT compiler with deterministic behaviour.
 
-> **WIP** - The `runwell` JIT is under active development. Don't expect it to be working and expect dragons instead.
+> **WIP** - The `runwell` virtual machine is under active development. Don't expect it to be working. Here be dragons.
 
 ## Credits
 
@@ -34,95 +34,3 @@ For many applications it is of high importance to have a deterministic execution
 Even though the `runwell` JIT guarantees deterministic behaviour and protection against JIT bombs it still tries its best to optimize its input bytecode as much as possible.
 
 High-level optimizations that might be bombable are performed by the `runwell` JIT securely to protect them from JIT bombs.
-
-## Example
-
-The following example shows how to construct a Runwell IR function equivalent to the below
-python script and evaluate it using the Runwell IR interpreter.
-```python
-x = 0
-while x < 100:
-    x = x + 1
-```
-Below is the Rust code necessary to construct the equivalent Runwell IR function:
-```rust
-use runwell::ir::*;
-use runwell::ir::interpreter::*;
-
-let mut b = Function::build()
-    .with_inputs(&[IntType::I32.into()])?
-    .with_outputs(&[IntType::I32.into()])?
-    .declare_variables(1, IntType::I32.into())?
-    .declare_variables(1, IntType::I32.into())?
-    .body();
-
-let loop_head = b.create_block();
-let loop_body = b.create_block();
-let loop_exit = b.create_block();
-
-let input = Variable::from_raw(RawIdx::from_u32(0));
-let counter = Variable::from_raw(RawIdx::from_u32(1));
-let one = Variable::from_raw(RawIdx::from_u32(2));
-
-let v0 = b.ins()?.constant(IntConst::I32(0))?;
-let v0_1 = b.ins()?.constant(IntConst::I32(1))?;
-b.write_var(counter, v0)?;
-b.write_var(one, v0_1)?;
-b.ins()?.br(loop_head)?;
-
-b.switch_to_block(loop_head)?;
-let v1 = b.read_var(counter)?;
-let v2 = b.read_var(input)?;
-let v3 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v1, v2)?;
-b.ins()?.if_then_else(v3, loop_body, loop_exit)?;
-
-b.switch_to_block(loop_body)?;
-b.seal_block()?;
-let v4 = b.read_var(counter)?;
-let v5 = b.read_var(one)?;
-let v6 = b.ins()?.iadd(IntType::I32, v4, v5)?;
-b.write_var(counter, v6)?;
-b.ins()?.br(loop_head)?;
-
-b.switch_to_block(loop_head)?;
-b.seal_block()?;
-
-b.switch_to_block(loop_exit)?;
-b.seal_block()?;
-let v7 = b.read_var(counter)?;
-b.ins()?.return_value(v7)?;
-
-let function = b.finalize()?;
-```
-Printing the Runwell IR function using `println!("{}", function)` yields the following output:
-```llvm
-fn (v0: i32) -> i32
-bb0:
-    v1: i32 = const 0
-    v2: i32 = const 1
-    br bb1
-bb1:
-    v3: i32 = ϕ [ bb0 -> v1, bb2 -> v7 ]
-    v5: bool = scmp i32 slt v3 v0
-    if v5 then bb2 else bb3
-bb2:
-    v7: i32 = iadd i32 v3 v2
-    br bb1
-bb3:
-    ret v3
-```
-Evaluating `function` using Runwell's built-in interpreter is done as follows:
-```rust
-let mut store = Store::default();
-let func = store.push_function(function);
-let mut ctx = EvaluationContext::new(&store);
-let mut results = Vec::new();
-let iterations = 100;
-ctx.evaluate_function(
-    func,
-    [iterations].iter().copied(),
-    |result| results.push(result),
-)
-.unwrap();
-assert_eq!(result[0], iterations);
-```
