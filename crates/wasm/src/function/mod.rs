@@ -176,19 +176,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::BrTable { table } => {}
             Op::Return => {}
             Op::Call { function_index } => {
-                let func = Func::from_raw(RawIdx::from_u32(function_index));
-                let func_type = self
-                    .res
-                    .get_func_type(func)
-                    .expect("function type must exist due to validation");
-                let params = self
-                    .stack
-                    .pop_n(func_type.inputs().len())?
-                    .map(|entry| entry.value);
-                let result = self.builder.ins()?.call(func, params)?;
-                for output_type in func_type.outputs() {
-                    self.stack.push(result, *output_type);
-                }
+                self.translate_call(function_index)?
             }
             Op::CallIndirect { index, table_index } => {}
             Op::ReturnCall { function_index } => {}
@@ -407,6 +395,29 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
+    /// Translates a Wasm function call.
+    fn translate_call(&mut self, function_index: u32) -> Result<(), Error> {
+        let func = Func::from_raw(RawIdx::from_u32(function_index));
+        let func_type = self.res.get_func_type(func).unwrap_or_else(|| {
+            panic!("function type for {} must exist due to validation", func)
+        });
+        let len_inputs = func_type.inputs().len();
+        let params = self
+            .stack
+            .pop_n(len_inputs)
+            .unwrap_or_else(|_| {
+                panic!(
+                    "can expect {} arguments on the stack due to validation",
+                    len_inputs
+                )
+            })
+            .map(|entry| entry.value);
+        let result = self.builder.ins()?.call(func, params)?;
+        for output_type in func_type.outputs() {
+            self.stack.push(result, *output_type);
+        }
+        Ok(())
+    }
     /// Translates a Wasm integer to float conversion.
     fn translate_int_to_float<SrcType, DstType>(
         &mut self,
