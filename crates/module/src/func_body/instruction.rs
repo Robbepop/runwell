@@ -827,7 +827,10 @@ impl<'a> InstructionBuilder<'a> {
     }
 
     /// Returns the given value to the caller of the function.
-    pub fn return_values<T>(mut self, return_values: T) -> Result<Instr, IrError>
+    pub fn return_values<T>(
+        mut self,
+        return_values: T,
+    ) -> Result<Instr, IrError>
     where
         T: IntoIterator<Item = Value>,
         <T as IntoIterator>::IntoIter: Clone,

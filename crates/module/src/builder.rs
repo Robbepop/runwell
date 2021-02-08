@@ -174,9 +174,7 @@ impl ModuleResources {
 
     /// Returns the function type of the function if the function exists in the module.
     pub fn get_raw_func_type(&self, func: Func) -> Option<FuncType> {
-        self.function_decls
-            .get(func)
-            .copied()
+        self.function_decls.get(func).copied()
     }
 
     /// Shrinks all data structures to fit their minimum space needed.

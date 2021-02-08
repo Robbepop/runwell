@@ -79,7 +79,10 @@ impl Blocks {
     ///
     /// If the stack of blocks is empty.
     pub fn current(&self) -> Result<WasmBlock, TranslateError> {
-        self.blocks.last().copied().ok_or(TranslateError::MissingWasmBlock)
+        self.blocks
+            .last()
+            .copied()
+            .ok_or(TranslateError::MissingWasmBlock)
     }
 }
 
@@ -94,7 +97,10 @@ pub struct WasmBlock {
 
 impl WasmBlock {
     /// Creates a new Wasm block with the given block type.
-    pub fn new(block: Block, block_type: wasmparser::TypeOrFuncType) -> Result<Self, Error> {
+    pub fn new(
+        block: Block,
+        block_type: wasmparser::TypeOrFuncType,
+    ) -> Result<Self, Error> {
         Ok(Self {
             block,
             ty: WasmBlockType::try_from(block_type)?,
@@ -103,7 +109,10 @@ impl WasmBlock {
 
     /// Creates a new Wasm block with the given function type.
     pub fn with_func_type(block: Block, func_type: FuncType) -> Self {
-        Self { block, ty: WasmBlockType::FuncType(func_type) }
+        Self {
+            block,
+            ty: WasmBlockType::FuncType(func_type),
+        }
     }
 
     /// Returns the associated Runwell block index.

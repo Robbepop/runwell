@@ -94,8 +94,9 @@ impl ValueStack {
     /// The values are peeked in the order in which they have been pushed.
     pub fn peek_n(
         &self,
-        n: usize
-    ) -> Result<impl Iterator<Item = ValueEntry> + Clone + '_, TranslateError> {
+        n: usize,
+    ) -> Result<impl Iterator<Item = ValueEntry> + Clone + '_, TranslateError>
+    {
         let len_stack = self.stack.len();
         if len_stack < n {
             return Err(TranslateError::MissingStackValue {

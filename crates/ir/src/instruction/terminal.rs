@@ -18,8 +18,8 @@ use crate::{
     ReplaceValue,
 };
 use core::fmt::{self, Display};
-use std::convert::identity;
 use derive_more::{Display, From};
+use std::convert::identity;
 
 /// A tail call instruction.
 #[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -122,7 +122,9 @@ impl ReturnInstr {
     where
         T: IntoIterator<Item = Value>,
     {
-        Self { return_values: return_values.into_iter().collect::<Vec<_>>() }
+        Self {
+            return_values: return_values.into_iter().collect::<Vec<_>>(),
+        }
     }
 
     /// Returns the value that is returned by the instruction.
@@ -137,8 +139,7 @@ impl ReplaceValue for ReturnInstr {
     where
         F: FnMut(&mut Value) -> bool,
     {
-        self
-            .return_values
+        self.return_values
             .iter_mut()
             .map(|return_value| replace(return_value))
             .any(identity)
