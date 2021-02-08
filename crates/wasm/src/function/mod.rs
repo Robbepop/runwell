@@ -26,7 +26,7 @@ use self::{
     stack::ValueStack,
 };
 use crate::{Const as WasmConst, Error, Type};
-use core::convert::TryFrom as _;
+use core::{convert::TryFrom as _, fmt};
 use entity::RawIdx;
 use ir::{
     instr::operands::{
@@ -80,6 +80,19 @@ pub struct FunctionBodyTranslator<'a, 'b> {
     stack: ValueStack,
     /// The emulated Wasm stack of control blocks.
     blocks: Blocks,
+}
+
+impl<'a, 'b> fmt::Debug for FunctionBodyTranslator<'a, 'b> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FunctionBodyTranslator")
+            .field("reader", &self.reader)
+            .field("func", &self.func)
+            .field("res", &self.res)
+            .field("builder", &self.builder)
+            .field("stack", &self.stack)
+            .field("blocks", &self.blocks)
+            .finish()
+    }
 }
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
