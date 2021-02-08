@@ -360,54 +360,30 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::F64Copysign => {
                 self.translate_float_binop(F64, BinFloatOp::CopySign)?
             }
-            Op::I32TruncF32S => {
-                self.translate_float_to_int(F32, I32, true, false)?
-            }
-            Op::I32TruncF32U => {
-                self.translate_float_to_int(F32, I32, false, false)?
-            }
-            Op::I32TruncF64S => {
-                self.translate_float_to_int(F64, I32, true, false)?
-            }
-            Op::I32TruncF64U => {
-                self.translate_float_to_int(F64, I32, false, false)?
-            }
-            Op::I64TruncF32S => {
-                self.translate_float_to_int(F32, I64, true, false)?
-            }
-            Op::I64TruncF32U => {
-                self.translate_float_to_int(F32, I64, false, false)?
-            }
-            Op::I64TruncF64S => {
-                self.translate_float_to_int(F64, I64, true, false)?
-            }
-            Op::I64TruncF64U => {
-                self.translate_float_to_int(F64, I64, false, false)?
-            }
-            Op::F32ConvertI32S => {
-                self.translate_int_to_float(I32, F32, true)?
-            }
-            Op::F32ConvertI32U => {
-                self.translate_int_to_float(I32, F32, false)?
-            }
-            Op::F32ConvertI64S => {
-                self.translate_int_to_float(I64, F32, true)?
-            }
-            Op::F32ConvertI64U => {
-                self.translate_int_to_float(I64, F32, false)?
-            }
-            Op::F64ConvertI32S => {
-                self.translate_int_to_float(I32, F64, true)?
-            }
-            Op::F64ConvertI32U => {
-                self.translate_int_to_float(I32, F64, false)?
-            }
-            Op::F64ConvertI64S => {
-                self.translate_int_to_float(I64, F64, true)?
-            }
-            Op::F64ConvertI64U => {
-                self.translate_int_to_float(I64, F64, false)?
-            }
+            Op::I32TruncF32S => self.translate_float_to_sint(F32, I32)?,
+            Op::I32TruncF32U => self.translate_float_to_uint(F32, I32)?,
+            Op::I32TruncF64S => self.translate_float_to_sint(F64, I32)?,
+            Op::I32TruncF64U => self.translate_float_to_uint(F64, I32)?,
+            Op::I64TruncF32S => self.translate_float_to_sint(F32, I64)?,
+            Op::I64TruncF32U => self.translate_float_to_uint(F32, I64)?,
+            Op::I64TruncF64S => self.translate_float_to_sint(F64, I64)?,
+            Op::I64TruncF64U => self.translate_float_to_uint(F64, I64)?,
+            Op::I32TruncSatF32S => self.translate_float_to_sint_sat(F32, I32)?,
+            Op::I32TruncSatF32U => self.translate_float_to_uint_sat(F32, I32)?,
+            Op::I32TruncSatF64S => self.translate_float_to_sint_sat(F64, I32)?,
+            Op::I32TruncSatF64U => self.translate_float_to_uint_sat(F64, I32)?,
+            Op::I64TruncSatF32S => self.translate_float_to_sint_sat(F32, I64)?,
+            Op::I64TruncSatF32U => self.translate_float_to_uint_sat(F32, I64)?,
+            Op::I64TruncSatF64S => self.translate_float_to_sint_sat(F64, I64)?,
+            Op::I64TruncSatF64U => self.translate_float_to_uint_sat(F64, I64)?,
+            Op::F32ConvertI32S => self.translate_int_to_float(I32, F32, true)?,
+            Op::F32ConvertI32U => self.translate_int_to_float(I32, F32, false)?,
+            Op::F32ConvertI64S => self.translate_int_to_float(I64, F32, true)?,
+            Op::F32ConvertI64U => self.translate_int_to_float(I64, F32, false)?,
+            Op::F64ConvertI32S => self.translate_int_to_float(I32, F64, true)?,
+            Op::F64ConvertI32U => self.translate_int_to_float(I32, F64, false)?,
+            Op::F64ConvertI64S => self.translate_int_to_float(I64, F64, true)?,
+            Op::F64ConvertI64U => self.translate_int_to_float(I64, F64, false)?,
             Op::F32DemoteF64 => self.translate_demote(F64, F32)?,
             Op::F64PromoteF32 => self.translate_promote(F32, F64)?,
             Op::I32ReinterpretF32 => self.translate_reinterpret(I32, F32)?,
@@ -469,6 +445,38 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     {
         let src_type = src_type.into();
         let dst_type = dst_type.into();
+    /// Translates a Wasm integer to float conversion.
+    fn translate_int_to_float<SrcType, DstType>(
+        &mut self,
+        src_type: SrcType,
+        dst_type: DstType,
+        src_signed: bool,
+    ) -> Result<(), Error>
+    where
+        SrcType: Into<IntType>,
+        DstType: Into<FloatType>,
+    {
+        let src_type = src_type.into();
+        let dst_type = dst_type.into();
+        let source = self.stack.pop1()?;
+        assert_eq!(source.ty, src_type.into());
+        let source = source.value;
+        let result = self
+            .builder
+            .ins()?
+            .int_to_float(src_signed, src_type, dst_type, source)?;
+        self.stack.push(result, dst_type.into());
+        Ok(())
+    }
+
+    /// Translates a Wasm float to integer conversion.
+    fn translate_float_to_int(
+        &mut self,
+        src_type: FloatType,
+        dst_type: IntType,
+        dst_signed: bool,
+        saturating: bool,
+    ) -> Result<(), Error> {
         let source = self.stack.pop1()?;
         assert_eq!(source.ty, src_type.into());
         let source = source.value;
@@ -478,6 +486,78 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             .float_to_int(src_type, dst_type, dst_signed, source, saturating)?;
         self.stack.push(result, dst_type.into());
         Ok(())
+    }
+
+    /// Translates a Wasm float to integer conversion.
+    fn translate_float_to_sint<SrcType, DstType>(
+        &mut self,
+        src_type: SrcType,
+        dst_type: DstType,
+    ) -> Result<(), Error>
+    where
+        SrcType: Into<FloatType>,
+        DstType: Into<IntType>,
+    {
+        self.translate_float_to_int(
+            src_type.into(),
+            dst_type.into(),
+            true,
+            false,
+        )
+    }
+
+    /// Translates a Wasm float to integer conversion.
+    fn translate_float_to_sint_sat<SrcType, DstType>(
+        &mut self,
+        src_type: SrcType,
+        dst_type: DstType,
+    ) -> Result<(), Error>
+    where
+        SrcType: Into<FloatType>,
+        DstType: Into<IntType>,
+    {
+        self.translate_float_to_int(
+            src_type.into(),
+            dst_type.into(),
+            true,
+            true,
+        )
+    }
+
+    /// Translates a Wasm float to integer conversion.
+    fn translate_float_to_uint<SrcType, DstType>(
+        &mut self,
+        src_type: SrcType,
+        dst_type: DstType,
+    ) -> Result<(), Error>
+    where
+        SrcType: Into<FloatType>,
+        DstType: Into<IntType>,
+    {
+        self.translate_float_to_int(
+            src_type.into(),
+            dst_type.into(),
+            false,
+            false,
+        )
+    }
+
+    /// Translates a Wasm float to integer conversion.
+    fn translate_float_to_uint_sat<SrcType, DstType>(
+        &mut self,
+        src_type: SrcType,
+        dst_type: DstType,
+    ) -> Result<(), Error>
+    where
+        SrcType: Into<FloatType>,
+        DstType: Into<IntType>,
+    {
+        self.translate_float_to_int(
+            src_type.into(),
+            dst_type.into(),
+            false,
+            true,
+        )
     }
 
     /// Translates a Wasm demote operator.
