@@ -74,7 +74,7 @@ fn ret_const_works() -> Result<(), IrError> {
     b.with_outputs(&[IntType::I32.into()])?;
     b.body()?;
     let c = b.ins()?.constant(IntConst::I32(42))?;
-    b.ins()?.return_value(c)?;
+    b.ins()?.return_values([c].iter().copied())?;
     let function = b.finalize()?;
 
     let results = evaluate_function(function, &[]);
@@ -93,7 +93,7 @@ fn simple_block_works() -> Result<(), IrError> {
     let v2 = b.ins()?.constant(IntConst::I32(2))?;
     let v3 = b.ins()?.iadd(IntType::I32, v1, v2)?;
     let v3 = b.ins()?.imul(IntType::I32, v3, v3)?;
-    b.ins()?.return_value(v3)?;
+    b.ins()?.return_values([v3].iter().copied())?;
     let function = b.finalize()?;
 
     let results = evaluate_function(function, &[]);
@@ -116,11 +116,11 @@ fn if_then_else_works() -> Result<(), IrError> {
     let _v4 = b.ins()?.if_then_else(v3, then_block, else_block)?;
     b.switch_to_block(then_block)?;
     let v5 = b.ins()?.constant(IntConst::I32(10))?;
-    b.ins()?.return_value(v5)?;
+    b.ins()?.return_values([v5].iter().copied())?;
     b.seal_block()?;
     b.switch_to_block(else_block)?;
     let v6 = b.ins()?.constant(IntConst::I32(20))?;
-    b.ins()?.return_value(v6)?;
+    b.ins()?.return_values([v6].iter().copied())?;
     b.seal_block()?;
     let function = b.finalize()?;
 
@@ -142,7 +142,7 @@ fn simple_variable() -> Result<(), IrError> {
     b.write_var(var, v1)?;
     let v2 = b.read_var(var)?;
     let v3 = b.ins()?.iadd(IntType::I32, v2, v2)?;
-    b.ins()?.return_value(v3)?;
+    b.ins()?.return_values([v3].iter().copied())?;
     let function = b.finalize()?;
 
     let results = evaluate_function(function, &[]);
@@ -160,7 +160,7 @@ fn simple_input() -> Result<(), IrError> {
     let input = Variable::from_raw(RawIdx::from_u32(0));
     let v0 = b.read_var(input)?;
     let v1 = b.ins()?.iadd(IntType::I32, v0, v0)?;
-    b.ins()?.return_value(v1)?;
+    b.ins()?.return_values([v1].iter().copied())?;
     let function = b.finalize()?;
 
     let results = evaluate_function(function, &[Const::Int(IntConst::I32(11))]);
@@ -182,7 +182,7 @@ fn simple_gvn_var_read() -> Result<(), IrError> {
     b.ins()?.br(exit_block)?;
     b.switch_to_block(exit_block)?;
     let v0 = b.read_var(var)?;
-    b.ins()?.return_value(v0)?;
+    b.ins()?.return_values([v0].iter().copied())?;
     b.seal_block()?;
     let function = b.finalize()?;
 
@@ -240,7 +240,7 @@ fn simple_gvn_if_works() -> Result<(), IrError> {
 
     b.switch_to_block(exit_block)?;
     let v5 = b.read_var(var)?;
-    b.ins()?.return_value(v5)?;
+    b.ins()?.return_values([v5].iter().copied())?;
     b.seal_block()?;
 
     let function = b.finalize()?;
@@ -306,7 +306,7 @@ fn simple_loop_works() -> Result<(), IrError> {
     b.switch_to_block(loop_exit)?;
     b.seal_block()?;
     let v7 = b.read_var(counter)?;
-    b.ins()?.return_value(v7)?;
+    b.ins()?.return_values([v7].iter().copied())?;
 
     let function = b.finalize()?;
 
@@ -364,7 +364,7 @@ where
 
     b.switch_to_block(if_zero)?;
     let v3 = b.ins()?.constant(Const::Bool(true))?;
-    b.ins()?.return_value(v3)?;
+    b.ins()?.return_values([v3].iter().copied())?;
     b.seal_block()?;
 
     b.switch_to_block(if_not_zero)?;
@@ -372,7 +372,7 @@ where
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
     let v7 = f(b.ins()?, is_odd, v6)?;
-    b.ins()?.return_value(v7)?;
+    b.ins()?.return_values([v7].iter().copied())?;
     b.seal_block()?;
     let is_even_body = b.finalize()?;
 
@@ -402,7 +402,7 @@ where
 
     b.switch_to_block(if_zero)?;
     let v3 = b.ins()?.constant(Const::Bool(false))?;
-    b.ins()?.return_value(v3)?;
+    b.ins()?.return_values([v3].iter().copied())?;
     b.seal_block()?;
 
     b.switch_to_block(if_not_zero)?;
@@ -410,7 +410,7 @@ where
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
     let v7 = f(b.ins()?, is_even, v6)?;
-    b.ins()?.return_value(v7)?;
+    b.ins()?.return_values([v7].iter().copied())?;
     b.seal_block()?;
     let is_odd_body = b.finalize()?;
 

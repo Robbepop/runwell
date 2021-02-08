@@ -64,9 +64,14 @@ impl InterpretInstr for ReturnInstr {
         _ctx: &mut EvaluationContext,
         frame: &mut FunctionFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = frame.read_register(self.return_value());
-        let r0 = Value::from_raw(RawIdx::from_u32(0));
-        frame.write_register(r0, return_value);
+        // Since we are no longer returning a single value but multiple
+        // we need to adjust this piece of code. This comment is left as
+        // a reminder to do so.
+        if let Some(&first) = self.return_values().first() {
+            let return_value = frame.read_register(first);
+            let r0 = Value::from_raw(RawIdx::from_u32(0));
+            frame.write_register(r0, return_value);
+        }
         Ok(InterpretationFlow::Return)
     }
 }
