@@ -172,6 +172,13 @@ impl ModuleResources {
             .map(|&func_type| &self.types[func_type])
     }
 
+    /// Returns the function type of the function if the function exists in the module.
+    pub fn get_raw_func_type(&self, func: Func) -> Option<FuncType> {
+        self.function_decls
+            .get(func)
+            .copied()
+    }
+
     /// Shrinks all data structures to fit their minimum space needed.
     ///
     /// This may costly reallocate some of the data structures.
