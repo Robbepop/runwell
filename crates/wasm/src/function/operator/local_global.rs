@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::super::FunctionBodyTranslator;
-use crate::Error;
+use crate::{Error, TranslateError};
 use entity::RawIdx;
 use module::Variable;
 
@@ -52,5 +52,27 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         assert_eq!(self.builder.var_type(var)?, source.ty);
         self.builder.write_var(var, source.value)?;
         Ok(())
+    }
+
+    /// Translates Wasm `global_get` operator.
+    pub(super) fn translate_global_get(
+        &mut self,
+        global_index: u32,
+    ) -> Result<(), Error> {
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::GlobalGet { global_index },
+        ))
+        .map_err(Into::into)
+    }
+
+    /// Translates Wasm `global_set` operator.
+    pub(super) fn translate_global_set(
+        &mut self,
+        global_index: u32,
+    ) -> Result<(), Error> {
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::GlobalSet { global_index },
+        ))
+        .map_err(Into::into)
     }
 }

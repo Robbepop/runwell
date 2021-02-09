@@ -17,7 +17,7 @@ mod call;
 mod control;
 mod float;
 mod int;
-mod local;
+mod local_global;
 mod memory;
 mod util;
 
@@ -50,7 +50,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use ir::primitive::IntType::{I16, I32, I64, I8};
         use UnaryFloatOp as FloatUnop;
         use UnaryIntOp::*;
-        println!("op = {:?}", op);
+        // println!("op = {:?}", op);
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
@@ -90,8 +90,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::LocalTee { local_index } => {
                 self.translate_local_tee(local_index)?
             }
-            Op::GlobalGet { global_index } => {}
-            Op::GlobalSet { global_index } => {}
+            Op::GlobalGet { global_index } => self.translate_global_get(global_index)?,
+            Op::GlobalSet { global_index } => self.translate_global_set(global_index)?,
             Op::I32Load { memarg } => self.translate_load(memarg, I32)?,
             Op::I64Load { memarg } => self.translate_load(memarg, I64)?,
             Op::F32Load { memarg } => self.translate_load(memarg, F32)?,
