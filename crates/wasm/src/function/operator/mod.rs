@@ -110,11 +110,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::I64Store { memarg } => self.translate_store(memarg, I64)?,
             Op::F32Store { memarg } => self.translate_store(memarg, F32)?,
             Op::F64Store { memarg } => self.translate_store(memarg, F64)?,
-            Op::I32Store8 { memarg } => {}
-            Op::I32Store16 { memarg } => {}
-            Op::I64Store8 { memarg } => {}
-            Op::I64Store16 { memarg } => {}
-            Op::I64Store32 { memarg } => {}
+            Op::I32Store8 { memarg } => self.translate_truncate_store(memarg, I32, I8)?,
+            Op::I32Store16 { memarg } => self.translate_truncate_store(memarg, I32, I16)?,
+            Op::I64Store8 { memarg } => self.translate_truncate_store(memarg, I64, I8)?,
+            Op::I64Store16 { memarg } => self.translate_truncate_store(memarg, I64, I16)?,
+            Op::I64Store32 { memarg } => self.translate_truncate_store(memarg, I64, I32)?,
             Op::MemorySize { mem, mem_byte } => {}
             Op::MemoryGrow { mem, mem_byte } => {}
             Op::I32Const { value } => self.translate_const_op(value, I32)?,

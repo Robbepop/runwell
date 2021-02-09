@@ -116,4 +116,16 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         self.translate_extend(load_type, extend_type, extend_signed)?;
         Ok(())
     }
+
+    /// Translates a combined Wasm linear memory load and extend operator.
+    pub(super) fn translate_truncate_store(
+        &mut self,
+        memarg: wasmparser::MemoryImmediate,
+        truncated_type: IntType,
+        stored_type: IntType,
+    ) -> Result<(), Error> {
+        self.translate_truncate(truncated_type, stored_type)?;
+        self.translate_store(memarg, stored_type)?;
+        Ok(())
+    }
 }
