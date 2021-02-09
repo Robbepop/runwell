@@ -50,7 +50,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use ir::primitive::IntType::{I16, I32, I64, I8};
         use UnaryFloatOp as FloatUnop;
         use UnaryIntOp::*;
-        // println!("op = {:?}", op);
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
