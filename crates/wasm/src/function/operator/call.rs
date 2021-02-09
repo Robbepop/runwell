@@ -50,7 +50,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         function_index: u32,
     ) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 
     /// Translates a Wasm indirect function call.
@@ -59,7 +60,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         index: u32,
         table_index: u32,
     ) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 
     /// Translates a Wasm indirect function call.
@@ -68,6 +70,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         index: u32,
         table_index: u32,
     ) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 }

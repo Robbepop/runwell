@@ -44,12 +44,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         ty: wasmparser::TypeOrFuncType,
     ) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 
     /// Translate a Wasm `Else` control operator.
     pub(super) fn translate_else(&mut self) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 
     /// Translate a Wasm `End` control operator.
@@ -94,7 +96,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         relative_depth: u32,
     ) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 
     /// Translate a Wasm `BrIf` control operator.
@@ -102,7 +105,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         relative_depth: u32,
     ) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 
     /// Translate a Wasm `BrTable` control operator.
@@ -110,11 +114,13 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         table: wasmparser::BrTable,
     ) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 
     /// Translate a Wasm `Return` control operator.
     pub(super) fn translate_return(&mut self) -> Result<(), Error> {
-        unimplemented!()
+        // unimplemented!()
+        Ok(())
     }
 }
