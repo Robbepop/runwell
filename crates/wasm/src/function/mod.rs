@@ -21,10 +21,7 @@ mod error;
 mod stack;
 
 pub use self::error::TranslateError;
-use self::{
-    blocks::{Blocks, WasmBlock},
-    stack::ValueStack,
-};
+use self::{blocks::{Blocks, WasmBlock}, stack::{ValueEntry, ValueStack}};
 use crate::{Const as WasmConst, Error, Type};
 use core::{convert::TryFrom as _, fmt};
 use entity::RawIdx;
@@ -206,8 +203,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             }
             Op::Nop => { /* Deliberately do nothing. */ }
             Op::Block { ty } => {
-                let block = self.builder.create_block()?;
-                let wasm_block = WasmBlock::new(block, ty)?;
+                let wasm_block = WasmBlock::new(None, ty)?;
                 self.blocks.push_block(wasm_block);
             }
             Op::Loop { ty } => {}
@@ -215,6 +211,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             Op::Else => {}
             Op::End => {
                 let block = self.blocks.pop_block()?;
+                if let Some(runwell_block) = block.block() {
+                    let _ = self.builder.switch_to_block(runwell_block).unwrap_or(());
+                    let _ = self.builder.seal_block().unwrap_or(());
+                }
                 if self.blocks.is_empty() {
                     // The popped block was the entry block and thus the
                     // `End` operator represents the end of the Wasm function.
