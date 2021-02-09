@@ -169,10 +169,10 @@ impl FloatToIntInstr {
     ///
     /// # Note
     ///
-    /// The source type must have a bit width that is greater than or equal to the bit width
-    /// of the destination type.
-    /// The `signed` flag tells if the conversion from float to integer shall treat the
-    /// resulting integer as signed or unsigned integer type.
+    /// - The `signed` flag tells if the conversion from float to integer shall treat the
+    ///   resulting integer as signed or unsigned integer type.
+    /// - The `saturating` flag tells if the conversion should trap in case of `NaN` and
+    ///   infinite inputs (`false`) or should saturate the resulting integer value.
     pub fn new(
         src_type: FloatType,
         dst_type: IntType,
