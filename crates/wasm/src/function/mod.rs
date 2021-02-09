@@ -19,9 +19,10 @@
 mod blocks;
 mod error;
 mod stack;
+mod operator;
 
 pub use self::error::TranslateError;
-use self::{blocks::{Blocks, WasmBlock}, stack::{ValueEntry, ValueStack}};
+use self::{blocks::{Blocks, WasmBlock}, stack::{ValueStack}};
 use crate::{Const as WasmConst, Error, Type};
 use core::{convert::TryFrom as _, fmt};
 use entity::RawIdx;
@@ -36,10 +37,9 @@ use ir::{
         UnaryIntOp,
     },
     primitive as runwell,
-    primitive::{FloatType, Func, IntConst, IntType, Mem, Value},
-    ImmU32,
+    primitive::{FloatType, Func, IntConst, IntType, Value},
 };
-use module::{FunctionBody, FunctionBuilder, ModuleResources, Variable};
+use module::{FunctionBody, FunctionBuilder, ModuleResources};
 use wasmparser::{BinaryReader, FuncValidator, Range, ValidatorResources};
 
 /// Translate a Wasm function body into a Runwell function body.
@@ -63,7 +63,7 @@ pub fn translate_function_body(
 }
 
 /// Translates Wasm function bodies into Runwell function bodies.
-pub struct FunctionBodyTranslator<'a, 'b> {
+struct FunctionBodyTranslator<'a, 'b> {
     // The Wasm function body.
     reader: BinaryReader<'a>,
     /// Used to validate a function on the fly during translation.
@@ -180,6 +180,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         }
         let offset = self.reader.original_position();
         self.validator.finish(offset)?;
+        println!();
         Ok(())
     }
 
@@ -198,6 +199,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use IntType::{I16, I32, I64, I8};
         use UnaryFloatOp as FloatUnop;
         use UnaryIntOp::*;
+        println!("op = {:?}", op);
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
@@ -481,87 +483,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
-    /// Builds a Wasm linear memory load operator.
-    ///
-    /// # Note
-    ///
-    /// Used by translators for Wasm load and store operators.
-    fn build_heap_addr(
-        &mut self,
-        memarg: wasmparser::MemoryImmediate,
-        pos: ValueEntry,
-        ty: runwell::Type,
-    ) -> Result<Value, Error> {
-        assert_eq!(pos.ty, IntType::I32.into());
-        let mem = Mem::from_raw(RawIdx::from_u32(memarg.memory));
-        let pos = pos.value;
-        let alignment_bytes = 2_u32.pow(ty.alignment() as u32);
-        let size = ImmU32::from(alignment_bytes + memarg.offset);
-        let ptr = self.builder.ins()?.heap_addr(mem, pos, size)?;
-        Ok(ptr)
-    }
-
-    /// Translates a Wasm linear memory load operator.
-    ///
-    /// # Note
-    ///
-    /// Users should prefer using [`translate_load`] over using this API directly.
-    fn translate_load_typed(
-        &mut self,
-        memarg: wasmparser::MemoryImmediate,
-        result_type: runwell::Type,
-    ) -> Result<(), Error> {
-        let pos = self.stack.pop1()?;
-        let ptr = self.build_heap_addr(memarg, pos, result_type)?;
-        let offset = ImmU32::from(memarg.offset);
-        let result = self.builder.ins()?.load(ptr, offset, result_type)?;
-        self.stack.push(result, result_type);
-        Ok(())
-    }
-
-    /// Translates a Wasm linear memory load operator.
-    fn translate_load<T>(
-        &mut self,
-        memarg: wasmparser::MemoryImmediate,
-        ty: T,
-    ) -> Result<(), Error>
-    where
-        T: Into<runwell::Type>,
-    {
-        self.translate_load_typed(memarg, ty.into())
-    }
-
-    /// Translates a Wasm linear memory store operator.
-    ///
-    /// # Note
-    ///
-    /// Users should prefer using [`translate_store`] over using this API directly.
-    fn translate_store_typed(
-        &mut self,
-        memarg: wasmparser::MemoryImmediate,
-        stored_type: runwell::Type,
-    ) -> Result<(), Error> {
-        let (pos, stored_value) = self.stack.pop2()?;
-        assert_eq!(stored_value.ty, stored_type);
-        let ptr = self.build_heap_addr(memarg, pos, stored_type)?;
-        let offset = ImmU32::from(memarg.offset);
-        let stored_value = stored_value.value;
-        self.builder.ins()?.store(ptr, offset, stored_value, stored_type)?;
-        Ok(())
-    }
-
-    /// Translates a Wasm linear memory load operator.
-    fn translate_store<T>(
-        &mut self,
-        memarg: wasmparser::MemoryImmediate,
-        ty: T,
-    ) -> Result<(), Error>
-    where
-        T: Into<runwell::Type>,
-    {
-        self.translate_store_typed(memarg, ty.into())
-    }
-
     /// Translates a Wasm function call.
     fn translate_call(&mut self, function_index: u32) -> Result<(), Error> {
         let func = Func::from_raw(RawIdx::from_u32(function_index));
@@ -583,237 +504,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         for output_type in func_type.outputs() {
             self.stack.push(result, *output_type);
         }
-        Ok(())
-    }
-
-    /// Translates Wasm `local_get` operator.
-    fn translate_local_get(&mut self, local_index: u32) -> Result<(), Error> {
-        let var = Variable::from_raw(RawIdx::from_u32(local_index));
-        let result = self.builder.read_var(var)?;
-        let result_type = self.builder.var_type(var)?;
-        self.stack.push(result, result_type);
-        Ok(())
-    }
-
-    /// Translates Wasm `local_set` operator.
-    fn translate_local_set(&mut self, local_index: u32) -> Result<(), Error> {
-        let var = Variable::from_raw(RawIdx::from_u32(local_index));
-        let source = self.stack.pop1()?;
-        assert_eq!(self.builder.var_type(var)?, source.ty);
-        self.builder.write_var(var, source.value)?;
-        Ok(())
-    }
-
-    /// Translates Wasm `local_tee` operator.
-    fn translate_local_tee(&mut self, local_index: u32) -> Result<(), Error> {
-        let var = Variable::from_raw(RawIdx::from_u32(local_index));
-        let source = self.stack.peek1()?;
-        assert_eq!(self.builder.var_type(var)?, source.ty);
-        self.builder.write_var(var, source.value)?;
-        Ok(())
-    }
-
-    /// Translates a Wasm integer extend operator.
-    fn translate_extend<SrcType, DstType>(
-        &mut self,
-        src_type: SrcType,
-        dst_type: DstType,
-        src_signed: bool,
-    ) -> Result<(), Error>
-    where
-        SrcType: Into<IntType>,
-        DstType: Into<IntType>,
-    {
-        let src_type = src_type.into();
-        let dst_type = dst_type.into();
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty, src_type.into());
-        let source = source.value;
-        let result = self
-            .builder
-            .ins()?
-            .iextend(src_type, dst_type, source, src_signed)?;
-        self.stack.push(result, dst_type.into());
-        Ok(())
-    }
-
-    /// Translates a Wasm integer truncate operator.
-    fn translate_truncate<SrcType, DstType>(
-        &mut self,
-        src_type: SrcType,
-        dst_type: DstType,
-    ) -> Result<(), Error>
-    where
-        SrcType: Into<IntType>,
-        DstType: Into<IntType>,
-    {
-        let src_type = src_type.into();
-        let dst_type = dst_type.into();
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty, src_type.into());
-        let source = source.value;
-        let result =
-            self.builder.ins()?.itruncate(src_type, dst_type, source)?;
-        self.stack.push(result, dst_type.into());
-        Ok(())
-    }
-
-    /// Translates a Wasm integer to float conversion.
-    fn translate_int_to_float<SrcType, DstType>(
-        &mut self,
-        src_type: SrcType,
-        dst_type: DstType,
-        src_signed: bool,
-    ) -> Result<(), Error>
-    where
-        SrcType: Into<IntType>,
-        DstType: Into<FloatType>,
-    {
-        let src_type = src_type.into();
-        let dst_type = dst_type.into();
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty, src_type.into());
-        let source = source.value;
-        let result = self
-            .builder
-            .ins()?
-            .int_to_float(src_signed, src_type, dst_type, source)?;
-        self.stack.push(result, dst_type.into());
-        Ok(())
-    }
-
-    /// Translates a Wasm float to integer conversion.
-    fn translate_float_to_int(
-        &mut self,
-        src_type: FloatType,
-        dst_type: IntType,
-        dst_signed: bool,
-        saturating: bool,
-    ) -> Result<(), Error> {
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty, src_type.into());
-        let source = source.value;
-        let result = self
-            .builder
-            .ins()?
-            .float_to_int(src_type, dst_type, dst_signed, source, saturating)?;
-        self.stack.push(result, dst_type.into());
-        Ok(())
-    }
-
-    /// Translates a Wasm float to integer conversion.
-    fn translate_float_to_sint<SrcType, DstType>(
-        &mut self,
-        src_type: SrcType,
-        dst_type: DstType,
-    ) -> Result<(), Error>
-    where
-        SrcType: Into<FloatType>,
-        DstType: Into<IntType>,
-    {
-        self.translate_float_to_int(
-            src_type.into(),
-            dst_type.into(),
-            true,
-            false,
-        )
-    }
-
-    /// Translates a Wasm float to integer conversion.
-    fn translate_float_to_sint_sat<SrcType, DstType>(
-        &mut self,
-        src_type: SrcType,
-        dst_type: DstType,
-    ) -> Result<(), Error>
-    where
-        SrcType: Into<FloatType>,
-        DstType: Into<IntType>,
-    {
-        self.translate_float_to_int(
-            src_type.into(),
-            dst_type.into(),
-            true,
-            true,
-        )
-    }
-
-    /// Translates a Wasm float to integer conversion.
-    fn translate_float_to_uint<SrcType, DstType>(
-        &mut self,
-        src_type: SrcType,
-        dst_type: DstType,
-    ) -> Result<(), Error>
-    where
-        SrcType: Into<FloatType>,
-        DstType: Into<IntType>,
-    {
-        self.translate_float_to_int(
-            src_type.into(),
-            dst_type.into(),
-            false,
-            false,
-        )
-    }
-
-    /// Translates a Wasm float to integer conversion.
-    fn translate_float_to_uint_sat<SrcType, DstType>(
-        &mut self,
-        src_type: SrcType,
-        dst_type: DstType,
-    ) -> Result<(), Error>
-    where
-        SrcType: Into<FloatType>,
-        DstType: Into<IntType>,
-    {
-        self.translate_float_to_int(
-            src_type.into(),
-            dst_type.into(),
-            false,
-            true,
-        )
-    }
-
-    /// Translates a Wasm demote operator.
-    fn translate_demote<FromType, ToType>(
-        &mut self,
-        from_type: FromType,
-        to_type: ToType,
-    ) -> Result<(), Error>
-    where
-        FromType: Into<FloatType>,
-        ToType: Into<FloatType>,
-    {
-        let from_type = from_type.into();
-        let to_type = to_type.into();
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty, from_type.into());
-        let result =
-            self.builder
-                .ins()?
-                .demote(from_type, to_type, source.value)?;
-        self.stack.push(result, to_type.into());
-        Ok(())
-    }
-
-    /// Translates a Wasm promote operator.
-    fn translate_promote<FromType, ToType>(
-        &mut self,
-        from_type: FromType,
-        to_type: ToType,
-    ) -> Result<(), Error>
-    where
-        FromType: Into<FloatType>,
-        ToType: Into<FloatType>,
-    {
-        let from_type = from_type.into();
-        let to_type = to_type.into();
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty, from_type.into());
-        let result =
-            self.builder
-                .ins()?
-                .promote(from_type, to_type, source.value)?;
-        self.stack.push(result, to_type.into());
         Ok(())
     }
 
@@ -859,166 +549,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
-    /// Extracts the float type from the generic Runwell type.
-    ///
-    /// # Note
-    ///
-    /// Use this only when certain due to Wasm validation that the given
-    /// type must be an integer type.
-    ///
-    /// # Panics
-    ///
-    /// If the generic type does not contain an float type.
-    fn extract_float_type(ty: runwell::Type) -> runwell::FloatType {
-        match ty {
-            runwell::Type::Float(float_type) => float_type,
-            unmatched => {
-                panic!("expected float type due to Wasm validation but found {} type.", ty)
-            }
-        }
-    }
-
-    /// Translate a Wasm unary float operator into Runwell IR.
-    fn translate_float_unop(
-        &mut self,
-        float_type: FloatType,
-        op: UnaryFloatOp,
-    ) -> Result<(), Error> {
-        let source = self.stack.pop1()?;
-        let actual_float_type = Self::extract_float_type(source.ty);
-        assert_eq!(actual_float_type, float_type);
-        let source = source.value;
-        let ins = self.builder.ins()?;
-        let result = match op {
-            UnaryFloatOp::Abs => ins.fabs(float_type, source)?,
-            UnaryFloatOp::Neg => ins.fneg(float_type, source)?,
-            UnaryFloatOp::Sqrt => ins.fsqrt(float_type, source)?,
-            UnaryFloatOp::Ceil => ins.fceil(float_type, source)?,
-            UnaryFloatOp::Floor => ins.ffloor(float_type, source)?,
-            UnaryFloatOp::Truncate => ins.ftruncate(float_type, source)?,
-            UnaryFloatOp::Nearest => ins.fnearest(float_type, source)?,
-        };
-        self.stack.push(result, float_type.into());
-        Ok(())
-    }
-
-    /// Translate a Wasm binary float operator into Runwell IR.
-    fn translate_float_binop(
-        &mut self,
-        float_type: FloatType,
-        op: BinaryFloatOp,
-    ) -> Result<(), Error> {
-        let (lhs, rhs) = self.stack.pop2()?;
-        assert_eq!(lhs.ty, rhs.ty);
-        let actual_float_type = Self::extract_float_type(lhs.ty);
-        assert_eq!(actual_float_type, float_type);
-        let ins = self.builder.ins()?;
-        let lhs = lhs.value;
-        let rhs = rhs.value;
-        let result = match op {
-            BinaryFloatOp::Add => ins.fadd(float_type, lhs, rhs)?,
-            BinaryFloatOp::Sub => ins.fsub(float_type, lhs, rhs)?,
-            BinaryFloatOp::Mul => ins.fmul(float_type, lhs, rhs)?,
-            BinaryFloatOp::Div => ins.fdiv(float_type, lhs, rhs)?,
-            BinaryFloatOp::Min => ins.fmin(float_type, lhs, rhs)?,
-            BinaryFloatOp::Max => ins.fmax(float_type, lhs, rhs)?,
-            BinaryFloatOp::CopySign => ins.fcopysign(float_type, lhs, rhs)?,
-        };
-        self.stack.push(result, float_type.into());
-        Ok(())
-    }
-
-    /// Extracts the integer type from the generic Runwell type.
-    ///
-    /// # Note
-    ///
-    /// Use this only when certain due to Wasm validation that the given
-    /// type must be an integer type.
-    ///
-    /// # Panics
-    ///
-    /// If the generic type does not contain an integer type.
-    fn extract_int_type(ty: runwell::Type) -> runwell::IntType {
-        match ty {
-            runwell::Type::Int(int_type) => int_type,
-            unmatched => {
-                panic!("expected integer type due to Wasm validation but found {} type.", ty)
-            }
-        }
-    }
-
-    /// Translate a Wasm integer shift or rotate operator into Runwell IR.
-    fn translate_int_shift(
-        &mut self,
-        int_type: IntType,
-        op: ShiftIntOp,
-    ) -> Result<(), Error> {
-        let (source, shift_amount) = self.stack.pop2()?;
-        assert_eq!(shift_amount.ty, IntType::I32.into());
-        assert_eq!(source.ty, int_type.into());
-        let ins = self.builder.ins()?;
-        let source = source.value;
-        let shift_amount = shift_amount.value;
-        let result = match op {
-            ShiftIntOp::Shl => ins.ishl(int_type, source, shift_amount)?,
-            ShiftIntOp::Sshr => ins.isshr(int_type, source, shift_amount)?,
-            ShiftIntOp::Ushr => ins.iushr(int_type, source, shift_amount)?,
-            ShiftIntOp::Rotl => ins.irotl(int_type, source, shift_amount)?,
-            ShiftIntOp::Rotr => ins.irotr(int_type, source, shift_amount)?,
-        };
-        self.stack.push(result, int_type.into());
-        Ok(())
-    }
-
-    /// Translate a Wasm unary integer operator into Runwell IR.
-    fn translate_int_unop(
-        &mut self,
-        int_type: IntType,
-        op: UnaryIntOp,
-    ) -> Result<(), Error> {
-        let source = self.stack.pop1()?;
-        let actual_int_ty = Self::extract_int_type(source.ty);
-        assert_eq!(actual_int_ty, int_type);
-        let ins = self.builder.ins()?;
-        let source = source.value;
-        let result = match op {
-            UnaryIntOp::LeadingZeros => ins.iclz(int_type, source)?,
-            UnaryIntOp::TrailingZeros => ins.ictz(int_type, source)?,
-            UnaryIntOp::PopCount => ins.ipopcnt(int_type, source)?,
-        };
-        self.stack.push(result, int_type.into());
-        Ok(())
-    }
-
-    /// Translate a Wasm binary integer operator into Runwell IR.
-    fn translate_int_binop(
-        &mut self,
-        int_ty: IntType,
-        op: BinaryIntOp,
-    ) -> Result<(), Error> {
-        let (lhs, rhs) = self.stack.pop2()?;
-        assert_eq!(lhs.ty, rhs.ty);
-        let actual_int_ty = Self::extract_int_type(lhs.ty);
-        assert_eq!(actual_int_ty, int_ty);
-        let ins = self.builder.ins()?;
-        let lhs = lhs.value;
-        let rhs = rhs.value;
-        let result = match op {
-            BinaryIntOp::Add => ins.iadd(int_ty, lhs, rhs)?,
-            BinaryIntOp::Sub => ins.isub(int_ty, lhs, rhs)?,
-            BinaryIntOp::Mul => ins.imul(int_ty, lhs, rhs)?,
-            BinaryIntOp::Sdiv => ins.sdiv(int_ty, lhs, rhs)?,
-            BinaryIntOp::Udiv => ins.udiv(int_ty, lhs, rhs)?,
-            BinaryIntOp::Srem => ins.srem(int_ty, lhs, rhs)?,
-            BinaryIntOp::Urem => ins.urem(int_ty, lhs, rhs)?,
-            BinaryIntOp::And => ins.iand(int_ty, lhs, rhs)?,
-            BinaryIntOp::Or => ins.ior(int_ty, lhs, rhs)?,
-            BinaryIntOp::Xor => ins.ixor(int_ty, lhs, rhs)?,
-        };
-        self.stack.push(result, int_ty.into());
-        Ok(())
-    }
-
     /// Translates a Runwell `bool` result into an equivalent Wasm `i32` result.
     fn translate_bool_to_i32(
         &mut self,
@@ -1033,69 +563,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             const_false,
         )?;
         self.stack.push(bool_to_i32, IntType::I32.into());
-        Ok(())
-    }
-
-    /// Translates a Wasm integer compare to zero (Eqz) operator.
-    fn translate_eqz_op(&mut self, int_type: IntType) -> Result<(), Error> {
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty.bit_width(), 32);
-        let actual_int_type = Self::extract_int_type(source.ty);
-        assert_eq!(actual_int_type, int_type);
-        let zero_const: runwell::Const = match int_type {
-            IntType::I32 => IntConst::I32(0).into(),
-            IntType::I64 => IntConst::I64(0).into(),
-            unsupported => {
-                panic!(
-                "encountered unsupported integer type {} for Wasm Eqz operator",
-                unsupported
-            )
-            }
-        };
-        let zero = self.builder.ins()?.constant(zero_const)?;
-        let result = self.builder.ins()?.icmp(
-            int_type,
-            CompareIntOp::Eq,
-            source.value,
-            zero,
-        )?;
-        self.translate_bool_to_i32(result)?;
-        Ok(())
-    }
-
-    /// Translates a Wasm integer compare operator.
-    fn translate_icmp_op(
-        &mut self,
-        op: CompareIntOp,
-        int_type: IntType,
-    ) -> Result<(), Error> {
-        let (lhs, rhs) = self.stack.pop2()?;
-        assert_eq!(lhs.ty, rhs.ty);
-        let actual_int_type = Self::extract_int_type(lhs.ty);
-        assert_eq!(actual_int_type, int_type);
-        let result = self
-            .builder
-            .ins()?
-            .icmp(int_type, op, lhs.value, rhs.value)?;
-        self.translate_bool_to_i32(result)?;
-        Ok(())
-    }
-
-    /// Translates a Wasm floating point number compare operator.
-    fn translate_fcmp_op(
-        &mut self,
-        op: CompareFloatOp,
-        float_type: FloatType,
-    ) -> Result<(), Error> {
-        let (lhs, rhs) = self.stack.pop2()?;
-        assert_eq!(lhs.ty, rhs.ty);
-        let actual_float_type = Self::extract_float_type(lhs.ty);
-        assert_eq!(actual_float_type, float_type);
-        let result = self
-            .builder
-            .ins()?
-            .fcmp(float_type, op, lhs.value, rhs.value)?;
-        self.translate_bool_to_i32(result)?;
         Ok(())
     }
 
