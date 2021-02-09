@@ -86,17 +86,13 @@ impl Blocks {
         builder: &mut FunctionBuilder,
     ) -> Result<Block, Error> {
         let len_blocks = self.blocks.len();
-        let wasm_block = self
-            .blocks
-            .iter_mut()
-            .rev()
-            .nth_back(n as usize)
-            .ok_or_else(|| {
+        let wasm_block =
+            self.blocks.iter_mut().rev().nth_back(n as usize).ok_or(
                 TranslateError::RelativeDepthExceedsBlockStack {
                     n,
                     len: len_blocks,
-                }
-            })?;
+                },
+            )?;
         match wasm_block.block() {
             Some(block) => Ok(block),
             None => {

@@ -825,7 +825,7 @@ impl<'a> InstructionBuilder<'a> {
         self.expect_type(pos, IntType::I32.into())?;
         let instruction = HeapAddrInstr::new(mem, pos, size);
         let (value, instr) =
-            self.append_value_instr(instruction.into(), Type::Ptr.into())?;
+            self.append_value_instr(instruction.into(), Type::Ptr)?;
         self.register_uses(instr, [pos].iter().copied());
         Ok(value)
     }
@@ -837,7 +837,7 @@ impl<'a> InstructionBuilder<'a> {
         offset: ImmU32,
         ty: Type,
     ) -> Result<Value, IrError> {
-        self.expect_type(ptr, Type::Ptr.into())?;
+        self.expect_type(ptr, Type::Ptr)?;
         let instruction = LoadInstr::new(ty, ptr, offset);
         let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
         self.register_uses(instr, [ptr].iter().copied());
@@ -852,7 +852,7 @@ impl<'a> InstructionBuilder<'a> {
         stored_value: Value,
         ty: Type,
     ) -> Result<Instr, IrError> {
-        self.expect_type(ptr, Type::Ptr.into())?;
+        self.expect_type(ptr, Type::Ptr)?;
         let instruction = StoreInstr::new(ptr, offset, stored_value, ty);
         let instr = self.append_instr(instruction)?;
         self.register_uses(instr, [ptr, stored_value].iter().copied());
