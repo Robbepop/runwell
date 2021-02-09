@@ -38,7 +38,7 @@ impl TruncateIntInstr {
     ///
     /// The bit width of the source type must be greater than the bit width of the destination type.
     pub fn new(src_type: IntType, dst_type: IntType, src: Value) -> Self {
-        assert!(src_type.bit_width() > dst_type.bit_width());
+        assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,
             dst_type,
@@ -103,7 +103,7 @@ impl ExtendIntInstr {
         dst_type: IntType,
         src: Value,
     ) -> Self {
-        assert!(src_type.bit_width() > dst_type.bit_width());
+        assert!(src_type.bit_width() <= dst_type.bit_width());
         Self {
             signed,
             src_type,
