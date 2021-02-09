@@ -108,6 +108,8 @@ impl DisplayHook for ValueEntity {
 pub enum Type {
     #[display(fmt = "bool")]
     Bool,
+    #[display(fmt = "ptr")]
+    Ptr,
     Int(IntType),
     Float(FloatType),
 }
@@ -117,8 +119,19 @@ impl Type {
     pub fn bit_width(&self) -> u32 {
         match self {
             Self::Bool => 1,
+            Self::Ptr => 32,
             Self::Int(int_type) => int_type.bit_width(),
             Self::Float(float_type) => float_type.bit_width(),
+        }
+    }
+
+    /// Returns the alignment exponent, `N` in `2^N`.
+    pub fn alignment(&self) -> u8 {
+        match self {
+            Self::Bool => 0,
+            Self::Ptr => 2,
+            Self::Int(int_type) => int_type.alignment(),
+            Self::Float(float_type) => float_type.alignment(),
         }
     }
 }
@@ -146,6 +159,16 @@ impl IntType {
             Self::I64 => 64,
         }
     }
+
+    /// Returns the alignment exponent, `N` in `2^N`.
+    pub fn alignment(&self) -> u8 {
+        match self {
+            Self::I8 => 0,
+            Self::I16 => 1,
+            Self::I32 => 2,
+            Self::I64 => 3,
+        }
+    }
 }
 
 /// Any floating point number type.
@@ -163,6 +186,14 @@ impl FloatType {
         match self {
             Self::F32 => 32,
             Self::F64 => 64,
+        }
+    }
+
+    /// Returns the alignment exponent, `N` in `2^N`.
+    pub fn alignment(&self) -> u8 {
+        match self {
+            Self::F32 => 2,
+            Self::F64 => 3,
         }
     }
 }
