@@ -36,21 +36,25 @@ use ir::{
         DemoteFloatInstr,
         ExtendIntInstr,
         FloatToIntInstr,
+        HeapAddrInstr,
         IfThenElseInstr,
         Instruction,
         IntToFloatInstr,
+        LoadInstr,
         PromoteFloatInstr,
         ReinterpretInstr,
         ReturnInstr,
         SelectInstr,
         ShiftIntInstr,
+        StoreInstr,
         TailCallInstr,
         TerminalInstr,
         TruncateIntInstr,
         UnaryFloatInstr,
         UnaryIntInstr,
     },
-    primitive::{Block, Const, FloatType, Func, IntType, Type, Value},
+    primitive::{Block, Const, FloatType, Func, IntType, Mem, Type, Value},
+    ImmU32,
 };
 
 /// The unique index of a basic block entity of the Runwell IR.
@@ -806,6 +810,53 @@ impl<'a> InstructionBuilder<'a> {
             self.append_value_instr(instruction.into(), dst_type.into())?;
         self.register_uses(instr, [src].iter().copied());
         Ok(value)
+    }
+
+    /// Retrieves the heap address at the byte position for the given linear memory of given size.
+    ///
+    /// The returned value can be used to load and store values from and to linear memory
+    /// with an offset that is valid for the given size.
+    pub fn heap_addr(
+        mut self,
+        mem: Mem,
+        pos: Value,
+        size: ImmU32,
+    ) -> Result<Value, IrError> {
+        self.expect_type(pos, IntType::I32.into())?;
+        let instruction = HeapAddrInstr::new(mem, pos, size);
+        let (value, instr) =
+            self.append_value_instr(instruction.into(), Type::Ptr.into())?;
+        self.register_uses(instr, [pos].iter().copied());
+        Ok(value)
+    }
+
+    /// Loads a value of the given type from the pointer with given offset.
+    pub fn load(
+        mut self,
+        ptr: Value,
+        offset: ImmU32,
+        ty: Type,
+    ) -> Result<Value, IrError> {
+        self.expect_type(ptr, Type::Ptr.into())?;
+        let instruction = LoadInstr::new(ty, ptr, offset);
+        let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
+        self.register_uses(instr, [ptr].iter().copied());
+        Ok(value)
+    }
+
+    /// Stores the given value of the given type to the pointer with given offset.
+    pub fn store(
+        mut self,
+        ptr: Value,
+        offset: ImmU32,
+        stored_value: Value,
+        ty: Type,
+    ) -> Result<Instr, IrError> {
+        self.expect_type(ptr, Type::Ptr.into())?;
+        let instruction = StoreInstr::new(ptr, offset, stored_value, ty);
+        let instr = self.append_instr(instruction)?;
+        self.register_uses(instr, [ptr, stored_value].iter().copied());
+        Ok(instr)
     }
 
     /// Appends the instruction onto the current basic block.
