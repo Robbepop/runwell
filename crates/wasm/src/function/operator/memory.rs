@@ -117,7 +117,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
-    /// Translates a combined Wasm linear memory load and extend operator.
+    /// Translates a combined Wasm linear memory truncate and store operator.
     pub(super) fn translate_truncate_store(
         &mut self,
         memarg: wasmparser::MemoryImmediate,
