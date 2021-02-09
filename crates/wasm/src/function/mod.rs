@@ -984,16 +984,16 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn translate_fcmp_op(
         &mut self,
         op: CompareFloatOp,
-        float_ty: FloatType,
+        float_type: FloatType,
     ) -> Result<(), Error> {
         let (lhs, rhs) = self.stack.pop2()?;
         assert_eq!(lhs.ty, rhs.ty);
-        assert_eq!(lhs.ty, float_ty.into());
-        let int_type = Self::extract_int_type(lhs.ty);
+        let actual_float_type = Self::extract_float_type(lhs.ty);
+        assert_eq!(actual_float_type, float_type);
         let result = self
             .builder
             .ins()?
-            .fcmp(float_ty, op, lhs.value, rhs.value)?;
+            .fcmp(float_type, op, lhs.value, rhs.value)?;
         self.stack.push(result, runwell::Type::Bool);
         Ok(())
     }
