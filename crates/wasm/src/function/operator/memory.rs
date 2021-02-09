@@ -103,4 +103,17 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     {
         self.translate_store_typed(memarg, ty.into())
     }
+
+    /// Translates a combined Wasm linear memory load and extend operator.
+    pub(super) fn translate_load_extend(
+        &mut self,
+        memarg: wasmparser::MemoryImmediate,
+        load_type: IntType,
+        extend_type: IntType,
+        extend_signed: bool,
+    ) -> Result<(), Error> {
+        self.translate_load(memarg, load_type)?;
+        self.translate_extend(load_type, extend_type, extend_signed)?;
+        Ok(())
+    }
 }
