@@ -935,6 +935,23 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
+    /// Translates a Runwell `bool` result into an equivalent Wasm `i32` result.
+    fn translate_bool_to_i32(
+        &mut self,
+        bool_result: Value,
+    ) -> Result<(), Error> {
+        let const_true = self.builder.ins()?.constant(IntConst::I32(0))?;
+        let const_false = self.builder.ins()?.constant(IntConst::I32(1))?;
+        let bool_to_i32 = self.builder.ins()?.select(
+            IntType::I32.into(),
+            bool_result,
+            const_true,
+            const_false,
+        )?;
+        self.stack.push(bool_to_i32, IntType::I32.into());
+        Ok(())
+    }
+
     /// Translates a Wasm integer compare to zero (Eqz) operator.
     fn translate_eqz_op(&mut self, int_type: IntType) -> Result<(), Error> {
         let source = self.stack.pop1()?;
@@ -958,7 +975,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             source.value,
             zero,
         )?;
-        self.stack.push(result, runwell::Type::Bool);
+        self.translate_bool_to_i32(result)?;
         Ok(())
     }
 
@@ -976,7 +993,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             .builder
             .ins()?
             .icmp(int_type, op, lhs.value, rhs.value)?;
-        self.stack.push(result, runwell::Type::Bool);
+        self.translate_bool_to_i32(result)?;
         Ok(())
     }
 
@@ -994,7 +1011,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             .builder
             .ins()?
             .fcmp(float_type, op, lhs.value, rhs.value)?;
-        self.stack.push(result, runwell::Type::Bool);
+        self.translate_bool_to_i32(result)?;
         Ok(())
     }
 
