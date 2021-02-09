@@ -782,11 +782,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn extract_float_type(ty: runwell::Type) -> runwell::FloatType {
         match ty {
             runwell::Type::Float(float_type) => float_type,
-            runwell::Type::Int(int_type) => {
-                panic!("expected float type due to Wasm validation but found {} type.", int_type)
-            }
-            runwell::Type::Bool => {
-                panic!("expected float type due to Wasm validation but found bool type.")
+            unmatched => {
+                panic!("expected float type due to Wasm validation but found {} type.", ty)
             }
         }
     }
@@ -854,11 +851,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn extract_int_type(ty: runwell::Type) -> runwell::IntType {
         match ty {
             runwell::Type::Int(int_type) => int_type,
-            runwell::Type::Bool => {
-                panic!("expected int type due to Wasm validation but found bool type.")
-            }
-            runwell::Type::Float(float_type) => {
-                panic!("expected int type due to Wasm validation but found {} type.", float_type)
+            unmatched => {
+                panic!("expected integer type due to Wasm validation but found {} type.", ty)
             }
         }
     }
