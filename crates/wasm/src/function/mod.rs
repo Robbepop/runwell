@@ -180,7 +180,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         }
         let offset = self.reader.original_position();
         self.validator.finish(offset)?;
-        println!();
         Ok(())
     }
 
@@ -199,7 +198,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use IntType::{I16, I32, I64, I8};
         use UnaryFloatOp as FloatUnop;
         use UnaryIntOp::*;
-        println!("op = {:?}", op);
         match op {
             Op::Unreachable => {
                 self.builder.ins()?.trap()?;
