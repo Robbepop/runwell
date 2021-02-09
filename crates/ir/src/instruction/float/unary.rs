@@ -73,7 +73,7 @@ pub struct UnaryFloatInstr {
 
 impl Display for UnaryFloatInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{} type {}, source {}", self.op, self.ty, self.src)?;
+        write!(f, "{} {} {}", self.op, self.ty, self.src)?;
         Ok(())
     }
 }

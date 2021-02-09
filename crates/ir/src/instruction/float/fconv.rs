@@ -25,7 +25,7 @@ use derive_more::Display;
 /// The bit width of destination float type must be smaller than the bit width of the
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "fdemote {} -> {}, source {}", src_type, dst_type, src)]
+#[display(fmt = "fdemote {} -> {} {}", src_type, dst_type, src)]
 pub struct DemoteFloatInstr {
     src_type: FloatType,
     dst_type: FloatType,
@@ -80,7 +80,7 @@ impl ReplaceValue for DemoteFloatInstr {
 /// The bit width of destination float type must be bigger than the bit width of the
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "fpromote {} -> {}, source {}", src_type, dst_type, src)]
+#[display(fmt = "fpromote {} -> {} {}", src_type, dst_type, src)]
 pub struct PromoteFloatInstr {
     src_type: FloatType,
     dst_type: FloatType,
