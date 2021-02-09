@@ -285,10 +285,6 @@ impl FunctionBuilder {
     }
 
     /// Creates a new basic block for the function and returns a reference to it.
-    ///
-    /// # Note
-    ///
-    /// After this operation the current block will reference the new basic block.
     pub fn create_block(&mut self) -> Result<Block, IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc(Default::default());
