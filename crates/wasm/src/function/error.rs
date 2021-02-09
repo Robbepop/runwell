@@ -19,7 +19,10 @@ use derive_more::{Display, Error};
 pub enum TranslateError {
     #[display(fmt = "encountered unsupported Wasm operator at {}", offset)]
     UnsupportedOperator { offset: usize },
-    #[display(fmt = "encountered supported but unimplemented Wasm operator: {}", display)]
+    #[display(
+        fmt = "encountered supported but unimplemented Wasm operator: {}",
+        display
+    )]
     UnimplementedOperator { display: String },
     #[display(
         fmt = "missing value in emulation stack. found {} but expected {}.",
@@ -49,7 +52,7 @@ impl TranslateError {
     /// Wasm operator has been encountered.
     pub fn unimplemented_operator(op: wasmparser::Operator) -> Self {
         Self::UnimplementedOperator {
-            display: format!("{:?}", op)
+            display: format!("{:?}", op),
         }
     }
 }

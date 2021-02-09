@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::super::FunctionBodyTranslator;
-use crate::{Error, TranslateError, function::stack::ValueEntry};
+use crate::{function::stack::ValueEntry, Error, TranslateError};
 use entity::RawIdx;
 use ir::{
     primitive::{self as runwell, IntType, Mem, Value},
