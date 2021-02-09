@@ -153,10 +153,10 @@ impl VariableDeclarations {
         let target = var.into_raw();
         match self
             .var_to_type
-            .binary_search_by(|decl| target.cmp(&decl.first_idx))
+            .binary_search_by(|decl| decl.first_idx.cmp(&target))
         {
             Ok(index) => self.var_to_type[index].ty,
-            Err(index) => self.var_to_type[index - 1].ty,
+            Err(index) => self.var_to_type[index.saturating_sub(1)].ty,
         }
     }
 }
