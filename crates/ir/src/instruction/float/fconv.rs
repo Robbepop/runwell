@@ -180,7 +180,6 @@ impl FloatToIntInstr {
         src: Value,
         saturating: bool,
     ) -> Self {
-        assert!(src_type.bit_width() >= dst_type.bit_width());
         Self {
             src_type,
             dst_type,
