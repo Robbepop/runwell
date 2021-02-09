@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::super::FunctionBodyTranslator;
-use crate::{function::stack::ValueEntry, Error};
+use crate::{Error, TranslateError, function::stack::ValueEntry};
 use entity::RawIdx;
 use ir::{
     primitive::{self as runwell, IntType, Mem, Value},
@@ -127,5 +127,29 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         self.translate_truncate(truncated_type, stored_type)?;
         self.translate_store(memarg, stored_type)?;
         Ok(())
+    }
+
+    /// Translates the Wasm memory grow operator.
+    pub(super) fn translate_memory_grow(
+        &mut self,
+        mem: u32,
+        mem_byte: u8,
+    ) -> Result<(), Error> {
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::MemoryGrow { mem, mem_byte },
+        ))
+        .map_err(Into::into)
+    }
+
+    /// Translates the Wasm memory size operator.
+    pub(super) fn translate_memory_size(
+        &mut self,
+        mem: u32,
+        mem_byte: u8,
+    ) -> Result<(), Error> {
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::MemorySize { mem, mem_byte },
+        ))
+        .map_err(Into::into)
     }
 }
