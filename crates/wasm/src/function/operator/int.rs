@@ -47,11 +47,22 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: ShiftIntOp,
     ) -> Result<(), Error> {
         let (source, shift_amount) = self.stack.pop2()?;
-        assert_eq!(shift_amount.ty, IntType::I32.into());
         assert_eq!(source.ty, int_type.into());
-        let ins = self.builder.ins()?;
+        // Wasm expects both operands for shift operations to be of the same
+        // type while Runwell always expects the shift amount to be of type
+        // `i32`. Because of this we need to truncate in case the shift amount
+        // is of type `i64`.
+        let shift_amount = if int_type == IntType::I64 {
+            self.builder.ins()?.itruncate(
+                IntType::I64,
+                IntType::I32,
+                shift_amount.value,
+            )?
+        } else {
+            shift_amount.value
+        };
         let source = source.value;
-        let shift_amount = shift_amount.value;
+        let ins = self.builder.ins()?;
         let result = match op {
             ShiftIntOp::Shl => ins.ishl(int_type, source, shift_amount)?,
             ShiftIntOp::Sshr => ins.isshr(int_type, source, shift_amount)?,
