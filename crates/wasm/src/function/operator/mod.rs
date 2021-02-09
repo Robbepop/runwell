@@ -12,27 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod base;
+mod call;
+mod control;
 mod float;
 mod int;
 mod local;
 mod memory;
+mod util;
 
-use super::{blocks::WasmBlock, FunctionBodyTranslator};
-use crate::{Error, TranslateError, Type, Const};
+use super::FunctionBodyTranslator;
+use crate::{Error, TranslateError, Type};
 use core::convert::TryFrom as _;
-use entity::RawIdx;
-use ir::primitive::{self as runwell, IntConst, Value};
-use ir::{
-    instr::operands::{
-        BinaryFloatOp,
-        BinaryIntOp,
-        CompareFloatOp,
-        CompareIntOp,
-        ShiftIntOp,
-        UnaryFloatOp,
-        UnaryIntOp,
-    },
-    primitive::{Func, IntType},
+use ir::instr::operands::{
+    BinaryFloatOp,
+    BinaryIntOp,
+    CompareFloatOp,
+    CompareIntOp,
+    ShiftIntOp,
+    UnaryFloatOp,
+    UnaryIntOp,
 };
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
@@ -56,64 +55,23 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.builder.ins()?.trap()?;
             }
             Op::Nop => { /* Deliberately do nothing. */ }
-            Op::Block { ty } => {
-                let wasm_block = WasmBlock::new(None, ty)?;
-                self.blocks.push_block(wasm_block);
+            Op::Block { ty } => self.translate_block(ty)?,
+            Op::Loop { ty } => self.translate_loop(ty)?,
+            Op::If { ty } => self.translate_if(ty)?,
+            Op::Else => self.translate_else()?,
+            Op::End => self.translate_end()?,
+            Op::Br { relative_depth } => self.translate_br(relative_depth)?,
+            Op::BrIf { relative_depth } => self.translate_br_if(relative_depth)?,
+            Op::BrTable { table } => self.translate_br_table(table)?,
+            Op::Return => self.translate_return()?,
+            Op::Call { function_index } => self.translate_call(function_index)?,
+            Op::CallIndirect { index, table_index } => {
+                self.translate_call_indirect(index, table_index)?
             }
-            Op::Loop { ty } => {
-                let loop_header = self.builder.create_block()?;
-                let wasm_block = WasmBlock::new(loop_header, ty)?;
-                self.blocks.push_block(wasm_block);
-                self.builder.ins()?.br(loop_header)?;
-                self.builder.switch_to_block(loop_header)?;
+            Op::ReturnCall { function_index } => self.translate_return_call(function_index)?,
+            Op::ReturnCallIndirect { index, table_index } => {
+                self.translate_return_call_indirect(index, table_index)?
             }
-            Op::If { ty } => {}
-            Op::Else => {}
-            Op::End => {
-                let block = self.blocks.pop_block()?;
-                if let Some(runwell_block) = block.block() {
-                    let _ = self.builder.switch_to_block(runwell_block).unwrap_or(());
-                    let _ = self.builder.seal_block().unwrap_or(());
-                }
-                if self.blocks.is_empty() {
-                    // The popped block was the entry block and thus the
-                    // `End` operator represents the end of the Wasm function.
-                    // Therefore we need to insert a Runwell return statement
-                    // returning all values that are still on the stack and
-                    // check if they are matching the functions return types.
-                    let outputs = self
-                        .res
-                        .get_func_type(self.func)
-                        .unwrap_or_else(|| {
-                            panic!(
-                                "expected function type for {} due to validation",
-                                self.func
-                            )
-                        }).outputs();
-                    let output_values = self.stack.peek_n(outputs.len())?;
-                    for (req_type, entry)  in outputs
-                        .iter()
-                        .copied()
-                        .zip(output_values.clone())
-                    {
-                        assert_eq!(req_type, entry.ty);
-                    }
-                    self.builder.ins()?.return_values(
-                        output_values.map(|entry| entry.value)
-                    )?;
-                    self.stack.pop_n(outputs.len())?;
-                }
-            }
-            Op::Br { relative_depth } => {}
-            Op::BrIf { relative_depth } => {}
-            Op::BrTable { table } => {}
-            Op::Return => {}
-            Op::Call { function_index } => {
-                self.translate_call(function_index)?
-            }
-            Op::CallIndirect { index, table_index } => {}
-            Op::ReturnCall { function_index } => {}
-            Op::ReturnCallIndirect { index, table_index } => {}
             Op::Drop => {
                 self.stack.pop1()?;
             }
@@ -331,113 +289,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     .map_err(Into::into)
             }
         }
-        Ok(())
-    }
-
-    /// Translates a Wasm function call.
-    fn translate_call(&mut self, function_index: u32) -> Result<(), Error> {
-        let func = Func::from_raw(RawIdx::from_u32(function_index));
-        let func_type = self.res.get_func_type(func).unwrap_or_else(|| {
-            panic!("function type for {} must exist due to validation", func)
-        });
-        let len_inputs = func_type.inputs().len();
-        let params = self
-            .stack
-            .pop_n(len_inputs)
-            .unwrap_or_else(|_| {
-                panic!(
-                    "can expect {} arguments on the stack due to validation",
-                    len_inputs
-                )
-            })
-            .map(|entry| entry.value);
-        let result = self.builder.ins()?.call(func, params)?;
-        for output_type in func_type.outputs() {
-            self.stack.push(result, *output_type);
-        }
-        Ok(())
-    }
-
-    /// Translates a Wasm reinterpret operator.
-    fn translate_reinterpret<FromType, ToType>(
-        &mut self,
-        from_type: FromType,
-        to_type: ToType,
-    ) -> Result<(), Error>
-    where
-        FromType: Into<runwell::Type>,
-        ToType: Into<runwell::Type>,
-    {
-        let from_type = from_type.into();
-        let to_type = to_type.into();
-        assert_eq!(from_type.bit_width(), to_type.bit_width());
-        let source = self.stack.pop1()?;
-        assert_eq!(source.ty, from_type);
-        let result = self.builder.ins()?.reinterpret(
-            from_type,
-            to_type,
-            source.value,
-        )?;
-        self.stack.push(result, to_type);
-        Ok(())
-    }
-
-    /// Translates a Wasm constant operator.
-    fn translate_const_op<T1, T2>(
-        &mut self,
-        const_value: T1,
-        ty: T2,
-    ) -> Result<(), Error>
-    where
-        T1: Into<Const>,
-        T2: Into<runwell::Type>,
-    {
-        let const_value = const_value.into().into_inner();
-        let ty = ty.into();
-        assert_eq!(const_value.ty(), ty);
-        let result = self.builder.ins()?.constant(const_value)?;
-        self.stack.push(result, ty);
-        Ok(())
-    }
-
-    /// Translates a Runwell `bool` result into an equivalent Wasm `i32` result.
-    fn translate_bool_to_i32(
-        &mut self,
-        bool_result: Value,
-    ) -> Result<(), Error> {
-        let const_true = self.builder.ins()?.constant(IntConst::I32(0))?;
-        let const_false = self.builder.ins()?.constant(IntConst::I32(1))?;
-        let bool_to_i32 = self.builder.ins()?.select(
-            IntType::I32.into(),
-            bool_result,
-            const_true,
-            const_false,
-        )?;
-        self.stack.push(bool_to_i32, IntType::I32.into());
-        Ok(())
-    }
-
-    /// Translates a Wasm `Select` or `TypedSelect` operator.
-    fn translate_select_op(
-        &mut self,
-        required_ty: Option<runwell::Type>,
-    ) -> Result<(), Error> {
-        let (if_true, if_false, condition) = self.stack.pop3()?;
-        assert_eq!(
-            if_true.ty, if_false.ty,
-            "due to validation both types must be equal"
-        );
-        if let Some(required_ty) = required_ty {
-            assert_eq!(if_true.ty, required_ty);
-        }
-        let ty = if_true.ty;
-        let result = self.builder.ins()?.select(
-            ty,
-            condition.value,
-            if_true.value,
-            if_false.value,
-        )?;
-        self.stack.push(result, ty);
         Ok(())
     }
 }
