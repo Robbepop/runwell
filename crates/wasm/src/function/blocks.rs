@@ -144,6 +144,8 @@ impl WasmBlock {
 /// The type of a Wasm block.
 #[derive(Debug, Copy, Clone)]
 enum WasmBlockType {
+    /// Block has no inputs and no outputs.
+    Empty,
     /// Block just returns the inner type and has no inputs.
     Returns(Type),
     /// Block is equal to the function type found in the module under the given index.
@@ -157,6 +159,9 @@ impl TryFrom<wasmparser::TypeOrFuncType> for WasmBlockType {
         block_type: wasmparser::TypeOrFuncType,
     ) -> Result<Self, Self::Error> {
         let block_type = match block_type {
+            wasmparser::TypeOrFuncType::Type(wasmparser::Type::EmptyBlockType) => {
+                Self::Empty
+            }
             wasmparser::TypeOrFuncType::Type(ty) => {
                 Self::Returns(crate::Type::try_from(ty)?.into_inner())
             }
@@ -177,7 +182,7 @@ impl WasmBlockType {
         'b: 'c,
     {
         match self {
-            Self::Returns(_) => &[],
+            Self::Empty | Self::Returns(_) => &[],
             Self::FuncType(func_type) => {
                 res.get_type(*func_type)
                     .unwrap_or_else(|| {
@@ -195,6 +200,7 @@ impl WasmBlockType {
         'b: 'c,
     {
         match self {
+            Self::Empty => &[],
             Self::Returns(return_type) => core::slice::from_ref(return_type),
             Self::FuncType(func_type) => {
                 res.get_type(*func_type)
