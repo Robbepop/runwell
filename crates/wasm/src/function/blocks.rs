@@ -18,7 +18,7 @@ use crate::{Error, TranslateError};
 use core::convert::TryFrom;
 use entity::RawIdx;
 use ir::primitive::{Block, FuncType, Type};
-use module::ModuleResources;
+use module::{FunctionBuilder, ModuleResources};
 
 /// A stack of Wasm `Block` and `Loop` definitions to branch/continue to.
 #[derive(Debug, Default)]
@@ -73,6 +73,34 @@ impl Blocks {
             })
     }
 
+    /// Demans a jump to the n-th Wasm block from the back where 0-th is the last.
+    ///
+    /// This might potentially instantiate a new Runwell basic block for the Wasm block
+    /// if there has not yet been a branch to this Wasm block.
+    ///
+    /// The Wasm -> Runwell translator tries to create basic blocks on the fly when
+    /// branches to them happen.
+    pub fn break_to(&mut self, n: u32, builder: &mut FunctionBuilder) -> Result<Block, Error> {
+        let len_blocks = self.blocks.len();
+        let wasm_block = self.blocks
+            .iter_mut()
+            .rev()
+            .nth_back(n as usize)
+            .ok_or_else(|| {
+                TranslateError::RelativeDepthExceedsBlockStack { n, len: len_blocks }
+            })?;
+        match wasm_block.block() {
+            Some(block) => Ok(block),
+            None => {
+                // At this point we need to create a new Runwell basic block and
+                // set `wasm_block.block` to it.
+                let runwell_block = builder.create_block()?;
+                wasm_block.block = Some(runwell_block);
+                Ok(runwell_block)
+            }
+        }
+    }
+
     /// Returns the current Wasm block.
     ///
     /// This is the Wasm block that was put latest on the stack of blocks.
@@ -92,33 +120,39 @@ impl Blocks {
 #[derive(Debug, Copy, Clone)]
 pub struct WasmBlock {
     /// The unique Runwell basic block index of the Wasm block.
-    block: Block,
+    block: Option<Block>,
     /// The type of the Wasm block.
     ty: WasmBlockType,
 }
 
 impl WasmBlock {
     /// Creates a new Wasm block with the given block type.
-    pub fn new(
-        block: Block,
+    pub fn new<B>(
+        block: B,
         block_type: wasmparser::TypeOrFuncType,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, Error>
+    where
+        B: Into<Option<Block>>,
+    {
         Ok(Self {
-            block,
+            block: block.into(),
             ty: WasmBlockType::try_from(block_type)?,
         })
     }
 
     /// Creates a new Wasm block with the given function type.
-    pub fn with_func_type(block: Block, func_type: FuncType) -> Self {
+    pub fn with_func_type<B>(block: B, func_type: FuncType) -> Self
+    where
+        B: Into<Option<Block>>,
+    {
         Self {
-            block,
+            block: block.into(),
             ty: WasmBlockType::FuncType(func_type),
         }
     }
 
     /// Returns the associated Runwell block index.
-    pub fn block(&self) -> Block {
+    pub fn block(&self) -> Option<Block> {
         self.block
     }
 
