@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::super::FunctionBodyTranslator;
-use crate::Error;
+use crate::{Error, TranslateError};
 use entity::RawIdx;
 use ir::primitive::Func;
 
@@ -50,8 +50,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         function_index: u32,
     ) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::ReturnCall { function_index },
+        ))
+        .map_err(Into::into)
     }
 
     /// Translates a Wasm indirect function call.
@@ -60,8 +62,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         index: u32,
         table_index: u32,
     ) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::CallIndirect { index, table_index },
+        ))
+        .map_err(Into::into)
     }
 
     /// Translates a Wasm indirect function call.
@@ -70,7 +74,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         index: u32,
         table_index: u32,
     ) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::ReturnCallIndirect { index, table_index },
+        ))
+        .map_err(Into::into)
     }
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::super::{blocks::WasmBlock, FunctionBodyTranslator};
-use crate::Error;
+use crate::{Error, TranslateError};
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Translate a Wasm `Block` control operator.
@@ -44,14 +44,18 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         ty: wasmparser::TypeOrFuncType,
     ) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::If { ty },
+        ))
+        .map_err(Into::into)
     }
 
     /// Translate a Wasm `Else` control operator.
     pub(super) fn translate_else(&mut self) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::Else,
+        ))
+        .map_err(Into::into)
     }
 
     /// Translate a Wasm `End` control operator.
@@ -96,8 +100,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         relative_depth: u32,
     ) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::Br { relative_depth },
+        ))
+        .map_err(Into::into)
     }
 
     /// Translate a Wasm `BrIf` control operator.
@@ -105,8 +111,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         relative_depth: u32,
     ) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::BrIf { relative_depth },
+        ))
+        .map_err(Into::into)
     }
 
     /// Translate a Wasm `BrTable` control operator.
@@ -114,13 +122,17 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         table: wasmparser::BrTable,
     ) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::BrTable { table },
+        ))
+        .map_err(Into::into)
     }
 
     /// Translate a Wasm `Return` control operator.
     pub(super) fn translate_return(&mut self) -> Result<(), Error> {
-        // unimplemented!()
-        Ok(())
+        Err(TranslateError::unimplemented_operator(
+            wasmparser::Operator::Return,
+        ))
+        .map_err(Into::into)
     }
 }
