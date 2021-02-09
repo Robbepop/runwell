@@ -31,7 +31,7 @@ pub use self::{
     error::{Error, ErrorKind},
     export::{Export, ExportError, ExportItem, ExportKind},
     func_type::FunctionType,
-    function::{FunctionBodyTranslator, TranslateError},
+    function::TranslateError,
     global::GlobalVariable,
     import::{ImportError, ImportName},
     init_expr::{InitExpr, InitExprError},
