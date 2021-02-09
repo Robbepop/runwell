@@ -37,7 +37,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translate a Wasm integer shift or rotate operator into Runwell IR.
-    pub(in crate::function) fn translate_int_shift(
+    pub(super) fn translate_int_shift(
         &mut self,
         int_type: IntType,
         op: ShiftIntOp,
@@ -60,7 +60,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translate a Wasm unary integer operator into Runwell IR.
-    pub(in crate::function) fn translate_int_unop(
+    pub(super) fn translate_int_unop(
         &mut self,
         int_type: IntType,
         op: UnaryIntOp,
@@ -80,7 +80,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translate a Wasm binary integer operator into Runwell IR.
-    pub(in crate::function) fn translate_int_binop(
+    pub(super) fn translate_int_binop(
         &mut self,
         int_ty: IntType,
         op: BinaryIntOp,
@@ -109,7 +109,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm integer compare to zero (Eqz) operator.
-    pub(in crate::function) fn translate_eqz_op(
+    pub(super) fn translate_eqz_op(
         &mut self,
         int_type: IntType,
     ) -> Result<(), Error> {
@@ -139,7 +139,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm integer compare operator.
-    pub(in crate::function) fn translate_icmp_op(
+    pub(super) fn translate_icmp_op(
         &mut self,
         op: CompareIntOp,
         int_type: IntType,
@@ -157,7 +157,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm integer extend operator.
-    pub(in crate::function) fn translate_extend<SrcType, DstType>(
+    pub(super) fn translate_extend<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
@@ -181,7 +181,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm integer truncate operator.
-    pub(in crate::function) fn translate_truncate<SrcType, DstType>(
+    pub(super) fn translate_truncate<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
@@ -202,7 +202,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm integer to float conversion.
-    pub(in crate::function) fn translate_int_to_float<SrcType, DstType>(
+    pub(super) fn translate_int_to_float<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,

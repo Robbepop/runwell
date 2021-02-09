@@ -60,7 +60,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm float to integer conversion.
-    pub(in crate::function) fn translate_float_to_sint<SrcType, DstType>(
+    pub(super) fn translate_float_to_sint<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
@@ -78,7 +78,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm float to integer conversion.
-    pub(in crate::function) fn translate_float_to_sint_sat<SrcType, DstType>(
+    pub(super) fn translate_float_to_sint_sat<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
@@ -96,7 +96,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm float to integer conversion.
-    pub(in crate::function) fn translate_float_to_uint<SrcType, DstType>(
+    pub(super) fn translate_float_to_uint<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
@@ -114,7 +114,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm float to integer conversion.
-    pub(in crate::function) fn translate_float_to_uint_sat<SrcType, DstType>(
+    pub(super) fn translate_float_to_uint_sat<SrcType, DstType>(
         &mut self,
         src_type: SrcType,
         dst_type: DstType,
@@ -132,7 +132,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm demote operator.
-    pub(in crate::function) fn translate_demote<FromType, ToType>(
+    pub(super) fn translate_demote<FromType, ToType>(
         &mut self,
         from_type: FromType,
         to_type: ToType,
@@ -154,7 +154,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm promote operator.
-    pub(in crate::function) fn translate_promote<FromType, ToType>(
+    pub(super) fn translate_promote<FromType, ToType>(
         &mut self,
         from_type: FromType,
         to_type: ToType,
@@ -176,7 +176,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm floating point number compare operator.
-    pub(in crate::function) fn translate_fcmp_op(
+    pub(super) fn translate_fcmp_op(
         &mut self,
         op: CompareFloatOp,
         float_type: FloatType,
@@ -194,7 +194,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translate a Wasm unary float operator into Runwell IR.
-    pub(in crate::function) fn translate_float_unop(
+    pub(super) fn translate_float_unop(
         &mut self,
         float_type: FloatType,
         op: UnaryFloatOp,
@@ -218,7 +218,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translate a Wasm binary float operator into Runwell IR.
-    pub(in crate::function) fn translate_float_binop(
+    pub(super) fn translate_float_binop(
         &mut self,
         float_type: FloatType,
         op: BinaryFloatOp,

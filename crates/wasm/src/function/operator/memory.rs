@@ -60,7 +60,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm linear memory load operator.
-    pub(in crate::function) fn translate_load<T>(
+    pub(super) fn translate_load<T>(
         &mut self,
         memarg: wasmparser::MemoryImmediate,
         ty: T,
@@ -93,7 +93,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates a Wasm linear memory load operator.
-    pub(in crate::function) fn translate_store<T>(
+    pub(super) fn translate_store<T>(
         &mut self,
         memarg: wasmparser::MemoryImmediate,
         ty: T,

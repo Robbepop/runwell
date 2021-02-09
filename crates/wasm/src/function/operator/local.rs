@@ -19,7 +19,7 @@ use module::Variable;
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Translates Wasm `local_get` operator.
-    pub(in crate::function) fn translate_local_get(
+    pub(super) fn translate_local_get(
         &mut self,
         local_index: u32,
     ) -> Result<(), Error> {
@@ -31,7 +31,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates Wasm `local_set` operator.
-    pub(in crate::function) fn translate_local_set(
+    pub(super) fn translate_local_set(
         &mut self,
         local_index: u32,
     ) -> Result<(), Error> {
@@ -43,7 +43,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Translates Wasm `local_tee` operator.
-    pub(in crate::function) fn translate_local_tee(
+    pub(super) fn translate_local_tee(
         &mut self,
         local_index: u32,
     ) -> Result<(), Error> {
