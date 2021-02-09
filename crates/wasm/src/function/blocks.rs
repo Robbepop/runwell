@@ -80,14 +80,22 @@ impl Blocks {
     ///
     /// The Wasm -> Runwell translator tries to create basic blocks on the fly when
     /// branches to them happen.
-    pub fn break_to(&mut self, n: u32, builder: &mut FunctionBuilder) -> Result<Block, Error> {
+    pub fn break_to(
+        &mut self,
+        n: u32,
+        builder: &mut FunctionBuilder,
+    ) -> Result<Block, Error> {
         let len_blocks = self.blocks.len();
-        let wasm_block = self.blocks
+        let wasm_block = self
+            .blocks
             .iter_mut()
             .rev()
             .nth_back(n as usize)
             .ok_or_else(|| {
-                TranslateError::RelativeDepthExceedsBlockStack { n, len: len_blocks }
+                TranslateError::RelativeDepthExceedsBlockStack {
+                    n,
+                    len: len_blocks,
+                }
             })?;
         match wasm_block.block() {
             Some(block) => Ok(block),
@@ -193,9 +201,9 @@ impl TryFrom<wasmparser::TypeOrFuncType> for WasmBlockType {
         block_type: wasmparser::TypeOrFuncType,
     ) -> Result<Self, Self::Error> {
         let block_type = match block_type {
-            wasmparser::TypeOrFuncType::Type(wasmparser::Type::EmptyBlockType) => {
-                Self::Empty
-            }
+            wasmparser::TypeOrFuncType::Type(
+                wasmparser::Type::EmptyBlockType,
+            ) => Self::Empty,
             wasmparser::TypeOrFuncType::Type(ty) => {
                 Self::Returns(crate::Type::try_from(ty)?.into_inner())
             }

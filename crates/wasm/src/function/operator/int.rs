@@ -14,7 +14,11 @@
 
 use super::super::FunctionBodyTranslator;
 use crate::Error;
-use ir::{instr::operands::{BinaryIntOp, CompareIntOp, ShiftIntOp, UnaryIntOp}, primitive as runwell, primitive::{FloatType, IntConst, IntType}};
+use ir::{
+    instr::operands::{BinaryIntOp, CompareIntOp, ShiftIntOp, UnaryIntOp},
+    primitive as runwell,
+    primitive::{FloatType, IntConst, IntType},
+};
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Extracts the integer type from the generic Runwell type.
