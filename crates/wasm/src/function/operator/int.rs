@@ -129,7 +129,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         int_type: IntType,
     ) -> Result<(), Error> {
         let source = self.stack.pop1()?;
-        assert_eq!(source.ty.bit_width(), 32);
         let actual_int_type = Self::extract_int_type(source.ty);
         assert_eq!(actual_int_type, int_type);
         let zero_const: runwell::Const = match int_type {
