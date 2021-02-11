@@ -32,6 +32,7 @@ pub use self::{
         FunctionBody,
         FunctionBuilder,
         FunctionBuilderError,
+        Instr,
         InstructionBuilder,
         Variable,
     },
