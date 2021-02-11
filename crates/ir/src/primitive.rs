@@ -204,6 +204,7 @@ impl FloatType {
 )]
 pub enum Const {
     Bool(bool),
+    Ptr(u32),
     Int(IntConst),
     Float(FloatConst),
 }
@@ -213,6 +214,7 @@ impl Const {
     pub fn ty(&self) -> Type {
         match self {
             Self::Bool(_) => Type::Bool,
+            Self::Ptr(_) => Type::Ptr,
             Self::Int(int_const) => int_const.ty(),
             Self::Float(float_const) => float_const.ty(),
         }
@@ -222,6 +224,7 @@ impl Const {
     pub fn into_bits64(self) -> u64 {
         match self {
             Self::Bool(bool_const) => bool_const as u64,
+            Self::Ptr(ptr_value) => ptr_value as u64,
             Self::Int(int_const) => int_const.into_bits64(),
             Self::Float(float_const) => float_const.into_bits64(),
         }
