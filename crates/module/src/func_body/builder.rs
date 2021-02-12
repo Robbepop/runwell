@@ -21,6 +21,8 @@
 //! Conversely, a sealed block may look up variable definitions in
 //! its predecessors as all predecessors are known.
 
+use core::mem::replace;
+
 use super::{
     instruction::{Instr, InstructionBuilder},
     variable::Variable,
@@ -30,7 +32,13 @@ use super::{
 };
 use crate::{IrError, ModuleResources};
 use derive_more::Display;
-use entity::{ComponentMap, ComponentVec, EntityArena, RawIdx};
+use entity::{
+    ComponentMap,
+    ComponentVec,
+    DefaultComponentVec,
+    EntityArena,
+    RawIdx,
+};
 use ir::{
     instr::{Instruction, PhiInstr},
     primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
@@ -88,12 +96,12 @@ pub struct FunctionBuilderContext {
     /// Is `true` if block is sealed.
     ///
     /// A sealed block knows all its predecessors.
-    pub block_sealed: ComponentVec<Block, bool>,
+    pub block_sealed: DefaultComponentVec<Block, bool>,
     /// Is `true` if block is filled.
     ///
     /// A filled block knows all its instructions and has
     /// a terminal instruction as its last instruction.
-    pub block_filled: ComponentVec<Block, bool>,
+    pub block_filled: DefaultComponentVec<Block, bool>,
     /// Block instructions.
     pub block_instrs: ComponentVec<Block, Vec<Instr>>,
     /// Required information to remove phi from its block if it becomes trivial.
@@ -210,8 +218,7 @@ impl<'a> FunctionBuilder<'a> {
         }
         let entry_block = ctx.blocks.alloc(Default::default());
         ctx.block_preds.insert(entry_block, Default::default());
-        ctx.block_sealed.insert(entry_block, true);
-        ctx.block_filled.insert(entry_block, false);
+        ctx.block_sealed[entry_block] = true;
         ctx.block_instrs.insert(entry_block, Default::default());
         ctx.block_phis.insert(entry_block, Default::default());
         ctx.incomplete_phis.insert(entry_block, Default::default());
@@ -269,8 +276,6 @@ impl<'a> FunctionBuilder<'a> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc(Default::default());
         self.ctx.block_preds.insert(new_block, Default::default());
-        self.ctx.block_sealed.insert(new_block, false);
-        self.ctx.block_filled.insert(new_block, false);
         self.ctx.block_instrs.insert(new_block, Default::default());
         self.ctx.block_phis.insert(new_block, Default::default());
         self.ctx
@@ -314,11 +319,7 @@ impl<'a> FunctionBuilder<'a> {
     pub fn seal_block(&mut self) -> Result<(), IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
-        let already_sealed = self
-            .ctx
-            .block_sealed
-            .insert(block, true)
-            .expect("encountered invalid current basic block");
+        let already_sealed = replace(&mut self.ctx.block_sealed[block], true);
         if already_sealed {
             return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
                 block,
@@ -561,9 +562,9 @@ impl<'a> FunctionBuilder<'a> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let unsealed_blocks = self
             .ctx
-            .block_sealed
-            .iter()
-            .filter_map(|(idx, &sealed)| if !sealed { Some(idx) } else { None })
+            .blocks
+            .indices()
+            .filter(|&block| !self.ctx.block_sealed[block])
             .collect::<Vec<_>>();
         if !unsealed_blocks.is_empty() {
             return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
@@ -573,9 +574,9 @@ impl<'a> FunctionBuilder<'a> {
         }
         let unfilled_blocks = self
             .ctx
-            .block_filled
-            .iter()
-            .filter_map(|(idx, &filled)| if !filled { Some(idx) } else { None })
+            .blocks
+            .indices()
+            .filter(|&block| !self.ctx.block_filled[block])
             .collect::<Vec<_>>();
         if !unfilled_blocks.is_empty() {
             return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
