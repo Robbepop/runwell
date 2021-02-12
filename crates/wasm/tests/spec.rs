@@ -127,20 +127,19 @@ fn parse_works() {
             // We do not take into account any proposal specific tests.
             continue
         }
-        print!(
-            "  test {:4}: {}/{}: ",
-            n,
-            input.path.file_stem().unwrap().to_str().unwrap(),
-            local_test
-        );
         let result = runwell_wasm::parse(&mut &input.wasm[..], &mut buffer);
         match result {
             Ok(_) => {
-                println!("ok");
                 len_passed += 1;
             }
             Err(error) => {
-                println!("FAILED {:?}", error);
+                println!(
+                    "  test {:4}: {}/{} FAILED: \n    {:?}",
+                    n,
+                    input.path.file_stem().unwrap().to_str().unwrap(),
+                    local_test,
+                    error,
+                );
                 len_failed += 1;
             }
         }
