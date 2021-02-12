@@ -176,8 +176,10 @@ impl Default for FunctionBuilderContext {
 /// or to an input parameter of the IR function under construction.
 #[derive(Debug)]
 pub enum ValueAssoc {
+    /// The value is associated to the `n`-th input of the function.
     Input(u32),
-    Instr(Instr),
+    /// The value is associated to the `n`-th output of the instruction.
+    Instr(Instr, u32),
 }
 
 /// The current state of the function body construction.
@@ -387,7 +389,9 @@ impl<'a> FunctionBuilder<'a> {
     ) -> Result<Value, IrError> {
         let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
         let value = self.ctx.values.alloc(ValueEntity);
-        self.ctx.value_assoc.insert(value, ValueAssoc::Instr(instr));
+        self.ctx
+            .value_assoc
+            .insert(value, ValueAssoc::Instr(instr, 0));
         self.ctx.value_type.insert(value, var_type);
         self.ctx.value_users.insert(value, Default::default());
         self.ctx.phi_var.insert(value, var);
@@ -448,7 +452,13 @@ impl<'a> FunctionBuilder<'a> {
             .copied()
             .collect::<Vec<_>>();
         let instr = match self.ctx.value_assoc[phi] {
-            ValueAssoc::Instr(instr) => instr,
+            ValueAssoc::Instr(instr, 0) => instr,
+            ValueAssoc::Instr(instr, n) => {
+                panic!(
+                    "found {} to be the {}-th output of a phi instruction {} which is illegal",
+                    phi, n, instr,
+                )
+            }
             _ => panic!("unexpected non-instruction value"),
         };
         for pred in preds {
@@ -472,7 +482,13 @@ impl<'a> FunctionBuilder<'a> {
         phi_value: Value,
     ) -> Result<Value, IrError> {
         let phi_instr = match self.ctx.value_assoc[phi_value] {
-            ValueAssoc::Instr(instr) => instr,
+            ValueAssoc::Instr(instr, 0) => instr,
+            ValueAssoc::Instr(instr, n) => {
+                panic!(
+                    "found {} to be the {}-th output of a phi instruction {} which is illegal",
+                    phi_value, n, instr,
+                )
+            }
             _ => panic!("unexpected non-instruction value"),
         };
         let instruction = match &mut self.ctx.instrs[phi_instr] {

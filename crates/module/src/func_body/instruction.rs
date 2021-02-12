@@ -102,7 +102,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.builder
             .ctx
             .value_assoc
-            .insert(value, ValueAssoc::Instr(instr));
+            .insert(value, ValueAssoc::Instr(instr, 0));
         Ok((value, instr))
     }
 
