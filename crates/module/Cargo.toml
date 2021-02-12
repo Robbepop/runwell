@@ -8,6 +8,7 @@ edition = "2018"
 entity = { package = "runwell_entity", path = "../entity" }
 ir = { package = "runwell_ir", path = "../ir" }
 derive_more = "0.99.2"
+ahash = "0.7"
 
 [features]
 default = ["std"]

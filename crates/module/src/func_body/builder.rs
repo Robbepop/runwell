@@ -36,7 +36,8 @@ use ir::{
     primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
     ReplaceValue,
 };
-use std::collections::HashSet;
+
+type HashSet<T> = std::collections::HashSet<T, ahash::RandomState>;
 
 impl FunctionBody {
     /// Creates a function builder to incrementally construct the function.
