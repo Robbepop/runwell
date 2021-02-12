@@ -96,9 +96,6 @@ pub struct FunctionBuilderContext {
     pub block_filled: ComponentVec<Block, bool>,
     /// Block instructions.
     pub block_instrs: ComponentVec<Block, Vec<Instr>>,
-    /// Marker to indicate if a block has already been visited
-    /// when querying the latest value of a variable upon reading it.
-    pub block_marker: ComponentMap<Block, ()>,
     /// Required information to remove phi from its block if it becomes trivial.
     pub phi_block: ComponentMap<Value, Block>,
     /// Required information to remove phi from its block if it becomes trivial.
@@ -152,7 +149,6 @@ impl Default for FunctionBuilderContext {
             block_sealed: Default::default(),
             block_filled: Default::default(),
             block_instrs: Default::default(),
-            block_marker: Default::default(),
             phi_block: Default::default(),
             phi_var: Default::default(),
             incomplete_phis: Default::default(),
