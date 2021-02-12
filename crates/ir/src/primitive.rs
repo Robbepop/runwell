@@ -19,9 +19,19 @@
 //! that first load an 8-bit integer from the given address and then zero-extends it
 //! to a 32-bit integer value.
 
+use crate::instr::Instruction;
 use core::fmt;
 use derive_more::{Display, From};
 use entity::{DisplayHook, Idx};
+
+impl DisplayHook for Instruction {
+    fn fmt(
+        idx: Idx<Self>,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        write!(f, "instr({})", idx.into_raw())
+    }
+}
 
 /// A function entity of the Runwell IR.
 #[derive(Debug, Default)]
