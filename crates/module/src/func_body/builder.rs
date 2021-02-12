@@ -28,30 +28,42 @@ use super::{
     FunctionBuilderError,
     VariableTranslator,
 };
-use crate::IrError;
+use crate::{IrError, ModuleResources};
 use derive_more::Display;
 use entity::{ComponentMap, ComponentVec, EntityArena, RawIdx};
 use ir::{
     instr::{Instruction, PhiInstr},
-    primitive::{Block, BlockEntity, Type, Value, ValueEntity},
+    primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
     ReplaceValue,
 };
 use std::collections::HashSet;
 
 impl FunctionBody {
     /// Creates a function builder to incrementally construct the function.
-    pub fn build() -> FunctionBuilder {
+    pub fn build(func: Func, res: &ModuleResources) -> FunctionBuilder {
+        let mut ctx = Default::default();
+        let func_type = res.get_func_type(func).unwrap_or_else(|| {
+            panic!(
+                "tried to build function {} that is missing from module resources",
+                func
+            )
+        });
+        FunctionBuilder::initialize_inputs(&mut ctx, func_type.inputs());
         FunctionBuilder {
-            ctx: Default::default(),
-            state: FunctionBuilderState::Inputs,
+            ctx,
+            func,
+            res,
+            state: FunctionBuilderState::LocalVariables,
         }
     }
 }
 
 /// Incrementally guides the construction process to build a Runwell IR function.
 #[derive(Debug)]
-pub struct FunctionBuilder {
+pub struct FunctionBuilder<'a> {
     pub(super) ctx: FunctionBuilderContext,
+    pub(super) func: Func,
+    pub(super) res: &'a ModuleResources,
     state: FunctionBuilderState,
 }
 
@@ -126,12 +138,6 @@ pub struct FunctionBuilderContext {
     /// This translates local variables from the source language that
     /// are not in SSA form into SSA form values.
     pub vars: VariableTranslator,
-    /// The types of the input values of the constructed function.
-    ///
-    /// Used in order to check upon evaluating the function.
-    pub input_types: Vec<Type>,
-    /// The types of the output values of the constructed function.
-    pub output_types: Vec<Type>,
 }
 
 impl Default for FunctionBuilderContext {
@@ -155,8 +161,6 @@ impl Default for FunctionBuilderContext {
             value_users: Default::default(),
             current: Block::from_raw(RawIdx::from_u32(0)),
             vars: Default::default(),
-            input_types: Default::default(),
-            output_types: Default::default(),
         }
     }
 }
@@ -174,21 +178,15 @@ pub enum ValueAssoc {
 /// The current state of the function body construction.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FunctionBuilderState {
-    /// Declare input types.
-    #[display(fmt = "inputs")]
-    Inputs = 0,
-    /// Declare output types.
-    #[display(fmt = "outputs")]
-    Outputs = 1,
     /// Declare local variables used in the function body.
     #[display(fmt = "local variables")]
-    LocalVariables = 2,
+    LocalVariables = 1,
     /// Define the function body.
     #[display(fmt = "function body")]
-    Body = 3,
+    Body = 2,
 }
 
-impl FunctionBuilder {
+impl<'a> FunctionBuilder<'a> {
     /// Ensures that the function body construction happens in the correct order.
     ///
     /// Updates the current function body construction state if in order.
@@ -208,56 +206,41 @@ impl FunctionBuilder {
     }
 
     /// Creates the entry block of the constructed function.
-    fn create_entry_block(&mut self) -> Block {
-        if !self.ctx.blocks.is_empty() {
+    fn create_entry_block(ctx: &mut FunctionBuilderContext) -> Block {
+        if !ctx.blocks.is_empty() {
             // Do not create an entry block if there is already one.
-            return self.ctx.current
+            return ctx.current
         }
-        let entry_block = self.ctx.blocks.alloc(Default::default());
-        self.ctx.block_preds.insert(entry_block, Default::default());
-        self.ctx.block_sealed.insert(entry_block, true);
-        self.ctx.block_filled.insert(entry_block, false);
-        self.ctx
-            .block_instrs
-            .insert(entry_block, Default::default());
-        self.ctx.block_phis.insert(entry_block, Default::default());
-        self.ctx
-            .incomplete_phis
-            .insert(entry_block, Default::default());
-        self.ctx.current = entry_block;
+        let entry_block = ctx.blocks.alloc(Default::default());
+        ctx.block_preds.insert(entry_block, Default::default());
+        ctx.block_sealed.insert(entry_block, true);
+        ctx.block_filled.insert(entry_block, false);
+        ctx.block_instrs.insert(entry_block, Default::default());
+        ctx.block_phis.insert(entry_block, Default::default());
+        ctx.incomplete_phis.insert(entry_block, Default::default());
+        ctx.current = entry_block;
         entry_block
     }
 
-    /// Declares the inputs parameters and their types for the function.
-    pub fn with_inputs(&mut self, inputs: &[Type]) -> Result<(), IrError> {
-        self.ensure_construction_in_order(FunctionBuilderState::Inputs)?;
-        let entry_block = self.create_entry_block();
+    /// Initializes the input parameters and their types for the function.
+    pub fn initialize_inputs(
+        ctx: &mut FunctionBuilderContext,
+        inputs: &[Type],
+    ) {
+        let entry_block = Self::create_entry_block(ctx);
         for (n, input_type) in inputs.iter().copied().enumerate() {
-            let val = self.ctx.values.alloc(Default::default());
-            self.ctx.value_type.insert(val, input_type);
-            self.ctx
-                .value_assoc
-                .insert(val, ValueAssoc::Input(n as u32));
-            self.ctx.value_users.insert(val, Default::default());
-            self.ctx.vars.declare_vars(1, input_type)?;
+            let val = ctx.values.alloc(Default::default());
+            ctx.value_type.insert(val, input_type);
+            ctx.value_assoc.insert(val, ValueAssoc::Input(n as u32));
+            ctx.value_users.insert(val, Default::default());
+            ctx.vars.declare_vars(1, input_type).expect(
+                "unexpected failure to declare function input variable",
+            );
             let input_var = Variable::from_raw(RawIdx::from_u32(n as u32));
-            self.ctx
-                .vars
-                .write_var(input_var, val, entry_block, || input_type)?;
+            ctx.vars
+                .write_var(input_var, val, entry_block, || input_type)
+                .expect("unexpected failure to write just declared variable");
         }
-        self.ctx.input_types.extend_from_slice(inputs);
-        Ok(())
-    }
-
-    /// Declares the output types of the function.
-    ///
-    /// # Note
-    ///
-    /// The function is required to return the same amount and type as declared here.
-    pub fn with_outputs(&mut self, outputs: &[Type]) -> Result<(), IrError> {
-        self.ensure_construction_in_order(FunctionBuilderState::Outputs)?;
-        self.ctx.output_types.extend_from_slice(outputs);
-        Ok(())
     }
 
     /// Declares all function local variables that the function is going to require for execution.
@@ -362,7 +345,9 @@ impl FunctionBuilder {
     /// # Errors
     ///
     /// If the current block is already filled.
-    pub fn ins(&mut self) -> Result<InstructionBuilder, IrError> {
+    pub fn ins<'b>(
+        &'b mut self,
+    ) -> Result<InstructionBuilder<'b, 'a>, IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled[block];
@@ -608,8 +593,6 @@ impl FunctionBuilder {
         self.ctx.instr_value.shrink_to_fit();
         self.ctx.value_type.shrink_to_fit();
         self.ctx.value_assoc.shrink_to_fit();
-        self.ctx.input_types.shrink_to_fit();
-        self.ctx.output_types.shrink_to_fit();
         let mut block_instrs = ComponentVec::default();
         for (block, var_phis) in self.ctx.block_phis.iter() {
             // First add all phi instructions of a basic block and then

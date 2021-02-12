@@ -38,9 +38,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 )
             })
             .map(|entry| entry.value);
-        let result = self.builder.ins()?.call(func, params)?;
-        for output_type in func_type.outputs() {
-            self.stack.push(result, *output_type);
+        let (result, _) = self.builder.ins()?.call(func, params)?;
+        if let Some(result) = result {
+            let result_type = func_type.outputs()[0];
+            self.stack.push(result, result_type);
         }
         Ok(())
     }

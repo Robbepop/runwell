@@ -62,13 +62,13 @@ pub type Instr = Idx<Instruction>;
 
 /// Builder guiding the construction of Runwell IR instructions.
 #[derive(Debug)]
-pub struct InstructionBuilder<'a> {
-    builder: &'a mut FunctionBuilder,
+pub struct InstructionBuilder<'a, 'b: 'a> {
+    builder: &'a mut FunctionBuilder<'b>,
 }
 
-impl<'a> InstructionBuilder<'a> {
+impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     /// Creates a new function instruction builder.
-    pub(super) fn new(builder: &'a mut FunctionBuilder) -> Self {
+    pub(super) fn new(builder: &'a mut FunctionBuilder<'b>) -> Self {
         Self { builder }
     }
 
@@ -106,32 +106,78 @@ impl<'a> InstructionBuilder<'a> {
         Ok((value, instr))
     }
 
-    pub fn call<P>(mut self, func: Func, params: P) -> Result<Value, IrError>
+    pub fn call<P>(
+        mut self,
+        func: Func,
+        params: P,
+    ) -> Result<(Option<Value>, Instr), IrError>
     where
         P: IntoIterator<Item = Value>,
     {
         let instruction = CallInstr::new(func, params);
+        let func_type = self
+            .builder
+            .res
+            .get_func_type(func)
+            .unwrap_or_else(|| {
+                panic!(
+                    "encountered missing function type while building function {}",
+                    func
+                )
+            });
+        let param_types = instruction
+            .params()
+            .iter()
+            .copied()
+            .map(|val| self.builder.ctx.value_type[val]);
+        assert!(
+            param_types.eq(func_type.inputs().iter().copied()),
+            "encountered mismatch between function parameter types and declaration types",
+        );
         // We have to query the type of the function `func` in the store.
         // Currently we simply use `bool` as return type for all functions.
-        let (value, _) =
-            self.append_value_instr(instruction.into(), Type::Bool)?;
-        Ok(value)
+        if let Some(output) = func_type.outputs().first() {
+            let (value, instr) =
+                self.append_value_instr(instruction.into(), *output)?;
+            Ok((Some(value), instr))
+        } else {
+            let instr = self.append_instr(instruction)?;
+            Ok((None, instr))
+        }
     }
 
     pub fn tail_call<P>(
         mut self,
         func: Func,
         params: P,
-    ) -> Result<Value, IrError>
+    ) -> Result<Instr, IrError>
     where
         P: IntoIterator<Item = Value>,
     {
         let instruction = TailCallInstr::new(func, params);
+        let func_type = self
+            .builder
+            .res
+            .get_func_type(func)
+            .unwrap_or_else(|| {
+                panic!(
+                    "encountered missing function type while building function {}",
+                    func
+                )
+            });
+        let param_types = instruction
+            .params()
+            .iter()
+            .copied()
+            .map(|val| self.builder.ctx.value_type[val]);
+        assert!(
+            param_types.eq(func_type.inputs().iter().copied()),
+            "encountered mismatch between function parameter types and declaration types",
+        );
         // We have to query the type of the function `func` in the store.
         // Currently we simply use `bool` as return type for all functions.
-        let (value, _) =
-            self.append_value_instr(instruction.into(), Type::Bool)?;
-        Ok(value)
+        let instr = self.append_instr(instruction)?;
+        Ok(instr)
     }
 
     pub fn constant<C>(mut self, constant: C) -> Result<Value, IrError>
@@ -887,7 +933,17 @@ impl<'a> InstructionBuilder<'a> {
         <T as IntoIterator>::IntoIter: Clone,
     {
         let return_values = return_values.into_iter();
-        let expected_outputs = self.builder.ctx.output_types.iter().copied();
+        let func_type = self
+            .builder
+            .res
+            .get_func_type(self.builder.func)
+            .unwrap_or_else(|| {
+                panic!(
+                    "encountered missing function type while building function {}",
+                    self.builder.func
+                )
+            });
+        let expected_outputs = func_type.outputs().iter().copied();
         let return_types = return_values
             .clone()
             .map(|val| self.builder.ctx.value_type[val]);

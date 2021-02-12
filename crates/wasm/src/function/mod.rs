@@ -63,7 +63,7 @@ struct FunctionBodyTranslator<'a, 'b> {
     /// The immutable module resources required to translate the function body.
     res: &'b ModuleResources,
     /// The Runwell function body builder.
-    builder: FunctionBuilder,
+    builder: FunctionBuilder<'b>,
     /// The emulated Wasm stack to translate the Wasm stack machine.
     stack: ValueStack,
     /// The emulated Wasm stack of control blocks.
@@ -100,7 +100,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             validator,
             func,
             res,
-            builder: FunctionBody::build(),
+            builder: FunctionBody::build(func, res),
             stack: Default::default(),
             blocks: Default::default(),
         }
@@ -108,23 +108,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
 
     /// Translates the Wasm function body into an equivalent Runwell function body.
     fn translate(mut self) -> Result<FunctionBody, Error> {
-        self.translate_inputs_outputs()?;
         self.translate_local_variables()?;
         self.initialize_entry_block()?;
         self.translate_operators()?;
         let body = self.builder.finalize()?;
         Ok(body)
-    }
-
-    /// Populates the constructed Runwell function with input and output types.
-    fn translate_inputs_outputs(&mut self) -> Result<(), Error> {
-        let func_type = self
-            .res
-            .get_func_type(self.func)
-            .expect("encountered invalid function reference");
-        self.builder.with_inputs(func_type.inputs())?;
-        self.builder.with_outputs(func_type.outputs())?;
-        Ok(())
     }
 
     /// Parses, validates and translates the Wasm local variables into
