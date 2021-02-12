@@ -342,8 +342,9 @@ impl ModuleBuilder {
     /// If there are missing function bodies for declared internal functions.
     pub fn finalize(mut self) -> Result<Module, String> {
         let len_func_decls = self.res.function_decls.len();
+        let len_func_imports = self.res.function_import.len();
         let len_func_bodies = self.bodies.len();
-        if len_func_decls != len_func_bodies {
+        if len_func_decls != len_func_bodies + len_func_imports {
             return Err(format!(
                 "encountered mismatch with {} function bodies for {} function declarations",
                 len_func_decls,
