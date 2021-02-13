@@ -574,12 +574,20 @@ impl<'a> FunctionBuilder<'a> {
     }
 
     /// Returns the SSA output values of the instruction if any.
-    pub fn instr_values(&self, instr: Instr) -> &[Value] {
-        self.ctx
+    pub fn instr_values(&self, instr: Instr) -> Result<&[Value], IrError> {
+        if !self.ctx.instrs.contains_key(instr) {
+            return Err(IrError::from(FunctionBuilderError::InvalidInstr {
+                instr,
+            })
+            .with_context("tried to query instruction values"))
+        }
+        let values = self
+            .ctx
             .instr_values
             .get(instr)
             .map(SmallVec::as_slice)
-            .unwrap_or_default()
+            .unwrap_or_default();
+        Ok(values)
     }
 
     /// Finalizes construction of the built function.

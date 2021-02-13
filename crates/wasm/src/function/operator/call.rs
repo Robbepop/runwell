@@ -40,7 +40,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             .map(|entry| entry.value);
         let instr = self.builder.ins()?.call(func, params)?;
         for (n, &output_value) in
-            self.builder.instr_values(instr).iter().enumerate()
+            self.builder.instr_values(instr)?.iter().enumerate()
         {
             let output_type = func_type.outputs()[n];
             self.stack.push(output_value, output_type);

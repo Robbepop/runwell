@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::FunctionBuilderState;
-use crate::func_body::Variable;
+use crate::{func_body::Variable, Instr};
 use derive_more::{Display, Error};
 use ir::primitive::{Block, FloatType, IntType, Type, Value};
 
@@ -174,6 +174,8 @@ pub enum FunctionBuilderError {
         returned_types: Vec<Type>,
         expected_types: Vec<Type>,
     },
+    #[display(fmt = "encountered invalid instruction index {}", instr)]
+    InvalidInstr { instr: Instr },
 }
 
 /// A variable access for better error information.
