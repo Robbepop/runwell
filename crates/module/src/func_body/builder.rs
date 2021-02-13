@@ -26,11 +26,19 @@ use core::mem::replace;
 use super::{
     instruction::{Instr, InstructionBuilder},
     variable::Variable,
-    FunctionBody, FunctionBuilderError, VariableTranslator,
+    FunctionBody,
+    FunctionBuilderError,
+    VariableTranslator,
 };
 use crate::{IrError, ModuleResources};
 use derive_more::Display;
-use entity::{ComponentMap, ComponentVec, DefaultComponentVec, EntityArena, RawIdx};
+use entity::{
+    ComponentMap,
+    ComponentVec,
+    DefaultComponentVec,
+    EntityArena,
+    RawIdx,
+};
 use ir::{
     instr::{Instruction, PhiInstr},
     primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
@@ -199,7 +207,7 @@ impl<'a> FunctionBuilder<'a> {
             return Err(FunctionBuilderError::IncorrectOrder {
                 last_state: current,
                 fail_state: next,
-            });
+            })
         }
         self.state = next;
         Ok(())
@@ -209,7 +217,7 @@ impl<'a> FunctionBuilder<'a> {
     fn create_entry_block(ctx: &mut FunctionBuilderContext) -> Block {
         if !ctx.blocks.is_empty() {
             // Do not create an entry block if there is already one.
-            return ctx.current;
+            return ctx.current
         }
         let entry_block = ctx.blocks.alloc(Default::default());
         ctx.block_preds.insert(entry_block, Default::default());
@@ -222,16 +230,19 @@ impl<'a> FunctionBuilder<'a> {
     }
 
     /// Initializes the input parameters and their types for the function.
-    pub fn initialize_inputs(ctx: &mut FunctionBuilderContext, inputs: &[Type]) {
+    pub fn initialize_inputs(
+        ctx: &mut FunctionBuilderContext,
+        inputs: &[Type],
+    ) {
         let entry_block = Self::create_entry_block(ctx);
         for (n, input_type) in inputs.iter().copied().enumerate() {
             let val = ctx.values.alloc(Default::default());
             ctx.value_type.insert(val, input_type);
             ctx.value_assoc.insert(val, ValueAssoc::Input(n as u32));
             ctx.value_users.insert(val, Default::default());
-            ctx.vars
-                .declare_vars(1, input_type)
-                .expect("unexpected failure to declare function input variable");
+            ctx.vars.declare_vars(1, input_type).expect(
+                "unexpected failure to declare function input variable",
+            );
             let input_var = Variable::from_raw(RawIdx::from_u32(n as u32));
             ctx.vars
                 .write_var(input_var, val, entry_block, || input_type)
@@ -245,8 +256,14 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// This includes variables that are artifacts of translation from the original source
     /// language to whatever input source is fed into Runwell IR.
-    pub fn declare_variables(&mut self, amount: u32, ty: Type) -> Result<(), IrError> {
-        self.ensure_construction_in_order(FunctionBuilderState::LocalVariables)?;
+    pub fn declare_variables(
+        &mut self,
+        amount: u32,
+        ty: Type,
+    ) -> Result<(), IrError> {
+        self.ensure_construction_in_order(
+            FunctionBuilderState::LocalVariables,
+        )?;
         self.ctx.vars.declare_vars(amount, ty)?;
         Ok(())
     }
@@ -288,7 +305,8 @@ impl<'a> FunctionBuilder<'a> {
     pub fn switch_to_block(&mut self, block: Block) -> Result<(), IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         if !self.ctx.blocks.contains_key(block) {
-            return Err(FunctionBuilderError::InvalidBasicBlock { block }).map_err(Into::into);
+            return Err(FunctionBuilderError::InvalidBasicBlock { block })
+                .map_err(Into::into)
         }
         self.ctx.current = block;
         Ok(())
@@ -306,8 +324,10 @@ impl<'a> FunctionBuilder<'a> {
         let block = self.current_block()?;
         let already_sealed = replace(&mut self.ctx.block_sealed[block], true);
         if already_sealed {
-            return Err(FunctionBuilderError::BasicBlockIsAlreadySealed { block })
-                .map_err(Into::into);
+            return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
+                block,
+            })
+            .map_err(Into::into)
         }
         // Popping incomplete phis by inserting a new empty component map.
         let incomplete_phis = self
@@ -326,13 +346,17 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// If the current block is already filled.
-    pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, IrError> {
+    pub fn ins<'b>(
+        &'b mut self,
+    ) -> Result<InstructionBuilder<'b, 'a>, IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled[block];
         if already_filled {
-            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled { block })
-                .map_err(Into::into);
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
         }
         Ok(InstructionBuilder::new(self))
     }
@@ -343,7 +367,11 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// - If the variable has not beed declared.
     /// - If the type of the assigned value does not match the variable's type declaration.
-    pub fn write_var(&mut self, var: Variable, value: Value) -> Result<(), IrError> {
+    pub fn write_var(
+        &mut self,
+        var: Variable,
+        value: Value,
+    ) -> Result<(), IrError> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let FunctionBuilderContext {
@@ -376,11 +404,15 @@ impl<'a> FunctionBuilder<'a> {
     }
 
     /// Reads the given variable starting from the given block.
-    fn read_var_in_block(&mut self, var: Variable, block: Block) -> Result<Value, IrError> {
+    fn read_var_in_block(
+        &mut self,
+        var: Variable,
+        block: Block,
+    ) -> Result<Value, IrError> {
         let var_info = self.ctx.vars.get(var)?;
         if let Some(value) = var_info.definitions().for_block(block) {
             // Local Value Numbering
-            return Ok(value);
+            return Ok(value)
         }
         // Global Value Numbering
         let var_type = var_info.ty();
@@ -389,7 +421,7 @@ impl<'a> FunctionBuilder<'a> {
             let value = self.create_phi_instruction(var, var_type, block)?;
             self.ctx.vars.write_var(var, value, block, || var_type)?;
             self.ctx.incomplete_phis[block].insert(var, value);
-            return Ok(value);
+            return Ok(value)
         }
         let value = if self.ctx.block_preds[block].len() == 1 {
             // Optimize the common case of one predecessor: No phi needed.
@@ -446,7 +478,10 @@ impl<'a> FunctionBuilder<'a> {
     /// Replacement is a recursive operation that replaces all uses of the
     /// phi instruction with its only non-phi operand. During this process
     /// other phi instruction users might become trivial and cascade the effect.
-    fn try_remove_trivial_phi(&mut self, phi_value: Value) -> Result<Value, IrError> {
+    fn try_remove_trivial_phi(
+        &mut self,
+        phi_value: Value,
+    ) -> Result<Value, IrError> {
         let phi_instr = match self.ctx.value_assoc[phi_value] {
             ValueAssoc::Instr(instr, 0) => instr,
             ValueAssoc::Instr(instr, n) => {
@@ -465,19 +500,21 @@ impl<'a> FunctionBuilder<'a> {
         for (_block, op) in instruction.operands() {
             if Some(op) == same || op == phi_value {
                 // Unique value or self reference.
-                continue;
+                continue
             }
             if same.is_some() {
                 // The phi merges at least two values: not trivial
-                return Ok(phi_value);
+                return Ok(phi_value)
             }
             same = Some(op);
         }
         if same.is_none() {
             // The phi is unreachable or in the start block.
             // The paper replaces it with an undefined instruction.
-            return Err(FunctionBuilderError::UnreachablePhi { value: phi_value })
-                .map_err(Into::into);
+            return Err(FunctionBuilderError::UnreachablePhi {
+                value: phi_value,
+            })
+            .map_err(Into::into)
         }
         let same = same.expect("just asserted that same is Some");
         // Phi was determined to be trivial and can be removed.
@@ -499,7 +536,7 @@ impl<'a> FunctionBuilder<'a> {
             user_instr.replace_value(|value| {
                 if *value == phi_value {
                     *value = same;
-                    return true;
+                    return true
                 }
                 false
             });
@@ -564,7 +601,7 @@ impl<'a> FunctionBuilder<'a> {
             return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
                 unsealed: unsealed_blocks,
             })
-            .map_err(Into::into);
+            .map_err(Into::into)
         }
         let unfilled_blocks = self
             .ctx
@@ -576,7 +613,7 @@ impl<'a> FunctionBuilder<'a> {
             return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
                 unfilled: unfilled_blocks,
             })
-            .map_err(Into::into);
+            .map_err(Into::into)
         }
         self.ctx.blocks.shrink_to_fit();
         self.ctx.values.shrink_to_fit();
