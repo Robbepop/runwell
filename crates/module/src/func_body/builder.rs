@@ -22,6 +22,7 @@
 //! its predecessors as all predecessors are known.
 
 use super::{
+    incomplete_phi::IncompletePhi,
     instruction::{Instr, InstructionBuilder},
     variable::Variable,
     FunctionBody,
@@ -113,13 +114,24 @@ pub struct FunctionBuilderContext {
     /// This stores a mapping from each variable in a basic block to
     /// some value that must be associated to the phi instruction in
     /// the same block representing bindings for the variable.
-    pub incomplete_phis: ComponentMap<Block, ComponentMap<Variable, Value>>,
+    pub block_incomplete_phis:
+        ComponentMap<Block, ComponentMap<Variable, Value>>,
     /// Optional associated values for instructions.
     ///
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
     pub instr_values: ComponentMap<Instr, SmallVec<[Value; 4]>>,
+    /// The incomplete phi instruction in case the value represents one.
+    ///
+    /// Incomplete phis are use throughout the function body construction
+    /// instead of actually creating phi instructions. Phi instructions are
+    /// first created upon finalization of the function body.
+    ///
+    /// The construction algorithm works solely on incomplete phis, even
+    /// though a phi instruction might be deemed complete during function
+    /// body construction.
+    pub value_incomplete_phi: ComponentMap<Value, IncompletePhi>,
     /// Types for all values.
     pub value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
@@ -157,10 +169,11 @@ impl Default for FunctionBuilderContext {
             block_sealed: Default::default(),
             block_filled: Default::default(),
             block_instrs: Default::default(),
+            block_incomplete_phis: Default::default(),
             phi_block: Default::default(),
             phi_var: Default::default(),
-            incomplete_phis: Default::default(),
             instr_values: Default::default(),
+            value_incomplete_phi: Default::default(),
             value_type: Default::default(),
             value_assoc: Default::default(),
             value_users: Default::default(),
@@ -223,7 +236,8 @@ impl<'a> FunctionBuilder<'a> {
         ctx.block_sealed[entry_block] = true;
         ctx.block_instrs.insert(entry_block, Default::default());
         ctx.block_phis.insert(entry_block, Default::default());
-        ctx.incomplete_phis.insert(entry_block, Default::default());
+        ctx.block_incomplete_phis
+            .insert(entry_block, Default::default());
         ctx.current = entry_block;
         entry_block
     }
@@ -281,7 +295,7 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.block_instrs.insert(new_block, Default::default());
         self.ctx.block_phis.insert(new_block, Default::default());
         self.ctx
-            .incomplete_phis
+            .block_incomplete_phis
             .insert(new_block, Default::default());
         Ok(new_block)
     }
@@ -331,7 +345,7 @@ impl<'a> FunctionBuilder<'a> {
         // Popping incomplete phis by inserting a new empty component map.
         let incomplete_phis = self
             .ctx
-            .incomplete_phis
+            .block_incomplete_phis
             .insert(block, Default::default())
             .expect("encountered missing incomplete phis component");
         for (variable, &value) in incomplete_phis.iter() {
@@ -390,6 +404,9 @@ impl<'a> FunctionBuilder<'a> {
         let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
         let value = self.ctx.values.alloc(ValueEntity);
         self.ctx
+            .value_incomplete_phi
+            .insert(value, Default::default());
+        self.ctx
             .value_assoc
             .insert(value, ValueAssoc::Instr(instr, 0));
         self.ctx.value_type.insert(value, var_type);
@@ -419,7 +436,7 @@ impl<'a> FunctionBuilder<'a> {
             // Incomplete phi node required.
             let value = self.create_phi_instruction(var, var_type, block)?;
             self.ctx.vars.write_var(var, value, block, || var_type)?;
-            self.ctx.incomplete_phis[block].insert(var, value);
+            self.ctx.block_incomplete_phis[block].insert(var, value);
             return Ok(value)
         }
         let value = if self.ctx.block_preds[block].len() == 1 {
@@ -451,23 +468,10 @@ impl<'a> FunctionBuilder<'a> {
             .iter()
             .copied()
             .collect::<Vec<_>>();
-        let instr = match self.ctx.value_assoc[phi] {
-            ValueAssoc::Instr(instr, 0) => instr,
-            ValueAssoc::Instr(instr, n) => {
-                panic!(
-                    "found {} to be the {}-th output of a phi instruction {} which is illegal",
-                    phi, n, instr,
-                )
-            }
-            _ => panic!("unexpected non-instruction value"),
-        };
         for pred in preds {
             let value = self.read_var_in_block(var, pred)?;
-            let phi = match &mut self.ctx.instrs[instr] {
-                Instruction::Phi(phi) => phi,
-                _ => panic!("unexpected non-phi instruction"),
-            };
-            phi.append_operand(pred, value);
+            let incomplete_phi = &mut self.ctx.value_incomplete_phi[phi];
+            incomplete_phi.append_operand(pred, value);
         }
         self.try_remove_trivial_phi(phi)
     }
@@ -481,6 +485,24 @@ impl<'a> FunctionBuilder<'a> {
         &mut self,
         phi_value: Value,
     ) -> Result<Value, IrError> {
+        let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
+        let equivalent_value = match incomplete_phi.is_trivial(phi_value)? {
+            Some(equivalent_value) => {
+                // The phi instruction is trivial and the returned value
+                // is equivalent and shall replace it from now on.
+                equivalent_value
+            }
+            None => {
+                // The phi instruction is non-trivial, return it.
+                return Ok(phi_value)
+            }
+        };
+        // Phi was determined to be trivial and can be removed.
+        // Insert a default into its phi users to replace the current users with an empty set.
+        // Additionally this allows us to iterate over users without borrow checker issues.
+        //
+        // Remove phi from its own users in case it was using itself.
+        let same = equivalent_value;
         let phi_instr = match self.ctx.value_assoc[phi_value] {
             ValueAssoc::Instr(instr, 0) => instr,
             ValueAssoc::Instr(instr, n) => {
@@ -491,36 +513,6 @@ impl<'a> FunctionBuilder<'a> {
             }
             _ => panic!("unexpected non-instruction value"),
         };
-        let instruction = match &mut self.ctx.instrs[phi_instr] {
-            Instruction::Phi(phi) => phi,
-            _ => panic!("unexpected non-phi instruction"),
-        };
-        let mut same: Option<Value> = None;
-        for (_block, op) in instruction.operands() {
-            if Some(op) == same || op == phi_value {
-                // Unique value or self reference.
-                continue
-            }
-            if same.is_some() {
-                // The phi merges at least two values: not trivial
-                return Ok(phi_value)
-            }
-            same = Some(op);
-        }
-        if same.is_none() {
-            // The phi is unreachable or in the start block.
-            // The paper replaces it with an undefined instruction.
-            return Err(FunctionBuilderError::UnreachablePhi {
-                value: phi_value,
-            })
-            .map_err(Into::into)
-        }
-        let same = same.expect("just asserted that same is Some");
-        // Phi was determined to be trivial and can be removed.
-        // Insert a default into its phi users to replace the current users with an empty set.
-        // Additionally this allows us to iterate over users without borrow checker issues.
-        //
-        // Remove phi from its own users in case it was using itself.
         self.ctx.value_users[phi_value].remove(&phi_instr);
         let users = self
             .ctx
@@ -529,7 +521,12 @@ impl<'a> FunctionBuilder<'a> {
             .unwrap_or_default();
         let phi_block = self.ctx.phi_block[phi_value];
         let phi_var = self.ctx.phi_var[phi_value];
+        let phi_type = self.ctx.value_type[phi_value];
         self.ctx.block_phis[phi_block].remove(phi_var);
+        // Not sure about the next line but I think it is necessary to update future queries.
+        self.ctx
+            .vars
+            .write_var(phi_var, same, phi_block, || phi_type)?;
         for user in users {
             let user_instr = &mut self.ctx.instrs[user];
             user_instr.replace_value(|value| {
@@ -631,6 +628,22 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.value_assoc.shrink_to_fit();
         let mut block_instrs = ComponentVec::default();
         for (block, var_phis) in self.ctx.block_phis.iter() {
+            for (_var, &phi_instr) in var_phis {
+                assert_eq!(
+                    self.ctx.instr_values[phi_instr].len(),
+                    1,
+                    "phi instructions must have exactly one output value"
+                );
+                let phi_value = self.ctx.instr_values[phi_instr][0];
+                let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
+                let phi_instruction = match &mut self.ctx.instrs[phi_instr] {
+                    Instruction::Phi(phi) => phi,
+                    _ => panic!("unexpected non-phi instruction"),
+                };
+                for (block, value) in incomplete_phi.operands() {
+                    phi_instruction.append_operand(block, value);
+                }
+            }
             // First add all phi instructions of a basic block and then
             // append the rest of the instructions of the same basic block.
             let mut instructions = var_phis

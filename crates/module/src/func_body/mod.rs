@@ -14,6 +14,7 @@
 
 mod builder;
 mod error;
+mod incomplete_phi;
 mod instruction;
 mod variable;
 
