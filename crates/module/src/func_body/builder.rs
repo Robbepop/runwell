@@ -21,8 +21,6 @@
 //! Conversely, a sealed block may look up variable definitions in
 //! its predecessors as all predecessors are known.
 
-use core::mem::replace;
-
 use super::{
     instruction::{Instr, InstructionBuilder},
     variable::Variable,
@@ -31,6 +29,7 @@ use super::{
     VariableTranslator,
 };
 use crate::{IrError, ModuleResources};
+use core::mem::replace;
 use derive_more::Display;
 use entity::{
     ComponentMap,
