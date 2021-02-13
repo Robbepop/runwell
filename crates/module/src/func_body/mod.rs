@@ -56,7 +56,7 @@ pub struct FunctionBody {
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
-    instr_values: ComponentMap<Instr, SmallVec<[Value; 1]>>,
+    instr_values: ComponentMap<Instr, SmallVec<[Value; 4]>>,
     /// Types for all values.
     value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
@@ -75,7 +75,7 @@ impl FunctionBody {
     /// Returns the slice over the output values of the instruction.
     fn instr_values(
         instr: Instr,
-        instr_values: &ComponentMap<Instr, SmallVec<[Value; 1]>>,
+        instr_values: &ComponentMap<Instr, SmallVec<[Value; 4]>>,
     ) -> &[Value] {
         instr_values
             .get(instr)

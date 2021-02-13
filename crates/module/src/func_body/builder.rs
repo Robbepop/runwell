@@ -119,7 +119,7 @@ pub struct FunctionBuilderContext {
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
-    pub instr_values: ComponentMap<Instr, SmallVec<[Value; 1]>>,
+    pub instr_values: ComponentMap<Instr, SmallVec<[Value; 4]>>,
     /// Types for all values.
     pub value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
