@@ -87,43 +87,81 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     fn append_value_instr(
         &mut self,
         instruction: Instruction,
-        ty: Type,
+        output_type: Type,
     ) -> Result<(Value, Instr), IrError> {
-        let block = self.builder.current_block()?;
-        let instr = self.builder.ctx.instrs.alloc(instruction);
-        let value = self.builder.ctx.values.alloc(Default::default());
-        self.builder.ctx.block_instrs[block].push(instr);
-        self.builder.ctx.instr_value.insert(instr, value);
-        self.builder.ctx.value_type.insert(value, ty);
-        self.builder
-            .ctx
-            .value_users
-            .insert(value, Default::default());
-        self.builder
-            .ctx
-            .value_assoc
-            .insert(value, ValueAssoc::Instr(instr, 0));
+        let instr =
+            self.append_multi_value_instr(instruction, &[output_type])?;
+        let value = self.builder.ctx.instr_values[instr][0];
         Ok((value, instr))
     }
 
-    pub fn call<P>(
-        mut self,
-        func: Func,
-        params: P,
-    ) -> Result<(Option<Value>, Instr), IrError>
+    /// Appends the instruction to the current basic block if possible.
+    ///
+    /// The instruction is associated to `n` output SSA values where
+    /// `n` is equal to the length of the `output_types` slice.
+    ///
+    /// # Note
+    ///
+    /// - Flags the basic block as filled if the instruction terminates the basic block.
+    /// - Eventually updates the predecessors and successors of basic blocks.
+    ///
+    /// # Errors
+    ///
+    /// - If used SSA values do not exist for the function.
+    /// - If values do not match required type constraints.
+    /// - Upon trying to branch to a basic block that has already been sealed.
+    fn append_multi_value_instr(
+        &mut self,
+        instruction: Instruction,
+        output_types: &[Type],
+    ) -> Result<Instr, IrError> {
+        let is_terminal = instruction.is_terminal();
+        if is_terminal {
+            assert!(
+                output_types.is_empty(),
+                "a terminal instruction must not have output values but found {:?} for {:?}",
+                output_types,
+                instruction,
+            );
+        }
+        let block = self.builder.current_block()?;
+        let instr = self.builder.ctx.instrs.alloc(instruction);
+        self.builder
+            .ctx
+            .instr_values
+            .insert(instr, Default::default());
+        self.builder.ctx.block_instrs[block].push(instr);
+        for (n, output_type) in output_types.iter().copied().enumerate() {
+            let value = self.builder.ctx.values.alloc(Default::default());
+            self.builder.ctx.instr_values[instr].push(value);
+            self.builder.ctx.value_type.insert(value, output_type);
+            self.builder
+                .ctx
+                .value_users
+                .insert(value, Default::default());
+            assert!(n <= u32::MAX as usize);
+            self.builder
+                .ctx
+                .value_assoc
+                .insert(value, ValueAssoc::Instr(instr, n as u32));
+        }
+        if is_terminal {
+            self.builder.ctx.block_filled[block] = true;
+        }
+        Ok(instr)
+    }
+
+    pub fn call<P>(mut self, func: Func, params: P) -> Result<Instr, IrError>
     where
         P: IntoIterator<Item = Value>,
     {
         let instruction = CallInstr::new(func, params);
-        let func_type = self
-            .builder
-            .res
-            .get_func_type(func)
-            .unwrap_or_else(|| {
+        let func_type =
+            self.builder.res.get_func_type(func).unwrap_or_else(|| {
                 panic!(
-                    "encountered missing function type while building function {}",
-                    func
-                )
+                "encountered missing function type while building function {}",
+                func
+            )
             });
         let param_types = instruction
             .params()
@@ -131,19 +169,20 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .copied()
             .map(|val| self.builder.ctx.value_type[val]);
         assert!(
+            // We might want to turn this into an error instead of panicking.
             param_types.eq(func_type.inputs().iter().copied()),
             "encountered mismatch between function parameter types and declaration types",
         );
-        // We have to query the type of the function `func` in the store.
-        // Currently we simply use `bool` as return type for all functions.
-        if let Some(output) = func_type.outputs().first() {
-            let (value, instr) =
-                self.append_value_instr(instruction.into(), *output)?;
-            Ok((Some(value), instr))
-        } else {
-            let instr = self.append_instr(instruction)?;
-            Ok((None, instr))
-        }
+        let instr = self.append_multi_value_instr(
+            instruction.into(),
+            func_type.outputs(),
+        )?;
+        // let params = match &self.builder.ctx.instrs[instr] {
+        //     Instruction::Call(call_instr) => call_instr.params(),
+        //     _ => panic!(),
+        // };
+        // self.register_uses(instr, params.iter().copied());
+        Ok(instr)
     }
 
     pub fn tail_call<P>(
@@ -155,15 +194,12 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         P: IntoIterator<Item = Value>,
     {
         let instruction = TailCallInstr::new(func, params);
-        let func_type = self
-            .builder
-            .res
-            .get_func_type(func)
-            .unwrap_or_else(|| {
+        let func_type =
+            self.builder.res.get_func_type(func).unwrap_or_else(|| {
                 panic!(
-                    "encountered missing function type while building function {}",
-                    func
-                )
+                "encountered missing function type while building function {}",
+                func
+            )
             });
         let param_types = instruction
             .params()

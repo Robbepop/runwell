@@ -34,6 +34,7 @@ use ir::{
     instr::Instruction,
     primitive::{Block, BlockEntity, Type, Value, ValueEntity},
 };
+use smallvec::SmallVec;
 
 /// A virtual, verified Runwell IR function.
 #[derive(Debug)]
@@ -55,7 +56,7 @@ pub struct FunctionBody {
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
-    instr_value: ComponentMap<Instr, Value>,
+    instr_values: ComponentMap<Instr, SmallVec<[Value; 1]>>,
     /// Types for all values.
     value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
@@ -71,20 +72,31 @@ impl FunctionBody {
         Block::from_raw(RawIdx::from_u32(0))
     }
 
+    /// Returns the slice over the output values of the instruction.
+    fn instr_values(
+        instr: Instr,
+        instr_values: &ComponentMap<Instr, SmallVec<[Value; 1]>>,
+    ) -> &[Value] {
+        instr_values
+            .get(instr)
+            .map(SmallVec::as_slice)
+            .unwrap_or_default()
+    }
+
     /// Returns the n-th instruction of the block and its assoc value if any.
     pub fn instruction_and_value(
         &self,
         block: Block,
         n: usize,
-    ) -> Option<(Option<Value>, &Instruction)> {
+    ) -> Option<(&[Value], &Instruction)> {
         let instr = self
             .block_instrs
             .get(block)
             .and_then(|instrs| instrs.get(n))
             .copied()?;
         let instruction = &self.instrs[instr];
-        let instr_value = self.instr_value.get(instr).copied();
-        Some((instr_value, instruction))
+        let instr_values = Self::instr_values(instr, &self.instr_values);
+        Some((instr_values, instruction))
     }
 }
 
@@ -94,18 +106,21 @@ impl fmt::Display for FunctionBody {
             writeln!(f, "{}:", block)?;
             for &instr in &self.block_instrs[block] {
                 let instr_data = &self.instrs[instr];
-                let instr_value = self.instr_value.get(instr).copied();
-                match instr_value {
-                    Some(value) => {
-                        let value_type = self.value_type[value];
-                        writeln!(
-                            f,
-                            "    {}: {} = {}",
-                            value, value_type, instr_data
-                        )?;
-                    }
+                let instr_values =
+                    Self::instr_values(instr, &self.instr_values);
+                match instr_values.split_first() {
                     None => {
                         writeln!(f, "    {}", instr_data)?;
+                    }
+                    Some((&first, rest)) => {
+                        writeln!(f, "    ")?;
+                        let value_type = self.value_type[first];
+                        write!(f, "{}: {}", first, value_type)?;
+                        for &value in rest {
+                            let value_type = self.value_type[value];
+                            write!(f, ", {}: {}", value, value_type)?;
+                        }
+                        writeln!(f, " = {}", instr_data)?;
                     }
                 }
             }

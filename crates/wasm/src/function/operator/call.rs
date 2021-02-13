@@ -38,10 +38,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 )
             })
             .map(|entry| entry.value);
-        let (result, _) = self.builder.ins()?.call(func, params)?;
-        if let Some(result) = result {
-            let result_type = func_type.outputs()[0];
-            self.stack.push(result, result_type);
+        let instr = self.builder.ins()?.call(func, params)?;
+        for (n, &output_value) in
+            self.builder.instr_values(instr).iter().enumerate()
+        {
+            let output_type = func_type.outputs()[n];
+            self.stack.push(output_value, output_type);
         }
         Ok(())
     }

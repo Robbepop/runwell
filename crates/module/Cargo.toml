@@ -9,6 +9,7 @@ entity = { package = "runwell_entity", path = "../entity" }
 ir = { package = "runwell_ir", path = "../ir" }
 derive_more = "0.99.2"
 ahash = "0.7"
+smallvec = "1.6"
 
 [features]
 default = ["std"]

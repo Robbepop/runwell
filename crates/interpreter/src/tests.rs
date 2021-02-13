@@ -356,11 +356,7 @@ fn construct_is_even_and_is_odd<F>(
     mut f: F,
 ) -> Result<(Module, Func, Func), IrError>
 where
-    F: FnMut(
-        InstructionBuilder,
-        Func,
-        Value,
-    ) -> Result<(Option<Value>, Instr), IrError>,
+    F: FnMut(InstructionBuilder, Func, Value) -> Result<Instr, IrError>,
 {
     // Setup module.
     let mut builder = Module::build();
@@ -408,8 +404,9 @@ where
     let v4 = b.read_var(input)?;
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
-    let (v7, _) = f(b.ins()?, is_odd, v6)?;
-    if let Some(v7) = v7 {
+    let instr = f(b.ins()?, is_odd, v6)?;
+    if let Some((&v7, rest)) = b.instr_values(instr).split_first() {
+        assert!(rest.is_empty(), "is_odd only has a single output value");
         b.ins()?.return_values([v7].iter().copied())?;
     }
     b.seal_block()?;
@@ -446,8 +443,9 @@ where
     let v4 = b.read_var(input)?;
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
-    let (v7, _) = f(b.ins()?, is_even, v6)?;
-    if let Some(v7) = v7 {
+    let instr = f(b.ins()?, is_even, v6)?;
+    if let Some((&v7, rest)) = b.instr_values(instr).split_first() {
+        assert!(rest.is_empty(), "is_odd only has a single output value");
         b.ins()?.return_values([v7].iter().copied())?;
     }
     b.seal_block()?;
@@ -486,7 +484,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
 fn ping_pong_tail_calls() -> Result<(), IrError> {
     let (module, is_even, is_odd) =
         construct_is_even_and_is_odd(|ins, func, v6| {
-            ins.tail_call(func, vec![v6]).map(|instr| (None, instr))
+            ins.tail_call(func, vec![v6])
         })?;
 
     let mut ctx = EvaluationContext::new(&module);

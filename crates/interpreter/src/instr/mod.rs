@@ -71,10 +71,16 @@ impl InterpretInstr for FunctionBody {
     ) -> Result<InterpretationFlow, InterpretationError> {
         let block = frame.current_block();
         let ic = frame.bump_instruction_counter();
-        let (instr_value, instruction) = self
+        let (instr_values, instruction) = self
             .instruction_and_value(block, ic)
             .expect("missing instruction in function");
-        instruction.interpret_instr(instr_value, ctx, frame)
+        instruction.interpret_instr(
+            // We currently only support one return value in the interpreter.
+            // This needs to be addressed as soon as possible.
+            instr_values.split_first().map(|(first, _)| first).copied(),
+            ctx,
+            frame,
+        )
     }
 }
 
