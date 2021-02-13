@@ -113,7 +113,7 @@ impl fmt::Display for FunctionBody {
                         writeln!(f, "    {}", instr_data)?;
                     }
                     Some((&first, rest)) => {
-                        writeln!(f, "    ")?;
+                        write!(f, "    ")?;
                         let value_type = self.value_type[first];
                         write!(f, "{}: {}", first, value_type)?;
                         for &value in rest {
