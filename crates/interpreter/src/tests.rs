@@ -298,6 +298,36 @@ fn inconveniently_written_min() -> Result<(), IrError> {
 }
 
 #[test]
+fn binary_swap_works() -> Result<(), IrError> {
+    let (func, module) = module_with_func(
+        &[IntType::I32.into(); 2][..],
+        &[IntType::I32.into(); 2][..],
+        |b| {
+            b.body()?;
+
+            let lhs = Variable::from_raw(RawIdx::from_u32(0));
+            let rhs = Variable::from_raw(RawIdx::from_u32(1));
+
+            let v0 = b.read_var(lhs)?;
+            let v1 = b.read_var(rhs)?;
+            b.ins()?.return_values([v1, v0].iter().copied())?;
+
+            Ok(())
+        },
+    );
+    for x in -10..10 {
+        for y in -10..10 {
+            let x = IntConst::I32(x).into();
+            let y = IntConst::I32(y).into();
+            let result = evaluate_func(&module, func, &[x, y]);
+            let _result = bits_into_const(&module, func, result);
+            // assert_eq!(result, vec![y, x]);
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn counting_loop_works() -> Result<(), IrError> {
     let (func, module) =
         module_with_func(&[IntType::I32.into()], &[IntType::I32.into()], |b| {
