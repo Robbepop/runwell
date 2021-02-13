@@ -405,7 +405,7 @@ where
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
     let instr = f(b.ins()?, is_odd, v6)?;
-    if let Some((&v7, rest)) = b.instr_values(instr).split_first() {
+    if let Some((&v7, rest)) = b.instr_values(instr)?.split_first() {
         assert!(rest.is_empty(), "is_odd only has a single output value");
         b.ins()?.return_values([v7].iter().copied())?;
     }
@@ -444,7 +444,7 @@ where
     let v5 = b.ins()?.constant(IntConst::I32(1))?;
     let v6 = b.ins()?.isub(IntType::I32, v4, v5)?;
     let instr = f(b.ins()?, is_even, v6)?;
-    if let Some((&v7, rest)) = b.instr_values(instr).split_first() {
+    if let Some((&v7, rest)) = b.instr_values(instr)?.split_first() {
         assert!(rest.is_empty(), "is_odd only has a single output value");
         b.ins()?.return_values([v7].iter().copied())?;
     }
