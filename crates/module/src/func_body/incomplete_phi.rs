@@ -15,7 +15,10 @@
 use crate::{FunctionBuilderError, IrError};
 use core::iter::FusedIterator;
 use ir::primitive::{Block, Value};
-use std::collections::{hash_map::Iter as HashMapIter, HashMap};
+use std::{
+    collections::{btree_map::Iter as BTreeIter, BTreeMap},
+    convert::identity,
+};
 
 /// An incomplete phi instruction.
 ///
@@ -24,7 +27,7 @@ use std::collections::{hash_map::Iter as HashMapIter, HashMap};
 /// converted into proper phi instructions.
 #[derive(Debug, Default)]
 pub struct IncompletePhi {
-    operands: HashMap<Block, Value, ahash::RandomState>,
+    operands: BTreeMap<Block, Value>,
 }
 
 impl IncompletePhi {
@@ -37,6 +40,26 @@ impl IncompletePhi {
         value: Value,
     ) -> Option<Value> {
         self.operands.insert(block, value)
+    }
+
+    /// Replaces the `replace_value` with `with_value` in the entire incomplete phi instruction.
+    ///
+    /// Returns `true` if at least one value has actually been replaced by this operation.
+    pub fn replace_value(
+        &mut self,
+        replace_value: Value,
+        with_value: Value,
+    ) -> bool {
+        self.operands
+            .iter_mut()
+            .map(|(_block, value)| {
+                if *value == replace_value {
+                    *value = with_value;
+                    return true
+                }
+                false
+            })
+            .any(identity)
     }
 
     /// Returns an iterator over the operands of the incomplete ϕ-instruction.
@@ -93,7 +116,7 @@ impl IncompletePhi {
 /// Iterator over the operands of a ϕ-instruction.
 #[derive(Debug)]
 pub struct Iter<'a> {
-    iter: HashMapIter<'a, Block, Value>,
+    iter: BTreeIter<'a, Block, Value>,
 }
 
 impl<'a> Iterator for Iter<'a> {

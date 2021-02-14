@@ -258,7 +258,7 @@ impl<'a> FunctionBuilder<'a> {
             );
             let input_var = Variable::from_raw(RawIdx::from_u32(n as u32));
             ctx.vars
-                .write_var(input_var, val, entry_block, || input_type)
+                .write_var(input_var, val, entry_block, || input_type, None)
                 .expect("unexpected failure to write just declared variable");
         }
     }
@@ -390,7 +390,7 @@ impl<'a> FunctionBuilder<'a> {
         let FunctionBuilderContext {
             vars, value_type, ..
         } = &mut self.ctx;
-        vars.write_var(var, value, block, || value_type[value])?;
+        vars.write_var(var, value, block, || value_type[value], None)?;
         Ok(())
     }
 
@@ -414,7 +414,10 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.phi_var.insert(value, var);
         self.ctx.phi_block.insert(value, block);
         self.ctx.block_phis[block].insert(var, instr);
-        self.ctx.vars.write_var(var, value, block, || var_type)?;
+        self.ctx.block_incomplete_phis[block].insert(var, value);
+        self.ctx
+            .vars
+            .write_var(var, value, block, || var_type, None)?;
         self.ctx.instr_values.insert(instr, smallvec![value]);
         Ok(value)
     }
@@ -435,8 +438,6 @@ impl<'a> FunctionBuilder<'a> {
         if !self.ctx.block_sealed[block] {
             // Incomplete phi node required.
             let value = self.create_phi_instruction(var, var_type, block)?;
-            self.ctx.vars.write_var(var, value, block, || var_type)?;
-            self.ctx.block_incomplete_phis[block].insert(var, value);
             return Ok(value)
         }
         let value = if self.ctx.block_preds[block].len() == 1 {
@@ -449,9 +450,13 @@ impl<'a> FunctionBuilder<'a> {
             self.read_var_in_block(var, pred)?
         } else {
             // Break potential cycles with operandless phi instruction.
-            self.create_phi_instruction(var, var_type, block)?
+            let phi_value =
+                self.create_phi_instruction(var, var_type, block)?;
+            self.add_phi_operands(block, var, phi_value)?
         };
-        self.ctx.vars.write_var(var, value, block, || var_type)?;
+        self.ctx
+            .vars
+            .write_var(var, value, block, || var_type, None)?;
         Ok(value)
     }
 
@@ -472,6 +477,8 @@ impl<'a> FunctionBuilder<'a> {
             let value = self.read_var_in_block(var, pred)?;
             let incomplete_phi = &mut self.ctx.value_incomplete_phi[phi];
             incomplete_phi.append_operand(pred, value);
+            let phi_instr = self.phi_value_to_instr(phi);
+            self.ctx.value_users[value].insert(phi_instr);
         }
         self.try_remove_trivial_phi(phi)
     }
@@ -503,16 +510,7 @@ impl<'a> FunctionBuilder<'a> {
         //
         // Remove phi from its own users in case it was using itself.
         let same = equivalent_value;
-        let phi_instr = match self.ctx.value_assoc[phi_value] {
-            ValueAssoc::Instr(instr, 0) => instr,
-            ValueAssoc::Instr(instr, n) => {
-                panic!(
-                    "found {} to be the {}-th output of a phi instruction {} which is illegal",
-                    phi_value, n, instr,
-                )
-            }
-            _ => panic!("unexpected non-instruction value"),
-        };
+        let phi_instr = self.phi_value_to_instr(phi_value);
         self.ctx.value_users[phi_value].remove(&phi_instr);
         let users = self
             .ctx
@@ -521,33 +519,100 @@ impl<'a> FunctionBuilder<'a> {
             .unwrap_or_default();
         let phi_block = self.ctx.phi_block[phi_value];
         let phi_var = self.ctx.phi_var[phi_value];
+        let phi_value = self.phi_instr_to_value(phi_instr);
         let phi_type = self.ctx.value_type[phi_value];
         self.ctx.block_phis[phi_block].remove(phi_var);
-        // Not sure about the next line but I think it is necessary to update future queries.
-        self.ctx
-            .vars
-            .write_var(phi_var, same, phi_block, || phi_type)?;
+        self.ctx.vars.write_var(
+            phi_var,
+            same,
+            phi_block,
+            || phi_type,
+            Some(phi_value),
+        )?;
         for user in users {
-            let user_instr = &mut self.ctx.instrs[user];
-            user_instr.replace_value(|value| {
-                if *value == phi_value {
-                    *value = same;
-                    value_users[same].insert(user);
-                    return true
-                }
-                false
-            });
-            if user_instr.is_phi() {
-                assert_eq!(
-                    self.ctx.instr_values[user].len(),
-                    1,
-                    "phi instructions must have exactly one output value"
-                );
-                let phi_value = self.ctx.instr_values[user][0];
+            let got_replaced = self.replace_user_values(user, phi_value, same);
+            if got_replaced && self.ctx.instrs[user].is_phi() {
+                // If the user was an incomplete phi and there was an actual replacement
+                // we have to check if the phi is now trivial as well.
                 self.try_remove_trivial_phi(phi_value)?;
             }
         }
         Ok(same)
+    }
+
+    /// Replaces occurrences of `replace_value` with `with_value` for the given user instruction.
+    ///
+    /// # Note
+    ///
+    /// - This also updates value users on the fly if replacments took place.
+    /// - Returns `true` if an actual replacement took place.
+    fn replace_user_values(
+        &mut self,
+        user: Instr,
+        replace_value: Value,
+        with_value: Value,
+    ) -> bool {
+        let user_instr = &mut self.ctx.instrs[user];
+        let got_replaced = match user_instr.is_phi() {
+            false => {
+                // Returns `true` if a value actually got replaced.
+                user_instr.replace_value(|value| {
+                    if *value == replace_value {
+                        *value = with_value;
+                        return true
+                    }
+                    false
+                })
+            }
+            true => {
+                // Due to incomplete phi instruction we need to treat them differently.
+                let phi_value = self.phi_instr_to_value(user);
+                let inc_phi = &mut self.ctx.value_incomplete_phi[phi_value];
+                // Returns `true` if a value actually got replaced.
+                inc_phi.replace_value(replace_value, with_value)
+            }
+        };
+        if got_replaced {
+            // Register the instruction as user if there was an actual replacement.
+            self.ctx.value_users[with_value].insert(user);
+        }
+        got_replaced
+    }
+
+    /// Returns the associated value of the phi instruction.
+    ///
+    /// # Panics
+    ///
+    /// If the given `Instr` is not a phi instruction.
+    fn phi_instr_to_value(&self, phi_instr: Instr) -> Value {
+        assert!(self.ctx.instrs[phi_instr].is_phi());
+        assert_eq!(
+            self.ctx.instr_values[phi_instr].len(),
+            1,
+            "phi instructions must have exactly one output value"
+        );
+        self.ctx.instr_values[phi_instr][0]
+    }
+
+    /// Returns the associated `Instr` for the phi value.
+    ///
+    /// # Panics
+    ///
+    /// If the given phi value is not associated to a phi instruction.
+    fn phi_value_to_instr(&self, phi_value: Value) -> Instr {
+        match self.ctx.value_assoc[phi_value] {
+            ValueAssoc::Instr(instr, 0) => {
+                assert!(self.ctx.instrs[instr].is_phi());
+                instr
+            }
+            ValueAssoc::Instr(instr, n) => {
+                panic!(
+                    "found {} to be the {}-th output of a phi instruction {} which is illegal",
+                    phi_value, n, instr,
+                )
+            }
+            _ => panic!("unexpected non-instruction value"),
+        }
     }
 
     /// Reads the last assigned value of the variable within the scope of the current basic block.
@@ -630,20 +695,12 @@ impl<'a> FunctionBuilder<'a> {
         let mut block_instrs = ComponentVec::default();
         for (block, var_phis) in self.ctx.block_phis.iter() {
             for (_var, &phi_instr) in var_phis {
-                assert_eq!(
-                    self.ctx.instr_values[phi_instr].len(),
-                    1,
-                    "phi instructions must have exactly one output value"
-                );
-                let phi_value = self.ctx.instr_values[phi_instr][0];
+                let phi_value = self.phi_instr_to_value(phi_instr);
                 let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
-                let phi_instruction = match &mut self.ctx.instrs[phi_instr] {
-                    Instruction::Phi(phi) => phi,
-                    _ => panic!("unexpected non-phi instruction"),
-                };
-                for (block, value) in incomplete_phi.operands() {
-                    phi_instruction.append_operand(block, value);
-                }
+                let _empty_old_phi = core::mem::replace(
+                    &mut self.ctx.instrs[phi_instr],
+                    PhiInstr::new(incomplete_phi.operands()).into(),
+                );
             }
             // First add all phi instructions of a basic block and then
             // append the rest of the instructions of the same basic block.

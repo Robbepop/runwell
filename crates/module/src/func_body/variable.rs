@@ -324,6 +324,7 @@ impl VariableTranslator {
         new_value: Value,
         block: Block,
         value_to_type: F,
+        replace: Option<Value>,
     ) -> Result<(), IrError>
     where
         F: FnOnce() -> Type,
@@ -343,9 +344,17 @@ impl VariableTranslator {
                     declared_type,
                     value_to_type,
                 )?;
+                if let Some(replace) = replace {
+                    let previous = occupied.get().block_defs[block];
+                    if previous != replace {
+                        // The previous value is not equal so we bail out early.
+                        return Ok(())
+                    }
+                }
                 occupied.into_mut().block_defs.insert(block, new_value);
             }
             Entry::Vacant(vacant) => {
+                assert!(replace.is_none());
                 let declared_type = var_to_type.get_var_type(var);
                 Self::ensure_types_match(
                     var,
