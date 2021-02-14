@@ -21,9 +21,9 @@ pub mod primitive;
 mod replace_value;
 mod value_visitor;
 
+use self::replace_value::ReplaceValue;
 pub use self::{
     instruction::ImmU32,
-    replace_value::ReplaceValue,
     value_visitor::{VisitValues, VisitValuesMut},
 };
 

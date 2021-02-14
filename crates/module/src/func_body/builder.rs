@@ -42,7 +42,7 @@ use entity::{
 use ir::{
     instr::{Instruction, PhiInstr},
     primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
-    ReplaceValue,
+    VisitValuesMut,
 };
 use smallvec::{smallvec, SmallVec};
 
@@ -556,13 +556,15 @@ impl<'a> FunctionBuilder<'a> {
         let got_replaced = match user_instr.is_phi() {
             false => {
                 // Returns `true` if a value actually got replaced.
-                user_instr.replace_value(|value| {
+                let mut replaced = false;
+                user_instr.visit_values_mut(|value| {
                     if *value == replace_value {
                         *value = with_value;
-                        return true
+                        replaced = true;
                     }
-                    false
-                })
+                    true
+                });
+                replaced
             }
             true => {
                 // Due to incomplete phi instruction we need to treat them differently.
