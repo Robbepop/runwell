@@ -174,6 +174,19 @@ where
     Ok(eof)
 }
 
+/// Parses the binary WebAssembly (Wasm) bytes given through `reader`.
+///
+/// Returns the fully parsed and validated Wasm module.
+///
+/// # Note
+///
+/// Reuses the allocation from the `buffer` bytes vector.
+///
+/// # Errors
+///
+/// - If the given Wasm does not validate.
+/// - If the given Wasm does not parse properly.
+/// - If unsupported Wasm definitions or proposals are encountered.
 pub fn parse<R>(mut reader: R, buffer: &mut Vec<u8>) -> Result<Module, Error>
 where
     R: Read,
