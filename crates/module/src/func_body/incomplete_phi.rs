@@ -173,3 +173,18 @@ mod tests {
         assert_eq!(trivial_phi_2.is_trivial(phi), Ok(Some(v)));
     }
 }
+
+impl core::fmt::Display for IncompletePhi {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "ϕ [")?;
+        let mut iter = self.operands.iter();
+        if let Some((block, value)) = iter.next() {
+            write!(f, " {} -> {}", block, value)?;
+            for (block, value) in iter {
+                write!(f, ", {} -> {}", block, value)?;
+            }
+        }
+        write!(f, " ]")?;
+        Ok(())
+    }
+}
