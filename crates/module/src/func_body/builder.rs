@@ -104,7 +104,7 @@ pub struct FunctionBuilderContext {
     /// a terminal instruction as its last instruction.
     pub block_filled: DefaultComponentVec<Block, bool>,
     /// Block instructions.
-    pub block_instrs: ComponentVec<Block, Vec<Instr>>,
+    pub block_instrs: ComponentVec<Block, SmallVec<[Instr; 4]>>,
     /// Required information to remove phi from its block if it becomes trivial.
     pub phi_block: ComponentMap<Value, Block>,
     /// Required information to remove phi from its block if it becomes trivial.
@@ -707,7 +707,7 @@ impl<'a> FunctionBuilder<'a> {
             let mut instructions = var_phis
                 .iter()
                 .map(|(_var, &phi_instr)| phi_instr)
-                .collect::<Vec<_>>();
+                .collect::<SmallVec<[Instr; 4]>>();
             instructions.extend_from_slice(&self.ctx.block_instrs[block]);
             block_instrs.insert(block, instructions);
         }

@@ -51,7 +51,7 @@ pub struct FunctionBody {
     /// # Note
     ///
     /// Also contains all the phi instructions at the block start.
-    block_instrs: ComponentVec<Block, Vec<Instr>>,
+    block_instrs: ComponentVec<Block, SmallVec<[Instr; 4]>>,
     /// Optional associated values for instructions.
     ///
     /// Not all instructions can be associated with an SSA value.
