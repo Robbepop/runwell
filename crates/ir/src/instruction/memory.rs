@@ -34,7 +34,7 @@ pub struct ImmU32 {
 /// this instruction in order to load or store values from and to the heap memory.
 ///
 /// Traps if `ptr..ptr+size` is not within bounds for the target heap memory.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "heap_addr {}[{}..{}+{}]", heap, ptr, ptr, size)]
 pub struct HeapAddrInstr {
     heap: Mem,
@@ -74,7 +74,7 @@ impl ReplaceValue for HeapAddrInstr {
 }
 
 /// Loads a value of type `ty` from the given memory at the given address with given alignment.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "load {} from {}+{}", ty, address, offset)]
 pub struct LoadInstr {
     ty: Type,
@@ -118,7 +118,7 @@ impl ReplaceValue for LoadInstr {
 }
 
 /// Stores the value at the given address and offset.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "store {} {} from {}+{}", ty, value, address, offset)]
 pub struct StoreInstr {
     address: Value,
@@ -171,7 +171,7 @@ impl ReplaceValue for StoreInstr {
 /// Grows the indexed linear memory by the given amount of new memory pages.
 ///
 /// Returns the previous size of the linear memory upon success or -1 upon failure.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "memory.grow memory {}, pages {}", memory, new_pages)]
 pub struct MemoryGrowInstr {
     memory: Mem,
@@ -195,7 +195,7 @@ impl ReplaceValue for MemoryGrowInstr {
 }
 
 /// Returns the current number of pages of the indexed linear memory.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "memory.size memory {}", memory)]
 pub struct MemorySizeInstr {
     memory: Mem,

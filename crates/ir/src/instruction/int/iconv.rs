@@ -23,7 +23,7 @@ use derive_more::Display;
 /// # Note
 ///
 /// The bit width of the source type must be greater than the bit width of the destination type.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "itruncate {} -> {}, src {}", src_type, dst_type, src)]
 pub struct TruncateIntInstr {
     src_type: IntType,
@@ -76,7 +76,7 @@ impl ReplaceValue for TruncateIntInstr {
 /// # Note
 ///
 /// The bit width of the source type must be less than the bit width of the destination type.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
     fmt = "{}extend {} -> {}, src {}",
     "if self.signed { 's' } else { 'u' }",
@@ -164,7 +164,7 @@ impl ReplaceValue for ExtendIntInstr {
 }
 
 /// Instruction to convert an integer into a floating point number.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
     fmt = "{}convert {} -> {}, src {}",
     "if self.signed { 's' } else { 'u' }",

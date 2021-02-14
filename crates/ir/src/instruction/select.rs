@@ -24,7 +24,7 @@ use derive_more::Display;
 ///
 /// This might result in branching operations when translated to
 /// machine code.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
     fmt = "select condition {}, true {}, false {}",
     condition,

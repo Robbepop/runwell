@@ -29,7 +29,7 @@ use crate::{primitive::Value, ReplaceValue};
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum IntInstr {
     Binary(BinaryIntInstr),
     Unary(UnaryIntInstr),

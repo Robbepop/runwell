@@ -86,7 +86,7 @@ impl DisplayHook for TableEntity {
 }
 
 /// A basic block entity of the Runwell IR.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct BlockEntity;
 
 /// The unique index of a basic block entity of the Runwell IR.
@@ -99,7 +99,7 @@ impl DisplayHook for BlockEntity {
 }
 
 /// An SSA value entity of the Runwell IR.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ValueEntity;
 
 /// The unique index of a value entity of the Runwell IR.

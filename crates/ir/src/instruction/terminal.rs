@@ -22,7 +22,7 @@ use derive_more::{Display, From};
 use std::convert::identity;
 
 /// A tail call instruction.
-#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct TailCallInstr {
     /// The underlying call instruction.
     instr: CallInstr,
@@ -69,7 +69,7 @@ impl ReplaceValue for TailCallInstr {
 ///
 /// Every basic block is required to have a terminal instruction
 /// as its last instruction.
-#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum TerminalInstr {
     #[display(fmt = "trap")]
     Trap,
@@ -97,7 +97,7 @@ impl ReplaceValue for TerminalInstr {
 }
 
 /// Returns the returned value from to the function's caller.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct ReturnInstr {
     return_values: Vec<Value>,
 }
@@ -147,7 +147,7 @@ impl ReplaceValue for ReturnInstr {
 }
 
 /// Unconditionally branches to another basic block.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "br {}", target)]
 pub struct BranchInstr {
     target: Block,
@@ -167,7 +167,7 @@ impl BranchInstr {
 }
 
 /// Conditionally either branches to `then` or `else` branch depending on `condition`.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "if {} then {} else {}", condition, br_then, br_else)]
 pub struct IfThenElseInstr {
     condition: Value,
@@ -214,7 +214,7 @@ impl ReplaceValue for IfThenElseInstr {
 }
 
 /// A branching table mapping indices to branching targets.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct BranchTableInstr {
     case: Value,
     default: Block,

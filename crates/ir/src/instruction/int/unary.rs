@@ -44,7 +44,7 @@ impl Display for UnaryIntOp {
 /// The base of all unary integer instructions.
 ///
 /// Generic over a concrete unary integer operand.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct UnaryIntInstr {
     op: UnaryIntOp,
     ty: IntType,

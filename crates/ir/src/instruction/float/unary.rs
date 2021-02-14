@@ -64,7 +64,7 @@ impl Display for UnaryFloatOp {
 /// The base of all unary floating point number instructions.
 ///
 /// Generic over a concrete unary floating point number operand.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct UnaryFloatInstr {
     op: UnaryFloatOp,
     ty: FloatType,

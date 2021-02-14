@@ -20,7 +20,7 @@ use core::{convert::identity, fmt::Display, iter::FusedIterator};
 use std::collections::{btree_map::Iter as BTreeMapIter, BTreeMap};
 
 /// A ϕ-instruction in the Runwell IR.
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct PhiInstr {
     operands: BTreeMap<Block, Value>,
 }

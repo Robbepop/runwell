@@ -75,7 +75,7 @@ use super::{primitive::Value, ReplaceValue};
 use derive_more::{Display, From};
 
 /// An SSA instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq, Hash)]
+#[derive(Debug, Display, From, PartialEq, Eq, Hash, Clone)]
 pub enum Instruction {
     Call(CallInstr),
     CallIndirect(CallIndirectInstr),

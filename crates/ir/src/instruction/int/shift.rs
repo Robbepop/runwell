@@ -26,7 +26,7 @@ use core::fmt::Display;
 ///
 /// - The source and result values are of integer type `ty` whereas
 ///   the shift amount is always of type `I32`.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct ShiftIntInstr {
     op: ShiftIntOp,
     int_type: IntType,

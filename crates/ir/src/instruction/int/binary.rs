@@ -28,7 +28,7 @@ use core::fmt::Display;
 ///   equal to the type `ty`.
 /// - In case of shift and rotate operands the `lhs` value is the source
 ///   and the `rhs` value is the shift or rotate amount.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct BinaryIntInstr {
     op: BinaryIntOp,
     ty: IntType,

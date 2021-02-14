@@ -52,7 +52,7 @@ impl Display for CompareFloatOp {
 }
 
 /// A comparison instruction for comparing floating point number with respect to some operand.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "fcmp -{} {} {} {}", op, ty, lhs, rhs)]
 pub struct CompareFloatInstr {
     op: CompareFloatOp,

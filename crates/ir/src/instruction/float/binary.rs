@@ -58,7 +58,7 @@ impl Display for BinaryFloatOp {
 /// The base of all binary floating point number instructions.
 ///
 /// Generic over a concrete binary floating point number operand.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct BinaryFloatInstr {
     op: BinaryFloatOp,
     ty: FloatType,
