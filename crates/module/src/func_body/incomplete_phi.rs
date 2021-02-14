@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{FunctionBuilderError, IrError};
+use crate::{Error, FunctionBuilderError};
 use core::iter::FusedIterator;
 use ir::primitive::{Block, Value};
 use std::{
@@ -79,10 +79,7 @@ impl IncompletePhi {
     /// # Errors
     ///
     /// If the incomplete phi instruction is unreachable or in the entry block.
-    pub fn is_trivial(
-        &self,
-        phi_value: Value,
-    ) -> Result<Option<Value>, IrError> {
+    pub fn is_trivial(&self, phi_value: Value) -> Result<Option<Value>, Error> {
         let mut same: Option<Value> = None;
         for (_block, op) in self.operands() {
             if Some(op) == same || op == phi_value {

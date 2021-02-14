@@ -41,7 +41,6 @@ use module::{
     FunctionBody,
     FunctionBuilder,
     InstructionBuilder,
-    IrError,
     Module,
 };
 
@@ -52,7 +51,7 @@ fn module_with_func<F>(
     f: F,
 ) -> (Func, Module)
 where
-    F: FnOnce(&mut FunctionBuilder) -> Result<(), IrError>,
+    F: FnOnce(&mut FunctionBuilder) -> Result<(), module::Error>,
 {
     let mut builder = Module::build();
     let mut type_builder = builder.type_section().unwrap();
@@ -122,7 +121,7 @@ fn bits_into_const(module: &Module, func: Func, bits: Vec<u64>) -> Vec<Const> {
 }
 
 #[test]
-fn ret_const_works() -> Result<(), IrError> {
+fn ret_const_works() -> Result<(), module::Error> {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.body()?;
         let c = b.ins()?.constant(IntConst::I32(42))?;
@@ -135,7 +134,7 @@ fn ret_const_works() -> Result<(), IrError> {
 }
 
 #[test]
-fn simple_block_works() -> Result<(), IrError> {
+fn simple_block_works() -> Result<(), module::Error> {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.body()?;
         let v1 = b.ins()?.constant(IntConst::I32(1))?;
@@ -151,7 +150,7 @@ fn simple_block_works() -> Result<(), IrError> {
 }
 
 #[test]
-fn if_then_else_works() -> Result<(), IrError> {
+fn if_then_else_works() -> Result<(), module::Error> {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.body()?;
         let then_block = b.create_block()?;
@@ -176,7 +175,7 @@ fn if_then_else_works() -> Result<(), IrError> {
 }
 
 #[test]
-fn simple_variable() -> Result<(), IrError> {
+fn simple_variable() -> Result<(), module::Error> {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.declare_variables(1, IntType::I32.into())?;
         b.body()?;
@@ -194,7 +193,7 @@ fn simple_variable() -> Result<(), IrError> {
 }
 
 #[test]
-fn double_input() -> Result<(), IrError> {
+fn double_input() -> Result<(), module::Error> {
     let (func, module) =
         module_with_func(&[IntType::I32.into()], &[IntType::I32.into()], |b| {
             b.body()?;
@@ -213,7 +212,7 @@ fn double_input() -> Result<(), IrError> {
 }
 
 #[test]
-fn global_identity_using_local() -> Result<(), IrError> {
+fn global_identity_using_local() -> Result<(), module::Error> {
     let (func, module) =
         module_with_func(&[IntType::I32.into()], &[IntType::I32.into()], |b| {
             b.declare_variables(1, IntType::I32.into())?;
@@ -242,7 +241,7 @@ fn global_identity_using_local() -> Result<(), IrError> {
 }
 
 #[test]
-fn inconveniently_written_min() -> Result<(), IrError> {
+fn inconveniently_written_min() -> Result<(), module::Error> {
     let (func, module) = module_with_func(
         &[IntType::I32.into(); 2][..],
         &[IntType::I32.into()],
@@ -296,7 +295,7 @@ fn inconveniently_written_min() -> Result<(), IrError> {
 }
 
 #[test]
-fn binary_swap_works() -> Result<(), IrError> {
+fn binary_swap_works() -> Result<(), module::Error> {
     let (func, module) = module_with_func(
         &[IntType::I32.into(); 2][..],
         &[IntType::I32.into(); 2][..],
@@ -326,7 +325,7 @@ fn binary_swap_works() -> Result<(), IrError> {
 }
 
 #[test]
-fn counting_loop_works() -> Result<(), IrError> {
+fn counting_loop_works() -> Result<(), module::Error> {
     let (func, module) =
         module_with_func(&[IntType::I32.into()], &[IntType::I32.into()], |b| {
             b.declare_variables(2, IntType::I32.into())?;
@@ -381,9 +380,9 @@ fn counting_loop_works() -> Result<(), IrError> {
 
 fn construct_is_even_and_is_odd<F>(
     mut f: F,
-) -> Result<(Module, Func, Func), IrError>
+) -> Result<(Module, Func, Func), module::Error>
 where
-    F: FnMut(InstructionBuilder, Func, Value) -> Result<Instr, IrError>,
+    F: FnMut(InstructionBuilder, Func, Value) -> Result<Instr, module::Error>,
 {
     // Setup module.
     let mut builder = Module::build();
@@ -489,7 +488,7 @@ where
 }
 
 #[test]
-fn ping_pong_calls() -> Result<(), IrError> {
+fn ping_pong_calls() -> Result<(), module::Error> {
     let (module, is_even, is_odd) =
         construct_is_even_and_is_odd(|ins, func, v6| ins.call(func, vec![v6]))?;
 
@@ -508,7 +507,7 @@ fn ping_pong_calls() -> Result<(), IrError> {
 }
 
 #[test]
-fn ping_pong_tail_calls() -> Result<(), IrError> {
+fn ping_pong_tail_calls() -> Result<(), module::Error> {
     let (module, is_even, is_odd) =
         construct_is_even_and_is_odd(|ins, func, v6| {
             ins.tail_call(func, vec![v6])

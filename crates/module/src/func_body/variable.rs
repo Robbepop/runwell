@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::VariableAccess;
-use crate::{FunctionBuilderError, IrError};
+use crate::{Error, FunctionBuilderError};
 use core::fmt;
 use derive_more::From;
 use entity::{
@@ -232,7 +232,7 @@ impl VariableTranslator {
         &self,
         var: Variable,
         access: VariableAccess,
-    ) -> Result<(), IrError> {
+    ) -> Result<(), Error> {
         if !self.vars.contains_key(var) {
             return Err(FunctionBuilderError::MissingDeclarationForVariable {
                 variable: var,
@@ -253,7 +253,7 @@ impl VariableTranslator {
         new_value: Value,
         declared_type: Type,
         value_to_type: F,
-    ) -> Result<(), IrError>
+    ) -> Result<(), Error>
     where
         F: FnOnce() -> Type,
     {
@@ -278,11 +278,7 @@ impl VariableTranslator {
     /// # Errors
     ///
     /// If there are more than 2^31 variable declarations.
-    pub fn declare_vars(
-        &mut self,
-        amount: u32,
-        ty: Type,
-    ) -> Result<(), IrError> {
+    pub fn declare_vars(&mut self, amount: u32, ty: Type) -> Result<(), Error> {
         let first_idx = self.vars.alloc_default(amount as usize);
         if self.vars.len() >= u32::MAX as usize {
             return Err(FunctionBuilderError::TooManyVariableDeclarations)
@@ -325,7 +321,7 @@ impl VariableTranslator {
         block: Block,
         value_to_type: F,
         replace: Option<Value>,
-    ) -> Result<(), IrError>
+    ) -> Result<(), Error>
     where
         F: FnOnce() -> Type,
     {
@@ -382,7 +378,7 @@ impl VariableTranslator {
     pub fn get(
         &mut self,
         var: Variable,
-    ) -> Result<&VariableDefinitions, IrError> {
+    ) -> Result<&VariableDefinitions, Error> {
         self.ensure_declared(var, VariableAccess::Read)?;
         let Self {
             var_to_type,

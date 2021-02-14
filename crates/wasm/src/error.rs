@@ -25,7 +25,6 @@ use super::{
 };
 use core::fmt::Display;
 use derive_more::{Display, Error, From};
-use module::IrError;
 
 /// An error that occured while parsing a Wasm input and building up the module for it.
 #[derive(Debug, Error)]
@@ -128,7 +127,7 @@ pub enum ErrorKind {
     Read(ReadError),
     Section(SectionError),
     Module { message: String },
-    Ir(IrError),
+    Ir(module::Error),
     Translate(TranslateError),
     Wasmparser(wasmparser::BinaryReaderError),
 }

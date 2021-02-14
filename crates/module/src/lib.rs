@@ -27,7 +27,7 @@ mod table;
 
 pub use self::{
     builder::{ModuleBuilder, ModuleResources},
-    error::{IrError, IrErrorKind},
+    error::{Error, ErrorKind},
     func_body::{
         FunctionBody,
         FunctionBuilder,

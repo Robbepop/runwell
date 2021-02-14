@@ -18,12 +18,12 @@ use derive_more::{Display, Error, From};
 
 /// An error that occured while translating from Wasm to Runwell IR.
 #[derive(Debug, Error, From, PartialEq, Eq)]
-pub struct IrError {
-    kind: IrErrorKind,
+pub struct Error {
+    kind: ErrorKind,
     context: Vec<String>,
 }
 
-impl fmt::Display for IrError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.kind)?;
         if let Some((first, rest)) = self.context.split_first() {
@@ -36,9 +36,9 @@ impl fmt::Display for IrError {
     }
 }
 
-impl IrError {
+impl Error {
     /// Constructs a new IR error from the given error kind.
-    fn from_kind(kind: IrErrorKind) -> Self {
+    fn from_kind(kind: ErrorKind) -> Self {
         Self {
             kind,
             context: Vec::new(),
@@ -55,12 +55,12 @@ impl IrError {
     }
 
     /// Returns a shared reference to the underlying kind of encountered error.
-    pub fn kind(&self) -> &IrErrorKind {
+    pub fn kind(&self) -> &ErrorKind {
         &self.kind
     }
 }
 
-impl From<FunctionBuilderError> for IrError {
+impl From<FunctionBuilderError> for Error {
     fn from(error: FunctionBuilderError) -> Self {
         Self::from_kind(error.into())
     }
@@ -68,6 +68,6 @@ impl From<FunctionBuilderError> for IrError {
 
 /// An error kind that occured while translating from Wasm to Runwell IR.
 #[derive(Debug, Display, Error, From, PartialEq, Eq)]
-pub enum IrErrorKind {
+pub enum ErrorKind {
     FunctionBuilder(FunctionBuilderError),
 }

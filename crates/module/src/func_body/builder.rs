@@ -29,7 +29,7 @@ use super::{
     FunctionBuilderError,
     VariableTranslator,
 };
-use crate::{IrError, ModuleResources};
+use crate::{Error, ModuleResources};
 use core::mem::replace;
 use derive_more::Display;
 use entity::{
@@ -273,7 +273,7 @@ impl<'a> FunctionBuilder<'a> {
         &mut self,
         amount: u32,
         ty: Type,
-    ) -> Result<(), IrError> {
+    ) -> Result<(), Error> {
         self.ensure_construction_in_order(
             FunctionBuilderState::LocalVariables,
         )?;
@@ -282,13 +282,13 @@ impl<'a> FunctionBuilder<'a> {
     }
 
     /// Start defining the body of the function with its basic blocks and instructions.
-    pub fn body(&mut self) -> Result<(), IrError> {
+    pub fn body(&mut self) -> Result<(), Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         Ok(())
     }
 
     /// Creates a new basic block for the function and returns a reference to it.
-    pub fn create_block(&mut self) -> Result<Block, IrError> {
+    pub fn create_block(&mut self) -> Result<Block, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc(Default::default());
         self.ctx.block_preds.insert(new_block, Default::default());
@@ -305,7 +305,7 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// If no basic blocks exist.
-    pub fn current_block(&mut self) -> Result<Block, IrError> {
+    pub fn current_block(&mut self) -> Result<Block, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         Ok(self.ctx.current)
     }
@@ -315,7 +315,7 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// If the basic block does not exist in this function.
-    pub fn switch_to_block(&mut self, block: Block) -> Result<(), IrError> {
+    pub fn switch_to_block(&mut self, block: Block) -> Result<(), Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         if !self.ctx.blocks.contains_key(block) {
             return Err(FunctionBuilderError::InvalidBasicBlock { block })
@@ -332,7 +332,7 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// If the current basic block has already been sealed.
-    pub fn seal_block(&mut self) -> Result<(), IrError> {
+    pub fn seal_block(&mut self) -> Result<(), Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let already_sealed = replace(&mut self.ctx.block_sealed[block], true);
@@ -359,9 +359,7 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// If the current block is already filled.
-    pub fn ins<'b>(
-        &'b mut self,
-    ) -> Result<InstructionBuilder<'b, 'a>, IrError> {
+    pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled[block];
@@ -384,7 +382,7 @@ impl<'a> FunctionBuilder<'a> {
         &mut self,
         var: Variable,
         value: Value,
-    ) -> Result<(), IrError> {
+    ) -> Result<(), Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
         let FunctionBuilderContext {
@@ -400,7 +398,7 @@ impl<'a> FunctionBuilder<'a> {
         var: Variable,
         var_type: Type,
         block: Block,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
         let value = self.ctx.values.alloc(ValueEntity);
         self.ctx
@@ -427,7 +425,7 @@ impl<'a> FunctionBuilder<'a> {
         &mut self,
         var: Variable,
         block: Block,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         let var_info = self.ctx.vars.get(var)?;
         if let Some(value) = var_info.definitions().for_block(block) {
             // Local Value Numbering
@@ -468,7 +466,7 @@ impl<'a> FunctionBuilder<'a> {
         block: Block,
         var: Variable,
         phi: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         let preds = self.ctx.block_preds[block]
             .iter()
             .copied()
@@ -491,7 +489,7 @@ impl<'a> FunctionBuilder<'a> {
     fn try_remove_trivial_phi(
         &mut self,
         phi_value: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
         let equivalent_value = match incomplete_phi.is_trivial(phi_value)? {
             Some(equivalent_value) => {
@@ -622,7 +620,7 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// - If the variable has not beed declared.
-    pub fn read_var(&mut self, var: Variable) -> Result<Value, IrError> {
+    pub fn read_var(&mut self, var: Variable) -> Result<Value, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let current = self.current_block()?;
         self.read_var_in_block(var, current)
@@ -633,14 +631,14 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// - If the variable has not beed declared.
-    pub fn var_type(&mut self, var: Variable) -> Result<Type, IrError> {
+    pub fn var_type(&mut self, var: Variable) -> Result<Type, Error> {
         Ok(self.ctx.vars.get(var)?.ty())
     }
 
     /// Returns the SSA output values of the instruction if any.
-    pub fn instr_values(&self, instr: Instr) -> Result<&[Value], IrError> {
+    pub fn instr_values(&self, instr: Instr) -> Result<&[Value], Error> {
         if !self.ctx.instrs.contains_key(instr) {
-            return Err(IrError::from(FunctionBuilderError::InvalidInstr {
+            return Err(Error::from(FunctionBuilderError::InvalidInstr {
                 instr,
             })
             .with_context("tried to query instruction values"))
@@ -661,7 +659,7 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// If not all basic blocks in the function are sealed and filled.
-    pub fn finalize(mut self) -> Result<FunctionBody, IrError> {
+    pub fn finalize(mut self) -> Result<FunctionBody, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let unsealed_blocks = self
             .ctx

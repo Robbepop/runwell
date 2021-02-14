@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::{builder::ValueAssoc, FunctionBuilder, FunctionBuilderError};
-use crate::IrError;
+use crate::Error;
 use entity::Idx;
 use ir::{
     instr::{
@@ -88,7 +88,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         &mut self,
         instruction: Instruction,
         output_type: Type,
-    ) -> Result<(Value, Instr), IrError> {
+    ) -> Result<(Value, Instr), Error> {
         let instr =
             self.append_multi_value_instr(instruction, &[output_type])?;
         let value = self.builder.ctx.instr_values[instr][0];
@@ -114,7 +114,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         &mut self,
         instruction: Instruction,
         output_types: &[Type],
-    ) -> Result<Instr, IrError> {
+    ) -> Result<Instr, Error> {
         let is_terminal = instruction.is_terminal();
         if is_terminal {
             assert!(
@@ -151,7 +151,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         Ok(instr)
     }
 
-    pub fn call<P>(mut self, func: Func, params: P) -> Result<Instr, IrError>
+    pub fn call<P>(mut self, func: Func, params: P) -> Result<Instr, Error>
     where
         P: IntoIterator<Item = Value>,
     {
@@ -185,11 +185,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         Ok(instr)
     }
 
-    pub fn tail_call<P>(
-        mut self,
-        func: Func,
-        params: P,
-    ) -> Result<Instr, IrError>
+    pub fn tail_call<P>(mut self, func: Func, params: P) -> Result<Instr, Error>
     where
         P: IntoIterator<Item = Value>,
     {
@@ -216,7 +212,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         Ok(instr)
     }
 
-    pub fn constant<C>(mut self, constant: C) -> Result<Value, IrError>
+    pub fn constant<C>(mut self, constant: C) -> Result<Value, Error>
     where
         C: Into<Const>,
     {
@@ -249,7 +245,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         &self,
         value: Value,
         expected_type: Type,
-    ) -> Result<(), IrError> {
+    ) -> Result<(), Error> {
         let value_type = self.builder.ctx.value_type[value];
         if value_type != expected_type {
             return Err(FunctionBuilderError::UnmatchingValueType {
@@ -268,7 +264,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         op: UnaryIntOp,
         int_type: IntType,
         source: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(source, int_type.into())?;
         let instruction = UnaryIntInstr::new(op, int_type, source);
         let (value, instr) =
@@ -282,7 +278,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self,
         int_type: IntType,
         source: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.iunary(UnaryIntOp::LeadingZeros, int_type, source)
     }
 
@@ -291,7 +287,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self,
         int_type: IntType,
         source: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.iunary(UnaryIntOp::TrailingZeros, int_type, source)
     }
 
@@ -300,7 +296,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self,
         int_type: IntType,
         source: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.iunary(UnaryIntOp::PopCount, int_type, source)
     }
 
@@ -311,7 +307,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         int_type: IntType,
         source: Value,
         shift_amount: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(source, int_type.into())?;
         self.expect_type(shift_amount, IntType::I32.into())?;
         let instruction =
@@ -328,7 +324,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         int_type: IntType,
         source: Value,
         shift_amount: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ishift(ShiftIntOp::Shl, int_type, source, shift_amount)
     }
 
@@ -338,7 +334,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         int_type: IntType,
         source: Value,
         shift_amount: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ishift(ShiftIntOp::Ushr, int_type, source, shift_amount)
     }
 
@@ -348,7 +344,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         int_type: IntType,
         source: Value,
         shift_amount: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ishift(ShiftIntOp::Sshr, int_type, source, shift_amount)
     }
 
@@ -358,7 +354,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         int_type: IntType,
         source: Value,
         shift_amount: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ishift(ShiftIntOp::Rotl, int_type, source, shift_amount)
     }
 
@@ -368,7 +364,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         int_type: IntType,
         source: Value,
         shift_amount: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ishift(ShiftIntOp::Rotr, int_type, source, shift_amount)
     }
 
@@ -379,7 +375,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = BinaryIntInstr::new(op, ty, lhs, rhs);
@@ -395,7 +391,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Add, ty, lhs, rhs)
     }
 
@@ -405,7 +401,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Sub, ty, lhs, rhs)
     }
 
@@ -415,7 +411,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Mul, ty, lhs, rhs)
     }
 
@@ -425,7 +421,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Sdiv, ty, lhs, rhs)
     }
 
@@ -435,7 +431,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Udiv, ty, lhs, rhs)
     }
 
@@ -445,7 +441,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Srem, ty, lhs, rhs)
     }
 
@@ -455,7 +451,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Urem, ty, lhs, rhs)
     }
 
@@ -465,7 +461,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::And, ty, lhs, rhs)
     }
 
@@ -475,7 +471,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Or, ty, lhs, rhs)
     }
 
@@ -485,7 +481,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: IntType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.ibinary(BinaryIntOp::Xor, ty, lhs, rhs)
     }
 
@@ -510,7 +506,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         op: CompareIntOp,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
@@ -526,7 +522,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         op: UnaryFloatOp,
         ty: FloatType,
         source: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(source, ty.into())?;
         let instruction = UnaryFloatInstr::new(op, ty, source);
         let (value, instr) =
@@ -536,31 +532,27 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     }
 
     /// Float absolute value.
-    pub fn fabs(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+    pub fn fabs(self, ty: FloatType, source: Value) -> Result<Value, Error> {
         self.funary(UnaryFloatOp::Abs, ty, source)
     }
 
     /// Float negate.
-    pub fn fneg(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+    pub fn fneg(self, ty: FloatType, source: Value) -> Result<Value, Error> {
         self.funary(UnaryFloatOp::Neg, ty, source)
     }
 
     /// Float square root.
-    pub fn fsqrt(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+    pub fn fsqrt(self, ty: FloatType, source: Value) -> Result<Value, Error> {
         self.funary(UnaryFloatOp::Sqrt, ty, source)
     }
 
     /// Float round to ceil.
-    pub fn fceil(self, ty: FloatType, source: Value) -> Result<Value, IrError> {
+    pub fn fceil(self, ty: FloatType, source: Value) -> Result<Value, Error> {
         self.funary(UnaryFloatOp::Ceil, ty, source)
     }
 
     /// Float round to floor.
-    pub fn ffloor(
-        self,
-        ty: FloatType,
-        source: Value,
-    ) -> Result<Value, IrError> {
+    pub fn ffloor(self, ty: FloatType, source: Value) -> Result<Value, Error> {
         self.funary(UnaryFloatOp::Floor, ty, source)
     }
 
@@ -569,7 +561,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self,
         ty: FloatType,
         source: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.funary(UnaryFloatOp::Truncate, ty, source)
     }
 
@@ -578,7 +570,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self,
         ty: FloatType,
         source: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.funary(UnaryFloatOp::Nearest, ty, source)
     }
 
@@ -589,7 +581,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = BinaryFloatInstr::new(op, ty, lhs, rhs);
@@ -605,7 +597,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.fbinary(BinaryFloatOp::Add, ty, lhs, rhs)
     }
 
@@ -615,7 +607,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.fbinary(BinaryFloatOp::Sub, ty, lhs, rhs)
     }
 
@@ -625,7 +617,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.fbinary(BinaryFloatOp::Mul, ty, lhs, rhs)
     }
 
@@ -635,7 +627,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.fbinary(BinaryFloatOp::Div, ty, lhs, rhs)
     }
 
@@ -645,7 +637,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.fbinary(BinaryFloatOp::Min, ty, lhs, rhs)
     }
 
@@ -655,7 +647,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.fbinary(BinaryFloatOp::Max, ty, lhs, rhs)
     }
 
@@ -665,7 +657,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ty: FloatType,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.fbinary(BinaryFloatOp::CopySign, ty, lhs, rhs)
     }
 
@@ -685,7 +677,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         op: CompareFloatOp,
         lhs: Value,
         rhs: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareFloatInstr::new(op, ty, lhs, rhs);
@@ -706,7 +698,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         condition: Value,
         if_true: Value,
         if_false: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(if_true, ty)?;
         self.expect_type(if_false, ty)?;
         let instruction = SelectInstr::new(condition, ty, if_true, if_false);
@@ -732,7 +724,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         from_type: Type,
         to_type: Type,
         src: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         let from_bitwidth = from_type.bit_width();
         let to_bitwidth = to_type.bit_width();
         if from_bitwidth != to_bitwidth {
@@ -762,7 +754,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         to_type: IntType,
         src: Value,
         signed: bool,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         if from_type.bit_width() > to_type.bit_width() {
             return Err(FunctionBuilderError::InvalidExtension {
                 from_type,
@@ -788,7 +780,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         from_type: IntType,
         to_type: IntType,
         src: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         if to_type.bit_width() > from_type.bit_width() {
             return Err(FunctionBuilderError::InvalidTruncation {
                 from_type,
@@ -813,7 +805,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         from_type: FloatType,
         to_type: FloatType,
         src: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         if from_type.bit_width() > to_type.bit_width() {
             return Err(FunctionBuilderError::InvalidPromotion {
                 from_type,
@@ -838,7 +830,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         from_type: FloatType,
         to_type: FloatType,
         src: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         if from_type.bit_width() < to_type.bit_width() {
             return Err(FunctionBuilderError::InvalidPromotion {
                 from_type,
@@ -866,7 +858,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         dst_signed: bool,
         src: Value,
         saturating: bool,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         let instruction = FloatToIntInstr::new(
             src_type, dst_type, dst_signed, src, saturating,
         );
@@ -886,7 +878,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         src_type: IntType,
         dst_type: FloatType,
         src: Value,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         let instruction = IntToFloatInstr::new(signed, src_type, dst_type, src);
         let (value, instr) =
             self.append_value_instr(instruction.into(), dst_type.into())?;
@@ -903,7 +895,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         mem: Mem,
         pos: Value,
         size: ImmU32,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(pos, IntType::I32.into())?;
         let instruction = HeapAddrInstr::new(mem, pos, size);
         let (value, instr) =
@@ -918,7 +910,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         ptr: Value,
         offset: ImmU32,
         ty: Type,
-    ) -> Result<Value, IrError> {
+    ) -> Result<Value, Error> {
         self.expect_type(ptr, Type::Ptr)?;
         let instruction = LoadInstr::new(ty, ptr, offset);
         let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
@@ -933,7 +925,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         offset: ImmU32,
         stored_value: Value,
         ty: Type,
-    ) -> Result<Instr, IrError> {
+    ) -> Result<Instr, Error> {
         self.expect_type(ptr, Type::Ptr)?;
         let instruction = StoreInstr::new(ptr, offset, stored_value, ty);
         let instr = self.append_instr(instruction)?;
@@ -944,7 +936,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     /// Appends the instruction onto the current basic block.
     ///
     /// Fills the block in case the instruction is a terminal instruction.
-    fn append_instr<I>(&mut self, instruction: I) -> Result<Instr, IrError>
+    fn append_instr<I>(&mut self, instruction: I) -> Result<Instr, Error>
     where
         I: Into<Instruction>,
     {
@@ -960,10 +952,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     }
 
     /// Returns the given value to the caller of the function.
-    pub fn return_values<T>(
-        mut self,
-        return_values: T,
-    ) -> Result<Instr, IrError>
+    pub fn return_values<T>(mut self, return_values: T) -> Result<Instr, Error>
     where
         T: IntoIterator<Item = Value>,
         <T as IntoIterator>::IntoIter: Clone,
@@ -997,7 +986,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     }
 
     /// Unconditionally jumps to the target basic block.
-    pub fn br(mut self, target: Block) -> Result<Instr, IrError> {
+    pub fn br(mut self, target: Block) -> Result<Instr, Error> {
         let block = self.builder.current_block()?;
         let instr = self.append_instr(BranchInstr::new(target))?;
         self.add_predecessor(target, block)?;
@@ -1005,7 +994,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     }
 
     /// Immediately traps or aborts execution.
-    pub fn trap(mut self) -> Result<Instr, IrError> {
+    pub fn trap(mut self) -> Result<Instr, Error> {
         self.append_instr(TerminalInstr::Trap)
     }
 
@@ -1016,7 +1005,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         condition: Value,
         then_target: Block,
         else_target: Block,
-    ) -> Result<Instr, IrError> {
+    ) -> Result<Instr, Error> {
         self.expect_type(condition, Type::Bool)?;
         let block = self.builder.current_block()?;
         let instr = self.append_instr(IfThenElseInstr::new(
@@ -1041,7 +1030,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         &mut self,
         block: Block,
         new_pred: Block,
-    ) -> Result<(), IrError> {
+    ) -> Result<(), Error> {
         if !self.builder.ctx.block_filled[new_pred] {
             return Err(FunctionBuilderError::UnfilledPredecessor {
                 block,
