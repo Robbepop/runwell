@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::SmallValueVec;
 use crate::{
     primitive::{Func, FuncType, Table, Value},
     ReplaceValue,
 };
 use core::{convert::identity, fmt::Display};
+use smallvec::smallvec;
 
 /// Calls a function statically.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
@@ -24,7 +26,7 @@ pub struct CallInstr {
     /// The index of the called function.
     func: Func,
     /// The parameters of the function call.
-    params: Vec<Value>,
+    params: SmallValueVec,
 }
 
 impl CallInstr {
@@ -35,7 +37,7 @@ impl CallInstr {
     {
         Self {
             func,
-            params: params.into_iter().collect::<Vec<_>>(),
+            params: params.into_iter().collect::<SmallValueVec>(),
         }
     }
 
@@ -86,10 +88,16 @@ pub struct CallIndirectInstr {
     /// If the dynamically chosen function does not match this function type the
     /// call will trap at execution time.
     func_type: FuncType,
-    /// The index of the function in the table that is indirectly called.
-    index: Value,
-    /// The parameters given to the indirectly called function.
-    params: Vec<Value>,
+    /// Vector containing
+    ///
+    /// - the index of the function in the table that is indirectly called.
+    /// - followd by the parameters given to the indirectly called function.
+    ///
+    /// # Note
+    ///
+    /// This design was chosen in order to provide efficient implementations
+    /// of [`InputValues`] and [`InputValuesMut`].
+    index_and_params: SmallValueVec,
 }
 
 impl CallIndirectInstr {
@@ -103,11 +111,36 @@ impl CallIndirectInstr {
     where
         I: IntoIterator<Item = Value>,
     {
+        let mut index_and_params = smallvec![index];
+        index_and_params.extend(params.into_iter());
         Self {
             table,
             func_type,
-            index,
-            params: params.into_iter().collect::<Vec<_>>(),
+            index_and_params,
+        }
+    }
+
+    /// Returns the table for the indirect function call.
+    pub fn table(&self) -> Table {
+        self.table
+    }
+
+    /// Returns the table index for the indirect call.
+    pub fn index(&self) -> Value {
+        self.index_and_params[0]
+    }
+
+    /// Returns the expected func type of the indirectly called function.
+    pub fn func_type(&self) -> FuncType {
+        self.func_type
+    }
+
+    /// Returns the SSA function input values for the indirect call.
+    pub fn params(&self) -> &[Value] {
+        &self.index_and_params[1..]
+    }
+}
+
         }
     }
 }
@@ -117,19 +150,17 @@ impl ReplaceValue for CallIndirectInstr {
     where
         F: FnMut(&mut Value) -> bool,
     {
-        replace(&mut self.index)
-            && self
-                .params
-                .iter_mut()
-                .map(|param| replace(param))
-                .any(identity)
+        self.index_and_params
+            .iter_mut()
+            .map(|param| replace(param))
+            .any(identity)
     }
 }
 
 impl Display for CallIndirectInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "call_indirect {}[{}] [ ", self.table, self.index)?;
-        if let Some((first, rest)) = self.params.split_first() {
+        write!(f, "call_indirect {}[{}] [ ", self.table, self.index())?;
+        if let Some((first, rest)) = self.params().split_first() {
             write!(f, "{}", first)?;
             for param in rest {
                 write!(f, ", {}", param)?;

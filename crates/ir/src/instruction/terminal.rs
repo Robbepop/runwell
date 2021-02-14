@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::CallInstr;
+use super::{CallInstr, SmallBlockVec};
 use crate::{
     primitive::{Block, Func, Value},
     ReplaceValue,
@@ -218,7 +218,7 @@ impl ReplaceValue for IfThenElseInstr {
 pub struct BranchTableInstr {
     case: Value,
     default: Block,
-    targets: Vec<Block>,
+    targets: SmallBlockVec,
 }
 
 impl BranchTableInstr {
@@ -230,7 +230,7 @@ impl BranchTableInstr {
         Self {
             case,
             default,
-            targets: targets.into_iter().collect::<Vec<_>>(),
+            targets: targets.into_iter().collect(),
         }
     }
 

@@ -73,6 +73,19 @@ pub use self::{
 };
 use super::{primitive::Value, ReplaceValue};
 use derive_more::{Display, From};
+use smallvec::SmallVec;
+
+/// A space-optimized vector containing values.
+///
+/// This has the exact amount of inline elements required for the
+/// small vector to have the same stack size as the `Vec<Value>` type.
+type SmallValueVec = SmallVec<[Value; 4]>;
+
+/// A space-optimized vector containing basic blocks.
+///
+/// This has the exact amount of inline elements required for the
+/// small vector to have the same stack size as the `Vec<Block>` type.
+type SmallBlockVec = SmallVec<[Block; 4]>;
 
 /// An SSA instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq, Hash, Clone)]
