@@ -110,8 +110,8 @@ pub struct CallIndirectInstr {
     ///
     /// # Note
     ///
-    /// This design was chosen in order to provide efficient implementations
-    /// of [`InputValues`] and [`InputValuesMut`].
+    /// This design was chosen in order to slightly decrease the size of the
+    /// instruction.
     index_and_params: SmallValueVec,
 }
 
