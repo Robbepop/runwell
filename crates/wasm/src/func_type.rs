@@ -19,12 +19,12 @@ use core::convert::TryFrom;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FunctionType {
     /// The Runwell function type.
-    inner: module::FunctionType,
+    inner: module::primitive::FunctionType,
 }
 
 impl FunctionType {
     /// Returns the runwell function type.
-    pub fn into_inner(self) -> module::FunctionType {
+    pub fn into_inner(self) -> module::primitive::FunctionType {
         self.inner
     }
 }
@@ -33,7 +33,7 @@ impl TryFrom<wasmparser::FuncType> for FunctionType {
     type Error = Error;
 
     fn try_from(func_type: wasmparser::FuncType) -> Result<Self, Self::Error> {
-        let mut builder = module::FunctionType::build();
+        let mut builder = module::primitive::FunctionType::build();
         for input in func_type.params.iter().copied().map(Type::try_from) {
             let input = input.map(Type::into_inner).map_err(|err| {
                 err.with_context(

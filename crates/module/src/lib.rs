@@ -32,17 +32,9 @@ pub use self::{
         FunctionBody,
         FunctionBuilder,
         FunctionBuilderError,
-        Instr,
         InstructionBuilder,
-        Variable,
     },
-    func_type::{FunctionType, FunctionTypeBuilder},
     function::Function,
-    global_var::{Global, GlobalVariable, GlobalVariableEntity},
-    import_name::ImportName,
-    init_expr::InitExpr,
-    linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
-    table::{ElementSegmentIter, TableDecl, TableInit},
 };
 use entity::ComponentVec;
 use ir::primitive::Func;
@@ -60,6 +52,19 @@ pub mod builders {
         ModuleTableElementsBuilder,
         ModuleTablesBuilder,
         ModuleTypesBuilder,
+    };
+}
+
+/// Primitive Wasm types that implement conversion to Runwell types.
+pub mod primitive {
+    pub use super::{
+        func_body::{Instr, Variable},
+        func_type::{FunctionType, FunctionTypeBuilder},
+        global_var::{Global, GlobalVariable, GlobalVariableEntity},
+        import_name::ImportName,
+        init_expr::InitExpr,
+        linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
+        table::{ElementSegmentIter, TableDecl, TableInit},
     };
 }
 

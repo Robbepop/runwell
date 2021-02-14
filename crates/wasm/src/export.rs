@@ -16,7 +16,7 @@ use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use entity::RawIdx;
 use ir::primitive::{Func, Mem, Table};
-use module::Global;
+use module::primitive::Global;
 
 /// An error upon parsing, validating or operating on Wasm exports.
 #[derive(Debug, Display, Error, PartialEq, Eq, PartialOrd, Ord, Hash)]

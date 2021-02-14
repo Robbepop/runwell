@@ -16,17 +16,19 @@ use std::collections::HashSet;
 
 use crate::{
     func_body::FunctionBody,
-    FunctionType,
-    Global,
-    GlobalVariable,
-    GlobalVariableEntity,
-    ImportName,
-    InitExpr,
-    LinearMemoryDecl,
-    LinearMemoryInit,
+    primitive::{
+        FunctionType,
+        Global,
+        GlobalVariable,
+        GlobalVariableEntity,
+        ImportName,
+        InitExpr,
+        LinearMemoryDecl,
+        LinearMemoryInit,
+        TableDecl,
+        TableInit,
+    },
     Module,
-    TableDecl,
-    TableInit,
 };
 use entity::{ComponentMap, ComponentVec, DefaultComponentVec, EntityArena};
 use ir::primitive::{

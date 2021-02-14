@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::FunctionBuilderState;
-use crate::{func_body::Variable, Instr};
+use crate::{func_body::Variable, primitive::Instr};
 use derive_more::{Display, Error};
 use ir::primitive::{Block, FloatType, IntType, Type, Value};
 

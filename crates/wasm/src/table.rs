@@ -36,12 +36,12 @@ impl std::error::Error for TableError {}
 /// A Wasm table declaration.
 #[derive(Debug)]
 pub struct TableDecl {
-    inner: module::TableDecl,
+    inner: module::primitive::TableDecl,
 }
 
 impl TableDecl {
     /// Returns the inner Runwell table declaration.
-    pub fn into_inner(self) -> module::TableDecl {
+    pub fn into_inner(self) -> module::primitive::TableDecl {
         self.inner
     }
 }
@@ -62,7 +62,10 @@ impl TryFrom<wasmparser::TableType> for TableDecl {
         let initial_size = table_type.limits.initial;
         let maximum_size = table_type.limits.maximum;
         Ok(Self {
-            inner: module::TableDecl::new(initial_size, maximum_size),
+            inner: module::primitive::TableDecl::new(
+                initial_size,
+                maximum_size,
+            ),
         })
     }
 }
@@ -84,7 +87,7 @@ impl<'a> Element<'a> {
     }
 
     /// Returns the offset initializer expression for the element.
-    pub fn offset(self) -> module::InitExpr {
+    pub fn offset(self) -> module::primitive::InitExpr {
         self.offset.into_inner()
     }
 

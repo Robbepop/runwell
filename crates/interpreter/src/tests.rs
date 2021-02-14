@@ -37,14 +37,12 @@ use ir::{
     },
 };
 use module::{
+    primitive::{FunctionType, Instr, Variable},
     FunctionBody,
     FunctionBuilder,
-    FunctionType,
-    Instr,
     InstructionBuilder,
     IrError,
     Module,
-    Variable,
 };
 
 /// Evaluates the function given the inputs and returns the results.

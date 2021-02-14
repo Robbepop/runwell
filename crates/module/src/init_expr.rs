@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::Global;
+use crate::primitive::Global;
 use ir::primitive::Const;
 
 /// An initializer expression.

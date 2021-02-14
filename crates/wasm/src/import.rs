@@ -50,7 +50,7 @@ impl<'a> ImportName<'a> {
     }
 }
 
-impl<'a> From<ImportName<'a>> for module::ImportName {
+impl<'a> From<ImportName<'a>> for module::primitive::ImportName {
     fn from(import_name: ImportName<'a>) -> Self {
         Self::new(import_name.module_name(), import_name.field_name())
     }

@@ -15,7 +15,7 @@
 use super::super::FunctionBodyTranslator;
 use crate::{Error, TranslateError};
 use entity::RawIdx;
-use module::Variable;
+use module::primitive::Variable;
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Translates Wasm `local_get` operator.

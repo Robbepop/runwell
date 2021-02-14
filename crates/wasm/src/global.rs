@@ -19,12 +19,12 @@ use core::convert::TryFrom;
 #[derive(Debug)]
 pub struct GlobalVariable {
     /// The internal Runwell translated global variable.
-    inner: module::GlobalVariable,
+    inner: module::primitive::GlobalVariable,
 }
 
 impl GlobalVariable {
     /// Returns the inner Runwell global variable.
-    pub fn into_inner(self) -> module::GlobalVariable {
+    pub fn into_inner(self) -> module::primitive::GlobalVariable {
         self.inner
     }
 }
@@ -42,7 +42,7 @@ impl TryFrom<wasmparser::GlobalType> for GlobalVariable {
             })?;
         let is_mutable = global_type.mutable;
         Ok(Self {
-            inner: module::GlobalVariable::new(
+            inner: module::primitive::GlobalVariable::new(
                 content_type.into_inner(),
                 is_mutable,
             ),

@@ -14,7 +14,7 @@
 
 use core::fmt;
 
-use crate::{FunctionBody, FunctionType};
+use crate::{primitive::FunctionType, FunctionBody};
 use entity::RawIdx;
 use ir::primitive::{Func, Type, Value};
 

@@ -37,12 +37,12 @@ impl std::error::Error for MemoryError {}
 /// A Wasm linear memory declaration.
 #[derive(Debug)]
 pub struct LinearMemoryDecl {
-    inner: module::LinearMemoryDecl,
+    inner: module::primitive::LinearMemoryDecl,
 }
 
 impl LinearMemoryDecl {
     /// Returns the inner Runwell linear memory declaration.
-    pub fn into_inner(self) -> module::LinearMemoryDecl {
+    pub fn into_inner(self) -> module::primitive::LinearMemoryDecl {
         self.inner
     }
 }
@@ -61,7 +61,7 @@ impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
                 let initial_pages = limits.initial;
                 let maximum_pages = limits.maximum;
                 Ok(Self {
-                    inner: module::LinearMemoryDecl::new(
+                    inner: module::primitive::LinearMemoryDecl::new(
                         initial_pages,
                         maximum_pages,
                     ),

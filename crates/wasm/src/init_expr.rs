@@ -17,7 +17,7 @@ use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use entity::RawIdx;
 use ir::primitive::IntConst;
-use module::Global;
+use module::primitive::Global;
 use wasmparser::Operator;
 
 /// An error that can occure upon parsing a global initializer expression.
@@ -41,12 +41,12 @@ pub enum InitExprError {
 #[derive(Debug)]
 pub struct InitExpr {
     /// A Wasm translated Runwell init expr.
-    inner: module::InitExpr,
+    inner: module::primitive::InitExpr,
 }
 
 impl InitExpr {
     /// Returns the inner Runwell initializer expression.
-    pub fn into_inner(self) -> module::InitExpr {
+    pub fn into_inner(self) -> module::primitive::InitExpr {
         self.inner
     }
 }
@@ -60,21 +60,25 @@ impl<'a> TryFrom<wasmparser::InitExpr<'a>> for InitExpr {
         let mut init_expr_reader = init_expr.get_binary_reader();
         let init_expr = match init_expr_reader.read_operator()? {
             Operator::I32Const { value } => {
-                module::InitExpr::Const(IntConst::I32(value).into())
+                module::primitive::InitExpr::Const(IntConst::I32(value).into())
             }
             Operator::I64Const { value } => {
-                module::InitExpr::Const(IntConst::I64(value).into())
+                module::primitive::InitExpr::Const(IntConst::I64(value).into())
             }
             Operator::F32Const { value } => {
-                module::InitExpr::Const(Const::from(value).into_inner())
+                module::primitive::InitExpr::Const(
+                    Const::from(value).into_inner(),
+                )
             }
             Operator::F64Const { value } => {
-                module::InitExpr::Const(Const::from(value).into_inner())
+                module::primitive::InitExpr::Const(
+                    Const::from(value).into_inner(),
+                )
             }
             Operator::GlobalGet { global_index } => {
-                module::InitExpr::GlobalGet(Global::from_raw(RawIdx::from_u32(
-                    global_index,
-                )))
+                module::primitive::InitExpr::GlobalGet(Global::from_raw(
+                    RawIdx::from_u32(global_index),
+                ))
             }
             Operator::V128Const { .. } => {
                 return Err(InitExprError::UnsupportedV128).map_err(Into::into)
