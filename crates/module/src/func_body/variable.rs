@@ -353,7 +353,9 @@ impl VariableTranslator {
                     declared_type,
                     value_to_type,
                 )?;
-                vacant.insert(VariableDefinitions::new(declared_type));
+                let mut defs = VariableDefinitions::new(declared_type);
+                defs.block_defs.insert(block, new_value);
+                vacant.insert(defs);
             }
         }
         Ok(())
@@ -383,5 +385,34 @@ impl VariableTranslator {
             VariableDefinitions::new(declared_type)
         });
         Ok(definition)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ir::primitive::IntType;
+
+    fn v(raw: u32) -> Value {
+        Value::from_raw(RawIdx::from_u32(raw))
+    }
+
+    fn block(raw: u32) -> Block {
+        Block::from_raw(RawIdx::from_u32(raw))
+    }
+
+    fn var(raw: u32) -> Variable {
+        Variable::from_raw(RawIdx::from_u32(raw))
+    }
+
+    #[test]
+    fn var_translator_works() {
+        let ty = Type::Int(IntType::I32);
+        let mut vars = VariableTranslator::default();
+        vars.declare_vars(2, ty).unwrap();
+        vars.write_var(var(0), v(0), block(0), || ty, None).unwrap();
+        vars.write_var(var(1), v(1), block(0), || ty, None).unwrap();
+        assert_eq!(vars.get(var(0)).unwrap().block_defs[block(0)], v(0));
+        assert_eq!(vars.get(var(1)).unwrap().block_defs[block(0)], v(1));
     }
 }
