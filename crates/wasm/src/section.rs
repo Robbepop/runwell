@@ -12,13 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    function::translate_function_body,
-    table::Element,
-    FunctionType,
-    InitExpr,
-};
-
 use super::{
     Error,
     Export,
@@ -29,6 +22,12 @@ use super::{
     MemoryDataInit,
     Read,
     TableDecl,
+};
+use crate::{
+    function::translate_function_body,
+    table::Element,
+    FunctionType,
+    InitExpr,
 };
 use core::convert::TryFrom;
 use derive_more::{Display, Error};
@@ -60,6 +59,7 @@ pub enum SectionError {
     UnsupportedTypeDef(UnsupportedTypeDef),
 }
 
+/// An unexpected [`wasmparser::Payload`] has been encountered.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 #[display(
     fmt = "encountered unexpected Wasm payload. encountered: {:?}, expected: {:?}",
@@ -71,6 +71,7 @@ pub struct UnexpectedWasmPayload {
     expected: Option<PayloadKind>,
 }
 
+/// The [`wasmparser::Payload`] kind.
 #[derive(Debug, PartialEq, Eq)]
 pub enum PayloadKind {
     Version,
@@ -126,6 +127,7 @@ impl From<Payload<'_>> for PayloadKind {
     }
 }
 
+/// Encountered an unsupported binary Wasm section.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum UnsupportedWasmSection {
     #[display(fmt = "encountered unsupported Wasm data count section")]
@@ -142,6 +144,7 @@ pub enum UnsupportedWasmSection {
     Unknown,
 }
 
+/// Encountered an unsupported Wasm type definition.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum UnsupportedTypeDef {
     #[display(fmt = "encountered unsupported Wasm type def: instance")]
