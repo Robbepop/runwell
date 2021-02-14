@@ -18,7 +18,6 @@
 
 mod instruction;
 pub mod primitive;
-mod replace_value;
 mod value_visitor;
 
 pub use self::{
