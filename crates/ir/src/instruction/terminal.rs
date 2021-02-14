@@ -15,14 +15,10 @@
 use super::{CallInstr, SmallBlockVec};
 use crate::{
     primitive::{Block, Func, Value},
-    ReplaceValue,
     VisitValues,
     VisitValuesMut,
 };
-use core::{
-    convert::identity,
-    fmt::{self, Display},
-};
+use core::fmt::{self, Display};
 use derive_more::{Display, From};
 
 /// A tail call instruction.
@@ -78,15 +74,6 @@ impl VisitValuesMut for TailCallInstr {
     }
 }
 
-impl ReplaceValue for TailCallInstr {
-    fn replace_value<F>(&mut self, replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        self.instr.replace_value(replace)
-    }
-}
-
 /// A terminal SSA instruction.
 ///
 /// Every basic block is required to have a terminal instruction
@@ -130,22 +117,6 @@ impl VisitValuesMut for TerminalInstr {
             Self::Ite(instr) => instr.visit_values_mut(visitor),
             Self::TailCall(instr) => instr.visit_values_mut(visitor),
             Self::BranchTable(instr) => instr.visit_values_mut(visitor),
-        }
-    }
-}
-
-impl ReplaceValue for TerminalInstr {
-    fn replace_value<F>(&mut self, replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        match self {
-            Self::Trap => false,
-            Self::Return(instr) => instr.replace_value(replace),
-            Self::Br(_instr) => false,
-            Self::Ite(instr) => instr.replace_value(replace),
-            Self::TailCall(instr) => instr.replace_value(replace),
-            Self::BranchTable(instr) => instr.replace_value(replace),
         }
     }
 }
@@ -211,18 +182,6 @@ impl VisitValuesMut for ReturnInstr {
                 break
             }
         }
-    }
-}
-
-impl ReplaceValue for ReturnInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        self.return_values
-            .iter_mut()
-            .map(|return_value| replace(return_value))
-            .any(identity)
     }
 }
 
@@ -302,15 +261,6 @@ impl VisitValuesMut for IfThenElseInstr {
     }
 }
 
-impl ReplaceValue for IfThenElseInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.condition)
-    }
-}
-
 /// A branching table mapping indices to branching targets.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct BranchTableInstr {
@@ -363,15 +313,6 @@ impl VisitValuesMut for BranchTableInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.case);
-    }
-}
-
-impl ReplaceValue for BranchTableInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.case)
     }
 }
 

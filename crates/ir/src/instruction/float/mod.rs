@@ -17,7 +17,7 @@ mod fcmp;
 mod fconv;
 mod unary;
 
-use crate::{primitive::Value, ReplaceValue, VisitValues, VisitValuesMut};
+use crate::{primitive::Value, VisitValues, VisitValuesMut};
 
 pub use self::{
     binary::{BinaryFloatInstr, BinaryFloatOp},
@@ -66,22 +66,6 @@ impl VisitValuesMut for FloatInstr {
             Self::Demote(instr) => instr.visit_values_mut(visitor),
             Self::Promote(instr) => instr.visit_values_mut(visitor),
             Self::FloatToInt(instr) => instr.visit_values_mut(visitor),
-        }
-    }
-}
-
-impl ReplaceValue for FloatInstr {
-    fn replace_value<F>(&mut self, replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        match self {
-            Self::Unary(instr) => instr.replace_value(replace),
-            Self::Binary(instr) => instr.replace_value(replace),
-            Self::Compare(instr) => instr.replace_value(replace),
-            Self::Demote(instr) => instr.replace_value(replace),
-            Self::Promote(instr) => instr.replace_value(replace),
-            Self::FloatToInt(instr) => instr.replace_value(replace),
         }
     }
 }

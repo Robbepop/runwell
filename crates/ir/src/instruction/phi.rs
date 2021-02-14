@@ -14,11 +14,10 @@
 
 use crate::{
     primitive::{Block, Value},
-    ReplaceValue,
     VisitValues,
     VisitValuesMut,
 };
-use core::{convert::identity, fmt::Display, iter::FusedIterator};
+use core::{fmt::Display, iter::FusedIterator};
 use std::collections::{btree_map::Iter as BTreeMapIter, BTreeMap};
 
 /// A ϕ-instruction in the Runwell IR.
@@ -93,19 +92,6 @@ impl VisitValuesMut for PhiInstr {
                 break
             }
         }
-    }
-}
-
-impl ReplaceValue for PhiInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        self.operands
-            .iter_mut()
-            .map(|(_block, value)| value)
-            .map(|op| replace(op))
-            .any(identity)
     }
 }
 

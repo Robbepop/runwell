@@ -15,11 +15,10 @@
 use super::SmallValueVec;
 use crate::{
     primitive::{Func, FuncType, Table, Value},
-    ReplaceValue,
     VisitValues,
     VisitValuesMut,
 };
-use core::{convert::identity, fmt::Display};
+use core::fmt::Display;
 use smallvec::smallvec;
 
 /// Calls a function statically.
@@ -77,18 +76,6 @@ impl VisitValuesMut for CallInstr {
                 break
             }
         }
-    }
-}
-
-impl ReplaceValue for CallInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        self.params
-            .iter_mut()
-            .map(|param| replace(param))
-            .any(identity)
     }
 }
 
@@ -192,18 +179,6 @@ impl VisitValuesMut for CallIndirectInstr {
                 break
             }
         }
-    }
-}
-
-impl ReplaceValue for CallIndirectInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        self.index_and_params
-            .iter_mut()
-            .map(|param| replace(param))
-            .any(identity)
     }
 }
 

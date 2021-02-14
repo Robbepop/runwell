@@ -14,7 +14,6 @@
 
 use crate::{
     primitive::{FloatType, IntType, Value},
-    ReplaceValue,
     VisitValues,
     VisitValuesMut,
 };
@@ -84,15 +83,6 @@ impl VisitValuesMut for DemoteFloatInstr {
     }
 }
 
-impl ReplaceValue for DemoteFloatInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.src)
-    }
-}
-
 /// Demotes the source float value from source float type to destination float type.
 ///
 /// # Note
@@ -154,15 +144,6 @@ impl VisitValuesMut for PromoteFloatInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.src);
-    }
-}
-
-impl ReplaceValue for PromoteFloatInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.src)
     }
 }
 
@@ -268,14 +249,5 @@ impl VisitValuesMut for FloatToIntInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.src);
-    }
-}
-
-impl ReplaceValue for FloatToIntInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.src)
     }
 }

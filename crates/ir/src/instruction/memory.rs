@@ -14,7 +14,6 @@
 
 use crate::{
     primitive::{Mem, Type, Value},
-    ReplaceValue,
     VisitValues,
     VisitValuesMut,
 };
@@ -84,15 +83,6 @@ impl VisitValuesMut for HeapAddrInstr {
     }
 }
 
-impl ReplaceValue for HeapAddrInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.ptr)
-    }
-}
-
 /// Loads a value of type `ty` from the given memory at the given address with given alignment.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "load {} from {}+{}", ty, address, offset)]
@@ -143,15 +133,6 @@ impl VisitValuesMut for LoadInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.address);
-    }
-}
-
-impl ReplaceValue for LoadInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.address)
     }
 }
 
@@ -215,15 +196,6 @@ impl VisitValuesMut for StoreInstr {
     }
 }
 
-impl ReplaceValue for StoreInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.address) || replace(&mut self.value)
-    }
-}
-
 /// Grows the indexed linear memory by the given amount of new memory pages.
 ///
 /// Returns the previous size of the linear memory upon success or -1 upon failure.
@@ -256,15 +228,6 @@ impl VisitValuesMut for MemoryGrowInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.new_pages);
-    }
-}
-
-impl ReplaceValue for MemoryGrowInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.new_pages)
     }
 }
 

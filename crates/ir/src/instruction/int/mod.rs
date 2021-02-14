@@ -25,7 +25,7 @@ pub use self::{
     shift::{ShiftIntInstr, ShiftIntOp},
     unary::{UnaryIntInstr, UnaryIntOp},
 };
-use crate::{primitive::Value, ReplaceValue, VisitValues, VisitValuesMut};
+use crate::{primitive::Value, VisitValues, VisitValuesMut};
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
@@ -70,23 +70,6 @@ impl VisitValuesMut for IntInstr {
             Self::IntToFloat(instr) => instr.visit_values_mut(visitor),
             Self::Truncate(instr) => instr.visit_values_mut(visitor),
             Self::Shift(instr) => instr.visit_values_mut(visitor),
-        }
-    }
-}
-
-impl ReplaceValue for IntInstr {
-    fn replace_value<F>(&mut self, replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        match self {
-            Self::Binary(instr) => instr.replace_value(replace),
-            Self::Unary(instr) => instr.replace_value(replace),
-            Self::Compare(instr) => instr.replace_value(replace),
-            Self::Extend(instr) => instr.replace_value(replace),
-            Self::IntToFloat(instr) => instr.replace_value(replace),
-            Self::Truncate(instr) => instr.replace_value(replace),
-            Self::Shift(instr) => instr.replace_value(replace),
         }
     }
 }

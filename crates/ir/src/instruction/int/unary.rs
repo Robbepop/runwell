@@ -14,7 +14,6 @@
 
 use crate::{
     primitive::{IntType, Value},
-    ReplaceValue,
     VisitValues,
     VisitValuesMut,
 };
@@ -97,14 +96,5 @@ impl VisitValuesMut for UnaryIntInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.src);
-    }
-}
-
-impl ReplaceValue for UnaryIntInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.src)
     }
 }

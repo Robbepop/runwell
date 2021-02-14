@@ -71,7 +71,7 @@ pub use self::{
         TerminalInstr,
     },
 };
-use super::{primitive::Value, ReplaceValue};
+use super::primitive::Value;
 use crate::{primitive::Block, VisitValues, VisitValuesMut};
 use derive_more::{Display, From};
 use smallvec::SmallVec;
@@ -163,30 +163,6 @@ impl VisitValuesMut for Instruction {
             Self::Terminal(instr) => instr.visit_values_mut(visitor),
             Self::Int(instr) => instr.visit_values_mut(visitor),
             Self::Float(instr) => instr.visit_values_mut(visitor),
-        }
-    }
-}
-
-impl ReplaceValue for Instruction {
-    fn replace_value<F>(&mut self, replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        match self {
-            Self::Call(instr) => instr.replace_value(replace),
-            Self::CallIndirect(instr) => instr.replace_value(replace),
-            Self::Const(_instr) => false,
-            Self::MemoryGrow(instr) => instr.replace_value(replace),
-            Self::MemorySize(_instr) => false,
-            Self::Phi(instr) => instr.replace_value(replace),
-            Self::HeapAddr(instr) => instr.replace_value(replace),
-            Self::Load(instr) => instr.replace_value(replace),
-            Self::Store(instr) => instr.replace_value(replace),
-            Self::Select(instr) => instr.replace_value(replace),
-            Self::Reinterpret(instr) => instr.replace_value(replace),
-            Self::Terminal(instr) => instr.replace_value(replace),
-            Self::Int(instr) => instr.replace_value(replace),
-            Self::Float(instr) => instr.replace_value(replace),
         }
     }
 }

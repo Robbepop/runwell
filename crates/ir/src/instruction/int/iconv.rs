@@ -14,7 +14,6 @@
 
 use crate::{
     primitive::{FloatType, IntType, Value},
-    ReplaceValue,
     VisitValues,
     VisitValuesMut,
 };
@@ -79,15 +78,6 @@ impl VisitValuesMut for TruncateIntInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.src);
-    }
-}
-
-impl ReplaceValue for TruncateIntInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.src)
     }
 }
 
@@ -192,15 +182,6 @@ impl VisitValuesMut for ExtendIntInstr {
     }
 }
 
-impl ReplaceValue for ExtendIntInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.src)
-    }
-}
-
 /// Instruction to convert an integer into a floating point number.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
@@ -272,14 +253,5 @@ impl VisitValuesMut for IntToFloatInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.src);
-    }
-}
-
-impl ReplaceValue for IntToFloatInstr {
-    fn replace_value<F>(&mut self, mut replace: F) -> bool
-    where
-        F: FnMut(&mut Value) -> bool,
-    {
-        replace(&mut self.src)
     }
 }
