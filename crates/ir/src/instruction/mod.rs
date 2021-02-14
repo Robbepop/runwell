@@ -141,3 +141,20 @@ impl ReplaceValue for Instruction {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn size_of_instruction_is_kept_small() {
+        // Ideally we keep the size of generic instructions as small as possible.
+        assert_eq!(core::mem::size_of::<Instruction>(), 48);
+        // Also assert the sizes of the biggest known concrete instructions.
+        assert_eq!(core::mem::size_of::<BranchTableInstr>(), 32);
+        // Also assert the sizes of the biggest known concrete instructions.
+        assert_eq!(core::mem::size_of::<PhiInstr>(), 24);
+        // Also assert the sizes of the biggest known concrete instructions.
+        assert_eq!(core::mem::size_of::<CallIndirectInstr>(), 32);
+    }
+}
