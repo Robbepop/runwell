@@ -532,6 +532,7 @@ impl<'a> FunctionBuilder<'a> {
             user_instr.replace_value(|value| {
                 if *value == phi_value {
                     *value = same;
+                    value_users[same].insert(user);
                     return true
                 }
                 false
