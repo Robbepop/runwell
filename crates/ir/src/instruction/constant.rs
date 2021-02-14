@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::primitive::{Const, FloatConst, IntConst, Type, F32, F64};
+use crate::{
+    primitive::{Const, FloatConst, IntConst, Type, Value, F32, F64},
+    VisitValues,
+    VisitValuesMut,
+};
 use derive_more::Display;
 
 /// An instruction representing a constant value.
@@ -66,5 +70,21 @@ impl ConstInstr {
     #[inline]
     pub fn const_value(&self) -> Const {
         self.const_value
+    }
+}
+
+impl VisitValues for ConstInstr {
+    fn visit_values<V>(&self, _visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+    }
+}
+
+impl VisitValuesMut for ConstInstr {
+    fn visit_values_mut<V>(&mut self, _visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
     }
 }

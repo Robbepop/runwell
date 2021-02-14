@@ -15,6 +15,8 @@
 use crate::{
     primitive::{Type, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use derive_more::Display;
 
@@ -76,6 +78,28 @@ impl SelectInstr {
     /// Returns the value returned if the condition evaluates to `false`.
     pub fn false_value(&self) -> Value {
         self.value_false
+    }
+}
+
+impl VisitValues for SelectInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        let _ = visitor(self.condition)
+            && visitor(self.value_true)
+            && visitor(self.value_false);
+    }
+}
+
+impl VisitValuesMut for SelectInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        let _ = visitor(&mut self.condition)
+            && visitor(&mut self.value_true)
+            && visitor(&mut self.value_false);
     }
 }
 

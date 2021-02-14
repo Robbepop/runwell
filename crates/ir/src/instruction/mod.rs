@@ -72,6 +72,7 @@ pub use self::{
     },
 };
 use super::{primitive::Value, ReplaceValue};
+use crate::{primitive::Block, VisitValues, VisitValuesMut};
 use derive_more::{Display, From};
 use smallvec::SmallVec;
 
@@ -115,6 +116,54 @@ impl Instruction {
     /// Returns `true` if the instruction is a ϕ-instruction.
     pub fn is_phi(&self) -> bool {
         matches!(self, Self::Phi(_))
+    }
+}
+
+impl VisitValues for Instruction {
+    fn visit_values<V>(&self, visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        match self {
+            Self::Call(instr) => instr.visit_values(visitor),
+            Self::CallIndirect(instr) => instr.visit_values(visitor),
+            Self::Const(instr) => instr.visit_values(visitor),
+            Self::MemoryGrow(instr) => instr.visit_values(visitor),
+            Self::MemorySize(__instr) => (),
+            Self::Phi(instr) => instr.visit_values(visitor),
+            Self::HeapAddr(instr) => instr.visit_values(visitor),
+            Self::Load(instr) => instr.visit_values(visitor),
+            Self::Store(instr) => instr.visit_values(visitor),
+            Self::Select(instr) => instr.visit_values(visitor),
+            Self::Reinterpret(instr) => instr.visit_values(visitor),
+            Self::Terminal(instr) => instr.visit_values(visitor),
+            Self::Int(instr) => instr.visit_values(visitor),
+            Self::Float(instr) => instr.visit_values(visitor),
+        }
+    }
+}
+
+impl VisitValuesMut for Instruction {
+    fn visit_values_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Call(instr) => instr.visit_values_mut(visitor),
+            Self::CallIndirect(instr) => instr.visit_values_mut(visitor),
+            Self::Const(instr) => instr.visit_values_mut(visitor),
+            Self::MemoryGrow(instr) => instr.visit_values_mut(visitor),
+            Self::MemorySize(__instr) => (),
+            Self::Phi(instr) => instr.visit_values_mut(visitor),
+            Self::HeapAddr(instr) => instr.visit_values_mut(visitor),
+            Self::Load(instr) => instr.visit_values_mut(visitor),
+            Self::Store(instr) => instr.visit_values_mut(visitor),
+            Self::Select(instr) => instr.visit_values_mut(visitor),
+            Self::Reinterpret(instr) => instr.visit_values_mut(visitor),
+            Self::Terminal(instr) => instr.visit_values_mut(visitor),
+            Self::Int(instr) => instr.visit_values_mut(visitor),
+            Self::Float(instr) => instr.visit_values_mut(visitor),
+        }
     }
 }
 

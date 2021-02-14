@@ -15,6 +15,8 @@
 use crate::{
     primitive::{FloatType, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use core::fmt::Display;
 
@@ -97,6 +99,24 @@ impl UnaryFloatInstr {
     /// Returns the source value of the instruction.
     pub fn src(&self) -> Value {
         self.src
+    }
+}
+
+impl VisitValues for UnaryFloatInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for UnaryFloatInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
     }
 }
 

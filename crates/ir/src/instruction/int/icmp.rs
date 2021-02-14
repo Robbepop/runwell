@@ -15,6 +15,8 @@
 use crate::{
     primitive::{IntType, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use core::fmt::Display;
 use derive_more::Display;
@@ -101,6 +103,24 @@ impl CompareIntInstr {
     #[inline]
     pub fn ty(&self) -> IntType {
         self.ty
+    }
+}
+
+impl VisitValues for CompareIntInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        let _ = visitor(self.lhs) && visitor(self.rhs);
+    }
+}
+
+impl VisitValuesMut for CompareIntInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        let _ = visitor(&mut self.lhs) && visitor(&mut self.rhs);
     }
 }
 

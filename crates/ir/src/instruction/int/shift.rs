@@ -15,6 +15,8 @@
 use crate::{
     primitive::{IntType, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use core::fmt::Display;
 
@@ -109,6 +111,24 @@ impl ShiftIntInstr {
     #[inline]
     pub fn ty(&self) -> IntType {
         self.int_type
+    }
+}
+
+impl VisitValues for ShiftIntInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        let _ = visitor(self.source) && visitor(self.shift_amount);
+    }
+}
+
+impl VisitValuesMut for ShiftIntInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        let _ = visitor(&mut self.source) && visitor(&mut self.shift_amount);
     }
 }
 

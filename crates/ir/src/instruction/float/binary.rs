@@ -15,6 +15,8 @@
 use crate::{
     primitive::{FloatType, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use core::fmt::Display;
 
@@ -102,6 +104,24 @@ impl BinaryFloatInstr {
     /// Returns the type of the compare instruction.
     pub fn ty(&self) -> FloatType {
         self.ty
+    }
+}
+
+impl VisitValues for BinaryFloatInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        let _ = visitor(self.lhs) && visitor(self.rhs);
+    }
+}
+
+impl VisitValuesMut for BinaryFloatInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        let _ = visitor(&mut self.lhs) && visitor(&mut self.rhs);
     }
 }
 

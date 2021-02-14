@@ -16,10 +16,14 @@ use super::{CallInstr, SmallBlockVec};
 use crate::{
     primitive::{Block, Func, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
-use core::fmt::{self, Display};
+use core::{
+    convert::identity,
+    fmt::{self, Display},
+};
 use derive_more::{Display, From};
-use std::convert::identity;
 
 /// A tail call instruction.
 #[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
@@ -56,6 +60,24 @@ impl TailCallInstr {
     }
 }
 
+impl VisitValues for TailCallInstr {
+    fn visit_values<V>(&self, visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        self.instr.visit_values(visitor)
+    }
+}
+
+impl VisitValuesMut for TailCallInstr {
+    fn visit_values_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        self.instr.visit_values_mut(visitor)
+    }
+}
+
 impl ReplaceValue for TailCallInstr {
     fn replace_value<F>(&mut self, replace: F) -> bool
     where
@@ -78,6 +100,38 @@ pub enum TerminalInstr {
     Ite(IfThenElseInstr),
     TailCall(TailCallInstr),
     BranchTable(BranchTableInstr),
+}
+
+impl VisitValues for TerminalInstr {
+    fn visit_values<V>(&self, visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        match self {
+            Self::Trap => (),
+            Self::Return(instr) => instr.visit_values(visitor),
+            Self::Br(_instr) => (),
+            Self::Ite(instr) => instr.visit_values(visitor),
+            Self::TailCall(instr) => instr.visit_values(visitor),
+            Self::BranchTable(instr) => instr.visit_values(visitor),
+        }
+    }
+}
+
+impl VisitValuesMut for TerminalInstr {
+    fn visit_values_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Trap => (),
+            Self::Return(instr) => instr.visit_values_mut(visitor),
+            Self::Br(_instr) => (),
+            Self::Ite(instr) => instr.visit_values_mut(visitor),
+            Self::TailCall(instr) => instr.visit_values_mut(visitor),
+            Self::BranchTable(instr) => instr.visit_values_mut(visitor),
+        }
+    }
 }
 
 impl ReplaceValue for TerminalInstr {
@@ -131,6 +185,32 @@ impl ReturnInstr {
     #[inline]
     pub fn return_values(&self) -> &[Value] {
         &self.return_values
+    }
+}
+
+impl VisitValues for ReturnInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        for &value in &self.return_values {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+}
+
+impl VisitValuesMut for ReturnInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        for value in &mut self.return_values {
+            if !visitor(value) {
+                break
+            }
+        }
     }
 }
 
@@ -204,6 +284,24 @@ impl IfThenElseInstr {
     }
 }
 
+impl VisitValues for IfThenElseInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.condition);
+    }
+}
+
+impl VisitValuesMut for IfThenElseInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.condition);
+    }
+}
+
 impl ReplaceValue for IfThenElseInstr {
     fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
@@ -247,6 +345,24 @@ impl BranchTableInstr {
     /// Returns the default target to jump to.
     pub fn default_target(&self) -> Block {
         self.default
+    }
+}
+
+impl VisitValues for BranchTableInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.case);
+    }
+}
+
+impl VisitValuesMut for BranchTableInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.case);
     }
 }
 

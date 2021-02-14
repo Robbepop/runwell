@@ -15,6 +15,8 @@
 use crate::{
     primitive::{FloatType, IntType, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use derive_more::Display;
 
@@ -61,6 +63,24 @@ impl DemoteFloatInstr {
     /// Returns the source floating point value of the demotion.
     pub fn src(&self) -> Value {
         self.src
+    }
+}
+
+impl VisitValues for DemoteFloatInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for DemoteFloatInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
     }
 }
 
@@ -116,6 +136,24 @@ impl PromoteFloatInstr {
     /// Returns the source floating point value of the promotion.
     pub fn src(&self) -> Value {
         self.src
+    }
+}
+
+impl VisitValues for PromoteFloatInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for PromoteFloatInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
     }
 }
 
@@ -212,6 +250,24 @@ impl FloatToIntInstr {
     /// Returns `true` if the conversion is saturating.
     pub fn is_saturating(&self) -> bool {
         self.saturating
+    }
+}
+
+impl VisitValues for FloatToIntInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for FloatToIntInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
     }
 }
 

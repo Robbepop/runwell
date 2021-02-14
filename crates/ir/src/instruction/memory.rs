@@ -15,6 +15,8 @@
 use crate::{
     primitive::{Mem, Type, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use derive_more::{Display, From};
 
@@ -64,6 +66,24 @@ impl HeapAddrInstr {
     }
 }
 
+impl VisitValues for HeapAddrInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.ptr);
+    }
+}
+
+impl VisitValuesMut for HeapAddrInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.ptr);
+    }
+}
+
 impl ReplaceValue for HeapAddrInstr {
     fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
@@ -105,6 +125,24 @@ impl LoadInstr {
     /// Returns the type of the value that is stored in linear memory.
     pub fn ty(&self) -> Type {
         self.ty
+    }
+}
+
+impl VisitValues for LoadInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.address);
+    }
+}
+
+impl VisitValuesMut for LoadInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.address);
     }
 }
 
@@ -159,6 +197,24 @@ impl StoreInstr {
     }
 }
 
+impl VisitValues for StoreInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        let _ = visitor(self.address) && visitor(self.value);
+    }
+}
+
+impl VisitValuesMut for StoreInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        let _ = visitor(&mut self.address) && visitor(&mut self.value);
+    }
+}
+
 impl ReplaceValue for StoreInstr {
     fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
@@ -182,6 +238,24 @@ impl MemoryGrowInstr {
     /// Creates a new memory grow instruction to grow the indexed linear memory.
     pub fn new(memory: Mem, new_pages: Value) -> Self {
         Self { memory, new_pages }
+    }
+}
+
+impl VisitValues for MemoryGrowInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.new_pages);
+    }
+}
+
+impl VisitValuesMut for MemoryGrowInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.new_pages);
     }
 }
 

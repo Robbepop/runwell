@@ -15,6 +15,8 @@
 use crate::{
     primitive::{FloatType, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use core::fmt::Display;
 use derive_more::Display;
@@ -90,6 +92,24 @@ impl CompareFloatInstr {
     /// Returns the type of the compare instruction.
     pub fn ty(&self) -> FloatType {
         self.ty
+    }
+}
+
+impl VisitValues for CompareFloatInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        let _ = visitor(self.lhs) && visitor(self.rhs);
+    }
+}
+
+impl VisitValuesMut for CompareFloatInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        let _ = visitor(&mut self.lhs) && visitor(&mut self.rhs);
     }
 }
 

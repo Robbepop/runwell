@@ -17,7 +17,7 @@ mod fcmp;
 mod fconv;
 mod unary;
 
-use crate::{primitive::Value, ReplaceValue};
+use crate::{primitive::Value, ReplaceValue, VisitValues, VisitValuesMut};
 
 pub use self::{
     binary::{BinaryFloatInstr, BinaryFloatOp},
@@ -36,6 +36,38 @@ pub enum FloatInstr {
     Demote(DemoteFloatInstr),
     Promote(PromoteFloatInstr),
     FloatToInt(FloatToIntInstr),
+}
+
+impl VisitValues for FloatInstr {
+    fn visit_values<V>(&self, visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        match self {
+            Self::Unary(instr) => instr.visit_values(visitor),
+            Self::Binary(instr) => instr.visit_values(visitor),
+            Self::Compare(instr) => instr.visit_values(visitor),
+            Self::Demote(instr) => instr.visit_values(visitor),
+            Self::Promote(instr) => instr.visit_values(visitor),
+            Self::FloatToInt(instr) => instr.visit_values(visitor),
+        }
+    }
+}
+
+impl VisitValuesMut for FloatInstr {
+    fn visit_values_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Unary(instr) => instr.visit_values_mut(visitor),
+            Self::Binary(instr) => instr.visit_values_mut(visitor),
+            Self::Compare(instr) => instr.visit_values_mut(visitor),
+            Self::Demote(instr) => instr.visit_values_mut(visitor),
+            Self::Promote(instr) => instr.visit_values_mut(visitor),
+            Self::FloatToInt(instr) => instr.visit_values_mut(visitor),
+        }
+    }
 }
 
 impl ReplaceValue for FloatInstr {

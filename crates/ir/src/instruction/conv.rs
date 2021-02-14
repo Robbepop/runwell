@@ -15,6 +15,8 @@
 use crate::{
     primitive::{Type, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use derive_more::Display;
 
@@ -59,6 +61,24 @@ impl ReinterpretInstr {
     /// Returns the source value of the reinterpret instruction.
     pub fn src(&self) -> Value {
         self.src
+    }
+}
+
+impl VisitValues for ReinterpretInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for ReinterpretInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
     }
 }
 

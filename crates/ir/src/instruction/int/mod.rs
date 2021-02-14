@@ -25,7 +25,7 @@ pub use self::{
     shift::{ShiftIntInstr, ShiftIntOp},
     unary::{UnaryIntInstr, UnaryIntOp},
 };
-use crate::{primitive::Value, ReplaceValue};
+use crate::{primitive::Value, ReplaceValue, VisitValues, VisitValuesMut};
 use derive_more::{Display, From};
 
 /// An SSA integer instruction from the Runwell IR.
@@ -38,6 +38,40 @@ pub enum IntInstr {
     IntToFloat(IntToFloatInstr),
     Truncate(TruncateIntInstr),
     Shift(ShiftIntInstr),
+}
+
+impl VisitValues for IntInstr {
+    fn visit_values<V>(&self, visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        match self {
+            Self::Binary(instr) => instr.visit_values(visitor),
+            Self::Unary(instr) => instr.visit_values(visitor),
+            Self::Compare(instr) => instr.visit_values(visitor),
+            Self::Extend(instr) => instr.visit_values(visitor),
+            Self::IntToFloat(instr) => instr.visit_values(visitor),
+            Self::Truncate(instr) => instr.visit_values(visitor),
+            Self::Shift(instr) => instr.visit_values(visitor),
+        }
+    }
+}
+
+impl VisitValuesMut for IntInstr {
+    fn visit_values_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        match self {
+            Self::Binary(instr) => instr.visit_values_mut(visitor),
+            Self::Unary(instr) => instr.visit_values_mut(visitor),
+            Self::Compare(instr) => instr.visit_values_mut(visitor),
+            Self::Extend(instr) => instr.visit_values_mut(visitor),
+            Self::IntToFloat(instr) => instr.visit_values_mut(visitor),
+            Self::Truncate(instr) => instr.visit_values_mut(visitor),
+            Self::Shift(instr) => instr.visit_values_mut(visitor),
+        }
+    }
 }
 
 impl ReplaceValue for IntInstr {

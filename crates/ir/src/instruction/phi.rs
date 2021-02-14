@@ -15,6 +15,8 @@
 use crate::{
     primitive::{Block, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use core::{convert::identity, fmt::Display, iter::FusedIterator};
 use std::collections::{btree_map::Iter as BTreeMapIter, BTreeMap};
@@ -27,24 +29,21 @@ pub struct PhiInstr {
 
 impl PhiInstr {
     /// Creates a new ϕ-instruction from the given ϕ-sources.
+    ///
+    /// It is asserted that the given blocks appear in ascending order.
+    /// This is important to be able to search through the list of blocks
+    /// using fast binary search.
+    ///
+    /// # Panics
+    ///
+    /// - If the given blocks are not already sorted.
     pub fn new<I>(sources: I) -> Self
     where
         I: IntoIterator<Item = (Block, Value)>,
     {
         Self {
-            operands: sources.into_iter().collect::<BTreeMap<_, _>>(),
+            operands: sources.into_iter().collect(),
         }
-    }
-
-    /// Appends another ϕ-operand to the ϕ-instruction.
-    ///
-    /// Returns `Some` value if the ϕ-operand already existed for the ϕ-instruction.
-    pub fn append_operand(
-        &mut self,
-        block: Block,
-        value: Value,
-    ) -> Option<Value> {
-        self.operands.insert(block, value)
     }
 
     /// Returns the number of operands of the ϕ-instruction.
@@ -71,6 +70,32 @@ impl PhiInstr {
     }
 }
 
+impl VisitValues for PhiInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        for value in self.operands.values().copied() {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+}
+
+impl VisitValuesMut for PhiInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        for value in &mut self.operands.values_mut() {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+}
+
 impl ReplaceValue for PhiInstr {
     fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
@@ -78,7 +103,8 @@ impl ReplaceValue for PhiInstr {
     {
         self.operands
             .iter_mut()
-            .map(|(_block, op)| replace(op))
+            .map(|(_block, value)| value)
+            .map(|op| replace(op))
             .any(identity)
     }
 }
@@ -97,7 +123,7 @@ impl<'a> Iterator for Iter<'a> {
     }
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(block, op)| (*block, *op))
+        self.iter.next().map(|(block, value)| (*block, *value))
     }
 }
 
@@ -107,11 +133,11 @@ impl<'a> ExactSizeIterator for Iter<'a> {}
 impl Display for PhiInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "ϕ [")?;
-        let mut iter = self.operands.iter();
-        if let Some((basic_block, value)) = iter.next() {
-            write!(f, " {} -> {}", basic_block, value)?;
-            for (basic_block, value) in iter {
-                write!(f, ", {} -> {}", basic_block, value)?;
+        let mut iter = self.operands();
+        if let Some((block, value)) = iter.next() {
+            write!(f, " {} -> {}", block, value)?;
+            for (block, value) in iter {
+                write!(f, ", {} -> {}", block, value)?;
             }
         }
         write!(f, " ]")?;

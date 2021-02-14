@@ -16,6 +16,8 @@ use super::SmallValueVec;
 use crate::{
     primitive::{Func, FuncType, Table, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use core::{convert::identity, fmt::Display};
 use smallvec::smallvec;
@@ -49,6 +51,32 @@ impl CallInstr {
     /// Returns the function call parameters.
     pub fn params(&self) -> &[Value] {
         &self.params
+    }
+}
+
+impl VisitValues for CallInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        for &value in &self.params {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+}
+
+impl VisitValuesMut for CallInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        for value in &mut self.params {
+            if !visitor(value) {
+                break
+            }
+        }
     }
 }
 
@@ -141,6 +169,28 @@ impl CallIndirectInstr {
     }
 }
 
+impl VisitValues for CallIndirectInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        for &value in &self.index_and_params {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+}
+
+impl VisitValuesMut for CallIndirectInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        for value in &mut self.index_and_params {
+            if !visitor(value) {
+                break
+            }
         }
     }
 }

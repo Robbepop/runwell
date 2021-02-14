@@ -15,6 +15,8 @@
 use crate::{
     primitive::{FloatType, IntType, Value},
     ReplaceValue,
+    VisitValues,
+    VisitValuesMut,
 };
 use derive_more::Display;
 
@@ -59,6 +61,24 @@ impl TruncateIntInstr {
     /// Returns the source of the instruction that is to be extended.
     pub fn src(&self) -> Value {
         self.src
+    }
+}
+
+impl VisitValues for TruncateIntInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for TruncateIntInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
     }
 }
 
@@ -154,6 +174,24 @@ impl ExtendIntInstr {
     }
 }
 
+impl VisitValues for ExtendIntInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for ExtendIntInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
+    }
+}
+
 impl ReplaceValue for ExtendIntInstr {
     fn replace_value<F>(&mut self, mut replace: F) -> bool
     where
@@ -216,6 +254,24 @@ impl IntToFloatInstr {
     /// - `false`: `zero-extension`
     pub fn is_signed(&self) -> bool {
         self.signed
+    }
+}
+
+impl VisitValues for IntToFloatInstr {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        visitor(self.src);
+    }
+}
+
+impl VisitValuesMut for IntToFloatInstr {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        visitor(&mut self.src);
     }
 }
 
