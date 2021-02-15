@@ -258,7 +258,7 @@ impl<'a> FunctionBuilder<'a> {
             );
             let input_var = Variable::from_raw(RawIdx::from_u32(n as u32));
             ctx.vars
-                .write_var(input_var, val, entry_block, || input_type, None)
+                .write_var(input_var, val, entry_block, input_type)
                 .expect("unexpected failure to write just declared variable");
         }
     }
@@ -388,7 +388,7 @@ impl<'a> FunctionBuilder<'a> {
         let FunctionBuilderContext {
             vars, value_type, ..
         } = &mut self.ctx;
-        vars.write_var(var, value, block, || value_type[value], None)?;
+        vars.write_var(var, value, block, value_type[value])?;
         Ok(())
     }
 
@@ -413,9 +413,7 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.phi_block.insert(value, block);
         self.ctx.block_phis[block].insert(var, instr);
         self.ctx.block_incomplete_phis[block].insert(var, value);
-        self.ctx
-            .vars
-            .write_var(var, value, block, || var_type, None)?;
+        self.ctx.vars.write_var(var, value, block, var_type)?;
         self.ctx.instr_values.insert(instr, smallvec![value]);
         Ok(value)
     }
@@ -452,9 +450,7 @@ impl<'a> FunctionBuilder<'a> {
                 self.create_phi_instruction(var, var_type, block)?;
             self.add_phi_operands(block, var, phi_value)?
         };
-        self.ctx
-            .vars
-            .write_var(var, value, block, || var_type, None)?;
+        self.ctx.vars.write_var(var, value, block, var_type)?;
         Ok(value)
     }
 
@@ -520,13 +516,9 @@ impl<'a> FunctionBuilder<'a> {
         let phi_value = self.phi_instr_to_value(phi_instr);
         let phi_type = self.ctx.value_type[phi_value];
         self.ctx.block_phis[phi_block].remove(phi_var);
-        self.ctx.vars.write_var(
-            phi_var,
-            same,
-            phi_block,
-            || phi_type,
-            Some(phi_value),
-        )?;
+        self.ctx
+            .vars
+            .replace_var(phi_var, phi_block, phi_value, same, phi_type)?;
         for user in users {
             let got_replaced = self.replace_user_values(user, phi_value, same);
             if got_replaced && self.ctx.instrs[user].is_phi() {

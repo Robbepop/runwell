@@ -176,6 +176,19 @@ pub enum FunctionBuilderError {
     },
     #[display(fmt = "encountered invalid instruction index {}", instr)]
     InvalidInstr { instr: Instr },
+    #[display(
+        fmt = "missing {} definition in {} with value {} to value {}",
+        var,
+        block,
+        replace_value,
+        with_value
+    )]
+    MissingVariableForReplacement {
+        var: Variable,
+        block: Block,
+        replace_value: Value,
+        with_value: Value,
+    },
 }
 
 /// A variable access for better error information.
@@ -187,4 +200,6 @@ pub enum VariableAccess {
     /// Write the value to variable.
     #[display(fmt = "write {} to", _0)]
     Write(Value),
+    #[display(fmt = "replace {} with {}", from, to)]
+    Replace { from: Value, to: Value },
 }

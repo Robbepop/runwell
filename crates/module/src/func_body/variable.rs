@@ -248,16 +248,12 @@ impl VariableTranslator {
     /// # Errors
     ///
     /// If the type of the new value does not match the type of the variable declaration.
-    fn ensure_types_match<F>(
+    fn ensure_types_match(
         var: Variable,
         new_value: Value,
         declared_type: Type,
-        value_to_type: F,
-    ) -> Result<(), Error>
-    where
-        F: FnOnce() -> Type,
-    {
-        let value_type = value_to_type();
+        value_type: Type,
+    ) -> Result<(), Error> {
         if declared_type != value_type {
             return Err(FunctionBuilderError::UnmatchingVariableType {
                 variable: var,
@@ -314,17 +310,13 @@ impl VariableTranslator {
     ///
     /// - If the variable has not been declared before.
     /// - If the type of the new value does not match the type of the variable declaration.
-    pub fn write_var<F>(
+    pub fn write_var(
         &mut self,
         var: Variable,
         new_value: Value,
         block: Block,
-        value_to_type: F,
-        replace: Option<Value>,
-    ) -> Result<(), Error>
-    where
-        F: FnOnce() -> Type,
-    {
+        value_type: Type,
+    ) -> Result<(), Error> {
         self.ensure_declared(var, VariableAccess::Write(new_value))?;
         let Self {
             var_to_type,
@@ -338,29 +330,76 @@ impl VariableTranslator {
                     var,
                     new_value,
                     declared_type,
-                    value_to_type,
+                    value_type,
                 )?;
-                if let Some(replace) = replace {
-                    let previous = occupied.get().block_defs[block];
-                    if previous != replace {
-                        // The previous value is not equal so we bail out early.
-                        return Ok(())
-                    }
-                }
                 occupied.into_mut().block_defs.insert(block, new_value);
             }
             Entry::Vacant(vacant) => {
-                assert!(replace.is_none());
                 let declared_type = var_to_type.get_var_type(var);
                 Self::ensure_types_match(
                     var,
                     new_value,
                     declared_type,
-                    value_to_type,
+                    value_type,
                 )?;
                 let mut defs = VariableDefinitions::new(declared_type);
                 defs.block_defs.insert(block, new_value);
                 vacant.insert(defs);
+            }
+        }
+        Ok(())
+    }
+
+    /// Replaces the variable `var` of `block` with the new `with_value` in case it
+    /// is currently assigned to `replace_value`.
+    ///
+    /// Also ensures that the type of the variable stays correct.
+    ///
+    /// # Errors
+    ///
+    /// - If the variable has not been declared before.
+    /// - If the type of the new value does not match the type of the variable declaration.
+    pub fn replace_var(
+        &mut self,
+        var: Variable,
+        block: Block,
+        replace_value: Value,
+        with_value: Value,
+        value_type: Type,
+    ) -> Result<(), Error> {
+        self.ensure_declared(
+            var,
+            VariableAccess::Replace {
+                from: replace_value,
+                to: with_value,
+            },
+        )?;
+        match self.var_to_defs.entry(var) {
+            Entry::Occupied(occupied) => {
+                let declared_type = occupied.get().ty;
+                Self::ensure_types_match(
+                    var,
+                    with_value,
+                    declared_type,
+                    value_type,
+                )?;
+                let previous = occupied.get().block_defs[block];
+                if previous != replace_value {
+                    // The previous value is not equal so we bail out early.
+                    return Ok(())
+                }
+                occupied.into_mut().block_defs.insert(block, with_value);
+            }
+            Entry::Vacant(_vacant) => {
+                return Err(
+                    FunctionBuilderError::MissingVariableForReplacement {
+                        var,
+                        block,
+                        replace_value,
+                        with_value,
+                    },
+                )
+                .map_err(Into::into)
             }
         }
         Ok(())
@@ -415,8 +454,8 @@ mod tests {
         let ty = Type::Int(IntType::I32);
         let mut vars = VariableTranslator::default();
         vars.declare_vars(2, ty).unwrap();
-        vars.write_var(var(0), v(0), block(0), || ty, None).unwrap();
-        vars.write_var(var(1), v(1), block(0), || ty, None).unwrap();
+        vars.write_var(var(0), v(0), block(0), ty).unwrap();
+        vars.write_var(var(1), v(1), block(0), ty).unwrap();
         assert_eq!(vars.get(var(0)).unwrap().block_defs[block(0)], v(0));
         assert_eq!(vars.get(var(1)).unwrap().block_defs[block(0)], v(1));
     }
