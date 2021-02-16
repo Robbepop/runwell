@@ -317,8 +317,8 @@ fn binary_swap_works() -> Result<(), module::Error> {
             let x = IntConst::I32(x).into();
             let y = IntConst::I32(y).into();
             let result = evaluate_func(&module, func, &[x, y]);
-            let _result = bits_into_const(&module, func, result);
-            // assert_eq!(result, vec![y, x]);
+            let result = bits_into_const(&module, func, result);
+            assert_eq!(result, vec![y, x]);
         }
     }
     Ok(())
