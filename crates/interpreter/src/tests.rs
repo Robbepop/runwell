@@ -513,18 +513,17 @@ fn ping_pong_tail_calls() -> Result<(), module::Error> {
             ins.tail_call(func, vec![v6])
         })?;
 
-    let mut ctx = EvaluationContext::new(&module);
-    let mut results = Vec::new();
+    for x in 0..10 {
+        let input = IntConst::I32(x).into();
 
-    let input = 100;
-    ctx.evaluate_function(is_even, vec![input], |result| results.push(result))
-        .unwrap();
-    assert_eq!(results, vec![(input % 2 == 0) as u64]);
+        let is_even_result = evaluate_func(&module, is_even, &[input]);
+        let is_even_result = bits_into_const(&module, is_even, is_even_result);
+        assert_eq!(is_even_result, vec![Const::Bool(x % 2 == 0)]);
 
-    results.clear();
-    ctx.evaluate_function(is_odd, vec![input], |result| results.push(result))
-        .unwrap();
-    assert_eq!(results, vec![(input % 2 == 1) as u64]);
+        let is_odd_result = evaluate_func(&module, is_odd, &[input]);
+        let is_odd_result = bits_into_const(&module, is_odd, is_odd_result);
+        assert_eq!(is_odd_result, vec![Const::Bool(x % 2 == 1)]);
+    }
 
     Ok(())
 }
