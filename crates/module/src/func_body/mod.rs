@@ -74,11 +74,8 @@ impl FunctionBody {
     }
 
     /// Returns the slice over the output values of the instruction.
-    fn instr_values(
-        instr: Instr,
-        instr_values: &ComponentMap<Instr, SmallVec<[Value; 4]>>,
-    ) -> &[Value] {
-        instr_values
+    fn instr_values(&self, instr: Instr) -> &[Value] {
+        self.instr_values
             .get(instr)
             .map(SmallVec::as_slice)
             .unwrap_or_default()
@@ -96,7 +93,7 @@ impl FunctionBody {
             .and_then(|instrs| instrs.get(n))
             .copied()?;
         let instruction = &self.instrs[instr];
-        let instr_values = Self::instr_values(instr, &self.instr_values);
+        let instr_values = self.instr_values(instr);
         Some((instr_values, instruction))
     }
 }
@@ -107,8 +104,7 @@ impl fmt::Display for FunctionBody {
             writeln!(f, "{}:", block)?;
             for &instr in &self.block_instrs[block] {
                 let instr_data = &self.instrs[instr];
-                let instr_values =
-                    Self::instr_values(instr, &self.instr_values);
+                let instr_values = self.instr_values(instr);
                 match instr_values.split_first() {
                     None => {
                         writeln!(f, "    {}", instr_data)?;
