@@ -73,6 +73,14 @@ impl FunctionBody {
         Block::from_raw(RawIdx::from_u32(0))
     }
 
+    /// Returns the maximum SSA value used by the function.
+    pub fn max_value(&self) -> Value {
+        self.values
+            .indices()
+            .last()
+            .unwrap_or(Value::from_raw(RawIdx::from_u32(0)))
+    }
+
     /// Returns the slice over the output values of the instruction.
     fn instr_values(&self, instr: Instr) -> &[Value] {
         self.instr_values
