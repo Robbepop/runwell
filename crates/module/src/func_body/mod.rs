@@ -78,7 +78,7 @@ impl FunctionBody {
         self.values
             .indices()
             .last()
-            .unwrap_or(Value::from_raw(RawIdx::from_u32(0)))
+            .unwrap_or_else(|| Value::from_raw(RawIdx::from_u32(0)))
     }
 
     /// Returns the slice over the output values of the instruction.
