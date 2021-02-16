@@ -12,15 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{
-    EvaluationContext,
-    FunctionFrame,
-    InterpretInstr,
-    InterpretationError,
-    InterpretationFlow,
-};
-use core::mem::replace;
-use entity::RawIdx;
+use crate::core::ActivationFrame;
+
+use super::{InterpretInstr, InterpretationError, InterpretationFlow};
 use ir::{
     instr::{
         BranchInstr,
@@ -36,23 +30,16 @@ use ir::{
 impl InterpretInstr for TerminalInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
             Self::Trap => Err(InterpretationError::EvaluationHasTrapped),
-            Self::Return(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Br(instr) => instr.interpret_instr(return_value, ctx, frame),
-            Self::Ite(instr) => instr.interpret_instr(return_value, ctx, frame),
-            Self::TailCall(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::BranchTable(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::Return(instr) => instr.interpret_instr(outputs, frame),
+            Self::Br(instr) => instr.interpret_instr(outputs, frame),
+            Self::Ite(instr) => instr.interpret_instr(outputs, frame),
+            Self::TailCall(instr) => instr.interpret_instr(outputs, frame),
+            Self::BranchTable(instr) => instr.interpret_instr(outputs, frame),
         }
     }
 }
@@ -60,17 +47,13 @@ impl InterpretInstr for TerminalInstr {
 impl InterpretInstr for ReturnInstr {
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        _outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        // Since we are no longer returning a single value but multiple
-        // we need to adjust this piece of code. This comment is left as
-        // a reminder to do so.
-        if let Some(&first) = self.return_values().first() {
-            let return_value = frame.read_register(first);
-            let r0 = Value::from_raw(RawIdx::from_u32(0));
-            frame.write_register(r0, return_value);
+        frame.clear_scratch();
+        for param in self.return_values().iter().copied() {
+            let bits = frame.read_register(param);
+            frame.push_scratch(bits);
         }
         Ok(InterpretationFlow::Return)
     }
@@ -79,9 +62,8 @@ impl InterpretInstr for ReturnInstr {
 impl InterpretInstr for BranchInstr {
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        _outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         frame.switch_to_block(self.target());
         Ok(InterpretationFlow::Continue)
@@ -91,9 +73,8 @@ impl InterpretInstr for BranchInstr {
 impl InterpretInstr for IfThenElseInstr {
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        _outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let condition = frame.read_register(self.condition());
         let target = if condition != 0 {
@@ -109,33 +90,14 @@ impl InterpretInstr for IfThenElseInstr {
 impl InterpretInstr for TailCallInstr {
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
-        ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        _outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        // Create a new function frame and load input parameters into it.
-        // We cannot do this within the current frame since we might risk
-        // overriding inputs with each other.
-        // The old frame is released before continuing execution to have
-        // efficient tail calls without exploding the frame stack.
-        // In a tail call recursion this caching would result in similar
-        // behavior as using two ping-pong buffers.
-        //
-        // Since function frames are cached reusing them is very cheap.
-        let mut new_frame = ctx.create_frame();
-        let function = ctx
-            .module
-            .get_function(self.func())
-            .expect("encountered invalid function index");
-        new_frame.initialize(
-            function,
-            self.params()
-                .iter()
-                .copied()
-                .map(|param| frame.read_register(param)),
-        )?;
-        let old_frame = replace(frame, new_frame);
-        ctx.release_frame(old_frame);
+        frame.clear_scratch();
+        for param in self.params().iter().copied() {
+            let bits = frame.read_register(param);
+            frame.push_scratch(bits);
+        }
         Ok(InterpretationFlow::TailCall(self.func()))
     }
 }
@@ -143,9 +105,8 @@ impl InterpretInstr for TailCallInstr {
 impl InterpretInstr for BranchTableInstr {
     fn interpret_instr(
         &self,
-        _return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        _outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let case = frame.read_register(self.case());
         let target = self

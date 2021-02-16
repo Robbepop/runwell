@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::core::ActivationFrame;
+
 use super::{
-    EvaluationContext,
-    FunctionFrame,
+    extract_single_output,
     InterpretInstr,
     InterpretationError,
     InterpretationFlow,
-    MISSING_RETURN_VALUE_ERRSTR,
 };
 use ir::{
     instr::{
@@ -38,32 +38,17 @@ use ir::{
 impl InterpretInstr for IntInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            Self::Binary(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Unary(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Compare(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Extend(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::IntToFloat(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Truncate(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            Self::Shift(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            Self::Binary(instr) => instr.interpret_instr(outputs, frame),
+            Self::Unary(instr) => instr.interpret_instr(outputs, frame),
+            Self::Compare(instr) => instr.interpret_instr(outputs, frame),
+            Self::Extend(instr) => instr.interpret_instr(outputs, frame),
+            Self::IntToFloat(instr) => instr.interpret_instr(outputs, frame),
+            Self::Truncate(instr) => instr.interpret_instr(outputs, frame),
+            Self::Shift(instr) => instr.interpret_instr(outputs, frame),
         }
     }
 }
@@ -71,11 +56,10 @@ impl InterpretInstr for IntInstr {
 impl InterpretInstr for UnaryIntInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         let result = match self.op() {
             UnaryIntOp::LeadingZeros => source.leading_zeros(),
@@ -90,11 +74,10 @@ impl InterpretInstr for UnaryIntInstr {
 impl InterpretInstr for TruncateIntInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         debug_assert!(
             self.dst_type().bit_width() <= self.src_type().bit_width()
@@ -116,11 +99,10 @@ impl InterpretInstr for TruncateIntInstr {
 impl InterpretInstr for ExtendIntInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         debug_assert!(
             self.src_type().bit_width() <= self.dst_type().bit_width()
@@ -168,11 +150,10 @@ impl InterpretInstr for IntToFloatInstr {
     ///  - `i64.trunc_f64_u`
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use IntType::{I16, I32, I64, I8};
@@ -207,11 +188,10 @@ impl InterpretInstr for IntToFloatInstr {
 impl InterpretInstr for CompareIntInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use CompareIntOp as Op;
@@ -318,11 +298,10 @@ impl_primitive_integer_for! {
 impl InterpretInstr for ShiftIntInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let src = frame.read_register(self.source());
         let shamt = frame.read_register(self.shift_amount());
         fn eval_shift<T, F>(lhs: u64, rhs: u64, f: F) -> u64
@@ -364,11 +343,10 @@ impl InterpretInstr for ShiftIntInstr {
 impl InterpretInstr for BinaryIntInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use core::ops::{BitAnd, BitOr, BitXor};

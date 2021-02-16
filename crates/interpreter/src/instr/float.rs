@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::core::ActivationFrame;
+
 use super::{
-    EvaluationContext,
-    FunctionFrame,
+    extract_single_output,
     InterpretInstr,
     InterpretationError,
     InterpretationFlow,
-    MISSING_RETURN_VALUE_ERRSTR,
 };
 use ir::{
     instr::{
@@ -37,29 +37,18 @@ use ir::{
 impl InterpretInstr for FloatInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            FloatInstr::Binary(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            FloatInstr::Compare(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            FloatInstr::Demote(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            FloatInstr::Binary(instr) => instr.interpret_instr(outputs, frame),
+            FloatInstr::Compare(instr) => instr.interpret_instr(outputs, frame),
+            FloatInstr::Demote(instr) => instr.interpret_instr(outputs, frame),
             FloatInstr::FloatToInt(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
+                instr.interpret_instr(outputs, frame)
             }
-            FloatInstr::Promote(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
-            FloatInstr::Unary(instr) => {
-                instr.interpret_instr(return_value, ctx, frame)
-            }
+            FloatInstr::Promote(instr) => instr.interpret_instr(outputs, frame),
+            FloatInstr::Unary(instr) => instr.interpret_instr(outputs, frame),
         }
     }
 }
@@ -87,11 +76,10 @@ fn f64_reg(float: f64) -> u64 {
 impl InterpretInstr for DemoteFloatInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         assert!(self.dst_type().bit_width() <= self.src_type().bit_width());
         let result = match (self.src_type(), self.dst_type()) {
@@ -106,11 +94,10 @@ impl InterpretInstr for DemoteFloatInstr {
 impl InterpretInstr for PromoteFloatInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         assert!(self.src_type().bit_width() <= self.dst_type().bit_width());
         let result = match (self.src_type(), self.dst_type()) {
@@ -125,11 +112,10 @@ impl InterpretInstr for PromoteFloatInstr {
 impl InterpretInstr for CompareFloatInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use CompareFloatOp as Op;
@@ -172,11 +158,10 @@ impl InterpretInstr for CompareFloatInstr {
 impl InterpretInstr for BinaryFloatInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use core::ops::{Add, Div, Mul, Sub};
@@ -236,11 +221,10 @@ impl InterpretInstr for BinaryFloatInstr {
 impl InterpretInstr for UnaryFloatInstr {
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use UnaryFloatOp as Op;
@@ -294,11 +278,10 @@ impl InterpretInstr for FloatToIntInstr {
     ///  - `f64.convert_i64_u`
     fn interpret_instr(
         &self,
-        return_value: Option<Value>,
-        _ctx: &mut EvaluationContext,
-        frame: &mut FunctionFrame,
+        outputs: &[Value],
+        mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = return_value.expect(MISSING_RETURN_VALUE_ERRSTR);
+        let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use IntType::{I16, I32, I64, I8};
