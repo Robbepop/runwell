@@ -141,21 +141,6 @@ impl<'a> EvaluationContext<'a> {
         Ok(())
     }
 
-    fn update_and_push_frame(
-        &mut self,
-        func: Func,
-        function: &mut Function<'a>,
-    ) {
-        let called_function = self
-            .module
-            .get_function(func)
-            .expect("encountered invalid function index");
-        *function = called_function;
-        self.frames
-            .push_frame(func, self.scratch.drain(..).map(Register::into_u64))
-            .expect("encountered invalid function for call");
-    }
-
     /// Evaluates the given function using the function frame.
     ///
     /// The function frame is expected to already be setup with the input parameters.
@@ -186,41 +171,13 @@ impl<'a> EvaluationContext<'a> {
             match function.body().interpret_instr(&[], act)? {
                 InterpretationFlow::Continue => continue,
                 InterpretationFlow::Return => {
-                    frames.pop_frame();
-                    match frames.last_frame_mut() {
-                        Some((stack, next_frame)) => {
-                            let func = next_frame.func();
-                            let next_function = module
-                                .get_function(func)
-                                .expect("encountered invalid function index");
-                            let (output_values, _) = next_function
-                                .body()
-                                .instruction_and_value(
-                                    next_frame.current_block(),
-                                    next_frame.last_instruction_counter(),
-                                )
-                                .expect("missing instruction in function");
-                            let ptr = next_frame.stack_pointer();
-                            for (output_value, output_result) in
-                                output_values.iter().copied().zip(
-                                    scratch
-                                        .iter()
-                                        .copied()
-                                        .map(Register::into_u64),
-                                )
-                            {
-                                stack.write_register(
-                                    ptr + output_value,
-                                    output_result,
-                                );
-                            }
-                            function = next_function;
-                        }
-                        None => break,
+                    self.frames.pop_frame();
+                    if self.evaluate_return_flow(&mut function) {
+                        break
                     }
                 }
                 InterpretationFlow::TailCall(func) => {
-                    frames.pop_frame();
+                    self.frames.pop_frame();
                     self.update_and_push_frame(func, &mut function);
                 }
                 InterpretationFlow::Call(func) => {
@@ -232,5 +189,61 @@ impl<'a> EvaluationContext<'a> {
             outputs(return_value.into_u64())
         }
         Ok(())
+    }
+
+    /// Pushes another function frame onto the stack of frames.
+    ///
+    /// Initializes the new function frame with the values found in the scratch buffer.
+    /// Updates the function pointer to point to the new function frame.
+    fn update_and_push_frame(
+        &mut self,
+        func: Func,
+        function: &mut Function<'a>,
+    ) {
+        let called_function = self
+            .module
+            .get_function(func)
+            .expect("encountered invalid function index");
+        *function = called_function;
+        self.frames
+            .push_frame(func, self.scratch.drain(..).map(Register::into_u64))
+            .expect("encountered invalid function for call");
+    }
+
+    /// Evaluates the control flow when an interpreted function returns to its caller.
+    ///
+    /// Handles propagation of the returned results into the callers registers.
+    /// Updates the current `function` to the caller's function if any.
+    ///
+    /// Returns `true` if there was no caller so that the interpreter returns back entirely
+    /// to the interpreter's own caller.
+    fn evaluate_return_flow(&mut self, function: &mut Function<'a>) -> bool {
+        match self.frames.last_frame_mut() {
+            Some((stack, next_frame)) => {
+                let func = next_frame.func();
+                let next_function = self
+                    .module
+                    .get_function(func)
+                    .expect("encountered invalid function index");
+                let (output_values, _) = next_function
+                    .body()
+                    .instruction_and_value(
+                        next_frame.current_block(),
+                        next_frame.last_instruction_counter(),
+                    )
+                    .expect("missing instruction in function");
+                let ptr = next_frame.stack_pointer();
+                for (output_value, output_result) in output_values
+                    .iter()
+                    .copied()
+                    .zip(self.scratch.iter().copied().map(Register::into_u64))
+                {
+                    stack.write_register(ptr + output_value, output_result);
+                }
+                *function = next_function;
+                false
+            }
+            None => true,
+        }
     }
 }
