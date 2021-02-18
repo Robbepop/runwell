@@ -37,10 +37,9 @@ use ir::{
     },
 };
 use module::{
+    builder::{FunctionBuilder, InstructionBuilder},
     primitive::{FunctionType, Instr, Variable},
     FunctionBody,
-    FunctionBuilder,
-    InstructionBuilder,
     Module,
 };
 
