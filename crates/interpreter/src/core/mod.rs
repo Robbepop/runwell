@@ -34,7 +34,7 @@ use module::{Function, Module};
 #[derive(Debug)]
 pub struct EvaluationContext<'a> {
     /// The module that holds immutable data.
-    pub module: &'a Module,
+    module: &'a Module,
     /// The stack and function frames.
     frames: Frames<'a>,
     /// A scratch buffer to store intermediate state between function executions.
@@ -45,7 +45,7 @@ pub struct EvaluationContext<'a> {
 #[derive(Debug)]
 pub struct Frames<'a> {
     /// The module that holds immutable data.
-    pub module: &'a Module,
+    module: &'a Module,
     /// The stack on which functions are operating.
     stack: Stack,
     /// The currently active frames.
