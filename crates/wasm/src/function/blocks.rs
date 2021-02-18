@@ -18,7 +18,7 @@ use crate::{Error, TranslateError};
 use core::convert::TryFrom;
 use entity::RawIdx;
 use ir::primitive::{Block, FuncType, Type};
-use module::{FunctionBuilder, ModuleResources};
+use module::{builder::FunctionBuilder, ModuleResources};
 
 /// A stack of Wasm `Block` and `Loop` definitions to branch/continue to.
 #[derive(Debug, Default)]

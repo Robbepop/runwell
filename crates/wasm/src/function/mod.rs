@@ -29,7 +29,7 @@ use self::{
 use crate::{Error, Type};
 use core::{convert::TryFrom as _, fmt};
 use ir::primitive::Func;
-use module::{FunctionBody, FunctionBuilder, ModuleResources};
+use module::{builder::FunctionBuilder, FunctionBody, ModuleResources};
 use wasmparser::{BinaryReader, FuncValidator, Range, ValidatorResources};
 
 /// Translate a Wasm function body into a Runwell function body.

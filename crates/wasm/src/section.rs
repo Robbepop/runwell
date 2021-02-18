@@ -33,7 +33,7 @@ use core::convert::TryFrom;
 use derive_more::{Display, Error};
 use entity::RawIdx;
 use ir::primitive::{Func, FuncType};
-use module::{Module, ModuleBuilder};
+use module::{builder::ModuleBuilder, Module};
 use wasmparser::{
     Chunk,
     DataSectionReader,
