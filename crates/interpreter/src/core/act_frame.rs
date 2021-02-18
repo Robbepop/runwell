@@ -81,10 +81,17 @@ impl<'a> ActivationFrame<'a> {
         self.frame.stack_pointer()
     }
 
+    /// Clears the scratch buffer.
+    ///
+    /// Use this before populating the scratch buffer with function call
+    /// parameters or return values.
     pub fn clear_scratch(&mut self) {
         self.scratch.clear();
     }
 
+    /// Populates the scratch buffer with another value.
+    ///
+    /// Use this to temporarily store function call parameters or return values.
     pub fn push_scratch(&mut self, bits: u64) {
         self.scratch.push(Register::from_u64(bits))
     }
