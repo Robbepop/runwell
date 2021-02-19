@@ -54,7 +54,7 @@ where
     /// If the operation causes the entity arena to allocate more than or equal to `u32::MAX`
     /// entities in total.
     pub fn alloc_default(&mut self, amount: usize) -> Idx<T> {
-        let raw_idx = self.max_key();
+        let raw_idx = self.next_key();
         let new_len = self.len() + amount;
         assert!(new_len < u32::MAX as usize);
         self.entities.resize_with(new_len, Default::default);
@@ -64,7 +64,7 @@ where
 
 impl<T> EntityArena<T> {
     /// Returns the key for the next allocated entity.
-    fn max_key(&self) -> RawIdx {
+    fn next_key(&self) -> RawIdx {
         RawIdx::from_u32(self.entities.len() as u32)
     }
 
@@ -77,7 +77,7 @@ impl<T> EntityArena<T> {
     /// of it using secondary data structures.
     #[inline]
     pub fn alloc(&mut self, entity: T) -> Idx<T> {
-        let raw_idx = self.max_key();
+        let raw_idx = self.next_key();
         self.entities.push(entity);
         Idx::from_raw(raw_idx)
     }
@@ -112,7 +112,7 @@ impl<T> EntityArena<T> {
     /// Returns `true` if the entity at the index has been allocated.
     #[inline]
     pub fn contains_key(&self, index: Idx<T>) -> bool {
-        index.into_raw() < self.max_key()
+        index.into_raw() < self.next_key()
     }
 
     /// Returns a shared reference to the entity at the index if any.
@@ -131,7 +131,7 @@ impl<T> EntityArena<T> {
 
     /// Returns an iterator over the indices of the stored entities.
     pub fn indices(&self) -> Indices<T> {
-        Indices::new(RawIdx::from_u32(0), self.max_key())
+        Indices::new(RawIdx::from_u32(0), self.next_key())
     }
 
     /// Returns an iterator over shared references to the allocated entities of the entity arena.
@@ -146,12 +146,12 @@ impl<T> EntityArena<T> {
 
     /// Returns an iterator over the indices and shared references to their associated data.
     pub fn iter(&self) -> Iter<T> {
-        Iter::new(RawIdx::from_u32(0), self.max_key(), &self.entities)
+        Iter::new(RawIdx::from_u32(0), self.next_key(), &self.entities)
     }
 
     /// Returns an iterator over the indices and shared references to their associated data.
     pub fn iter_mut(&mut self) -> IterMut<T> {
-        IterMut::new(RawIdx::from_u32(0), self.max_key(), &mut self.entities)
+        IterMut::new(RawIdx::from_u32(0), self.next_key(), &mut self.entities)
     }
 }
 
