@@ -41,7 +41,7 @@ impl<'a> ModuleTablesBuilder<'a> {
         &mut self,
         table_decl: TableDecl,
     ) -> Result<Table, String> {
-        let idx = self.res.table_entities.alloc(Default::default());
+        let idx = self.res.table_entities.alloc_some(1);
         self.res.table_decls.insert(idx, table_decl);
         Ok(idx)
     }

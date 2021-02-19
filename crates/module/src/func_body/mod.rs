@@ -30,7 +30,7 @@ pub use self::{
     variable::{Variable, VariableTranslator},
 };
 use core::fmt;
-use entity::{ComponentMap, ComponentVec, EntityArena, RawIdx};
+use entity::{ComponentMap, ComponentVec, EntityArena, PhantomEntityArena, RawIdx};
 use ir::{
     instr::Instruction,
     primitive::{Block, BlockEntity, Type, Value, ValueEntity},
@@ -41,9 +41,9 @@ use smallvec::SmallVec;
 #[derive(Debug)]
 pub struct FunctionBody {
     /// Arena for all block entities.
-    blocks: EntityArena<BlockEntity>,
+    blocks: PhantomEntityArena<BlockEntity>,
     /// Arena for all SSA value entities.
-    values: EntityArena<ValueEntity>,
+    values: PhantomEntityArena<ValueEntity>,
     /// Arena for all IR instructions.
     instrs: EntityArena<Instruction>,
     /// Block instructions.

@@ -20,7 +20,7 @@ use entity::{
     secondary::map::Entry,
     ComponentMap,
     DisplayHook,
-    EntityArena,
+    PhantomEntityArena,
     Idx,
     RawIdx,
 };
@@ -105,7 +105,7 @@ impl DisplayHook for VariableEntity {
 #[derive(Debug, Default)]
 pub struct VariableTranslator {
     /// The amount of declared variables.
-    vars: EntityArena<VariableEntity>,
+    vars: PhantomEntityArena<VariableEntity>,
     /// For every declaration of multiple variables their shared declaration is appended
     /// to this vector.
     ///
@@ -275,7 +275,7 @@ impl VariableTranslator {
     ///
     /// If there are more than 2^31 variable declarations.
     pub fn declare_vars(&mut self, amount: u32, ty: Type) -> Result<(), Error> {
-        let first_idx = self.vars.alloc_default(amount as usize);
+        let first_idx = self.vars.alloc_some(amount);
         if self.vars.len() >= u32::MAX as usize {
             return Err(FunctionBuilderError::TooManyVariableDeclarations)
                 .map_err(Into::into)

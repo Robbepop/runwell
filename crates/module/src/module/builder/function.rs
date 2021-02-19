@@ -39,7 +39,7 @@ impl<'a> ModuleFunctionsBuilder<'a> {
         func_type: FuncType,
     ) -> Result<Func, String> {
         self.res.ensure_func_type_exists(func_type)?;
-        let idx = self.res.function_entities.alloc(Default::default());
+        let idx = self.res.function_entities.alloc_some(1);
         self.res.function_decls.insert(idx, func_type);
         Ok(idx)
     }

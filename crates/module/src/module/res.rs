@@ -20,7 +20,7 @@ use crate::{
     primitive::ImportName,
     table::{TableDecl, TableInit},
 };
-use entity::{ComponentMap, ComponentVec, DefaultComponentVec, EntityArena};
+use entity::{ComponentMap, ComponentVec, DefaultComponentVec, PhantomEntityArena};
 use ir::primitive::{
     Func,
     FuncType,
@@ -38,15 +38,15 @@ pub struct ModuleResources {
     /// The module's start function, if any.
     pub(super) start_func: Option<Func>,
     /// Function type entities.
-    pub(super) type_entities: EntityArena<FuncTypeEntity>,
+    pub(super) type_entities: PhantomEntityArena<FuncTypeEntity>,
     /// Function entities.
-    pub(super) function_entities: EntityArena<FunctionEntity>,
+    pub(super) function_entities: PhantomEntityArena<FunctionEntity>,
     /// Global variable entities.
-    pub(super) global_entities: EntityArena<GlobalVariableEntity>,
+    pub(super) global_entities: PhantomEntityArena<GlobalVariableEntity>,
     /// Linear memory (heap) entities.
-    pub(super) memory_entities: EntityArena<LinearMemoryEntity>,
+    pub(super) memory_entities: PhantomEntityArena<LinearMemoryEntity>,
     /// Table entities.
-    pub(super) table_entities: EntityArena<TableEntity>,
+    pub(super) table_entities: PhantomEntityArena<TableEntity>,
 
     /// Registered function types.
     pub(super) types: DefaultComponentVec<FuncType, FunctionType>,
@@ -162,11 +162,6 @@ impl ModuleResources {
     ///
     /// This may costly reallocate some of the data structures.
     pub(super) fn shrink_to_fit(&mut self) {
-        self.type_entities.shrink_to_fit();
-        self.function_entities.shrink_to_fit();
-        self.global_entities.shrink_to_fit();
-        self.memory_entities.shrink_to_fit();
-        self.table_entities.shrink_to_fit();
         self.types.shrink_to_fit();
         self.function_decls.shrink_to_fit();
         self.function_import.shrink_to_fit();

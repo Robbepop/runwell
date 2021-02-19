@@ -33,7 +33,7 @@ impl<'a> ModuleTypesBuilder<'a> {
 
     /// Pushes a new function type to the module and returns an index to it.
     pub fn push_type(&mut self, func_type: FunctionType) -> FuncType {
-        let idx = self.res.type_entities.alloc(Default::default());
+        let idx = self.res.type_entities.alloc_some(1);
         self.res.types[idx] = func_type;
         idx
     }

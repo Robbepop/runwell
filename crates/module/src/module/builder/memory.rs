@@ -41,7 +41,7 @@ impl<'a> ModuleMemoriesBuilder<'a> {
         &mut self,
         memory_decl: LinearMemoryDecl,
     ) -> Result<Mem, String> {
-        let idx = self.res.memory_entities.alloc(Default::default());
+        let idx = self.res.memory_entities.alloc_some(1);
         self.res.memory_decls.insert(idx, memory_decl);
         Ok(idx)
     }

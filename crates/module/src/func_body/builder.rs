@@ -37,6 +37,7 @@ use entity::{
     ComponentVec,
     DefaultComponentVec,
     EntityArena,
+    PhantomEntityArena,
     RawIdx,
 };
 use ir::{
@@ -46,6 +47,7 @@ use ir::{
 };
 use smallvec::{smallvec, SmallVec};
 
+/// Type alias to Rust's `HashSet` but using `ahash` as hasher which is more efficient.
 type HashSet<T> = std::collections::HashSet<T, ahash::RandomState>;
 
 impl FunctionBody {
@@ -81,9 +83,9 @@ pub struct FunctionBuilder<'a> {
 #[derive(Debug)]
 pub struct FunctionBuilderContext {
     /// Arena for all block entities.
-    pub blocks: EntityArena<BlockEntity>,
+    pub blocks: PhantomEntityArena<BlockEntity>,
     /// Arena for all SSA value entities.
-    pub values: EntityArena<ValueEntity>,
+    pub values: PhantomEntityArena<ValueEntity>,
     /// Arena for all IR instructions.
     pub instrs: EntityArena<Instruction>,
     /// Block predecessors.
@@ -231,7 +233,7 @@ impl<'a> FunctionBuilder<'a> {
             // Do not create an entry block if there is already one.
             return ctx.current
         }
-        let entry_block = ctx.blocks.alloc(Default::default());
+        let entry_block = ctx.blocks.alloc_some(1);
         ctx.block_preds.insert(entry_block, Default::default());
         ctx.block_sealed[entry_block] = true;
         ctx.block_instrs.insert(entry_block, Default::default());
@@ -249,7 +251,7 @@ impl<'a> FunctionBuilder<'a> {
     ) {
         let entry_block = Self::create_entry_block(ctx);
         for (n, input_type) in inputs.iter().copied().enumerate() {
-            let val = ctx.values.alloc(Default::default());
+            let val = ctx.values.alloc_some(1);
             ctx.value_type.insert(val, input_type);
             ctx.value_assoc.insert(val, ValueAssoc::Input(n as u32));
             ctx.value_users.insert(val, Default::default());
@@ -290,7 +292,7 @@ impl<'a> FunctionBuilder<'a> {
     /// Creates a new basic block for the function and returns a reference to it.
     pub fn create_block(&mut self) -> Result<Block, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
-        let new_block = self.ctx.blocks.alloc(Default::default());
+        let new_block = self.ctx.blocks.alloc_some(1);
         self.ctx.block_preds.insert(new_block, Default::default());
         self.ctx.block_instrs.insert(new_block, Default::default());
         self.ctx.block_phis.insert(new_block, Default::default());
@@ -400,7 +402,7 @@ impl<'a> FunctionBuilder<'a> {
         block: Block,
     ) -> Result<Value, Error> {
         let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
-        let value = self.ctx.values.alloc(ValueEntity);
+        let value = self.ctx.values.alloc_some(1);
         self.ctx
             .value_incomplete_phi
             .insert(value, Default::default());
@@ -677,8 +679,6 @@ impl<'a> FunctionBuilder<'a> {
             })
             .map_err(Into::into)
         }
-        self.ctx.blocks.shrink_to_fit();
-        self.ctx.values.shrink_to_fit();
         self.ctx.instrs.shrink_to_fit();
         self.ctx.block_instrs.shrink_to_fit();
         self.ctx.instr_values.shrink_to_fit();

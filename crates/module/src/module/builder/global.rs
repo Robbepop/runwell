@@ -51,7 +51,7 @@ impl<'a> ModuleGlobalsBuilder<'a> {
         decl: GlobalVariable,
         init: InitExpr,
     ) -> Result<Global, String> {
-        let idx = self.res.global_entities.alloc(Default::default());
+        let idx = self.res.global_entities.alloc_some(1);
         self.res.global_decls.insert(idx, decl);
         self.res.global_inits.insert(idx, GlobalInit::Define(init));
         Ok(idx)

@@ -132,7 +132,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .insert(instr, Default::default());
         self.builder.ctx.block_instrs[block].push(instr);
         for (n, output_type) in output_types.iter().copied().enumerate() {
-            let value = self.builder.ctx.values.alloc(Default::default());
+            let value = self.builder.ctx.values.alloc_some(1);
             self.builder.ctx.instr_values[instr].push(value);
             self.builder.ctx.value_type.insert(value, output_type);
             self.builder
