@@ -15,9 +15,11 @@
 //! Data structure to create new unique entities.
 
 mod arena;
+mod phantom_arena;
 mod iter;
 
 pub use self::{
+    phantom_arena::PhantomEntityArena,
     arena::EntityArena,
     iter::{Entities, EntitiesMut, Indices, Iter, IterMut},
 };
