@@ -9,14 +9,14 @@ entity = { package = "runwell_entity", path = "../entity" }
 ir = { package = "runwell_ir", path = "../ir" }
 module = { package = "runwell_module", path = "../module" }
 
-wasmparser = { version = "0.74", features = ["deterministic"] }
+wasmparser = { version = "0.75", features = ["deterministic"] }
 derive_more = "0.99.2"
 cfg-if = "1"
 
 [dev-dependencies]
 wabt = "0.10"
 anyhow = "1.0"
-wast = "33.0"
+wast = "34.0"
 wat = "1.0"
 
 [features]
