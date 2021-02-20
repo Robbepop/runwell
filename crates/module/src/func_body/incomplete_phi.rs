@@ -62,6 +62,21 @@ impl IncompletePhi {
             .any(identity)
     }
 
+    /// Visit all input values of the incomplete phi instruction by mutable reference.
+    ///
+    /// Allow to mutate the input values in-place.
+    /// The visitor returns `true` to signal to visit more input values and `false` otherwise.
+    pub fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        for value in self.operands.iter_mut().map(|(_block, value)| value) {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+
     /// Returns an iterator over the operands of the incomplete ϕ-instruction.
     pub fn operands(&self) -> Iter {
         Iter {
