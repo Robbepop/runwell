@@ -107,7 +107,7 @@ pub struct FunctionBuilderContext {
     /// a terminal instruction as its last instruction.
     pub block_filled: DefaultComponentVec<Block, bool>,
     /// Block instructions.
-    pub block_instrs: ComponentVec<Block, SmallVec<[Instr; 4]>>,
+    pub block_instrs: DefaultComponentVec<Block, SmallVec<[Instr; 4]>>,
     /// Required information to remove phi from its block if it becomes trivial.
     pub phi_block: ComponentMap<Value, Block>,
     /// Required information to remove phi from its block if it becomes trivial.
@@ -236,7 +236,6 @@ impl<'a> FunctionBuilder<'a> {
         }
         let entry_block = ctx.blocks.alloc_some(1);
         ctx.block_sealed[entry_block] = true;
-        ctx.block_instrs.insert(entry_block, Default::default());
         ctx.block_incomplete_phis
             .insert(entry_block, Default::default());
         ctx.current = entry_block;
@@ -292,7 +291,6 @@ impl<'a> FunctionBuilder<'a> {
     pub fn create_block(&mut self) -> Result<Block, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc_some(1);
-        self.ctx.block_instrs.insert(new_block, Default::default());
         self.ctx
             .block_incomplete_phis
             .insert(new_block, Default::default());
