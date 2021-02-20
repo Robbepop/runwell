@@ -30,7 +30,7 @@ use super::{
     VariableTranslator,
 };
 use crate::{Error, ModuleResources};
-use core::mem::replace;
+use core::mem::{replace, take};
 use derive_more::Display;
 use entity::{
     ComponentMap,
@@ -334,10 +334,7 @@ impl<'a> FunctionBuilder<'a> {
             .map_err(Into::into)
         }
         // Popping incomplete phis by replacing with new empty component map.
-        let incomplete_phis = replace(
-            &mut self.ctx.block_incomplete_phis[block],
-            Default::default(),
-        );
+        let incomplete_phis = take(&mut self.ctx.block_incomplete_phis[block]);
         for (variable, &value) in incomplete_phis.iter() {
             self.add_phi_operands(block, variable, value)?;
         }
@@ -495,8 +492,7 @@ impl<'a> FunctionBuilder<'a> {
         let same = equivalent_value;
         let phi_instr = self.phi_value_to_instr(phi_value);
         self.ctx.value_users[phi_value].remove(&phi_instr);
-        let users =
-            replace(&mut self.ctx.value_users[phi_value], Default::default());
+        let users = take(&mut self.ctx.value_users[phi_value]);
         let phi_block = self.ctx.phi_block[phi_value];
         let phi_var = self.ctx.phi_var[phi_value];
         let phi_value = self.phi_instr_to_value(phi_instr);
