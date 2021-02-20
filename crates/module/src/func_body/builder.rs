@@ -35,6 +35,7 @@ use derive_more::Display;
 use entity::{
     ComponentMap,
     ComponentVec,
+    DefaultComponentMap,
     DefaultComponentVec,
     EntityArena,
     PhantomEntityArena,
@@ -95,7 +96,7 @@ pub struct FunctionBuilderContext {
     /// The phi functions of every basic block.
     ///
     /// Every basic block can have up to one phi instruction per variable in use.
-    pub block_phis: ComponentMap<Block, ComponentMap<Variable, Instr>>,
+    pub block_phis: DefaultComponentMap<Block, ComponentMap<Variable, Instr>>,
     /// Is `true` if block is sealed.
     ///
     /// A sealed block knows all its predecessors.
@@ -236,7 +237,6 @@ impl<'a> FunctionBuilder<'a> {
         let entry_block = ctx.blocks.alloc_some(1);
         ctx.block_sealed[entry_block] = true;
         ctx.block_instrs.insert(entry_block, Default::default());
-        ctx.block_phis.insert(entry_block, Default::default());
         ctx.block_incomplete_phis
             .insert(entry_block, Default::default());
         ctx.current = entry_block;
@@ -293,7 +293,6 @@ impl<'a> FunctionBuilder<'a> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc_some(1);
         self.ctx.block_instrs.insert(new_block, Default::default());
-        self.ctx.block_phis.insert(new_block, Default::default());
         self.ctx
             .block_incomplete_phis
             .insert(new_block, Default::default());
@@ -683,7 +682,8 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.value_type.shrink_to_fit();
         self.ctx.value_assoc.shrink_to_fit();
         let mut block_instrs = ComponentVec::default();
-        for (block, var_phis) in self.ctx.block_phis.iter() {
+        for block in self.ctx.blocks.indices() {
+            let var_phis = &self.ctx.block_phis[block];
             for (_var, &phi_instr) in var_phis {
                 let phi_value = self.phi_instr_to_value(phi_instr);
                 let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
