@@ -138,7 +138,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
                 .insert(value, ValueAssoc::Instr(instr, n as u32));
         }
         if is_terminal {
-            self.builder.ctx.block_filled[block] = true;
+            self.builder.ctx.block_filled.set(block, true);
         }
         Ok(instr)
     }
@@ -949,7 +949,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         let instr = self.builder.ctx.instrs.alloc(instruction);
         self.builder.ctx.block_instrs[block].push(instr);
         if is_terminal {
-            self.builder.ctx.block_filled[block] = true;
+            self.builder.ctx.block_filled.set(block, true);
         }
         Ok(instr)
     }
@@ -1034,14 +1034,14 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         block: Block,
         new_pred: Block,
     ) -> Result<(), Error> {
-        if !self.builder.ctx.block_filled[new_pred] {
+        if !self.builder.ctx.block_filled.get(new_pred) {
             return Err(FunctionBuilderError::UnfilledPredecessor {
                 block,
                 unfilled_pred: new_pred,
             })
             .map_err(Into::into)
         }
-        if self.builder.ctx.block_sealed[block] {
+        if self.builder.ctx.block_sealed.get(block) {
             return Err(FunctionBuilderError::PredecessorForSealedBlock {
                 sealed_block: block,
                 new_pred,

@@ -30,11 +30,12 @@ use super::{
     VariableTranslator,
 };
 use crate::{Error, ModuleResources};
-use core::mem::{replace, take};
+use core::mem::take;
 use derive_more::Display;
 use entity::{
     ComponentMap,
     ComponentVec,
+    DefaultComponentBitVec,
     DefaultComponentMap,
     DefaultComponentVec,
     EntityArena,
@@ -101,12 +102,12 @@ pub struct FunctionBuilderContext {
     /// Is `true` if block is sealed.
     ///
     /// A sealed block knows all its predecessors.
-    pub block_sealed: DefaultComponentVec<Block, bool>,
+    pub block_sealed: DefaultComponentBitVec<Block>,
     /// Is `true` if block is filled.
     ///
     /// A filled block knows all its instructions and has
     /// a terminal instruction as its last instruction.
-    pub block_filled: DefaultComponentVec<Block, bool>,
+    pub block_filled: DefaultComponentBitVec<Block>,
     /// Block instructions.
     pub block_instrs: DefaultComponentVec<Block, SmallVec<[Instr; 4]>>,
     /// Required information to remove phi from its block if it becomes trivial.
@@ -243,7 +244,7 @@ impl<'a> FunctionBuilder<'a> {
             return ctx.current
         }
         let entry_block = ctx.blocks.alloc_some(1);
-        ctx.block_sealed[entry_block] = true;
+        ctx.block_sealed.set(entry_block, true);
         ctx.current = entry_block;
         entry_block
     }
@@ -334,7 +335,7 @@ impl<'a> FunctionBuilder<'a> {
     pub fn seal_block(&mut self) -> Result<(), Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
-        let already_sealed = replace(&mut self.ctx.block_sealed[block], true);
+        let already_sealed = self.ctx.block_sealed.replace(block, true);
         if already_sealed {
             return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
                 block,
@@ -357,7 +358,7 @@ impl<'a> FunctionBuilder<'a> {
     pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let block = self.current_block()?;
-        let already_filled = self.ctx.block_filled[block];
+        let already_filled = self.ctx.block_filled.get(block);
         if already_filled {
             return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
                 block,
@@ -425,7 +426,7 @@ impl<'a> FunctionBuilder<'a> {
         }
         // Global Value Numbering
         let var_type = var_info.ty();
-        if !self.ctx.block_sealed[block] {
+        if !self.ctx.block_sealed.get(block) {
             // Incomplete phi node required.
             let value = self.create_phi_instruction(var, var_type, block)?;
             return Ok(value)
@@ -642,7 +643,7 @@ impl<'a> FunctionBuilder<'a> {
             .ctx
             .blocks
             .indices()
-            .filter(|&block| !self.ctx.block_sealed[block])
+            .filter(|&block| !self.ctx.block_sealed.get(block))
             .collect::<Vec<_>>();
         if !unsealed_blocks.is_empty() {
             return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
@@ -654,7 +655,7 @@ impl<'a> FunctionBuilder<'a> {
             .ctx
             .blocks
             .indices()
-            .filter(|&block| !self.ctx.block_filled[block])
+            .filter(|&block| !self.ctx.block_filled.get(block))
             .collect::<Vec<_>>();
         if !unfilled_blocks.is_empty() {
             return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
