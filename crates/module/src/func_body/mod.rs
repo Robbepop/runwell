@@ -33,6 +33,7 @@ use core::fmt;
 use entity::{
     ComponentVec,
     DefaultComponentMap,
+    DefaultComponentVec,
     EntityArena,
     PhantomEntityArena,
     RawIdx,
@@ -57,7 +58,7 @@ pub struct FunctionBody {
     /// # Note
     ///
     /// Also contains all the phi instructions at the block start.
-    block_instrs: ComponentVec<Block, SmallVec<[Instr; 4]>>,
+    block_instrs: DefaultComponentVec<Block, SmallVec<[Instr; 4]>>,
     /// Optional associated values for instructions.
     ///
     /// Not all instructions can be associated with an SSA value.
@@ -98,11 +99,7 @@ impl FunctionBody {
         block: Block,
         n: usize,
     ) -> Option<(&[Value], &Instruction)> {
-        let instr = self
-            .block_instrs
-            .get(block)
-            .and_then(|instrs| instrs.get(n))
-            .copied()?;
+        let instr = self.block_instrs[block].get(n).copied()?;
         let instruction = &self.instrs[instr];
         let instr_values = self.instr_values(instr);
         Some((instr_values, instruction))

@@ -663,25 +663,23 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.instr_values.shrink_to_fit();
         self.ctx.value_type.shrink_to_fit();
         self.ctx.value_assoc.shrink_to_fit();
-        let mut block_instrs = ComponentVec::default();
+        let mut block_instrs =
+            <DefaultComponentVec<Block, SmallVec<[Instr; 4]>>>::default();
         for block in self.ctx.blocks.indices() {
-            let var_phis = &self.ctx.block_phis[block];
-            for (_var, &phi_instr) in var_phis {
+            // Convert all incomplete phis into complete phis and add them to the
+            // start of each of their basic block instructions.
+            for &phi_instr in self.ctx.block_phis[block].components() {
                 let phi_value = self.phi_instr_to_value(phi_instr);
                 let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
-                let _empty_old_phi = core::mem::replace(
+                let _ = core::mem::replace(
                     &mut self.ctx.instrs[phi_instr],
                     PhiInstr::new(incomplete_phi.operands()).into(),
                 );
+                block_instrs[block].push(phi_instr);
             }
-            // First add all phi instructions of a basic block and then
-            // append the rest of the instructions of the same basic block.
-            let mut instructions = var_phis
-                .iter()
-                .map(|(_var, &phi_instr)| phi_instr)
-                .collect::<SmallVec<[Instr; 4]>>();
-            instructions.extend_from_slice(&self.ctx.block_instrs[block]);
-            block_instrs.insert(block, instructions);
+            // Append the rest of the instructions of the same basic block.
+            block_instrs[block]
+                .extend_from_slice(&self.ctx.block_instrs[block]);
         }
         block_instrs.shrink_to_fit();
         Ok(FunctionBody {
