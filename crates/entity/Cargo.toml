@@ -5,6 +5,7 @@ authors = ["Robin Freyler <robin.freyler@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+smallbitvec = "2.5"
 derive_more = "0.99.2"
 ahash = "0.7"
 

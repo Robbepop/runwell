@@ -32,6 +32,7 @@ pub use self::{
     secondary::{
         ComponentMap,
         ComponentVec,
+        DefaultComponentBitVec,
         DefaultComponentMap,
         DefaultComponentVec,
     },

@@ -14,6 +14,7 @@
 
 //! Data structures to add, remove and query components for existing entities.
 
+pub mod default_bitvec;
 pub mod default_map;
 pub mod default_vec;
 mod immutable;
@@ -22,6 +23,7 @@ pub mod vec;
 
 use self::immutable::Immutable;
 pub use self::{
+    default_bitvec::DefaultComponentBitVec,
     default_map::DefaultComponentMap,
     default_vec::DefaultComponentVec,
     map::ComponentMap,
