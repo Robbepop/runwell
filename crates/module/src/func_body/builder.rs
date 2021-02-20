@@ -151,7 +151,7 @@ pub struct FunctionBuilderContext {
     ///
     /// Also this information can be used for optimizations when replacing
     /// one instruction with another.
-    pub value_users: ComponentMap<Value, HashSet<Instr>>,
+    pub value_users: DefaultComponentMap<Value, HashSet<Instr>>,
     /// The current basic block that is being operated on.
     pub current: Block,
     /// The variable translator.
@@ -252,7 +252,6 @@ impl<'a> FunctionBuilder<'a> {
             let val = ctx.values.alloc_some(1);
             ctx.value_type.insert(val, input_type);
             ctx.value_assoc.insert(val, ValueAssoc::Input(n as u32));
-            ctx.value_users.insert(val, Default::default());
             ctx.vars.declare_vars(1, input_type).expect(
                 "unexpected failure to declare function input variable",
             );
@@ -405,7 +404,6 @@ impl<'a> FunctionBuilder<'a> {
             .value_assoc
             .insert(value, ValueAssoc::Instr(instr, 0));
         self.ctx.value_type.insert(value, var_type);
-        self.ctx.value_users.insert(value, Default::default());
         self.ctx.phi_var.insert(value, var);
         self.ctx.phi_block.insert(value, block);
         self.ctx.block_phis[block].insert(var, instr);
@@ -503,11 +501,7 @@ impl<'a> FunctionBuilder<'a> {
         let same = equivalent_value;
         let phi_instr = self.phi_value_to_instr(phi_value);
         self.ctx.value_users[phi_value].remove(&phi_instr);
-        let users = self
-            .ctx
-            .value_users
-            .insert(phi_value, Default::default())
-            .unwrap_or_default();
+        let users = replace(&mut self.ctx.value_users[phi_value], Default::default());
         let phi_block = self.ctx.phi_block[phi_value];
         let phi_var = self.ctx.phi_var[phi_value];
         let phi_value = self.phi_instr_to_value(phi_instr);

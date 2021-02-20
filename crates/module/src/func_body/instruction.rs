@@ -131,10 +131,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             let value = self.builder.ctx.values.alloc_some(1);
             self.builder.ctx.instr_values[instr].push(value);
             self.builder.ctx.value_type.insert(value, output_type);
-            self.builder
-                .ctx
-                .value_users
-                .insert(value, Default::default());
             assert!(n <= u32::MAX as usize);
             self.builder
                 .ctx
