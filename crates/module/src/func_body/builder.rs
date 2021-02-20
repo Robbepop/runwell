@@ -47,6 +47,7 @@ use ir::{
     VisitValuesMut,
 };
 use smallvec::SmallVec;
+use std::collections::HashMap;
 
 /// Type alias to Rust's `HashSet` but using `ahash` as hasher which is more efficient.
 type HashSet<T> = std::collections::HashSet<T, ahash::RandomState>;
@@ -196,6 +197,13 @@ pub enum ValueAssoc {
     Input(u32),
     /// The value is associated to the `n`-th output of the instruction.
     Instr(Instr, u32),
+}
+
+impl ValueAssoc {
+    /// Returns `true` if the value is associated to a function input parameter.
+    pub fn is_input(self) -> bool {
+        matches!(self, Self::Input(_))
+    }
 }
 
 /// The current state of the function body construction.
@@ -657,8 +665,60 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.instrs.shrink_to_fit();
         self.ctx.block_instrs.shrink_to_fit();
         self.ctx.instr_values.shrink_to_fit();
-        self.ctx.value_type.shrink_to_fit();
-        self.ctx.value_assoc.shrink_to_fit();
+
+        let FunctionBuilderContext {
+            values: old_values,
+            instrs,
+            instr_values,
+            value_assoc: old_value_assoc,
+            value_type: old_value_type,
+            value_users: old_value_users,
+            value_incomplete_phi: old_value_incomplete_phi,
+            ..
+        } = &mut self.ctx;
+        let mut values = <PhantomEntityArena<ValueEntity>>::default();
+        let mut value_type = <ComponentVec<Value, Type>>::default();
+        let mut value_assoc = <ComponentVec<Value, ValueAssoc>>::default();
+        let mut value_incomplete_phi =
+            <ComponentMap<Value, IncompletePhi>>::default();
+        let mut value_replace = <HashMap<Value, Value>>::default();
+        for old_value in old_values.indices() {
+            if !old_value_users[old_value].is_empty()
+                || old_value_assoc[old_value].is_input()
+            {
+                let new_value = values.alloc_some(1);
+                value_type.insert(new_value, old_value_type[old_value]);
+                value_assoc.insert(new_value, old_value_assoc[old_value]);
+                if let Some(incomplete_phi) =
+                    old_value_incomplete_phi.get_mut(old_value)
+                {
+                    value_incomplete_phi
+                        .insert(new_value, take(incomplete_phi));
+                }
+                value_replace.insert(old_value, new_value);
+            }
+        }
+        for (instr, instruction) in instrs {
+            instruction.visit_values_mut(|old_value| {
+                let new_value =
+                    value_replace.get(old_value).copied().unwrap_or(*old_value);
+                *old_value = new_value;
+                true
+            });
+            for old_value in &mut instr_values[instr] {
+                let new_value =
+                    value_replace.get(old_value).copied().unwrap_or(*old_value);
+                *old_value = new_value;
+            }
+        }
+        for (_phi_value, incomplete_phi) in &mut value_incomplete_phi {
+            incomplete_phi.visit_values_mut(|old_value| {
+                let new_value =
+                    value_replace.get(old_value).copied().unwrap_or(*old_value);
+                *old_value = new_value;
+                true
+            })
+        }
         let mut block_instrs =
             <DefaultComponentVec<Block, SmallVec<[Instr; 4]>>>::default();
         for block in self.ctx.blocks.indices() {
@@ -666,7 +726,7 @@ impl<'a> FunctionBuilder<'a> {
             // start of each of their basic block instructions.
             for &phi_instr in self.ctx.block_phis[block].components() {
                 let phi_value = self.phi_instr_to_value(phi_instr);
-                let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
+                let incomplete_phi = &value_incomplete_phi[phi_value];
                 let _ = core::mem::replace(
                     &mut self.ctx.instrs[phi_instr],
                     PhiInstr::new(incomplete_phi.operands()).into(),
@@ -680,12 +740,12 @@ impl<'a> FunctionBuilder<'a> {
         block_instrs.shrink_to_fit();
         Ok(FunctionBody {
             blocks: self.ctx.blocks,
-            values: self.ctx.values,
+            values,
             instrs: self.ctx.instrs,
             block_instrs,
             instr_values: self.ctx.instr_values,
-            value_type: self.ctx.value_type,
-            value_assoc: self.ctx.value_assoc,
+            value_type,
+            value_assoc,
         })
     }
 }
