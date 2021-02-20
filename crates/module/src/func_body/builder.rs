@@ -189,7 +189,7 @@ impl Default for FunctionBuilderContext {
 ///
 /// Every SSA value has an association to either an IR instruction
 /// or to an input parameter of the IR function under construction.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum ValueAssoc {
     /// The value is associated to the `n`-th input of the function.
     Input(u32),
