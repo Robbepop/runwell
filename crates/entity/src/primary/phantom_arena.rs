@@ -14,9 +14,7 @@
 
 use super::iter::Indices;
 use crate::{Idx, RawIdx};
-use core::{
-    marker::PhantomData,
-};
+use core::marker::PhantomData;
 
 /// Primary map to create new entities without the need to directly store data with them.
 ///

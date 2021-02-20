@@ -28,10 +28,7 @@ mod tests;
 
 pub use self::{
     index::{DisplayHook, Idx, RawIdx},
-    primary::{
-        EntityArena,
-        PhantomEntityArena,
-    },
+    primary::{EntityArena, PhantomEntityArena},
     secondary::{
         ComponentMap,
         ComponentVec,
