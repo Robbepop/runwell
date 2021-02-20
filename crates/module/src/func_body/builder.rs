@@ -118,7 +118,7 @@ pub struct FunctionBuilderContext {
     /// some value that must be associated to the phi instruction in
     /// the same block representing bindings for the variable.
     pub block_incomplete_phis:
-        ComponentMap<Block, ComponentMap<Variable, Value>>,
+        DefaultComponentMap<Block, ComponentMap<Variable, Value>>,
     /// Optional associated values for instructions.
     ///
     /// Not all instructions can be associated with an SSA value.
@@ -236,8 +236,6 @@ impl<'a> FunctionBuilder<'a> {
         }
         let entry_block = ctx.blocks.alloc_some(1);
         ctx.block_sealed[entry_block] = true;
-        ctx.block_incomplete_phis
-            .insert(entry_block, Default::default());
         ctx.current = entry_block;
         entry_block
     }
@@ -290,9 +288,6 @@ impl<'a> FunctionBuilder<'a> {
     pub fn create_block(&mut self) -> Result<Block, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc_some(1);
-        self.ctx
-            .block_incomplete_phis
-            .insert(new_block, Default::default());
         Ok(new_block)
     }
 
@@ -338,12 +333,11 @@ impl<'a> FunctionBuilder<'a> {
             })
             .map_err(Into::into)
         }
-        // Popping incomplete phis by inserting a new empty component map.
-        let incomplete_phis = self
-            .ctx
-            .block_incomplete_phis
-            .insert(block, Default::default())
-            .expect("encountered missing incomplete phis component");
+        // Popping incomplete phis by replacing with new empty component map.
+        let incomplete_phis = replace(
+            &mut self.ctx.block_incomplete_phis[block],
+            Default::default(),
+        );
         for (variable, &value) in incomplete_phis.iter() {
             self.add_phi_operands(block, variable, value)?;
         }
@@ -501,7 +495,8 @@ impl<'a> FunctionBuilder<'a> {
         let same = equivalent_value;
         let phi_instr = self.phi_value_to_instr(phi_value);
         self.ctx.value_users[phi_value].remove(&phi_instr);
-        let users = replace(&mut self.ctx.value_users[phi_value], Default::default());
+        let users =
+            replace(&mut self.ctx.value_users[phi_value], Default::default());
         let phi_block = self.ctx.phi_block[phi_value];
         let phi_var = self.ctx.phi_var[phi_value];
         let phi_value = self.phi_instr_to_value(phi_instr);
