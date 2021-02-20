@@ -119,9 +119,9 @@ impl fmt::Display for FunctionBody {
                         writeln!(f, "    {}", instr_data)?;
                     }
                     Some((&first, rest)) => {
-                        write!(f, "    ")?;
+                        write!(f, "    let ")?;
                         if instr_values_tuples {
-                            write!(f, "[")?;
+                            write!(f, "(")?;
                         }
                         if let Some(first) = first {
                             let value_type = self.value_type[first];
@@ -138,7 +138,7 @@ impl fmt::Display for FunctionBody {
                             }
                         }
                         if instr_values_tuples {
-                            write!(f, "]")?;
+                            write!(f, ")")?;
                         }
                         writeln!(f, " = {}", instr_data)?;
                     }

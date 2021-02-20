@@ -30,7 +30,7 @@ pub struct TailCallInstr {
 
 impl Display for TailCallInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "tail{}", self.instr)
+        write!(f, "tail_{}", self.instr)
     }
 }
 
@@ -129,10 +129,10 @@ pub struct ReturnInstr {
 
 impl fmt::Display for ReturnInstr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ret ")?;
-        let requires_bracket = self.return_values().len() >= 2;
-        if requires_bracket {
-            write!(f, "[")?;
+        write!(f, "return ")?;
+        let requires_parens = self.return_values().len() >= 2;
+        if requires_parens {
+            write!(f, "(")?;
         }
         if let Some((first, rest)) = self.return_values().split_first() {
             write!(f, "{}", first)?;
@@ -140,8 +140,8 @@ impl fmt::Display for ReturnInstr {
                 write!(f, ", {}", return_value)?;
             }
         }
-        if requires_bracket {
-            write!(f, "]")?;
+        if requires_parens {
+            write!(f, ")")?;
         }
         Ok(())
     }

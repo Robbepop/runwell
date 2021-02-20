@@ -87,7 +87,7 @@ impl<'a> fmt::Display for Function<'a> {
                 (val, ty)
             })
             .collect::<Vec<_>>();
-        write!(f, "{} (", self.idx())?;
+        write!(f, "{} := (", self.idx())?;
         if let Some(((first_value, first_type), rest)) = inputs.split_first() {
             write!(f, "{}: {}", first_value, first_type)?;
             for (rest_value, rest_type) in rest {
@@ -99,14 +99,14 @@ impl<'a> fmt::Display for Function<'a> {
             write!(f, " -> ")?;
             let just_one_output = self.outputs().len() == 1;
             if !just_one_output {
-                write!(f, "[")?;
+                write!(f, "(")?;
             }
             write!(f, "{}", first_output)?;
             for rest_output in rest {
                 write!(f, ", {}", rest_output)?;
             }
             if !just_one_output {
-                write!(f, "]")?;
+                write!(f, ")")?;
             }
         }
         writeln!(f)?;

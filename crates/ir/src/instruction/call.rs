@@ -81,14 +81,14 @@ impl VisitValuesMut for CallInstr {
 
 impl Display for CallInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "call {} [ ", self.func())?;
+        write!(f, "call {} (", self.func())?;
         if let Some((fst, rest)) = self.params().split_first() {
             write!(f, "{}", fst)?;
             for param in rest {
                 write!(f, ", {}", param)?;
             }
         }
-        write!(f, " ]")?;
+        write!(f, ")")?;
         Ok(())
     }
 }
@@ -184,14 +184,14 @@ impl VisitValuesMut for CallIndirectInstr {
 
 impl Display for CallIndirectInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "call_indirect {}[{}] [ ", self.table, self.index())?;
+        write!(f, "call_indirect {}[{}] (", self.table, self.index())?;
         if let Some((first, rest)) = self.params().split_first() {
             write!(f, "{}", first)?;
             for param in rest {
                 write!(f, ", {}", param)?;
             }
         }
-        write!(f, " ]: ")?;
+        write!(f, " ): ")?;
         write!(f, "{}", self.func_type)?;
         Ok(())
     }

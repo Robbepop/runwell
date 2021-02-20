@@ -118,15 +118,15 @@ impl<'a> ExactSizeIterator for Iter<'a> {}
 
 impl Display for PhiInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "ϕ [")?;
+        write!(f, "ϕ {{ ")?;
         let mut iter = self.operands();
         if let Some((block, value)) = iter.next() {
-            write!(f, " {} -> {}", block, value)?;
+            write!(f, "{} -> {}", block, value)?;
             for (block, value) in iter {
                 write!(f, ", {} -> {}", block, value)?;
             }
         }
-        write!(f, " ]")?;
+        write!(f, " }}")?;
         Ok(())
     }
 }
