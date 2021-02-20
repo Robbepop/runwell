@@ -129,14 +129,20 @@ pub struct ReturnInstr {
 
 impl fmt::Display for ReturnInstr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ret [")?;
+        write!(f, "ret ")?;
+        let requires_bracket = self.return_values().len() >= 2;
+        if requires_bracket {
+            write!(f, "[")?;
+        }
         if let Some((first, rest)) = self.return_values().split_first() {
             write!(f, "{}", first)?;
             for return_value in rest {
                 write!(f, ", {}", return_value)?;
             }
         }
-        write!(f, "]")?;
+        if requires_bracket {
+            write!(f, "]")?;
+        }
         Ok(())
     }
 }

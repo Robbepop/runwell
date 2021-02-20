@@ -30,7 +30,7 @@ use ir::{
 impl InterpretInstr for TerminalInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
@@ -47,7 +47,7 @@ impl InterpretInstr for TerminalInstr {
 impl InterpretInstr for ReturnInstr {
     fn interpret_instr(
         &self,
-        _outputs: &[Value],
+        _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         frame.clear_scratch();
@@ -62,7 +62,7 @@ impl InterpretInstr for ReturnInstr {
 impl InterpretInstr for BranchInstr {
     fn interpret_instr(
         &self,
-        _outputs: &[Value],
+        _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         frame.switch_to_block(self.target());
@@ -73,7 +73,7 @@ impl InterpretInstr for BranchInstr {
 impl InterpretInstr for IfThenElseInstr {
     fn interpret_instr(
         &self,
-        _outputs: &[Value],
+        _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let condition = frame.read_register(self.condition());
@@ -90,7 +90,7 @@ impl InterpretInstr for IfThenElseInstr {
 impl InterpretInstr for TailCallInstr {
     fn interpret_instr(
         &self,
-        _outputs: &[Value],
+        _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         frame.clear_scratch();
@@ -105,7 +105,7 @@ impl InterpretInstr for TailCallInstr {
 impl InterpretInstr for BranchTableInstr {
     fn interpret_instr(
         &self,
-        _outputs: &[Value],
+        _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let case = frame.read_register(self.case());

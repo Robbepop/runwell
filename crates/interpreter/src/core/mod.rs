@@ -238,7 +238,9 @@ impl<'a> EvaluationContext<'a> {
                     .copied()
                     .zip(self.scratch.iter().copied().map(Register::into_u64))
                 {
-                    stack.write_register(ptr + output_value, output_result);
+                    if let Some(output_value) = output_value {
+                        stack.write_register(ptr + output_value, output_result);
+                    }
                 }
                 *function = next_function;
                 false

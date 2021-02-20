@@ -38,7 +38,7 @@ use ir::{
 impl InterpretInstr for IntInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
@@ -56,7 +56,7 @@ impl InterpretInstr for IntInstr {
 impl InterpretInstr for UnaryIntInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -74,7 +74,7 @@ impl InterpretInstr for UnaryIntInstr {
 impl InterpretInstr for TruncateIntInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -99,7 +99,7 @@ impl InterpretInstr for TruncateIntInstr {
 impl InterpretInstr for ExtendIntInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -150,7 +150,7 @@ impl InterpretInstr for IntToFloatInstr {
     ///  - `i64.trunc_f64_u`
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -188,7 +188,7 @@ impl InterpretInstr for IntToFloatInstr {
 impl InterpretInstr for CompareIntInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -278,7 +278,7 @@ macro_rules! impl_primitive_integer_for {
                     self.checked_div(rhs).ok_or(InterpretationError::DivisionByZero)
                 }
                 fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError> {
-                    self.checked_div(rhs).ok_or(InterpretationError::DivisionByZero)
+                    self.checked_rem(rhs).ok_or(InterpretationError::DivisionByZero)
                 }
             }
         )*
@@ -298,7 +298,7 @@ impl_primitive_integer_for! {
 impl InterpretInstr for ShiftIntInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -343,7 +343,7 @@ impl InterpretInstr for ShiftIntInstr {
 impl InterpretInstr for BinaryIntInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);

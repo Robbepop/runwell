@@ -669,7 +669,7 @@ impl<'a> FunctionBuilder<'a> {
         let FunctionBuilderContext {
             values: old_values,
             instrs,
-            instr_values,
+            instr_values: old_instr_values,
             value_assoc: old_value_assoc,
             value_type: old_value_type,
             value_users: old_value_users,
@@ -681,6 +681,10 @@ impl<'a> FunctionBuilder<'a> {
         let mut value_assoc = <ComponentVec<Value, ValueAssoc>>::default();
         let mut value_incomplete_phi =
             <ComponentMap<Value, IncompletePhi>>::default();
+        let mut instr_values = <DefaultComponentMap<
+            Instr,
+            SmallVec<[Option<Value>; 4]>,
+        >>::default();
         let mut value_replace = <HashMap<Value, Value>>::default();
         for old_value in old_values.indices() {
             if !old_value_users[old_value].is_empty()
@@ -705,10 +709,9 @@ impl<'a> FunctionBuilder<'a> {
                 *old_value = new_value;
                 true
             });
-            for old_value in &mut instr_values[instr] {
-                let new_value =
-                    value_replace.get(old_value).copied().unwrap_or(*old_value);
-                *old_value = new_value;
+            for old_value in &mut old_instr_values[instr] {
+                let new_value = value_replace.get(old_value).copied();
+                instr_values[instr].push(new_value);
             }
         }
         for (_phi_value, incomplete_phi) in &mut value_incomplete_phi {
@@ -743,7 +746,7 @@ impl<'a> FunctionBuilder<'a> {
             values,
             instrs: self.ctx.instrs,
             block_instrs,
-            instr_values: self.ctx.instr_values,
+            instr_values,
             value_type,
             value_assoc,
         })

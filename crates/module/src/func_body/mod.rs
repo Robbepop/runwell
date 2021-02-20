@@ -64,7 +64,7 @@ pub struct FunctionBody {
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
-    instr_values: DefaultComponentMap<Instr, SmallVec<[Value; 4]>>,
+    instr_values: DefaultComponentMap<Instr, SmallVec<[Option<Value>; 4]>>,
     /// Types for all values.
     value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
@@ -89,7 +89,7 @@ impl FunctionBody {
     }
 
     /// Returns the slice over the output values of the instruction.
-    fn instr_values(&self, instr: Instr) -> &[Value] {
+    fn instr_values(&self, instr: Instr) -> &[Option<Value>] {
         self.instr_values[instr].as_slice()
     }
 
@@ -98,7 +98,7 @@ impl FunctionBody {
         &self,
         block: Block,
         n: usize,
-    ) -> Option<(&[Value], &Instruction)> {
+    ) -> Option<(&[Option<Value>], &Instruction)> {
         let instr = self.block_instrs[block].get(n).copied()?;
         let instruction = &self.instrs[instr];
         let instr_values = self.instr_values(instr);
@@ -113,17 +113,32 @@ impl fmt::Display for FunctionBody {
             for &instr in &self.block_instrs[block] {
                 let instr_data = &self.instrs[instr];
                 let instr_values = self.instr_values(instr);
+                let instr_values_tuples = instr_values.len() >= 2;
                 match instr_values.split_first() {
                     None => {
                         writeln!(f, "    {}", instr_data)?;
                     }
                     Some((&first, rest)) => {
                         write!(f, "    ")?;
-                        let value_type = self.value_type[first];
-                        write!(f, "{}: {}", first, value_type)?;
+                        if instr_values_tuples {
+                            write!(f, "[")?;
+                        }
+                        if let Some(first) = first {
+                            let value_type = self.value_type[first];
+                            write!(f, "{}: {}", first, value_type)?;
+                        } else {
+                            write!(f, "_")?;
+                        }
                         for &value in rest {
-                            let value_type = self.value_type[value];
-                            write!(f, ", {}: {}", value, value_type)?;
+                            if let Some(value) = value {
+                                let value_type = self.value_type[value];
+                                write!(f, ", {}: {}", value, value_type)?;
+                            } else {
+                                write!(f, ", _")?;
+                            }
+                        }
+                        if instr_values_tuples {
+                            write!(f, "]")?;
                         }
                         writeln!(f, " = {}", instr_data)?;
                     }

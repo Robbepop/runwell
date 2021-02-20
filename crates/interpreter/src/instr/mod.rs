@@ -36,7 +36,7 @@ pub trait InterpretInstr {
     /// Evaluates the function given the interpretation context.
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError>;
 }
@@ -61,15 +61,15 @@ pub enum InterpretationFlow {
     Call(Func),
 }
 
-fn extract_single_output(outputs: &[Value]) -> Value {
+fn extract_single_output(outputs: &[Option<Value>]) -> Value {
     debug_assert_eq!(outputs.len(), 1);
-    outputs[0]
+    outputs[0].expect("encountered missing single output SSA value")
 }
 
 impl InterpretInstr for FunctionBody {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         debug_assert!(outputs.is_empty());
@@ -85,7 +85,7 @@ impl InterpretInstr for FunctionBody {
 impl InterpretInstr for Instruction {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
@@ -110,7 +110,7 @@ impl InterpretInstr for Instruction {
 impl InterpretInstr for PhiInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -129,7 +129,7 @@ impl InterpretInstr for PhiInstr {
 impl InterpretInstr for ConstInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -141,7 +141,7 @@ impl InterpretInstr for ConstInstr {
 impl InterpretInstr for SelectInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -160,7 +160,7 @@ impl InterpretInstr for SelectInstr {
 impl InterpretInstr for CallInstr {
     fn interpret_instr(
         &self,
-        _outputs: &[Value],
+        _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         frame.clear_scratch();
@@ -175,7 +175,7 @@ impl InterpretInstr for CallInstr {
 impl InterpretInstr for ReinterpretInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);

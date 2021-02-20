@@ -37,7 +37,7 @@ use ir::{
 impl InterpretInstr for FloatInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
@@ -76,7 +76,7 @@ fn f64_reg(float: f64) -> u64 {
 impl InterpretInstr for DemoteFloatInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -94,7 +94,7 @@ impl InterpretInstr for DemoteFloatInstr {
 impl InterpretInstr for PromoteFloatInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -112,7 +112,7 @@ impl InterpretInstr for PromoteFloatInstr {
 impl InterpretInstr for CompareFloatInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -158,7 +158,7 @@ impl InterpretInstr for CompareFloatInstr {
 impl InterpretInstr for BinaryFloatInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -221,7 +221,7 @@ impl InterpretInstr for BinaryFloatInstr {
 impl InterpretInstr for UnaryFloatInstr {
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
@@ -278,7 +278,7 @@ impl InterpretInstr for FloatToIntInstr {
     ///  - `f64.convert_i64_u`
     fn interpret_instr(
         &self,
-        outputs: &[Value],
+        outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
