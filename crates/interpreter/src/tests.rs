@@ -526,3 +526,127 @@ fn ping_pong_tail_calls() -> Result<(), module::Error> {
 
     Ok(())
 }
+
+#[test]
+fn multi_value_div_rem_works() -> Result<(), module::Error> {
+    // Setup module.
+    let mut builder = Module::build();
+    let mut type_builder = builder.type_section().unwrap();
+    let div_rem_func_type = type_builder.push_type({
+        let mut b = FunctionType::build();
+        b.push_input(IntType::I32);
+        b.push_input(IntType::I32);
+        b.push_output(IntType::I32);
+        b.push_output(IntType::I32);
+        b.finalize()
+    });
+    let div_or_rem_func_type = type_builder.push_type({
+        let mut b = FunctionType::build();
+        b.push_input(IntType::I32);
+        b.push_input(IntType::I32);
+        b.push_output(IntType::I32);
+        b.finalize()
+    });
+
+    // Pre declare functions used before they are defined.
+    let mut function_builder = builder.function_section().unwrap();
+    let div_rem = function_builder.push_function(div_rem_func_type).unwrap();
+    let div = function_builder
+        .push_function(div_or_rem_func_type)
+        .unwrap();
+    let rem = function_builder
+        .push_function(div_or_rem_func_type)
+        .unwrap();
+    let (res, mut body_builder) = builder.code_section().unwrap();
+
+    let dividend = Variable::from_raw(RawIdx::from_u32(0));
+    let divisor = Variable::from_raw(RawIdx::from_u32(1));
+
+    // Create Function: div_rem
+    //
+    // Encodes `div_rem` as follows:
+    //
+    // div_rem(x, y):
+    //     return ((x / y), (x % y))
+
+    let mut b = FunctionBody::build(div_rem, res);
+    b.body()?;
+    let v0 = b.read_var(dividend)?;
+    let v1 = b.read_var(divisor)?;
+    let v2 = b.ins()?.sdiv(IntType::I32, v0, v1)?;
+    let v3 = b.ins()?.srem(IntType::I32, v0, v1)?;
+    b.ins()?.return_values([v2, v3].iter().copied())?;
+    let div_rem_body = b.finalize()?;
+
+    // Create Function: div
+    //
+    // Encodes `div` as follows:
+    //
+    // div(x, y):
+    //     v0, _ = div_rem(x, y)
+    //     return v0
+
+    let mut b = FunctionBody::build(div, res);
+    b.body()?;
+    let v0 = b.read_var(dividend)?;
+    let v1 = b.read_var(divisor)?;
+    let instr = b.ins()?.call(div_rem, [v0, v1].iter().copied())?;
+    let v_div = b.instr_values(instr)?[0];
+    b.ins()?.return_values([v_div].iter().copied())?;
+    let div_body = b.finalize()?;
+
+    // Create Function: rem
+    //
+    // Encodes `rem` as follows:
+    //
+    // rem(x, y):
+    //     _, v0 = div_rem(x, y)
+    //     return v0
+
+    let mut b = FunctionBody::build(rem, res);
+    b.body()?;
+    let v0 = b.read_var(dividend)?;
+    let v1 = b.read_var(divisor)?;
+    let instr = b.ins()?.call(div_rem, [v0, v1].iter().copied())?;
+    let v_rem = b.instr_values(instr)?[1];
+    b.ins()?.return_values([v_rem].iter().copied())?;
+    let rem_body = b.finalize()?;
+
+    body_builder.push_body(div_rem, div_rem_body).unwrap();
+    body_builder.push_body(div, div_body).unwrap();
+    body_builder.push_body(rem, rem_body).unwrap();
+    let module = builder.finalize().unwrap();
+
+    println!("{}", module.get_function(div_rem).unwrap());
+    println!("{}", module.get_function(div).unwrap());
+    println!("{}", module.get_function(rem).unwrap());
+
+    for x in -20..20 {
+        for y in -5..5 {
+            if y == 0 {
+                // Don't test division by zero here.
+                continue
+            }
+            // Test `div_rem` function directly:
+            let input_x = IntConst::I32(x).into();
+            let input_y = IntConst::I32(y).into();
+            let output_div = IntConst::I32(x / y).into();
+            let output_rem = IntConst::I32(x % y).into();
+            let div_rem_result =
+                evaluate_func(&module, div_rem, &[input_x, input_y]);
+            let div_rem_result =
+                bits_into_const(&module, div_rem, div_rem_result);
+            assert_eq!(div_rem_result, vec![output_div, output_rem]);
+
+            let div_result = evaluate_func(&module, div, &[input_x, input_y]);
+            let div_result = bits_into_const(&module, div, div_result);
+            assert_eq!(div_result, vec![output_div]);
+
+            let rem_result = evaluate_func(&module, rem, &[input_x, input_y]);
+            let rem_result = bits_into_const(&module, rem, rem_result);
+            assert_eq!(rem_result, vec![output_rem]);
+        }
+    }
+
+    Ok(())
+}
