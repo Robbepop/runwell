@@ -126,10 +126,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         }
         let block = self.builder.current_block()?;
         let instr = self.builder.ctx.instrs.alloc(instruction);
-        self.builder
-            .ctx
-            .instr_values
-            .insert(instr, Default::default());
         self.builder.ctx.block_instrs[block].push(instr);
         for (n, output_type) in output_types.iter().copied().enumerate() {
             let value = self.builder.ctx.values.alloc_some(1);

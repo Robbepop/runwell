@@ -46,7 +46,7 @@ use ir::{
     primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
     VisitValuesMut,
 };
-use smallvec::{smallvec, SmallVec};
+use smallvec::SmallVec;
 
 /// Type alias to Rust's `HashSet` but using `ahash` as hasher which is more efficient.
 type HashSet<T> = std::collections::HashSet<T, ahash::RandomState>;
@@ -124,7 +124,7 @@ pub struct FunctionBuilderContext {
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
-    pub instr_values: ComponentMap<Instr, SmallVec<[Value; 4]>>,
+    pub instr_values: DefaultComponentMap<Instr, SmallVec<[Value; 4]>>,
     /// The incomplete phi instruction in case the value represents one.
     ///
     /// Incomplete phis are use throughout the function body construction
@@ -411,7 +411,7 @@ impl<'a> FunctionBuilder<'a> {
         self.ctx.block_phis[block].insert(var, instr);
         self.ctx.block_incomplete_phis[block].insert(var, value);
         self.ctx.vars.write_var(var, value, block, var_type)?;
-        self.ctx.instr_values.insert(instr, smallvec![value]);
+        self.ctx.instr_values[instr].push(value);
         Ok(value)
     }
 
@@ -632,12 +632,7 @@ impl<'a> FunctionBuilder<'a> {
             })
             .with_context("tried to query instruction values"))
         }
-        let values = self
-            .ctx
-            .instr_values
-            .get(instr)
-            .map(SmallVec::as_slice)
-            .unwrap_or_default();
+        let values = self.ctx.instr_values[instr].as_slice();
         Ok(values)
     }
 

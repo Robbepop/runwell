@@ -31,8 +31,8 @@ pub use self::{
 };
 use core::fmt;
 use entity::{
-    ComponentMap,
     ComponentVec,
+    DefaultComponentMap,
     EntityArena,
     PhantomEntityArena,
     RawIdx,
@@ -63,7 +63,7 @@ pub struct FunctionBody {
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
-    instr_values: ComponentMap<Instr, SmallVec<[Value; 4]>>,
+    instr_values: DefaultComponentMap<Instr, SmallVec<[Value; 4]>>,
     /// Types for all values.
     value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
@@ -89,10 +89,7 @@ impl FunctionBody {
 
     /// Returns the slice over the output values of the instruction.
     fn instr_values(&self, instr: Instr) -> &[Value] {
-        self.instr_values
-            .get(instr)
-            .map(SmallVec::as_slice)
-            .unwrap_or_default()
+        self.instr_values[instr].as_slice()
     }
 
     /// Returns the n-th instruction of the block and its assoc value if any.
