@@ -91,7 +91,7 @@ pub struct FunctionBuilderContext {
     /// Block predecessors.
     ///
     /// Only filled blocks may have successors, predecessors are always filled.
-    pub block_preds: ComponentVec<Block, HashSet<Block>>,
+    pub block_preds: DefaultComponentVec<Block, HashSet<Block>>,
     /// The phi functions of every basic block.
     ///
     /// Every basic block can have up to one phi instruction per variable in use.
@@ -234,7 +234,6 @@ impl<'a> FunctionBuilder<'a> {
             return ctx.current
         }
         let entry_block = ctx.blocks.alloc_some(1);
-        ctx.block_preds.insert(entry_block, Default::default());
         ctx.block_sealed[entry_block] = true;
         ctx.block_instrs.insert(entry_block, Default::default());
         ctx.block_phis.insert(entry_block, Default::default());
@@ -293,7 +292,6 @@ impl<'a> FunctionBuilder<'a> {
     pub fn create_block(&mut self) -> Result<Block, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let new_block = self.ctx.blocks.alloc_some(1);
-        self.ctx.block_preds.insert(new_block, Default::default());
         self.ctx.block_instrs.insert(new_block, Default::default());
         self.ctx.block_phis.insert(new_block, Default::default());
         self.ctx
