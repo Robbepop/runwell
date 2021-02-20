@@ -13,7 +13,6 @@
 // limitations under the License.
 
 mod builder;
-mod instance;
 mod res;
 
 pub use self::builder::{
