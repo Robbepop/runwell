@@ -20,7 +20,12 @@ use crate::{
     primitive::ImportName,
     table::{TableDecl, TableInit},
 };
-use entity::{ComponentMap, ComponentVec, DefaultComponentVec, PhantomEntityArena};
+use entity::{
+    ComponentMap,
+    ComponentVec,
+    DefaultComponentVec,
+    PhantomEntityArena,
+};
 use ir::primitive::{
     Func,
     FuncType,

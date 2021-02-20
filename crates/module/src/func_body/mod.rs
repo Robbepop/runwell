@@ -30,7 +30,13 @@ pub use self::{
     variable::{Variable, VariableTranslator},
 };
 use core::fmt;
-use entity::{ComponentMap, ComponentVec, EntityArena, PhantomEntityArena, RawIdx};
+use entity::{
+    ComponentMap,
+    ComponentVec,
+    EntityArena,
+    PhantomEntityArena,
+    RawIdx,
+};
 use ir::{
     instr::Instruction,
     primitive::{Block, BlockEntity, Type, Value, ValueEntity},

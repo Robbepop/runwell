@@ -20,8 +20,8 @@ use entity::{
     secondary::map::Entry,
     ComponentMap,
     DisplayHook,
-    PhantomEntityArena,
     Idx,
+    PhantomEntityArena,
     RawIdx,
 };
 use ir::primitive::{Block, Type, Value};
