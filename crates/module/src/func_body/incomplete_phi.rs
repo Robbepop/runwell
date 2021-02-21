@@ -14,7 +14,11 @@
 
 use crate::{Error, FunctionBuilderError};
 use core::iter::FusedIterator;
-use ir::primitive::{Block, Value};
+use ir::{
+    primitive::{Block, Value},
+    VisitValues,
+    VisitValuesMut,
+};
 use std::{
     collections::{btree_map::Iter as BTreeIter, BTreeMap},
     convert::identity,
@@ -62,21 +66,6 @@ impl IncompletePhi {
             .any(identity)
     }
 
-    /// Visit all input values of the incomplete phi instruction by mutable reference.
-    ///
-    /// Allow to mutate the input values in-place.
-    /// The visitor returns `true` to signal to visit more input values and `false` otherwise.
-    pub fn visit_values_mut<V>(&mut self, mut visitor: V)
-    where
-        V: FnMut(&mut Value) -> bool,
-    {
-        for value in self.operands.iter_mut().map(|(_block, value)| value) {
-            if !visitor(value) {
-                break
-            }
-        }
-    }
-
     /// Returns an iterator over the operands of the incomplete ϕ-instruction.
     pub fn operands(&self) -> Iter {
         Iter {
@@ -122,6 +111,33 @@ impl IncompletePhi {
         //
         // Remove phi from its own users in case it was using itself.
         Ok(Some(same))
+    }
+}
+
+impl VisitValues for IncompletePhi {
+    fn visit_values<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        for value in self.operands.iter().map(|(_block, value)| value).copied()
+        {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+}
+
+impl VisitValuesMut for IncompletePhi {
+    fn visit_values_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        for value in self.operands.iter_mut().map(|(_block, value)| value) {
+            if !visitor(value) {
+                break
+            }
+        }
     }
 }
 
