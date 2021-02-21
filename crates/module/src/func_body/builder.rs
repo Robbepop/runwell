@@ -639,33 +639,8 @@ impl<'a> FunctionBuilder<'a> {
     /// If not all basic blocks in the function are sealed and filled.
     pub fn finalize(mut self) -> Result<FunctionBody, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
-        let unsealed_blocks = self
-            .ctx
-            .blocks
-            .indices()
-            .filter(|&block| !self.ctx.block_sealed.get(block))
-            .collect::<Vec<_>>();
-        if !unsealed_blocks.is_empty() {
-            return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
-                unsealed: unsealed_blocks,
-            })
-            .map_err(Into::into)
-        }
-        let unfilled_blocks = self
-            .ctx
-            .blocks
-            .indices()
-            .filter(|&block| !self.ctx.block_filled.get(block))
-            .collect::<Vec<_>>();
-        if !unfilled_blocks.is_empty() {
-            return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
-                unfilled: unfilled_blocks,
-            })
-            .map_err(Into::into)
-        }
-        self.ctx.instrs.shrink_to_fit();
-        self.ctx.block_instrs.shrink_to_fit();
-        self.ctx.instr_values.shrink_to_fit();
+        self.ensure_all_blocks_sealed()?;
+        self.ensure_all_blocks_filled()?;
 
         let FunctionBuilderContext {
             values: old_values,
@@ -742,6 +717,7 @@ impl<'a> FunctionBuilder<'a> {
                 .extend_from_slice(&self.ctx.block_instrs[block]);
         }
         block_instrs.shrink_to_fit();
+        self.ctx.instrs.shrink_to_fit();
         Ok(FunctionBody {
             blocks: self.ctx.blocks,
             values,
@@ -751,5 +727,39 @@ impl<'a> FunctionBuilder<'a> {
             value_type,
             value_assoc,
         })
+    }
+
+    /// Ensures that all basic blocks are sealed and returns an `Error` if not.
+    fn ensure_all_blocks_sealed(&self) -> Result<(), Error> {
+        let unsealed_blocks = self
+            .ctx
+            .blocks
+            .indices()
+            .filter(|&block| !self.ctx.block_sealed.get(block))
+            .collect::<Vec<_>>();
+        if !unsealed_blocks.is_empty() {
+            return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
+                unsealed: unsealed_blocks,
+            })
+            .map_err(Into::into)
+        }
+        Ok(())
+    }
+
+    /// Ensures that all basic blocks are filled and returns an `Error` if not.
+    fn ensure_all_blocks_filled(&self) -> Result<(), Error> {
+        let unfilled_blocks = self
+            .ctx
+            .blocks
+            .indices()
+            .filter(|&block| !self.ctx.block_filled.get(block))
+            .collect::<Vec<_>>();
+        if !unfilled_blocks.is_empty() {
+            return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
+                unfilled: unfilled_blocks,
+            })
+            .map_err(Into::into)
+        }
+        Ok(())
     }
 }
