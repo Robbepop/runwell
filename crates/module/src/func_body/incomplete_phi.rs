@@ -13,16 +13,13 @@
 // limitations under the License.
 
 use crate::{Error, FunctionBuilderError};
-use core::iter::FusedIterator;
+use core::{convert::identity, iter::FusedIterator};
 use ir::{
     primitive::{Block, Value},
     VisitValues,
     VisitValuesMut,
 };
-use std::{
-    collections::{btree_map::Iter as BTreeIter, BTreeMap},
-    convert::identity,
-};
+use std::collections::{btree_map::Iter as BTreeIter, BTreeMap};
 
 /// An incomplete phi instruction.
 ///
