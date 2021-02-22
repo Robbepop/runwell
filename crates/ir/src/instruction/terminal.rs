@@ -30,7 +30,7 @@ pub struct TailCallInstr {
 
 impl Display for TailCallInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "tail_{}", self.instr)
+        write!(f, "return {}", self.instr)
     }
 }
 

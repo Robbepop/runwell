@@ -42,7 +42,7 @@ pub type Func = Idx<FunctionEntity>;
 
 impl DisplayHook for FunctionEntity {
     fn fmt(idx: Func, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "func({})", idx.into_raw())
+        write!(f, "func{}", idx.into_raw())
     }
 }
 
@@ -299,7 +299,7 @@ impl FloatConst {
 
 /// A `f32` (32-bit floating point) value.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "{}", "f32::from_le_bytes(bits.to_le_bytes())")]
+#[display(fmt = "{:?}", "f32::from_le_bytes(bits.to_le_bytes())")]
 pub struct F32 {
     bits: u32,
 }
@@ -332,7 +332,7 @@ impl From<F32> for Const {
 
 /// A `f64` (64-bit floating point) value.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[display(fmt = "{}", "f64::from_le_bytes(bits.to_le_bytes())")]
+#[display(fmt = "{:?}", "f64::from_le_bytes(bits.to_le_bytes())")]
 pub struct F64 {
     bits: u64,
 }

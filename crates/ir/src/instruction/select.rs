@@ -27,7 +27,8 @@ use derive_more::Display;
 /// machine code.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
-    fmt = "select condition {}, true {}, false {}",
+    fmt = "select<{}> {} then {} else {}",
+    ty,
     condition,
     value_true,
     value_false

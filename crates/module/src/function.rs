@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::{module::Indent, primitive::FunctionType, FunctionBody};
 use core::fmt;
-
-use crate::{primitive::FunctionType, FunctionBody};
 use entity::RawIdx;
 use ir::primitive::{Func, Type, Value};
 
@@ -74,10 +73,13 @@ impl<'a> Function<'a> {
     pub fn body(&self) -> &'a FunctionBody {
         &self.func_body
     }
-}
 
-impl<'a> fmt::Display for Function<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    /// Displays the function using the given indentation.
+    pub(crate) fn display_with_indent(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+    ) -> Result<(), fmt::Error> {
         let inputs = self
             .inputs()
             .iter()
@@ -87,7 +89,7 @@ impl<'a> fmt::Display for Function<'a> {
                 (val, ty)
             })
             .collect::<Vec<_>>();
-        write!(f, "{} := (", self.idx())?;
+        write!(f, "{}fn {}(", indent, self.idx())?;
         if let Some(((first_value, first_type), rest)) = inputs.split_first() {
             write!(f, "{}: {}", first_value, first_type)?;
             for (rest_value, rest_type) in rest {
@@ -109,8 +111,16 @@ impl<'a> fmt::Display for Function<'a> {
                 write!(f, ")")?;
             }
         }
-        writeln!(f)?;
-        writeln!(f, "{}", self.body())?;
+        writeln!(f, " {{")?;
+        self.body()
+            .display_with_indent(f, indent + Indent::single())?;
+        writeln!(f, "{}}}", indent)?;
         Ok(())
+    }
+}
+
+impl<'a> fmt::Display for Function<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.display_with_indent(f, Default::default())
     }
 }

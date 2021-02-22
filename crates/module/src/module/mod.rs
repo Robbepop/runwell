@@ -13,6 +13,7 @@
 // limitations under the License.
 
 mod builder;
+mod indent;
 mod res;
 
 pub use self::builder::{
@@ -31,8 +32,10 @@ pub use self::builder::{
     ModuleTypesBuilder,
 };
 
+pub(crate) use self::indent::Indent;
 pub use self::{builder::ModuleBuilder, res::ModuleResources};
 use crate::{Function, FunctionBody};
+use core::fmt;
 use entity::ComponentVec;
 use ir::primitive::Func;
 
@@ -57,5 +60,19 @@ impl Module {
             let func_body = &self.bodies[func];
             Function::new(func, func_type, func_body)
         })
+    }
+}
+
+impl fmt::Display for Module {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "mod {{")?;
+        for func in self.res.function_entities.indices() {
+            let function = self
+                .get_function(func)
+                .expect("encountered missing function");
+            function.display_with_indent(f, Indent::single())?;
+        }
+        writeln!(f, "}}")?;
+        Ok(())
     }
 }

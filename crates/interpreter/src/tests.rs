@@ -73,7 +73,7 @@ where
     body_builder.push_body(func, func_body).unwrap();
     let module = builder.finalize().unwrap();
 
-    println!("{}", module.get_function(func).unwrap());
+    println!("{}", module);
 
     (func, module)
 }
@@ -480,8 +480,7 @@ where
     body_builder.push_body(is_odd, is_odd_body).unwrap();
     let module = builder.finalize().unwrap();
 
-    println!("{}", module.get_function(is_even).unwrap());
-    println!("{}", module.get_function(is_odd).unwrap());
+    println!("{}", module);
 
     Ok((module, is_even, is_odd))
 }
@@ -617,9 +616,7 @@ fn multi_value_div_rem_works() -> Result<(), module::Error> {
     body_builder.push_body(rem, rem_body).unwrap();
     let module = builder.finalize().unwrap();
 
-    println!("{}", module.get_function(div_rem).unwrap());
-    println!("{}", module.get_function(div).unwrap());
-    println!("{}", module.get_function(rem).unwrap());
+    println!("{}", module);
 
     for x in -20..20 {
         for y in -5..5 {

@@ -21,7 +21,7 @@ use derive_more::Display;
 
 /// Reinterprets the bytes of the source from source type to destination type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(fmt = "reinterpret {} -> {}, source {}", src_type, dst_type, src)]
+#[display(fmt = "reinterpret {} -> {} {}", src_type, dst_type, src)]
 pub struct ReinterpretInstr {
     src_type: Type,
     dst_type: Type,

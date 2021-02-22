@@ -29,6 +29,7 @@ pub use self::{
     instruction::{Instr, InstructionBuilder},
     variable::{Variable, VariableTranslator},
 };
+use crate::module::Indent;
 use core::fmt;
 use entity::{
     ComponentVec,
@@ -104,22 +105,39 @@ impl FunctionBody {
         let instr_values = self.instr_values(instr);
         Some((instr_values, instruction))
     }
-}
 
-impl fmt::Display for FunctionBody {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    /// Display the function body with the given identiation.
+    ///
+    /// # Note
+    ///
+    /// Indentation is important to properly indent the printed function body
+    /// in case the output is part of an entire function with signature.
+    pub(crate) fn display_with_indent(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+        ident: Indent,
+    ) -> fmt::Result {
+        let block_ident = ident;
+        let instr_ident = ident + Indent::single();
+        let mut passed_entry = false;
         for block in self.blocks.indices() {
-            writeln!(f, "{}:", block)?;
+            if !passed_entry {
+                passed_entry = true;
+                writeln!(f, "{}block {{", block_ident)?;
+            } else {
+                writeln!(f, "{}block {} {{", block_ident, block)?;
+            }
             for &instr in &self.block_instrs[block] {
                 let instr_data = &self.instrs[instr];
                 let instr_values = self.instr_values(instr);
                 let instr_values_tuples = instr_values.len() >= 2;
+                write!(f, "{}", instr_ident)?;
                 match instr_values.split_first() {
                     None => {
-                        writeln!(f, "    {}", instr_data)?;
+                        writeln!(f, "{}", instr_data)?;
                     }
                     Some((&first, rest)) => {
-                        write!(f, "    let ")?;
+                        write!(f, "let ")?;
                         if instr_values_tuples {
                             write!(f, "(")?;
                         }
@@ -144,8 +162,14 @@ impl fmt::Display for FunctionBody {
                     }
                 }
             }
+            writeln!(f, "{}}}", block_ident)?;
         }
-        writeln!(f)?;
         Ok(())
+    }
+}
+
+impl fmt::Display for FunctionBody {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.display_with_indent(f, Default::default())
     }
 }

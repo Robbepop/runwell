@@ -21,7 +21,7 @@ use derive_more::Display;
 
 /// An instruction representing a constant value.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(fmt = "const {} {}", "self.const_value.ty()", const_value)]
+#[display(fmt = "const<{}> {}", "self.const_value.ty()", const_value)]
 pub struct ConstInstr {
     const_value: Const,
 }

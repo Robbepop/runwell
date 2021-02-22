@@ -88,7 +88,7 @@ impl VisitValuesMut for TruncateIntInstr {
 /// The bit width of the source type must be less than the bit width of the destination type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
-    fmt = "{}extend {} -> {}, src {}",
+    fmt = "{}extend {} -> {} {}",
     "if self.signed { 's' } else { 'u' }",
     src_type,
     dst_type,
@@ -185,7 +185,7 @@ impl VisitValuesMut for ExtendIntInstr {
 /// Instruction to convert an integer into a floating point number.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
-    fmt = "{}convert {} -> {}, src {}",
+    fmt = "{}convert {} -> {} {}",
     "if self.signed { 's' } else { 'u' }",
     src_type,
     dst_type,

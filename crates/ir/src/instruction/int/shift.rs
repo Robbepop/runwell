@@ -135,7 +135,7 @@ impl Display for ShiftIntInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
-            "{} {} {} {}",
+            "{}<{}> {} {}",
             self.op, self.int_type, self.source, self.shift_amount
         )?;
         Ok(())
