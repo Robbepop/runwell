@@ -39,7 +39,6 @@ impl fmt::Display for Indent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         core::iter::repeat(" ")
             .take(self.0 * 4)
-            .map(|ws| write!(f, "{}", ws))
-            .collect::<Result<(), _>>()
+            .try_for_each(|ws| write!(f, "{}", ws))
     }
 }
