@@ -16,24 +16,26 @@ mod builder;
 mod indent;
 mod res;
 
-pub use self::builder::{
-    ExportKind,
-    ExportName,
-    GlobalInit,
-    ModuleExportsBuilder,
-    ModuleFunctionBodiesBuilder,
-    ModuleFunctionsBuilder,
-    ModuleGlobalsBuilder,
-    ModuleImportsBuilder,
-    ModuleMemoriesBuilder,
-    ModuleMemoryDataBuilder,
-    ModuleTableElementsBuilder,
-    ModuleTablesBuilder,
-    ModuleTypesBuilder,
-};
-
 pub(crate) use self::indent::Indent;
-pub use self::{builder::ModuleBuilder, res::ModuleResources};
+pub use self::{
+    builder::{
+        ExportKind,
+        ExportName,
+        GlobalInit,
+        ModuleBuilder,
+        ModuleExportsBuilder,
+        ModuleFunctionBodiesBuilder,
+        ModuleFunctionsBuilder,
+        ModuleGlobalsBuilder,
+        ModuleImportsBuilder,
+        ModuleMemoriesBuilder,
+        ModuleMemoryDataBuilder,
+        ModuleTableElementsBuilder,
+        ModuleTablesBuilder,
+        ModuleTypesBuilder,
+    },
+    res::ModuleResources,
+};
 use crate::{Function, FunctionBody};
 use core::fmt;
 use entity::ComponentVec;
