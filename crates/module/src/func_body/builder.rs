@@ -663,15 +663,19 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Ensures that all basic blocks are sealed and returns an `Error` if not.
     fn ensure_all_blocks_sealed(&self) -> Result<(), Error> {
-        let unsealed_blocks = self
-            .ctx
-            .blocks
-            .indices()
-            .filter(|&block| !self.ctx.block_sealed.get(block))
-            .collect::<Vec<_>>();
-        if !unsealed_blocks.is_empty() {
+        let is_block_unsealed =
+            |block: &Block| -> bool { !self.ctx.block_sealed.get(*block) };
+        let len_unsealed_blocks =
+            self.ctx.blocks.indices().filter(is_block_unsealed).count();
+        if len_unsealed_blocks > 0 {
             return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
-                unsealed: unsealed_blocks,
+                unsealed: {
+                    self.ctx
+                        .blocks
+                        .indices()
+                        .filter(is_block_unsealed)
+                        .collect::<Vec<_>>()
+                },
             })
             .map_err(Into::into)
         }
@@ -680,15 +684,19 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Ensures that all basic blocks are filled and returns an `Error` if not.
     fn ensure_all_blocks_filled(&self) -> Result<(), Error> {
-        let unfilled_blocks = self
-            .ctx
-            .blocks
-            .indices()
-            .filter(|&block| !self.ctx.block_filled.get(block))
-            .collect::<Vec<_>>();
-        if !unfilled_blocks.is_empty() {
+        let is_block_unfilled =
+            |block: &Block| -> bool { !self.ctx.block_filled.get(*block) };
+        let len_unfilled_blocks =
+            self.ctx.blocks.indices().filter(is_block_unfilled).count();
+        if len_unfilled_blocks > 0 {
             return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
-                unfilled: unfilled_blocks,
+                unfilled: {
+                    self.ctx
+                        .blocks
+                        .indices()
+                        .filter(is_block_unfilled)
+                        .collect::<Vec<_>>()
+                },
             })
             .map_err(Into::into)
         }
