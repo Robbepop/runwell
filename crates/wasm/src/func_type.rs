@@ -23,7 +23,7 @@ pub struct FunctionType {
 }
 
 impl FunctionType {
-    /// Returns the runwell function type.
+    /// Returns the Runwell function type.
     pub fn into_inner(self) -> module::primitive::FunctionType {
         self.inner
     }

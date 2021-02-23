@@ -30,7 +30,7 @@ pub struct Type {
 }
 
 impl Type {
-    /// Returns the runwell Type.
+    /// Returns the Runwell type.
     pub fn into_inner(self) -> runwell::Type {
         self.inner
     }
@@ -67,7 +67,7 @@ pub struct Const {
 }
 
 impl Const {
-    /// Returns the runwell constant value.
+    /// Returns the Runwell constant value.
     pub fn into_inner(self) -> runwell::Const {
         self.inner
     }
