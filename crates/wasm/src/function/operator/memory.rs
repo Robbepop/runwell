@@ -36,8 +36,20 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let mem = Mem::from_raw(RawIdx::from_u32(memarg.memory));
         let pos = pos.value;
         let alignment_bytes = 2_u32.pow(ty.alignment() as u32);
-        let size = ImmU32::from(alignment_bytes + memarg.offset);
-        let ptr = self.builder.ins()?.heap_addr(mem, pos, size)?;
+        let ptr = match memarg.offset.checked_add(alignment_bytes) {
+            Some(size) => {
+                self.builder.ins()?.heap_addr(mem, pos, ImmU32::from(size))?
+            }
+            None => {
+                // The offset + alignment is out of bounds for the 32-bit addressable heap.
+                // This is a trap at Wasm runtime but we can just generate the trap during compile-time.
+                // Therefore we create a dummy `heap_addr` instruction to return an SSA value
+                // and an immediately following `trap` behind it.
+                let ptr = self.builder.ins()?.heap_addr(mem, pos, ImmU32::from(0))?;
+                self.builder.ins()?.trap()?;
+                ptr
+            }
+        };
         Ok(ptr)
     }
 
