@@ -123,7 +123,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
-    /// Translates a Wasm integer compare to zero (Eqz) operator.
+    /// Translates a Wasm integer compare to zero (`Eqz`) operator.
     pub(super) fn translate_eqz_op(
         &mut self,
         int_type: IntType,

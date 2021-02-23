@@ -22,10 +22,10 @@ use core::marker::PhantomData;
 ///
 /// - Use this if your entities are zero-sized types and all their associated component
 ///   data lives in component data structures.
-/// - The memory footprint of this data structure is just a single `u32` so this arena type
-///   is just a glorified counter.
+/// - The memory footprint of this data structure is just a single unsigned integer (`u32`),
+///   so this arena type is just a glorified counter.
 ///
-/// For efficiency and satety reasons it is not possible to remove entities.
+/// For efficiency and safety reasons it is not possible to remove entities.
 #[derive(Debug, Clone)]
 pub struct PhantomEntityArena<T> {
     current: u32,

@@ -43,7 +43,7 @@ use std::collections::{
 /// # Note
 ///
 /// - The component map is well suited when only few entities have a component.
-/// - By design all secondary component containers are meant to be easily interchangable.
+/// - By design all secondary component containers are meant to be easily interchangeable.
 #[derive(Debug)]
 pub struct ComponentMap<K, V> {
     components: HashMap<RawIdx, V, ahash::RandomState>,
@@ -242,7 +242,7 @@ impl<'a, K, V> IntoIterator for &'a mut ComponentMap<Idx<K>, V> {
 
 /// A view into a single entry in a map, which may either be vacant or occupied.
 ///
-/// This enum is constructed from the entry method on `ComponentMap`.
+/// This `enum` is constructed from the entry method on `ComponentMap`.
 #[derive(Debug)]
 pub enum Entry<'a, K: 'a, V: 'a> {
     Occupied(OccupiedEntry<'a, K, V>),
@@ -302,7 +302,7 @@ where
     }
 }
 
-/// A view into an occupied entry in a `ComponentMap`. It is part of the `Entry` enum.
+/// A view into an occupied entry in a `ComponentMap`. It is part of the `Entry` `enum`.
 #[derive(Debug)]
 pub struct OccupiedEntry<'a, K, V> {
     occupied: hash_map::OccupiedEntry<'a, RawIdx, V>,
@@ -353,7 +353,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
     }
 }
 
-/// A view into a vacant entry in a `ComponentMap`. It is part of the `Entry` enum.
+/// A view into a vacant entry in a `ComponentMap`. It is part of the `Entry` `enum`.
 #[derive(Debug)]
 pub struct VacantEntry<'a, K, V> {
     vacant: hash_map::VacantEntry<'a, RawIdx, V>,
@@ -366,7 +366,7 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
         Idx::from_raw(*self.vacant.key())
     }
 
-    /// Sets the value of the entry with the VacantEntry's key, and returns a mutable reference to it.
+    /// Sets the value of the entry with the vacant entry's key, and returns a mutable reference to it.
     pub fn insert(self, value: V) -> &'a mut V {
         self.vacant.insert(value)
     }

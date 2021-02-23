@@ -34,7 +34,7 @@ use core::{
 /// # Note
 ///
 /// - The component vector is well suited when a component is very common for entities.
-/// - By design all secondary component containers are meant to be easily interchangable.
+/// - By design all secondary component containers are meant to be easily interchangeable.
 #[derive(Debug)]
 pub struct ComponentVec<K, V> {
     /// Stores the components at the key indices.
@@ -240,7 +240,7 @@ impl<K, V> ComponentVec<Idx<K>, V> {
         }
     }
 
-    /// Shrinks the memory consumption of the component vec to a minimum.
+    /// Shrinks the memory consumption of the component vector to a minimum.
     ///
     /// # Note
     ///
@@ -288,7 +288,7 @@ impl<'a, K, V> IntoIterator for &'a mut ComponentVec<Idx<K>, V> {
 
 /// A view into a single entry in a map, which may either be vacant or occupied.
 ///
-/// This enum is constructed from the entry method on `ComponentVec`.
+/// This `enum` is constructed from the entry method on `ComponentVec`.
 #[derive(Debug)]
 pub enum Entry<'a, K: 'a, V: 'a> {
     Occupied(OccupiedEntry<'a, K, V>),
@@ -348,7 +348,7 @@ where
     }
 }
 
-/// A view into an occupied entry in a `ComponentVec`. It is part of the `Entry` enum.
+/// A view into an occupied entry in a `ComponentVec`. It is part of the `Entry` `enum`.
 #[derive(Debug)]
 pub struct OccupiedEntry<'a, K, V> {
     vec: &'a mut ComponentVec<Idx<K>, V>,
@@ -413,7 +413,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
     }
 }
 
-/// A view into a vacant entry in a `ComponentVec`. It is part of the `Entry` enum.
+/// A view into a vacant entry in a `ComponentVec`. It is part of the `Entry` `enum`.
 #[derive(Debug)]
 pub struct VacantEntry<'a, K, V> {
     vec: &'a mut ComponentVec<Idx<K>, V>,
@@ -426,7 +426,7 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
         self.key
     }
 
-    /// Sets the value of the entry with the VacantEntry's key, and returns a mutable reference to it.
+    /// Sets the value of the entry with the vacant entry's key, and returns a mutable reference to it.
     pub fn insert(self, value: V) -> &'a mut V {
         self.vec.insert(self.key, value);
         self.vec.components[<ComponentVec<Idx<K>, V>>::key_to_index(self.key)]

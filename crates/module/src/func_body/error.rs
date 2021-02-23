@@ -17,7 +17,7 @@ use crate::{func_body::Variable, primitive::Instr};
 use derive_more::{Display, Error};
 use ir::primitive::{Block, FloatType, IntType, Type, Value};
 
-/// Errors that might occure upon building up a Runwell IR function.
+/// Errors that might occur upon building up a Runwell IR function.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum FunctionBuilderError {
     #[display(
@@ -191,7 +191,7 @@ pub enum FunctionBuilderError {
     },
 }
 
-/// A variable access for better error information.
+/// Kind of variable access for better error information.
 #[derive(Debug, Display, PartialEq, Eq)]
 pub enum VariableAccess {
     /// Read the value of the variable.

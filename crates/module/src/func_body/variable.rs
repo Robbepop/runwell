@@ -57,7 +57,7 @@ impl DisplayHook for VariableEntity {
 
 /// Used to translate variables of some source language into Runwell IR SSA values.
 ///
-/// All variables are required to be declared before their first use and they
+/// All variables are required to be declared before their first use, and they
 /// are also required to be assigned to some value before they are read.
 ///
 ///
@@ -75,31 +75,31 @@ impl DisplayHook for VariableEntity {
 ///
 /// The first time a variable is assigned that has been declared with a shared
 /// declaration the `var_to_type` array is traversed using binary search taking
-/// roughly O(log(D)) where D is the number of shared variable declarations.
-/// Due to caching this occures only once per unique variable assignment.
+/// roughly `O(log(D))` where D is the number of shared variable declarations.
+/// Due to caching this occurs only once per unique variable assignment.
 /// Therefore the worst-case is triggered only whenever a shared declared variable
 /// is only ever assigned to a new value once in the entire function.
-/// The total worst-case execution time is O(A * log(D)) where A is the number of
+/// The total worst-case execution time is `O(A * log(D))` where A is the number of
 /// unique variable assignments and D is the number of shared variable declarations.
 ///
 /// ## Variable Reads
 ///
-/// Both `read_var` as well as `VariableDefinitions::for_block` have a constant
+/// Both `read_var` and `VariableDefinitions::for_block` have a constant
 /// execution time of O(1). However, reading the value of a variable during translation
 /// might call `VariableDefinitions::for_block` multiple times for each recursive
 /// predecessor of the current basic block. Therefore the execution time of reading
 /// a variable is in O(P) where P is the set of predecessors of the current basic block
 /// in the worst case.
 ///
-/// # Dev. Note
+/// # Developer Note
 ///
 /// As stated above the total worst-case execution time for variable assignments is in
-/// O(A * log(D)) where A is the number of unique variable assignments and D is the number
+/// `O(A * log(D))` where A is the number of unique variable assignments and D is the number
 /// of shared variable declarations.
 /// In typical Wasm binaries D is very small leading to linear translation time.
 /// Due to caching if A and D are equal the execution time is only O(A).
 /// The worst case is if D is equal to A/2 with a worst-case execution time of
-/// O(A * log(A/2)). The worst-case can be easily eliminated by requiring that types of variable
+/// `O(A * log(A/2))`. The worst-case can be easily eliminated by requiring that types of variable
 /// declarations in a function are required to be unique. As stated above this is already
 /// true for typical generated Wasm binaries, e.g. in case of LLVM translations.
 #[derive(Debug, Default)]
@@ -273,7 +273,7 @@ impl VariableTranslator {
     ///
     /// # Errors
     ///
-    /// If there are more than 2^31 variable declarations.
+    /// If there are more than `2^31` variable declarations.
     pub fn declare_vars(&mut self, amount: u32, ty: Type) -> Result<(), Error> {
         let first_idx = self.vars.alloc_some(amount);
         if self.vars.len() >= u32::MAX as usize {

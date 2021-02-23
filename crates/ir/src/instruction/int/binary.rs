@@ -25,7 +25,7 @@ use core::fmt::Display;
 ///
 /// # Note
 ///
-/// - Both input values as well as the output value of the instruction are
+/// - Both input values and the output value of the instruction are
 ///   equal to the type `ty`.
 /// - In case of shift and rotate operands the `lhs` value is the source
 ///   and the `rhs` value is the shift or rotate amount.
@@ -40,11 +40,11 @@ pub struct BinaryIntInstr {
 /// Binary integer operand codes.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum BinaryIntOp {
-    /// Evalutes integer addition of two integer values.
+    /// Evaluates integer addition of two integer values.
     Add,
     /// Subtracts the right-hand side integer from the left-hand side integer.
     Sub,
-    /// Evalutes integer multiplication of two integer values.
+    /// Evaluates integer multiplication of two integer values.
     Mul,
     /// Divides the right-hand side signed integer from the left-hand side signed integer.
     Sdiv,
@@ -54,11 +54,11 @@ pub enum BinaryIntOp {
     Srem,
     /// Computes the remainder of the left-hand side unsigned integer divided by the right-hand side unsigned integer.
     Urem,
-    /// Computes the bitwise and for two integer value.
+    /// Computes the bit-wise and for two integer value.
     And,
-    /// Computes the bitwise or for two integer value.
+    /// Computes the bit-wise or for two integer value.
     Or,
-    /// Computes the bitwise xor for two integer value.
+    /// Computes the bit-wise xor for two integer value.
     Xor,
 }
 

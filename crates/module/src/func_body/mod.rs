@@ -94,7 +94,7 @@ impl FunctionBody {
         self.instr_values[instr].as_slice()
     }
 
-    /// Returns the n-th instruction of the block and its assoc value if any.
+    /// Returns the nth instruction of the block and its assoc value if any.
     pub fn instruction_and_value(
         &self,
         block: Block,
@@ -106,7 +106,7 @@ impl FunctionBody {
         Some((instr_values, instruction))
     }
 
-    /// Display the function body with the given identiation.
+    /// Display the function body with the given indentation.
     ///
     /// # Note
     ///

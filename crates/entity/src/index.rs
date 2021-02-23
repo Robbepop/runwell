@@ -24,7 +24,7 @@ use core::{
     num::NonZeroU32,
 };
 
-/// A hook to customize the `Display` impl of type alises to `Idx`.
+/// A hook to customize the `Display` implementation of type aliases to `Idx`.
 pub trait DisplayHook: Sized {
     fn fmt(idx: Idx<Self>, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }
@@ -32,7 +32,7 @@ pub trait DisplayHook: Sized {
 /// The raw index of an entity.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RawIdx {
-    /// The raw index shifted by +1.
+    /// The raw index shifted by plus 1.
     ///
     /// A [`NonZeroU32`] value is used in order to space-optimize raw indices
     /// for example when used inside `Option` somewhere in a secondary data

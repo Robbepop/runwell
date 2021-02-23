@@ -56,7 +56,7 @@ impl Blocks {
         self.blocks.pop().ok_or(TranslateError::MissingWasmBlock)
     }
 
-    /// Returns the n-th Wasm block from the back where 0-th is the last.
+    /// Returns the nth Wasm block from the back where 0th is the last.
     ///
     /// # Errors
     ///
@@ -73,12 +73,12 @@ impl Blocks {
             })
     }
 
-    /// Demans a jump to the n-th Wasm block from the back where 0-th is the last.
+    /// Demands a jump to the nth Wasm block from the back where 0th is the last.
     ///
     /// This might potentially instantiate a new Runwell basic block for the Wasm block
     /// if there has not yet been a branch to this Wasm block.
     ///
-    /// The Wasm -> Runwell translator tries to create basic blocks on the fly when
+    /// The Wasm to Runwell translator tries to create basic blocks on the fly when
     /// branches to them happen.
     pub fn break_to(
         &mut self,
@@ -107,7 +107,7 @@ impl Blocks {
 
     /// Returns the current Wasm block.
     ///
-    /// This is the Wasm block that was put latest on the stack of blocks.
+    /// This is the Wasm block that was put the latest on the stack of blocks.
     ///
     /// # Errors
     ///

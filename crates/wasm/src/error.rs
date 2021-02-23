@@ -26,7 +26,7 @@ use super::{
 use core::fmt::Display;
 use derive_more::{Display, Error, From};
 
-/// An error that occured while parsing a Wasm input and building up the module for it.
+/// An error that occurred while parsing a Wasm input and building up the module for it.
 #[derive(Debug, Error)]
 pub struct Error {
     /// The range of bytes in the input Wasm binary that is associated to this error.
@@ -115,7 +115,7 @@ where
     }
 }
 
-/// Any kind of error that might occure while parsing a Wasm input binary.
+/// Any kind of error that might occur while parsing a Wasm input binary.
 #[derive(Debug, Display, Error, From)]
 pub enum ErrorKind {
     Primitive(PrimitiveError),

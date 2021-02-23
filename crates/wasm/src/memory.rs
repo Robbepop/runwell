@@ -18,7 +18,7 @@ use derive_more::Display;
 use entity::RawIdx;
 use ir::primitive::Mem;
 
-/// An error that can occure upon parsing and validating linear memory.
+/// An error that can occur upon parsing and validating linear memory.
 #[derive(Debug, Display)]
 pub enum MemoryError {
     #[display(fmt = "encountered unsupported 64-bit linear memory: {:?}", _0)]

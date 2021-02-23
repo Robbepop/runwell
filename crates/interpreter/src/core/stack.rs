@@ -55,7 +55,7 @@ impl Stack {
         len_inputs
     }
 
-    /// Writes the `new_value` to the register at the given `ptr`.
+    /// Writes `new_value` to the register at the given `ptr`.
     pub fn write_register(&mut self, ptr: Ptr, new_value: u64) {
         self.registers[ptr.into_usize()].bits = new_value;
     }

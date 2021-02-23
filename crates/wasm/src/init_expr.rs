@@ -20,7 +20,7 @@ use ir::primitive::IntConst;
 use module::primitive::Global;
 use wasmparser::Operator;
 
-/// An error that can occure upon parsing a global initializer expression.
+/// An error that can occur upon parsing a global initializer expression.
 #[derive(Debug, Display, Error, PartialEq, Eq, Hash)]
 pub enum InitExprError {
     /// Encountered a generic unsupported operator.
@@ -32,7 +32,7 @@ pub enum InitExprError {
     /// Encountered an unsupported reference type operator.
     #[display(fmt = "encountered an unsupported reference type operator")]
     UnsupportedRefType,
-    /// Encountered a malformatted initializer expression.
+    /// Encountered a malformed initializer expression.
     #[display(fmt = "encountered a malformatted initializer expression")]
     MalformedExpression,
 }
@@ -40,7 +40,7 @@ pub enum InitExprError {
 /// A parsed and validated Wasm constant initializer expression.
 #[derive(Debug)]
 pub struct InitExpr {
-    /// A Wasm translated Runwell init expr.
+    /// A Wasm translated Runwell initializer expression.
     inner: module::primitive::InitExpr,
 }
 

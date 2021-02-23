@@ -215,7 +215,7 @@ impl<'a> EvaluationContext<'a> {
     /// Handles propagation of the returned results into the callers registers.
     /// Updates the current `function` to the caller's function if any.
     ///
-    /// Returns `true` if there was no caller so that the interpreter returns back entirely
+    /// Returns `true` if there was no caller so that the interpreter returns entirely
     /// to the interpreter's own caller.
     fn evaluate_return_flow(&mut self, function: &mut Function<'a>) -> bool {
         match self.frames.last_frame_mut() {

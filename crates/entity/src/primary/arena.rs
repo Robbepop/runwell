@@ -26,7 +26,7 @@ use core::{
 /// Use this if all your entities are required to store some additional necessary
 /// information or data with them or if the data identifies the entity.
 ///
-/// For efficiency and satety reasons it is not possible to remove entities.
+/// For efficiency and safety reasons it is not possible to remove entities.
 #[derive(Debug, Clone)]
 pub struct EntityArena<T> {
     entities: Vec<T>,

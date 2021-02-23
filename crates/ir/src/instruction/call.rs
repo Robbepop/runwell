@@ -106,7 +106,7 @@ pub struct CallIndirectInstr {
     /// Vector containing
     ///
     /// - the index of the function in the table that is indirectly called.
-    /// - followd by the parameters given to the indirectly called function.
+    /// - followed by the parameters given to the indirectly called function.
     ///
     /// # Note
     ///
@@ -145,7 +145,7 @@ impl CallIndirectInstr {
         self.index_and_params[0]
     }
 
-    /// Returns the expected func type of the indirectly called function.
+    /// Returns the expected function type of the indirectly called function.
     pub fn func_type(&self) -> FuncType {
         self.func_type
     }

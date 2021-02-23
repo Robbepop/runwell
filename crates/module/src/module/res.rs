@@ -165,7 +165,7 @@ impl ModuleResources {
 
     /// Shrinks all data structures to fit their minimum space needed.
     ///
-    /// This may costly reallocate some of the data structures.
+    /// This may costly reallocate some data structures.
     pub(super) fn shrink_to_fit(&mut self) {
         self.types.shrink_to_fit();
         self.function_decls.shrink_to_fit();

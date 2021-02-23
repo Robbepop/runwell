@@ -32,7 +32,7 @@ use smallbitvec::SmallBitVec;
 ///   `DefaultComponentBitVec` type instead respectively.
 /// - Unbounded iteration over a default component data structure might not be what a
 ///   user normally wants since they eagerly iterate over the entire key space of their
-///   entity which yields approx 2^32 components in total.
+///   entity which yields approx `2^32` components in total.
 #[derive(Debug)]
 pub struct DefaultComponentBitVec<K> {
     /// Stores the `bool` components at the key indices.
@@ -107,9 +107,9 @@ impl<K> DefaultComponentBitVec<Idx<K>> {
         true
     }
 
-    /// Returns the current `bool` value of the key'ed entitiy.
+    /// Returns the current `bool` value of the keyed entity.
     ///
-    /// Returns `false` if the component is not yet set for the entitiy.
+    /// Returns `false` if the component is not yet set for the entity.
     #[inline]
     pub fn get(&self, key: Idx<K>) -> bool {
         self.components
@@ -117,7 +117,7 @@ impl<K> DefaultComponentBitVec<Idx<K>> {
             .unwrap_or(false)
     }
 
-    /// Sets the `bool` component of the key'ed entity to the `new_value`.
+    /// Sets the `bool` component of the keyed entity to the `new_value`.
     #[inline]
     pub fn set(&mut self, key: Idx<K>, new_value: bool) {
         self.set_capacity(key);
@@ -166,7 +166,7 @@ impl<K> DefaultComponentBitVec<Idx<K>> {
 ///
 /// Unbounded iteration over a default component data structure might not be what a
 /// user normally wants since they eagerly iterate over the entire key space of their
-/// entity which yields approx 2^32 components in total.
+/// entity which yields approx `2^32` components in total.
 pub struct Iter<'a, K> {
     vec: &'a DefaultComponentBitVec<Idx<K>>,
     current: u32,
@@ -206,7 +206,7 @@ impl<'a, K> ExactSizeIterator for Iter<'a, K> {}
 ///
 /// Unbounded iteration over a default component data structure might not be what a
 /// user normally wants since they eagerly iterate over the entire key space of their
-/// entity which yields approx 2^32 components in total.
+/// entity which yields approx `2^32` components in total.
 pub struct Components<'a, K> {
     iter: Iter<'a, K>,
 }

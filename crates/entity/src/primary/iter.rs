@@ -18,7 +18,7 @@ use core::{
     marker::PhantomData,
 };
 
-/// Iterator yielding the indices of allocated entities in the entitiy arena.
+/// Iterator yielding the indices of allocated entities in the entity arena.
 #[derive(Debug)]
 pub struct Indices<'a, T> {
     /// The current next yielded start index.
@@ -41,7 +41,7 @@ impl<'a, T> Indices<'a, T> {
     /// # Note
     ///
     /// The `min_key` is the key to the first entity and `max_key`
-    /// is the key right after the last entitiy of the entity arena.
+    /// is the key right after the last entity of the entity arena.
     ///
     /// # Panics
     ///
@@ -90,7 +90,7 @@ impl<'a, T> DoubleEndedIterator for Indices<'a, T> {
 impl<'a, T> FusedIterator for Indices<'a, T> {}
 impl<'a, T> ExactSizeIterator for Indices<'a, T> {}
 
-/// Iterator yielding shared references to allocated values of the entitiy arena.
+/// Iterator yielding shared references to allocated values of the entity arena.
 #[derive(Debug)]
 pub struct Entities<'a, T> {
     iter: core::slice::Iter<'a, T>,
@@ -134,7 +134,7 @@ impl<'a, T> DoubleEndedIterator for Entities<'a, T> {
 impl<'a, T> FusedIterator for Entities<'a, T> {}
 impl<'a, T> ExactSizeIterator for Entities<'a, T> {}
 
-/// Iterator yielding mutable reference to allocated values of the entitiy arena.
+/// Iterator yielding mutable reference to allocated values of the entity arena.
 #[derive(Debug)]
 pub struct EntitiesMut<'a, T> {
     iter: core::slice::IterMut<'a, T>,

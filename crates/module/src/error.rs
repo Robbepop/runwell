@@ -16,7 +16,7 @@ use super::FunctionBuilderError;
 use core::fmt;
 use derive_more::{Display, Error, From};
 
-/// An error that occured while translating from Wasm to Runwell IR.
+/// An error that occurred while translating from Wasm to Runwell IR.
 #[derive(Debug, Error, From, PartialEq, Eq)]
 pub struct Error {
     kind: ErrorKind,
@@ -66,7 +66,7 @@ impl From<FunctionBuilderError> for Error {
     }
 }
 
-/// An error kind that occured while translating from Wasm to Runwell IR.
+/// An error kind that occurred while translating from Wasm to Runwell IR.
 #[derive(Debug, Display, Error, From, PartialEq, Eq)]
 pub enum ErrorKind {
     FunctionBuilder(FunctionBuilderError),

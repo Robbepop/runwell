@@ -52,9 +52,9 @@ pub enum InterpretationFlow {
     Return,
     /// The function returns a call to another function.
     ///
-    /// In this case the registers are assumed to be prefilled
+    /// In this case the registers are assumed to be initialized
     /// with the functions inputs. The outer evaluation context
-    /// then has to check the aquired inputs against the called
+    /// then has to check the acquired inputs against the called
     /// function signature.
     TailCall(Func),
     /// The function calls another function.

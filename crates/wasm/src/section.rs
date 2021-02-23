@@ -51,7 +51,7 @@ use wasmparser::{
     Validator,
 };
 
-/// A general error that might occure while parsing Wasm sections.
+/// A general error that might occur while parsing Wasm sections.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum SectionError {
     Unsupported(UnsupportedWasmSection),

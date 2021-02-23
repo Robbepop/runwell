@@ -17,7 +17,7 @@ use core::iter::FusedIterator;
 
 /// A linear memory declaration.
 ///
-/// Specifies how many initial 64kb pages and optional maximum pages it will use.
+/// Specifies how many initial 64 kb pages and optional maximum pages it will use.
 #[derive(Debug)]
 pub struct LinearMemoryDecl {
     /// The amount of pages with which the linear memory is initialized.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! From the paper "Simple and Efficient SSA Construction" by Buchwald et. al.:
+//! From the paper "Simple and Efficient SSA Construction" by Buchwald et al.:
 //!
 //! We call a basic block sealed if no further predecessors will be added to the block.
 //! As only filled blocks may have successors, predecessors are always filled.
@@ -198,9 +198,9 @@ impl Default for FunctionBuilderContext {
 /// or to an input parameter of the IR function under construction.
 #[derive(Debug, Copy, Clone)]
 pub enum ValueAssoc {
-    /// The value is associated to the `n`-th input of the function.
+    /// The value is associated to the nth input of the function.
     Input(u32),
-    /// The value is associated to the `n`-th output of the instruction.
+    /// The value is associated to the nth output of the instruction.
     Instr(Instr, u32),
 }
 
@@ -372,11 +372,11 @@ impl<'a> FunctionBuilder<'a> {
         Ok(InstructionBuilder::new(self))
     }
 
-    /// Assignes the value to the variable for the current basic block.
+    /// Assigns the value to the variable for the current basic block.
     ///
     /// # Errors
     ///
-    /// - If the variable has not beed declared.
+    /// - If the variable has not been declared.
     /// - If the type of the assigned value does not match the variable's type declaration.
     pub fn write_var(
         &mut self,
@@ -529,7 +529,7 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// # Note
     ///
-    /// - This also updates value users on the fly if replacments took place.
+    /// - This also updates value users on the fly if replacements took place.
     /// - Returns `true` if an actual replacement took place.
     fn replace_user_values(
         &mut self,
@@ -606,7 +606,7 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// # Errors
     ///
-    /// - If the variable has not beed declared.
+    /// - If the variable has not been declared.
     pub fn read_var(&mut self, var: Variable) -> Result<Value, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         let current = self.current_block()?;
@@ -617,7 +617,7 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// # Errors
     ///
-    /// - If the variable has not beed declared.
+    /// - If the variable has not been declared.
     pub fn var_type(&mut self, var: Variable) -> Result<Type, Error> {
         Ok(self.ctx.vars.get(var)?.ty())
     }

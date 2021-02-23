@@ -27,7 +27,7 @@ pub use self::{
 
 /// All Runwell IR SSA instructions.
 pub mod instr {
-    /// The operands for some of the instructions.
+    /// The operands for some instructions.
     pub mod operands {
         #[doc(inline)]
         pub use super::super::instruction::{

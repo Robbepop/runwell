@@ -135,7 +135,7 @@ impl InterpretInstr for ExtendIntInstr {
 }
 
 impl InterpretInstr for IntToFloatInstr {
-    /// WebAssembly instructions that map to IntToFloatInstr:
+    /// WebAssembly instructions that map to `IntToFloatInstr`:
     ///
     /// `i32` conversion to `f32` and `f64`:
     ///  - `i32.trunc_f32_s`

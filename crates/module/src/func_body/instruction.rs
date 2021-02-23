@@ -458,7 +458,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.ibinary(BinaryIntOp::Urem, ty, lhs, rhs)
     }
 
-    /// Integer bitwise AND.
+    /// Integer bit-wise AND.
     pub fn iand(
         self,
         ty: IntType,
@@ -468,7 +468,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.ibinary(BinaryIntOp::And, ty, lhs, rhs)
     }
 
-    /// Integer bitwise OR.
+    /// Integer bit-wise OR.
     pub fn ior(
         self,
         ty: IntType,
@@ -478,7 +478,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.ibinary(BinaryIntOp::Or, ty, lhs, rhs)
     }
 
-    /// Integer bitwise XOR.
+    /// Integer bit-wise XOR.
     pub fn ixor(
         self,
         ty: IntType,
@@ -568,7 +568,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.funary(UnaryFloatOp::Truncate, ty, source)
     }
 
-    /// Float round to nearest integer.
+    /// Float round to the nearest integer.
     pub fn fnearest(
         self,
         ty: FloatType,
@@ -654,7 +654,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.fbinary(BinaryFloatOp::Max, ty, lhs, rhs)
     }
 
-    /// Float copysign operation.
+    /// Float copy-sign operation.
     pub fn fcopysign(
         self,
         ty: FloatType,
@@ -668,8 +668,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ///
     /// # Comparator Kinds
     ///
-    /// - `eq`: Tests for bitwise equality.
-    /// - `ne`: Tests for bitwise inequality.
+    /// - `eq`: Tests for bit-wise equality.
+    /// - `ne`: Tests for bit-wise inequality.
     /// - `le`: Less-than or equals.
     /// - `lt`: Less-than.
     /// - `ge`: Greater-than or equals.
@@ -749,7 +749,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ///
     /// # Errors
     ///
-    /// If the destination integer type does not have a bitwidth greater than or equal
+    /// If the destination integer type does not have a bit-width greater than or equal
     /// to the source type.
     pub fn iextend(
         mut self,
@@ -776,7 +776,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ///
     /// # Errors
     ///
-    /// If the destination integer type does not have a bitwidth greater than or equal
+    /// If the destination integer type does not have a bit-width greater than or equal
     /// to the source type.
     pub fn itruncate(
         mut self,
@@ -1027,7 +1027,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     /// # Errors
     ///
     /// - If the new predecessor is not yet filled.
-    /// - If the block that gains a new predessor has already been sealed.
+    /// - If the block that gains a new predecessor has already been sealed.
     /// - If the new predecessor is already a predecessor of the block.
     fn add_predecessor(
         &mut self,

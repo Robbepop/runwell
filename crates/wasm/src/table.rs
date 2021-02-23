@@ -18,7 +18,7 @@ use derive_more::Display;
 use entity::RawIdx;
 use ir::primitive::{Func, Table};
 
-/// An error that might occure while parsing or validating tables or table elements.
+/// An error that might occur while parsing or validating tables or table elements.
 #[derive(Debug, Display, PartialEq, Eq)]
 pub enum TableError {
     #[display(fmt = "encountered invalid table element type: {:?}", _0)]

@@ -15,7 +15,7 @@
 //! Unit tests for the secondary data structures that store the components.
 //!
 //! The unit tests for the primary data structures is kept in the `primary`
-//! submodule directly. Tests for the secondary data structures are kept in
+//! sub-module directly. Tests for the secondary data structures are kept in
 //! their parent module since they require the primary data structures in
 //! order to properly be used.
 

@@ -33,7 +33,7 @@ pub struct TruncateIntInstr {
 }
 
 impl TruncateIntInstr {
-    /// Creates a new truncate instruction truncating src from source type to destination type.
+    /// Creates a new truncation instruction truncating `src` from source type to destination type.
     ///
     /// # Note
     ///
@@ -102,7 +102,7 @@ pub struct ExtendIntInstr {
 }
 
 impl ExtendIntInstr {
-    /// Creates a new extend instruction extending src from source type to destination type.
+    /// Creates a new extension instruction extending `src` from source type to destination type.
     ///
     /// # Note
     ///
@@ -122,7 +122,7 @@ impl ExtendIntInstr {
         }
     }
 
-    /// Creates a new zero-extend instruction extending src from source type to destination type.
+    /// Creates a new zero-extend instruction extending `src` from source type to destination type.
     ///
     /// # Note
     ///
@@ -131,7 +131,7 @@ impl ExtendIntInstr {
         Self::new(false, src_type, dst_type, src)
     }
 
-    /// Creates a new sign-extend instruction extending src from source type to destination type.
+    /// Creates a new sign-extend instruction extending `src` from source type to destination type.
     ///
     /// # Note
     ///

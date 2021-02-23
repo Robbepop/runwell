@@ -14,7 +14,7 @@
 
 use derive_more::{Display, Error};
 
-/// An error that occured while translating from Wasm to Runwell IR.
+/// An error that occurred while translating from Wasm to Runwell IR.
 #[derive(Debug, Display, Error, PartialEq, Eq)]
 pub enum TranslateError {
     #[display(fmt = "encountered unsupported Wasm operator at {}", offset)]
@@ -40,7 +40,7 @@ pub enum TranslateError {
         len
     )]
     RelativeDepthExceedsBlockStack {
-        /// The n-th index (from back) that was tried to accessed.
+        /// The nth index (from back) that was tried to accessed.
         n: u32,
         /// The current length of the block stack.
         len: usize,

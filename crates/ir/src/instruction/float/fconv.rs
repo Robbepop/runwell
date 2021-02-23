@@ -38,7 +38,7 @@ impl DemoteFloatInstr {
     ///
     /// # Panics
     ///
-    /// If the destination floating point number type has a bit width greater
+    /// If the destination floating point number type has a bit-width greater
     /// than the source floating point number type.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
         assert!(src_type.bit_width() >= dst_type.bit_width());
@@ -87,7 +87,7 @@ impl VisitValuesMut for DemoteFloatInstr {
 ///
 /// # Note
 ///
-/// The bit width of destination float type must be bigger than the bit width of the
+/// The bit width of destination float type must be bigger than the bit-width of the
 /// source float type.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(fmt = "fpromote {} -> {} {}", src_type, dst_type, src)]
@@ -102,7 +102,7 @@ impl PromoteFloatInstr {
     ///
     /// # Panics
     ///
-    /// If the destination floating point number type has a bit width smaller
+    /// If the destination floating point number type has a bit-width smaller
     /// than the source floating point number type.
     pub fn new(src_type: FloatType, dst_type: FloatType, src: Value) -> Self {
         assert!(src_type.bit_width() <= dst_type.bit_width());
@@ -156,16 +156,19 @@ impl VisitValuesMut for PromoteFloatInstr {
 /// depending on the `dst_signed` field.
 ///
 /// Truncation from floating point to integer where IEEE 754-2008 would specify an invalid
-/// operator exception (e.g. when the floating point value is NaN or outside the range which
+/// operator exception (e.g. when the floating point value is Nan or outside the range which
 /// rounds to an integer in range) is handled as follows:
 ///
 /// If `saturating` is `false`:
-///    - A trap is produced.
+///
+/// - A trap is produced.
+///
 /// If `saturating` is `true`:
-///    - No trap is produced.
-///    - If the floating-point value is positive, the maximum integer value is returned.
-///    - If the floating-point value is negative, the minimum integer value is returned.
-///    - If the floating-point value is NaN, zero is returned.
+///
+/// - No trap is produced.
+/// - If the floating-point value is positive, the maximum integer value is returned.
+/// - If the floating-point value is negative, the minimum integer value is returned.
+/// - If the floating-point value is Nan, zero is returned.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[display(
     fmt = "fconvert_{} {} -> {}, src {}, saturating {}",

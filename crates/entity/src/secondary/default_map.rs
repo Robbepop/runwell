@@ -36,7 +36,7 @@ use std::{collections::HashMap, iter::FusedIterator};
 ///   have a component.
 /// - Unbounded iteration over a default component data structure might not be what a
 ///   user normally wants since they eagerly iterate over the entire key space of their
-///   entity which yields approx 2^32 components in total.
+///   entity which yields approx `2^32` components in total.
 /// - Access to a default component data structure goes entirely through its
 ///   [`Index`][`core::ops::Index`] and [`IndexMut`][`core::ops::IndexMut`] implementations.
 #[derive(Debug)]
@@ -184,7 +184,7 @@ where
 ///
 /// Unbounded iteration over a default component data structure might not be what a
 /// user normally wants since they eagerly iterate over the entire key space of their
-/// entity which yields approx 2^32 components in total.
+/// entity which yields approx `2^32` components in total.
 pub struct Iter<'a, K, V> {
     vec: &'a DefaultComponentMap<Idx<K>, V>,
     current: u32,
@@ -230,7 +230,7 @@ impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> where V: Default {}
 ///
 /// Unbounded iteration over a default component data structure might not be what a
 /// user normally wants since they eagerly iterate over the entire key space of their
-/// entity which yields approx 2^32 components in total.
+/// entity which yields approx `2^32` components in total.
 pub struct Components<'a, K, V> {
     iter: Iter<'a, K, V>,
 }

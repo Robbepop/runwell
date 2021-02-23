@@ -17,7 +17,7 @@ use core::convert::TryFrom;
 use derive_more::{Display, Error, From};
 use ir::primitive as runwell;
 
-/// An error that occured while operating on Wasm primitives.
+/// An error that occurred while operating on Wasm primitives.
 #[derive(Debug, Display, Error, From, PartialEq, Eq, Hash)]
 pub enum PrimitiveError {
     #[display(fmt = "encountered unsupported Wasm type: {:?}", unsupported)]

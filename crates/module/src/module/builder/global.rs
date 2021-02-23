@@ -35,7 +35,7 @@ pub struct ModuleGlobalsBuilder<'a> {
 }
 
 impl<'a> ModuleGlobalsBuilder<'a> {
-    /// Creates a new module globals builder.
+    /// Creates a new module global variable builder.
     pub(super) fn new(res: &'a mut ModuleResources) -> Self {
         Self { res }
     }
