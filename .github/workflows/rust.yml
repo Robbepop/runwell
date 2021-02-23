@@ -94,6 +94,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
