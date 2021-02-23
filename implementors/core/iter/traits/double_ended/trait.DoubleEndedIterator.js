@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["runwell_entity"] = [{"text":"impl&lt;'a, T&gt; DoubleEndedIterator for Indices&lt;'a, T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a, T&gt; DoubleEndedIterator for Entities&lt;'a, T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a, T&gt; DoubleEndedIterator for EntitiesMut&lt;'a, T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a, T&gt; DoubleEndedIterator for Iter&lt;'a, T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a, T&gt; DoubleEndedIterator for IterMut&lt;'a, T&gt;","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

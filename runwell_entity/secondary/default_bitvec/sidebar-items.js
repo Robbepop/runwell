@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Components","Iterator over the components of a default component vector."],["DefaultComponentBitVec","Container where every entity has a `bool` component that is default initialized to `false`."],["Iter","Iterator over the indices and components of a default component bit-vector."]]});

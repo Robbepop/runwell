@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Components","Iterator over the components of a default component vector."],["DefaultComponentVec","Container where every entity has a component that is default initialized."],["Iter","Iterator over the indices and components of a default component vector."]]});

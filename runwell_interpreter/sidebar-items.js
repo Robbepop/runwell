@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["InterpretationError","An error that may occur while evaluating a function."]],"struct":[["EvaluationContext","The evaluation context for the entire virtual machine."]]});
