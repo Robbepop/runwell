@@ -30,7 +30,11 @@ use super::{
     VariableTranslator,
 };
 use crate::{Error, ModuleResources};
-use core::mem::take;
+use core::{
+    fmt::Debug,
+    hash::Hash,
+    mem::{replace, take},
+};
 use derive_more::Display;
 use entity::{
     ComponentMap,
@@ -642,91 +646,19 @@ impl<'a> FunctionBuilder<'a> {
         self.ensure_all_blocks_sealed()?;
         self.ensure_all_blocks_filled()?;
 
-        let FunctionBuilderContext {
-            values: old_values,
-            instrs,
-            instr_values: old_instr_values,
-            value_assoc: old_value_assoc,
-            value_type: old_value_type,
-            value_users: old_value_users,
-            value_incomplete_phi: old_value_incomplete_phi,
-            ..
-        } = &mut self.ctx;
-        let mut values = <PhantomEntityArena<ValueEntity>>::default();
-        let mut value_type = <ComponentVec<Value, Type>>::default();
-        let mut value_assoc = <ComponentVec<Value, ValueAssoc>>::default();
-        let mut value_incomplete_phi =
-            <ComponentMap<Value, IncompletePhi>>::default();
-        let mut instr_values = <DefaultComponentMap<
-            Instr,
-            SmallVec<[Option<Value>; 4]>,
-        >>::default();
-        let mut value_replace = <HashMap<Value, Value>>::default();
-        for old_value in old_values.indices() {
-            if !old_value_users[old_value].is_empty()
-                || old_value_assoc[old_value].is_input()
-            {
-                let new_value = values.alloc_some(1);
-                value_type.insert(new_value, old_value_type[old_value]);
-                value_assoc.insert(new_value, old_value_assoc[old_value]);
-                if let Some(incomplete_phi) =
-                    old_value_incomplete_phi.get_mut(old_value)
-                {
-                    value_incomplete_phi
-                        .insert(new_value, take(incomplete_phi));
-                }
-                value_replace.insert(old_value, new_value);
-            }
-        }
-        for (instr, instruction) in instrs {
-            instruction.visit_values_mut(|old_value| {
-                let new_value =
-                    value_replace.get(old_value).copied().unwrap_or(*old_value);
-                *old_value = new_value;
-                true
-            });
-            for old_value in &mut old_instr_values[instr] {
-                let new_value = value_replace.get(old_value).copied();
-                instr_values[instr].push(new_value);
-            }
-        }
-        for (_phi_value, incomplete_phi) in &mut value_incomplete_phi {
-            incomplete_phi.visit_values_mut(|old_value| {
-                let new_value =
-                    value_replace.get(old_value).copied().unwrap_or(*old_value);
-                *old_value = new_value;
-                true
-            })
-        }
-        let mut block_instrs =
-            <DefaultComponentVec<Block, SmallVec<[Instr; 4]>>>::default();
-        for block in self.ctx.blocks.indices() {
-            // Convert all incomplete phis into complete phis and add them to the
-            // start of each of their basic block instructions.
-            for &phi_instr in self.ctx.block_phis[block].components() {
-                let phi_value = self.phi_instr_to_value(phi_instr);
-                let incomplete_phi = &value_incomplete_phi[phi_value];
-                let _ = core::mem::replace(
-                    &mut self.ctx.instrs[phi_instr],
-                    PhiInstr::new(incomplete_phi.operands()).into(),
-                );
-                block_instrs[block].push(phi_instr);
-            }
-            // Append the rest of the instructions of the same basic block.
-            block_instrs[block]
-                .extend_from_slice(&self.ctx.block_instrs[block]);
-        }
-        block_instrs.shrink_to_fit();
-        self.ctx.instrs.shrink_to_fit();
-        Ok(FunctionBody {
-            blocks: self.ctx.blocks,
-            values,
-            instrs: self.ctx.instrs,
-            block_instrs,
-            instr_values,
-            value_type,
-            value_assoc,
-        })
+        let mut body = FunctionBody {
+            blocks: Default::default(),
+            block_instrs: Default::default(),
+            values: Default::default(),
+            value_type: Default::default(),
+            value_assoc: Default::default(),
+            instrs: Default::default(),
+            instr_values: Default::default(),
+        };
+        let (replace_values, incomplete_phis) =
+            self.initialize_values(&mut body);
+        self.initialize_instrs(&replace_values, incomplete_phis, &mut body);
+        Ok(body)
     }
 
     /// Ensures that all basic blocks are sealed and returns an `Error` if not.
@@ -761,5 +693,191 @@ impl<'a> FunctionBuilder<'a> {
             .map_err(Into::into)
         }
         Ok(())
+    }
+
+    /// Initializes all values of the finalized constructed function body.
+    ///
+    /// This eliminates all dead SSA values that are no longer in use at the end of construction.
+    /// This also updates all data that is associated to the remaining alive SSA values in order
+    /// to compact their representation in memory.
+    ///
+    /// Returns a mapping that stores all the SSA value replacements for all alive SSA values.
+    /// Also returns all incomplete phi instructions with their values updated.
+    /// These two return values are going to be used in the `initialize_instrs` procedure.
+    fn initialize_values(
+        &mut self,
+        body: &mut FunctionBody,
+    ) -> (Replacer<Value>, ComponentMap<Value, IncompletePhi>) {
+        let mut value_replace = <Replacer<Value>>::default();
+        let mut value_incomplete_phi =
+            <ComponentMap<Value, IncompletePhi>>::default();
+        // Replace all values and update references for all their associated data.
+        for old_value in self.ctx.values.indices() {
+            if !self.ctx.value_users[old_value].is_empty()
+                || self.ctx.value_assoc[old_value].is_input()
+            {
+                let new_value = body.values.alloc_some(1);
+                body.value_type
+                    .insert(new_value, self.ctx.value_type[old_value]);
+                body.value_assoc
+                    .insert(new_value, self.ctx.value_assoc[old_value]);
+                if let Some(incomplete_phi) =
+                    self.ctx.value_incomplete_phi.get_mut(old_value)
+                {
+                    value_incomplete_phi
+                        .insert(new_value, take(incomplete_phi));
+                }
+                value_replace.insert(old_value, new_value);
+            }
+        }
+        // Replace all old value operands of all incomplete phi instructions.
+        for value in body.values.indices() {
+            if let Some(incomplete_phi) = value_incomplete_phi.get_mut(value) {
+                incomplete_phi.visit_values_mut(|old_value| {
+                    let new_value = value_replace.get(*old_value);
+                    *old_value = new_value;
+                    true
+                });
+            }
+        }
+        (value_replace, value_incomplete_phi)
+    }
+
+    /// For every instruction returns a `bool` indicating if it is alive within the function body.
+    ///
+    /// Is only called and used from the `initialize_instrs` procedure.
+    ///
+    /// # Note
+    ///
+    /// - This information can later be used to remove dead instructions from the function body.
+    /// - An instruction is said to be alive if it is used at least once in any of the basic blocks.
+    /// - Since phi instructions are not part of the block instructions during function body construction
+    ///   we need to treat them specially.
+    fn get_alive_instrs(&self) -> DefaultComponentBitVec<Instr> {
+        let mut is_alive = <DefaultComponentBitVec<Instr>>::default();
+        for block in self.ctx.blocks.indices() {
+            for instr in self.ctx.block_instrs[block].iter().copied() {
+                is_alive.set(instr, true);
+            }
+            for (_phi_var, &phi_instr) in &self.ctx.block_phis[block] {
+                let phi_value = self.phi_instr_to_value(phi_instr);
+                if !self.ctx.value_users[phi_value].is_empty() {
+                    is_alive.set(phi_instr, true);
+                }
+            }
+        }
+        is_alive
+    }
+
+    /// Initializes all instructions of the finalized constructed function body.
+    ///
+    /// This eliminates all dead instructions that are no longer in use at the end of construction.
+    /// This also updates all the data that is associated to the remaining alive instructions in order
+    /// to compact their representation in memory.
+    fn initialize_instrs(
+        &mut self,
+        value_replace: &Replacer<Value>,
+        value_incomplete_phi: ComponentMap<Value, IncompletePhi>,
+        body: &mut FunctionBody,
+    ) {
+        let is_instr_alive = self.get_alive_instrs();
+        let mut instr_replace = <Replacer<Instr>>::default();
+        // Fetch all alive instructions.
+        for (old_instr, instruction) in &mut self.ctx.instrs {
+            if is_instr_alive.get(old_instr) {
+                // Replace all old values in the instruction with new values.
+                instruction.visit_values_mut(|old_value| {
+                    let new_value = value_replace.get(*old_value);
+                    *old_value = new_value;
+                    true
+                });
+                // Swap out updated instruction with a placeholder phi instruction.
+                // The old instructions will be dropped so whatever we put in there does not matter.
+                let instruction =
+                    replace(instruction, Instruction::Phi(PhiInstr::default()));
+                let new_instr = body.instrs.alloc(instruction);
+                instr_replace.insert(old_instr, new_instr);
+                // Replace all values associated to the output of all instructions.
+                for old_value in &self.ctx.instr_values[old_instr] {
+                    let maybe_new_value = value_replace.try_get(*old_value);
+                    body.instr_values[new_instr].push(maybe_new_value);
+                }
+            }
+        }
+        // Simply copy over the same basic block structure.
+        // We do not yet eliminate trivial or dead basic blocks.
+        body.blocks = self.ctx.blocks.clone();
+        // Convert all incomplete phis into complete phis and add them to the
+        // start of each of their associated basic blocks.
+        for block in self.ctx.blocks.indices() {
+            for &phi_instr in self.ctx.block_phis[block].components() {
+                let phi_value = self.phi_instr_to_value(phi_instr);
+                let incomplete_phi = &value_incomplete_phi[phi_value];
+                let _ = replace(
+                    &mut body.instrs[phi_instr],
+                    PhiInstr::new(incomplete_phi.operands()).into(),
+                );
+                body.block_instrs[block].push(phi_instr);
+            }
+        }
+        // Replace instruction references of block instructions.
+        for block in self.ctx.blocks.indices() {
+            for old_instr in self.ctx.block_instrs[block].iter().copied() {
+                let new_instr = instr_replace.get(old_instr);
+                body.block_instrs[block].push(new_instr);
+            }
+        }
+        // Replace value association of all alive values.
+        for value in body.values.indices() {
+            if let ValueAssoc::Instr(old_instr, _) =
+                &mut body.value_assoc[value]
+            {
+                let new_instr = instr_replace.get(*old_instr);
+                *old_instr = new_instr;
+            }
+        }
+    }
+}
+
+/// A replacement mapping.
+#[derive(Debug)]
+pub struct Replacer<T> {
+    replace: HashMap<T, T, ahash::RandomState>,
+}
+
+impl<T> Default for Replacer<T> {
+    fn default() -> Self {
+        Self {
+            replace: Default::default(),
+        }
+    }
+}
+
+impl<T> Replacer<T>
+where
+    T: Debug + Hash + Eq + Copy,
+{
+    /// Inserts a replacement for `old_value` to `new_value`.
+    ///
+    /// # Panics
+    ///
+    /// If this replacement has already been inserted.
+    pub fn insert(&mut self, old_value: T, new_value: T) {
+        if self.replace.insert(old_value, new_value).is_some() {
+            panic!(
+                "encountered duplicate replacement insert of {:?} -> {:?}",
+                old_value, new_value,
+            )
+        }
+    }
+
+    /// Returns the replacement of `old_value` or returns `old_value` back.
+    pub fn get(&self, old_value: T) -> T {
+        self.replace.get(&old_value).copied().unwrap_or(old_value)
+    }
+
+    /// Returns the replacement of `old_value` or returns `None`.
+    pub fn try_get(&self, old_value: T) -> Option<T> {
+        self.replace.get(&old_value).copied()
     }
 }
