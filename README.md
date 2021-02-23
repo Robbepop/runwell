@@ -13,22 +13,22 @@ An attempt for a non-bombable, optimizing WebAssembly (Wasm) JIT compiler with d
 
 > **WIP** - The `runwell` virtual machine is under active development. Don't expect it to be working. Here be dragons.
 
-## Credits
+## Crates & Documentation
 
-Credits go to the people behind the [Bytecode Alliance](https://bytecodealliance.org/) for their fantastic
-work on the WebAssembly specification and work on WebAssembly frameworks, libraries and tooling.
-This project took a lot of inspiration from projects found under their
-[GitHub Organization](https://github.com/bytecodealliance).
+| Crate | Docs | Description |
+|:--|:--|:--|
+| `runwell_entity` | [![][doc-badge]][entity-docs] | Data structures to follow data oriented design architecture using entity component structures. |
+| `runwell_ir` | [![][doc-badge]][ir-docs] | Defines the Runwell **I**ntermediate **R**epresentation (IR) on the instruction level. |
+| `runwell_module` | [![][doc-badge]][module-docs] | Defines the module and function structure of the Runwell IR. |
+| `runwell_interpreter` | [![][doc-badge]][interpreter-docs] | Implements a simple Runwell IR interpreter. |
+| `runwell_wasm` | [![][doc-badge]][wasm-docs] | Implements routines to convert from WebAssembly (Wasm) to Runwell IR. |
 
-## Architecture
-
-The `runwell` virtual machine consists of several sub-crates:
-
-- `runwell_entity`: Data structures to follow data oriented design architecture using entity component structures.
-- `runwell_ir`: Defines the Runwell **I**ntermediate **R**epresentation (IR) on the instruction level.
-- `runwell_module`: Defines the module and function structure of the Runwell IR.
-- `runwell_interpreter`: Implements a simple Runwell IR interpreter.
-- `runwell_wasm`: Implements routines to convert from WebAssembly (Wasm) to Runwell IR.
+[doc-badge]: https://img.shields.io/badge/click-blue.svg
+[entity-docs]: https://robbepop.github.io/runwell/runwell_entity/index.html
+[wasm-docs]: https://robbepop.github.io/runwell/runwell_wasm/index.html
+[ir-docs]: https://robbepop.github.io/runwell/runwell_ir/index.html
+[module-docs]: https://robbepop.github.io/runwell/runwell_module/index.html
+[interpreter-docs]: https://robbepop.github.io/runwell/runwell_interpreter/index.html
 
 The crates are ordered in the way they depend on each other.
 Crates below might depend on a subset of the crates above them.
@@ -57,10 +57,9 @@ Read more [here](https://webassembly.org/).
 [tail_call]: https://github.com/WebAssembly/tail-call
 [multi-memory]: https://github.com/WebAssembly/multi-memory
 
-## Why JIT Compiler?
+## Credits
 
-Just-in-time (abbreviated JIT) compilers compile the bytecode on the fly to efficient machine code while running the program. Wasm is especially suited for this kind of execution. Just-in-time compilation is expected to be orders of magnitudes more efficient than interpretation of the same bytecode.
-
-## JIT-bomb Protection
-
-A JIT bomb is a program that, upon execution via a JIT compiler, has a significantly increased compile-time in proportion to its original bytecode size. Since compile-time is part of the execution-time under a JIT compiler this has severe effects of the execution itself.
+Credits go to the people behind the [Bytecode Alliance](https://bytecodealliance.org/) for their fantastic
+work on the WebAssembly specification and work on WebAssembly frameworks, libraries and tooling.
+This project took a lot of inspiration from projects found under their
+[GitHub Organization](https://github.com/bytecodealliance).
