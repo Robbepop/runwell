@@ -39,6 +39,24 @@ WebAssembly (abbreviated Wasm) is a binary instruction format for a stack-based 
 
 Read more [here](https://webassembly.org/).
 
+### Planned & Implemented Wasm Proposals
+
+> [x] Means that the feature is either fully implemented or that some implemented foundation already exists.
+
+- [ ] [Import/Export of Mutable Globals][import_export_of_mutable_globals]
+- [x] [Non-trapping float-to-int conversions][non-trapping_float-to-int_conversions]
+- [x] [Sign-extension operators][sign-extension_operators]
+- [x] [Multi-value][multi-value]
+- [x] [Tail call][tail_call]
+- [ ] [Multiple memories][multi-memory]
+
+[import_export_of_mutable_globals]: https://github.com/WebAssembly/mutable-global
+[non-trapping_float-to-int_conversions]: https://github.com/WebAssembly/nontrapping-float-to-int-conversions
+[sign-extension_operators]: https://github.com/WebAssembly/sign-extension-ops
+[multi-value]: https://github.com/WebAssembly/multi-value
+[tail_call]: https://github.com/WebAssembly/tail-call
+[multi-memory]: https://github.com/WebAssembly/multi-memory
+
 ## Why JIT Compiler?
 
 Just-in-time (abbreviated JIT) compilers compile the bytecode on the fly to efficient machine code while running the program. Wasm is especially suited for this kind of execution. Just-in-time compilation is expected to be orders of magnitudes more efficient than interpretation of the same bytecode.
