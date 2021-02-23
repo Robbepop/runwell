@@ -1,13 +1,15 @@
 # The `runwell` WebAssembly Virtual Machine
 
-|   Continuous Integration  |       LoC        |
-|:-------------------------:|:----------------:|
-| [![GHActions][A1]][A2]    | [![loc][B1]][B2] |
+|   Continuous Integration  |    Coverage      |       LoC        |
+|:-------------------------:|:----------------:|:----------------:|
+| [![GHActions][A1]][A2]    | [![loc][B1]][B2] | [![][C1]][C2]    |
 
 [A1]: https://github.com/Robbepop/runwell/workflows/Rust%20-%20Continuous%20Integration/badge.svg?branch=master&event=push
 [A2]: https://github.com/Robbepop/runwell/actions?query=workflow%3A%22Rust+-+Continuous+Integration%22+branch%3Amaster+event%3Apush
-[B1]: https://tokei.rs/b1/github/Robbepop/runwell?category=code
-[B2]: https://github.com/Aaronepower/tokei#badges
+[B1]:  https://codecov.io/gh/Robbepop/runwell/branch/master/graph/badge.svg
+[B2]:  https://codecov.io/gh/Robbepop/runwell/branch/master
+[C1]: https://tokei.rs/b1/github/Robbepop/runwell?category=code
+[C2]: https://github.com/Aaronepower/tokei#badges
 
 An attempt for a non-bombable, optimizing WebAssembly (Wasm) JIT compiler with deterministic behaviour.
 
