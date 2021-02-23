@@ -164,7 +164,7 @@ impl VariableDeclarations {
 /// Space efficient storage for variable declarations and their declared types.
 ///
 /// Used for storing shared information about variables that have been declared
-/// together using [`VariableTranslator::declare_variables`] for more than just
+/// together using [`VariableTranslator::declare_vars`] for more than just
 /// a single variable.
 #[derive(Debug)]
 struct VariableDecl {

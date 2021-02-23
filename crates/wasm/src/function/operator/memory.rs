@@ -45,7 +45,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ///
     /// # Note
     ///
-    /// Users should prefer using [`translate_load`] over using this API directly.
+    /// Users should prefer using
+    /// [`translate_load`][`FunctionBodyTranslator::translate_load`]
+    /// over using this API directly.
     fn translate_load_typed(
         &mut self,
         memarg: wasmparser::MemoryImmediate,
@@ -75,7 +77,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ///
     /// # Note
     ///
-    /// Users should prefer using [`translate_store`] over using this API directly.
+    /// Users should prefer using
+    /// [`translate_store`][`FunctionBodyTranslator::translate_store`]
+    /// over using this API directly.
     fn translate_store_typed(
         &mut self,
         memarg: wasmparser::MemoryImmediate,
