@@ -64,7 +64,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-          components: rustdoc
+          components: rust-docs
       - uses: actions-rs/cargo@v1
         env:
           RUSTDOCFLAGS: '-D warnings'
