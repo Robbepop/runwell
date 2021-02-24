@@ -90,6 +90,21 @@ fn evaluate_func(module: &Module, func: Func, inputs: &[Const]) -> Vec<u64> {
     results
 }
 
+fn evaluate_func_in_ctx(
+    ctx: &mut EvaluationContext,
+    func: Func,
+    inputs: &[Const],
+) -> Vec<u64> {
+    let mut results = Vec::new();
+    ctx.evaluate_function(
+        func,
+        inputs.iter().copied().map(Const::into_bits64),
+        |result| results.push(result),
+    )
+    .unwrap();
+    results
+}
+
 fn bits_into_const(module: &Module, func: Func, bits: Vec<u64>) -> Vec<Const> {
     let outputs = module.get_function(func).unwrap().outputs();
     bits.into_iter()
@@ -198,8 +213,10 @@ fn double_input() {
             b.ins()?.return_values([v1].iter().copied())?;
             Ok(())
         });
+    let mut ctx = EvaluationContext::new(&module);
     for x in -10..10 {
-        let result = evaluate_func(&module, func, &[IntConst::I32(x).into()]);
+        let result =
+            evaluate_func_in_ctx(&mut ctx, func, &[IntConst::I32(x).into()]);
         let result = bits_into_const(&module, func, result);
         assert_eq!(result, vec![IntConst::I32(x * 2).into()]);
     }
@@ -225,9 +242,10 @@ fn global_identity_using_local() {
 
             Ok(())
         });
+    let mut ctx = EvaluationContext::new(&module);
     for x in -10..10 {
         let value = IntConst::I32(x).into();
-        let result = evaluate_func(&module, func, &[value]);
+        let result = evaluate_func_in_ctx(&mut ctx, func, &[value]);
         let result = bits_into_const(&module, func, result);
         assert_eq!(result, vec![value]);
     }
@@ -275,11 +293,12 @@ fn inconveniently_written_min() {
             Ok(())
         },
     );
+    let mut ctx = EvaluationContext::new(&module);
     for x in -10..10 {
         for y in -5..15 {
             let x = IntConst::I32(x).into();
             let y = IntConst::I32(y).into();
-            let result = evaluate_func(&module, func, &[x, y]);
+            let result = evaluate_func_in_ctx(&mut ctx, func, &[x, y]);
             let result = bits_into_const(&module, func, result);
             assert_eq!(result, vec![if x < y { x } else { y }]);
         }
@@ -304,11 +323,12 @@ fn binary_swap_works() {
             Ok(())
         },
     );
+    let mut ctx = EvaluationContext::new(&module);
     for x in -10..10 {
         for y in -10..10 {
             let x = IntConst::I32(x).into();
             let y = IntConst::I32(y).into();
-            let result = evaluate_func(&module, func, &[x, y]);
+            let result = evaluate_func_in_ctx(&mut ctx, func, &[x, y]);
             let result = bits_into_const(&module, func, result);
             assert_eq!(result, vec![y, x]);
         }
@@ -360,9 +380,10 @@ fn counting_loop_works() {
 
             Ok(())
         });
+    let mut ctx = EvaluationContext::new(&module);
     for count_until in 0..10 {
         let count_until = IntConst::I32(count_until).into();
-        let result = evaluate_func(&module, func, &[count_until]);
+        let result = evaluate_func_in_ctx(&mut ctx, func, &[count_until]);
         let result = bits_into_const(&module, func, result);
         assert_eq!(result, vec![count_until]);
     }
@@ -481,14 +502,15 @@ fn ping_pong_calls() -> Result<(), module::Error> {
     let (module, is_even, is_odd) =
         construct_is_even_and_is_odd(|ins, func, v6| ins.call(func, vec![v6]))?;
 
+    let mut ctx = EvaluationContext::new(&module);
     for x in 0..10 {
         let input = IntConst::I32(x).into();
 
-        let is_even_result = evaluate_func(&module, is_even, &[input]);
+        let is_even_result = evaluate_func_in_ctx(&mut ctx, is_even, &[input]);
         let is_even_result = bits_into_const(&module, is_even, is_even_result);
         assert_eq!(is_even_result, vec![Const::Bool(x % 2 == 0)]);
 
-        let is_odd_result = evaluate_func(&module, is_odd, &[input]);
+        let is_odd_result = evaluate_func_in_ctx(&mut ctx, is_odd, &[input]);
         let is_odd_result = bits_into_const(&module, is_odd, is_odd_result);
         assert_eq!(is_odd_result, vec![Const::Bool(x % 2 == 1)]);
     }
@@ -502,14 +524,15 @@ fn ping_pong_tail_calls() -> Result<(), module::Error> {
             ins.tail_call(func, vec![v6])
         })?;
 
+    let mut ctx = EvaluationContext::new(&module);
     for x in 0..10 {
         let input = IntConst::I32(x).into();
 
-        let is_even_result = evaluate_func(&module, is_even, &[input]);
+        let is_even_result = evaluate_func_in_ctx(&mut ctx, is_even, &[input]);
         let is_even_result = bits_into_const(&module, is_even, is_even_result);
         assert_eq!(is_even_result, vec![Const::Bool(x % 2 == 0)]);
 
-        let is_odd_result = evaluate_func(&module, is_odd, &[input]);
+        let is_odd_result = evaluate_func_in_ctx(&mut ctx, is_odd, &[input]);
         let is_odd_result = bits_into_const(&module, is_odd, is_odd_result);
         assert_eq!(is_odd_result, vec![Const::Bool(x % 2 == 1)]);
     }
@@ -609,6 +632,7 @@ fn multi_value_div_rem_works() -> Result<(), module::Error> {
 
     println!("{}", module);
 
+    let mut ctx = EvaluationContext::new(&module);
     for x in -20..20 {
         for y in -5..5 {
             if y == 0 {
@@ -621,16 +645,18 @@ fn multi_value_div_rem_works() -> Result<(), module::Error> {
             let output_div = IntConst::I32(x / y).into();
             let output_rem = IntConst::I32(x % y).into();
             let div_rem_result =
-                evaluate_func(&module, div_rem, &[input_x, input_y]);
+                evaluate_func_in_ctx(&mut ctx, div_rem, &[input_x, input_y]);
             let div_rem_result =
                 bits_into_const(&module, div_rem, div_rem_result);
             assert_eq!(div_rem_result, vec![output_div, output_rem]);
 
-            let div_result = evaluate_func(&module, div, &[input_x, input_y]);
+            let div_result =
+                evaluate_func_in_ctx(&mut ctx, div, &[input_x, input_y]);
             let div_result = bits_into_const(&module, div, div_result);
             assert_eq!(div_result, vec![output_div]);
 
-            let rem_result = evaluate_func(&module, rem, &[input_x, input_y]);
+            let rem_result =
+                evaluate_func_in_ctx(&mut ctx, rem, &[input_x, input_y]);
             let rem_result = bits_into_const(&module, rem, rem_result);
             assert_eq!(rem_result, vec![output_rem]);
         }
