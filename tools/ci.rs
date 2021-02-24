@@ -12,14 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This quality controlling Rust script was heavily inspired by the one
-// used and provided in `stdio-utils` repository authored by Consolero:
-//
-// https://github.com/consolero/stdio-utils-rs/blob/dev/0.1/tools/src/bin/quality-control.rs
-//
-// Developers should run this script before pushing their PRs to the main repository
-// to make sure that the quality of the PR's edits are in the realm of what the project
-// accepts.
+//! Runs CI scripts locally on the users computer.
+//!
+//! Developers should run this script at least once before pushing to the
+//! Runwell repository.
+//!
+//! # Usage
+//!
+//! In order to successfully run this script the user needs to have installed
+//! the following programs on their machines:
+//!
+//! - git
+//! - rustup
+//! - cargo
+//!
+//! The scripts will eventually install some other Rust or Cargo components:
+//!
+//! - cargo-miri via rustup
+//! - cargo-clippy via rustup
+//! - cargo-spellcheck via cargo
+//!
+//! # Credits
+//!
+//! This quality controlling Rust script was heavily inspired by the one
+//! used and provided in `stdio-utils` repository authored by Consolero:
+//!
+//! <https://github.com/consolero/stdio-utils-rs/blob/dev/0.1/tools/src/bin/quality-control.rs>
+//!
+//! Developers should run this script before pushing their pull requests to
+//! the main repository to make sure that the quality of the pull request's
+//! edits are in the realm of what the project accepts.
 
 use std::{env::set_var, process::Command};
 

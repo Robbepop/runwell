@@ -10,3 +10,7 @@ LLVM
 JIT
 hasher
 ECS
+Consolero
+rustup
+miri
+clippy
