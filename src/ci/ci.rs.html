@@ -120,6 +120,30 @@
 <span id="117">117</span>
 <span id="118">118</span>
 <span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -135,14 +159,36 @@
 <span class="comment">// See the License for the specific language governing permissions and</span>
 <span class="comment">// limitations under the License.</span>
 
-<span class="comment">// This quality controlling Rust script was heavily inspired by the one</span>
-<span class="comment">// used and provided in `stdio-utils` repository authored by Consolero:</span>
-<span class="comment">//</span>
-<span class="comment">// https://github.com/consolero/stdio-utils-rs/blob/dev/0.1/tools/src/bin/quality-control.rs</span>
-<span class="comment">//</span>
-<span class="comment">// Developers should run this script before pushing their PRs to the main repository</span>
-<span class="comment">// to make sure that the quality of the PR&#39;s edits are in the realm of what the project</span>
-<span class="comment">// accepts.</span>
+<span class="doccomment">//! Runs CI scripts locally on the users computer.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Developers should run this script at least once before pushing to the</span>
+<span class="doccomment">//! Runwell repository.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Usage</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! In order to successfully run this script the user needs to have installed</span>
+<span class="doccomment">//! the following programs on their machines:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - git</span>
+<span class="doccomment">//! - rustup</span>
+<span class="doccomment">//! - cargo</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The scripts will eventually install some other Rust or Cargo components:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - cargo-miri via rustup</span>
+<span class="doccomment">//! - cargo-clippy via rustup</span>
+<span class="doccomment">//! - cargo-spellcheck via cargo</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Credits</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This quality controlling Rust script was heavily inspired by the one</span>
+<span class="doccomment">//! used and provided in `stdio-utils` repository authored by Consolero:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! &lt;https://github.com/consolero/stdio-utils-rs/blob/dev/0.1/tools/src/bin/quality-control.rs&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Developers should run this script before pushing their pull requests to</span>
+<span class="doccomment">//! the main repository to make sure that the quality of the pull request&#39;s</span>
+<span class="doccomment">//! edits are in the realm of what the project accepts.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">env</span>::<span class="ident">set_var</span>, <span class="ident">process</span>::<span class="ident">Command</span>};
 
@@ -194,6 +240,8 @@
         <span class="string">&quot;./.config/cargo_spellcheck.toml&quot;</span>,
         <span class="string">&quot;--checkers&quot;</span>,
         <span class="string">&quot;hunspell&quot;</span>,
+        <span class="string">&quot;--code&quot;</span>,
+        <span class="string">&quot;1&quot;</span>,
     ]);
     <span class="comment">// Run miri to detect undefined behavior in Runwell crates and dependencies.</span>
     <span class="comment">// rustup +nightly component add miri</span>
