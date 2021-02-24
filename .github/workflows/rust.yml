@@ -86,7 +86,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --workspace --all-targets --all-features -- -Dwarnings
 
   coverage:
     name: Test Coverage Report
