@@ -75,6 +75,20 @@ jobs:
           command: doc
           args: --workspace --no-deps --document-private-items
 
+  spellchecker:
+    name: Spell Checker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-spellcheck
+          version: latest
+      - uses: actions-rs/cargo@v1
+        with:
+          command: spellcheck
+          args: --cfg ./.config/cargo_spellcheck.toml --checkers hunspell --code 1
+
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
