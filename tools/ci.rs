@@ -72,6 +72,10 @@ fn main() {
         "--checkers",
         "hunspell",
     ]);
+    // Run miri to detect undefined behavior in Runwell crates and dependencies.
+    // rustup +nightly component add miri
+    rustup(&["+nightly", "component", "add", "miri"]);
+    cargo(&["+nightly", "--locked", "miri", "test"]);
     // Reports code coverage using `cargo-tarpaulin`.
     cargo(&["--locked", "install", "cargo-tarpaulin"]);
     cargo(&["--locked", "tarpaulin", "--version"]);
