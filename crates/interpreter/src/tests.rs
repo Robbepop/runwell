@@ -120,7 +120,7 @@ fn bits_into_const(module: &Module, func: Func, bits: Vec<u64>) -> Vec<Const> {
 }
 
 #[test]
-fn ret_const_works() -> Result<(), module::Error> {
+fn ret_const_works() {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.body()?;
         let c = b.ins()?.constant(IntConst::I32(42))?;
@@ -129,11 +129,10 @@ fn ret_const_works() -> Result<(), module::Error> {
     });
     let result = evaluate_func(&module, func, &[]);
     assert_eq!(result, vec![42]);
-    Ok(())
 }
 
 #[test]
-fn simple_block_works() -> Result<(), module::Error> {
+fn simple_block_works() {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.body()?;
         let v1 = b.ins()?.constant(IntConst::I32(1))?;
@@ -145,11 +144,10 @@ fn simple_block_works() -> Result<(), module::Error> {
     });
     let result = evaluate_func(&module, func, &[]);
     assert_eq!(result, vec![9]);
-    Ok(())
 }
 
 #[test]
-fn if_then_else_works() -> Result<(), module::Error> {
+fn if_then_else_works() {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.body()?;
         let then_block = b.create_block()?;
@@ -170,11 +168,10 @@ fn if_then_else_works() -> Result<(), module::Error> {
     });
     let result = evaluate_func(&module, func, &[]);
     assert_eq!(result, vec![10]);
-    Ok(())
 }
 
 #[test]
-fn simple_variable() -> Result<(), module::Error> {
+fn simple_variable() {
     let (func, module) = module_with_func(&[], &[IntType::I32.into()], |b| {
         b.declare_variables(1, IntType::I32.into())?;
         b.body()?;
@@ -188,11 +185,10 @@ fn simple_variable() -> Result<(), module::Error> {
     });
     let result = evaluate_func(&module, func, &[]);
     assert_eq!(result, vec![2]);
-    Ok(())
 }
 
 #[test]
-fn double_input() -> Result<(), module::Error> {
+fn double_input() {
     let (func, module) =
         module_with_func(&[IntType::I32.into()], &[IntType::I32.into()], |b| {
             b.body()?;
@@ -207,11 +203,10 @@ fn double_input() -> Result<(), module::Error> {
         let result = bits_into_const(&module, func, result);
         assert_eq!(result, vec![IntConst::I32(x * 2).into()]);
     }
-    Ok(())
 }
 
 #[test]
-fn global_identity_using_local() -> Result<(), module::Error> {
+fn global_identity_using_local() {
     let (func, module) =
         module_with_func(&[IntType::I32.into()], &[IntType::I32.into()], |b| {
             b.declare_variables(1, IntType::I32.into())?;
@@ -236,11 +231,10 @@ fn global_identity_using_local() -> Result<(), module::Error> {
         let result = bits_into_const(&module, func, result);
         assert_eq!(result, vec![value]);
     }
-    Ok(())
 }
 
 #[test]
-fn inconveniently_written_min() -> Result<(), module::Error> {
+fn inconveniently_written_min() {
     let (func, module) = module_with_func(
         &[IntType::I32.into(); 2][..],
         &[IntType::I32.into()],
@@ -290,11 +284,10 @@ fn inconveniently_written_min() -> Result<(), module::Error> {
             assert_eq!(result, vec![if x < y { x } else { y }]);
         }
     }
-    Ok(())
 }
 
 #[test]
-fn binary_swap_works() -> Result<(), module::Error> {
+fn binary_swap_works() {
     let (func, module) = module_with_func(
         &[IntType::I32.into(); 2][..],
         &[IntType::I32.into(); 2][..],
@@ -320,11 +313,10 @@ fn binary_swap_works() -> Result<(), module::Error> {
             assert_eq!(result, vec![y, x]);
         }
     }
-    Ok(())
 }
 
 #[test]
-fn counting_loop_works() -> Result<(), module::Error> {
+fn counting_loop_works() {
     let (func, module) =
         module_with_func(&[IntType::I32.into()], &[IntType::I32.into()], |b| {
             b.declare_variables(2, IntType::I32.into())?;
@@ -374,7 +366,6 @@ fn counting_loop_works() -> Result<(), module::Error> {
         let result = bits_into_const(&module, func, result);
         assert_eq!(result, vec![count_until]);
     }
-    Ok(())
 }
 
 fn construct_is_even_and_is_odd<F>(
