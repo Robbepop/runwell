@@ -1,4 +1,5 @@
 var N = null;var sourcesIndex = {};
+sourcesIndex["ci"] = {"name":"","files":["ci.rs"]};
 sourcesIndex["runwell_entity"] = {"name":"","dirs":[{"name":"primary","files":["arena.rs","iter.rs","mod.rs","phantom_arena.rs"]},{"name":"secondary","files":["default_bitvec.rs","default_map.rs","default_vec.rs","immutable.rs","map.rs","mod.rs","vec.rs"]}],"files":["index.rs","lib.rs"]};
 sourcesIndex["runwell_interpreter"] = {"name":"","dirs":[{"name":"core","files":["act_frame.rs","frame.rs","mod.rs","stack.rs"]},{"name":"instr","files":["float.rs","int.rs","mod.rs","terminal.rs"]}],"files":["error.rs","lib.rs"]};
 sourcesIndex["runwell_ir"] = {"name":"","dirs":[{"name":"instruction","dirs":[{"name":"float","files":["binary.rs","fcmp.rs","fconv.rs","mod.rs","unary.rs"]},{"name":"int","files":["binary.rs","icmp.rs","iconv.rs","mod.rs","shift.rs","unary.rs"]}],"files":["call.rs","constant.rs","conv.rs","memory.rs","mod.rs","phi.rs","select.rs","terminal.rs"]}],"files":["lib.rs","primitive.rs","value_visitor.rs"]};

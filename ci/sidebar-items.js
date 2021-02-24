@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["call","Invokes the given command with the provided arguments."],["cargo","Invokes the `cargo` command with the provided arguments."],["git","Invokes the `git` command with the provided arguments."],["main",""]]});
