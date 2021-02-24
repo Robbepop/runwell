@@ -73,6 +73,8 @@ fn main() {
         "hunspell",
     ]);
     // Reports code coverage using `cargo-tarpaulin`.
+    cargo(&["--locked", "install", "cargo-tarpaulin"]);
+    cargo(&["--locked", "tarpaulin", "--version"]);
     cargo(&["--locked", "tarpaulin", "--", "--test-threads", "1"]);
 }
 
