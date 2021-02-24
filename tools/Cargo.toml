@@ -1,0 +1,10 @@
+[package]
+name = "tools"
+version = "1.0.0"
+authors = ["Robin Freyler <robin.freyler@gmail.com>"]
+edition = "2018"
+publish = false
+
+[[bin]]
+name = "ci"
+path = "ci.rs"

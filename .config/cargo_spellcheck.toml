@@ -1,0 +1,5 @@
+[Hunspell]
+# lang and name of `.dic` file
+lang = "en_US"
+search_dirs = ["."]
+extra_dictionaries = ["cargo_spellcheck.dic"]
