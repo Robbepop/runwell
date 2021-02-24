@@ -23,7 +23,10 @@ jobs:
 
   test:
     name: Test
-    runs-on: [ubuntu-latest, macos-latest, windows-latest]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v2
