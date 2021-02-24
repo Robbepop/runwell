@@ -27,6 +27,7 @@ fn main() {
     // Check code formatting of all crates in the workspace.
     cargo(&["+nightly", "--locked", "fmt", "--all", "--", "--check"]);
     // Query clippy lints for the entire workspace.
+    rustup(&["+nightly", "component", "add", "clippy"]);
     cargo(&[
         "+nightly",
         "--locked",
@@ -73,6 +74,13 @@ fn main() {
     ]);
     // Reports code coverage using `cargo-tarpaulin`.
     cargo(&["--locked", "tarpaulin", "--", "--test-threads", "1"]);
+}
+
+/// Invokes the `rustup` command with the provided arguments.
+///
+/// Exits the process upon errors.
+fn rustup(args: &[&str]) {
+    call("rustup", args)
 }
 
 /// Invokes the `cargo` command with the provided arguments.
