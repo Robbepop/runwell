@@ -71,6 +71,8 @@ fn main() {
         "./.config/cargo_spellcheck.toml",
         "--checkers",
         "hunspell",
+        "--code",
+        "1",
     ]);
     // Run miri to detect undefined behavior in Runwell crates and dependencies.
     // rustup +nightly component add miri
