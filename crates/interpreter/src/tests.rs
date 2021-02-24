@@ -633,8 +633,8 @@ fn multi_value_div_rem_works() -> Result<(), module::Error> {
     println!("{}", module);
 
     let mut ctx = EvaluationContext::new(&module);
-    for x in -20..20 {
-        for y in -5..5 {
+    for x in -10..10 {
+        for y in -4..4 {
             if y == 0 {
                 // Don't test division by zero here.
                 continue
