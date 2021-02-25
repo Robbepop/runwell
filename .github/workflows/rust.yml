@@ -108,7 +108,7 @@ jobs:
           args: test
 
   coverage:
-    name: Test Coverage Report
+    name: Coverage
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
