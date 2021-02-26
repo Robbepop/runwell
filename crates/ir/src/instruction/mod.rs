@@ -67,6 +67,7 @@ pub use self::{
         BranchTableInstr,
         IfThenElseInstr,
         ReturnInstr,
+        TailCallIndirectInstr,
         TailCallInstr,
         TerminalInstr,
     },

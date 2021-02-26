@@ -70,6 +70,7 @@ pub mod instr {
         SelectInstr,
         ShiftIntInstr,
         StoreInstr,
+        TailCallIndirectInstr,
         TailCallInstr,
         TerminalInstr,
         TruncateIntInstr,

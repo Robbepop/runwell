@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{CallInstr, SmallBlockVec};
+use super::{CallIndirectInstr, CallInstr, SmallBlockVec};
 use crate::{
-    primitive::{Block, Func, Value},
+    primitive::{Block, Func, FuncType, Table, Value},
     VisitValues,
     VisitValuesMut,
 };
@@ -33,6 +33,7 @@ pub enum TerminalInstr {
     Br(BranchInstr),
     Ite(IfThenElseInstr),
     TailCall(TailCallInstr),
+    TailCallIndirect(TailCallIndirectInstr),
     BranchTable(BranchTableInstr),
 }
 
@@ -47,6 +48,7 @@ impl VisitValues for TerminalInstr {
             Self::Br(_instr) => (),
             Self::Ite(instr) => instr.visit_values(visitor),
             Self::TailCall(instr) => instr.visit_values(visitor),
+            Self::TailCallIndirect(instr) => instr.visit_values(visitor),
             Self::BranchTable(instr) => instr.visit_values(visitor),
         }
     }
@@ -63,6 +65,7 @@ impl VisitValuesMut for TerminalInstr {
             Self::Br(_instr) => (),
             Self::Ite(instr) => instr.visit_values_mut(visitor),
             Self::TailCall(instr) => instr.visit_values_mut(visitor),
+            Self::TailCallIndirect(instr) => instr.visit_values_mut(visitor),
             Self::BranchTable(instr) => instr.visit_values_mut(visitor),
         }
     }
@@ -267,6 +270,74 @@ impl VisitValuesMut for TailCallInstr {
     }
 }
 
+/// A indirect tail call instruction.
+#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub struct TailCallIndirectInstr {
+    /// The underlying indirect call instruction.
+    instr: CallIndirectInstr,
+}
+
+impl Display for TailCallIndirectInstr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "return {}", self.instr)
+    }
+}
+
+impl TailCallIndirectInstr {
+    /// Creates a new call instruction to call the indexed function using the given parameters.
+    pub fn new<I>(
+        table: Table,
+        func_type: FuncType,
+        index: Value,
+        call_params: I,
+    ) -> Self
+    where
+        I: IntoIterator<Item = Value>,
+    {
+        Self {
+            instr: CallIndirectInstr::new(table, func_type, index, call_params),
+        }
+    }
+
+    /// Returns the table for the indirect function call.
+    pub fn table(&self) -> Table {
+        self.instr.table()
+    }
+
+    /// Returns the table index for the indirect call.
+    pub fn index(&self) -> Value {
+        self.instr.index()
+    }
+
+    /// Returns the expected function type of the indirectly called function.
+    pub fn func_type(&self) -> FuncType {
+        self.instr.func_type()
+    }
+
+    /// Returns the SSA function input values for the indirect call.
+    pub fn params(&self) -> &[Value] {
+        self.instr.params()
+    }
+}
+
+impl VisitValues for TailCallIndirectInstr {
+    fn visit_values<V>(&self, visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        self.instr.visit_values(visitor)
+    }
+}
+
+impl VisitValuesMut for TailCallIndirectInstr {
+    fn visit_values_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        self.instr.visit_values_mut(visitor)
+    }
+}
+
 /// A branching table mapping indices to branching targets.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct BranchTableInstr {
@@ -354,4 +425,5 @@ impl_from_terminal_instr_for_instr! {
     IfThenElseInstr,
     BranchTableInstr,
     TailCallInstr,
+    TailCallIndirectInstr,
 }

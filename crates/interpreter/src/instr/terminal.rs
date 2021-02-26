@@ -21,6 +21,7 @@ use ir::{
         BranchTableInstr,
         IfThenElseInstr,
         ReturnInstr,
+        TailCallIndirectInstr,
         TailCallInstr,
         TerminalInstr,
     },
@@ -39,6 +40,9 @@ impl InterpretInstr for TerminalInstr {
             Self::Br(instr) => instr.interpret_instr(outputs, frame),
             Self::Ite(instr) => instr.interpret_instr(outputs, frame),
             Self::TailCall(instr) => instr.interpret_instr(outputs, frame),
+            Self::TailCallIndirect(instr) => {
+                instr.interpret_instr(outputs, frame)
+            }
             Self::BranchTable(instr) => instr.interpret_instr(outputs, frame),
         }
     }
@@ -99,6 +103,16 @@ impl InterpretInstr for TailCallInstr {
             frame.push_scratch(bits);
         }
         Ok(InterpretationFlow::TailCall(self.func()))
+    }
+}
+
+impl InterpretInstr for TailCallIndirectInstr {
+    fn interpret_instr(
+        &self,
+        _outputs: &[Option<Value>],
+        _frame: ActivationFrame,
+    ) -> Result<InterpretationFlow, InterpretationError> {
+        unimplemented!()
     }
 }
 
