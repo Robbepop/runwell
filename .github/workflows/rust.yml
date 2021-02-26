@@ -111,7 +111,7 @@ jobs:
     name: Spellcheck
     runs-on: ubuntu-latest
     steps:
-      - uses: mickare/cargo-spellcheck-action@v0.0.1
+      - uses: mickare/cargo-spellcheck-action@v0.0.2
         with:
           args: --cfg .config/cargo_spellcheck.toml --code 1
 
