@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! From the paper "Simple and Efficient SSA Construction" by Buchwald et al.:
+//! From the paper "Simple and Efficient SSA Construction" by Buchwald and others:
 //!
 //! We call a basic block sealed if no further predecessors will be added to the block.
 //! As only filled blocks may have successors, predecessors are always filled.
