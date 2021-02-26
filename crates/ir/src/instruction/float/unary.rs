@@ -32,7 +32,7 @@ pub enum UnaryFloatOp {
     Ceil,
     /// Rounds to floor for the floating point number.
     Floor,
-    /// Truncates the floating point number to ne next smaller integer.
+    /// Truncates the floating point number to the next smaller integer.
     ///
     /// # Note
     ///
