@@ -891,7 +891,6 @@
 <span id="888">888</span>
 <span id="889">889</span>
 <span id="890">890</span>
-<span id="891">891</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -1231,9 +1230,8 @@
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the current basic block has already been sealed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">seal_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">seal_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">already_sealed</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_sealed</span>.<span class="ident">replace</span>(<span class="ident">block</span>, <span class="bool-val">true</span>);
         <span class="kw">if</span> <span class="ident">already_sealed</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadySealed</span> {
