@@ -21,59 +21,6 @@ use crate::{
 use core::fmt::{self, Display};
 use derive_more::{Display, From};
 
-/// A tail call instruction.
-#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-pub struct TailCallInstr {
-    /// The underlying call instruction.
-    instr: CallInstr,
-}
-
-impl Display for TailCallInstr {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "return {}", self.instr)
-    }
-}
-
-impl TailCallInstr {
-    /// Creates a new tail call instruction to call the indexed function using the given parameters.
-    pub fn new<I>(func: Func, call_params: I) -> Self
-    where
-        I: IntoIterator<Item = Value>,
-    {
-        Self {
-            instr: CallInstr::new(func, call_params),
-        }
-    }
-
-    /// Returns the called function index.
-    pub fn func(&self) -> Func {
-        self.instr.func()
-    }
-
-    /// Returns the function call parameters.
-    pub fn params(&self) -> &[Value] {
-        self.instr.params()
-    }
-}
-
-impl VisitValues for TailCallInstr {
-    fn visit_values<V>(&self, visitor: V)
-    where
-        V: FnMut(Value) -> bool,
-    {
-        self.instr.visit_values(visitor)
-    }
-}
-
-impl VisitValuesMut for TailCallInstr {
-    fn visit_values_mut<V>(&mut self, visitor: V)
-    where
-        V: FnMut(&mut Value) -> bool,
-    {
-        self.instr.visit_values_mut(visitor)
-    }
-}
-
 /// A terminal SSA instruction.
 ///
 /// Every basic block is required to have a terminal instruction
@@ -264,6 +211,59 @@ impl VisitValuesMut for IfThenElseInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.condition);
+    }
+}
+
+/// A tail call instruction.
+#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub struct TailCallInstr {
+    /// The underlying call instruction.
+    instr: CallInstr,
+}
+
+impl Display for TailCallInstr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "return {}", self.instr)
+    }
+}
+
+impl TailCallInstr {
+    /// Creates a new tail call instruction to call the indexed function using the given parameters.
+    pub fn new<I>(func: Func, call_params: I) -> Self
+    where
+        I: IntoIterator<Item = Value>,
+    {
+        Self {
+            instr: CallInstr::new(func, call_params),
+        }
+    }
+
+    /// Returns the called function index.
+    pub fn func(&self) -> Func {
+        self.instr.func()
+    }
+
+    /// Returns the function call parameters.
+    pub fn params(&self) -> &[Value] {
+        self.instr.params()
+    }
+}
+
+impl VisitValues for TailCallInstr {
+    fn visit_values<V>(&self, visitor: V)
+    where
+        V: FnMut(Value) -> bool,
+    {
+        self.instr.visit_values(visitor)
+    }
+}
+
+impl VisitValuesMut for TailCallInstr {
+    fn visit_values_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Value) -> bool,
+    {
+        self.instr.visit_values_mut(visitor)
     }
 }
 
