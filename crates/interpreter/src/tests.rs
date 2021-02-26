@@ -174,11 +174,11 @@ fn if_then_else_works() {
         b.switch_to_block(then_block)?;
         let v5 = b.ins()?.constant(IntConst::I32(10))?;
         b.ins()?.return_values([v5].iter().copied())?;
-        b.seal_block()?;
+        b.seal_block(then_block)?;
         b.switch_to_block(else_block)?;
         let v6 = b.ins()?.constant(IntConst::I32(20))?;
         b.ins()?.return_values([v6].iter().copied())?;
-        b.seal_block()?;
+        b.seal_block(else_block)?;
         Ok(())
     });
     let result = evaluate_func(&module, func, &[]);
@@ -238,7 +238,7 @@ fn global_identity_using_local() {
             b.switch_to_block(exit_block)?;
             let v0 = b.read_var(local)?;
             b.ins()?.return_values([v0].iter().copied())?;
-            b.seal_block()?;
+            b.seal_block(exit_block)?;
 
             Ok(())
         });
@@ -274,13 +274,13 @@ fn inconveniently_written_min() {
             b.ins()?.if_then_else(v2, then_block, else_block)?;
 
             b.switch_to_block(then_block)?;
-            b.seal_block()?;
+            b.seal_block(then_block)?;
             let v3 = b.read_var(lhs)?;
             b.write_var(result, v3)?;
             b.ins()?.br(exit_block)?;
 
             b.switch_to_block(else_block)?;
-            b.seal_block()?;
+            b.seal_block(else_block)?;
             let v4 = b.read_var(rhs)?;
             b.write_var(result, v4)?;
             b.ins()?.br(exit_block)?;
@@ -288,7 +288,7 @@ fn inconveniently_written_min() {
             b.switch_to_block(exit_block)?;
             let v5 = b.read_var(result)?;
             b.ins()?.return_values([v5].iter().copied())?;
-            b.seal_block()?;
+            b.seal_block(exit_block)?;
 
             Ok(())
         },
@@ -368,13 +368,11 @@ fn counting_loop_works() {
             let v7 = b.ins()?.iadd(IntType::I32, v5, v6)?;
             b.write_var(counter, v7)?;
             b.ins()?.br(loop_head)?;
-            b.seal_block()?;
+            b.seal_block(loop_body)?;
 
-            b.switch_to_block(loop_head)?;
-            b.seal_block()?;
-
+            b.seal_block(loop_head)?;
             b.switch_to_block(loop_exit)?;
-            b.seal_block()?;
+            b.seal_block(loop_exit)?;
             let v8 = b.read_var(counter)?;
             b.ins()?.return_values([v8].iter().copied())?;
 
@@ -435,7 +433,7 @@ where
     b.switch_to_block(if_zero)?;
     let v3 = b.ins()?.constant(Const::Bool(true))?;
     b.ins()?.return_values([v3].iter().copied())?;
-    b.seal_block()?;
+    b.seal_block(if_zero)?;
 
     b.switch_to_block(if_not_zero)?;
     let v4 = b.read_var(input)?;
@@ -446,7 +444,7 @@ where
         assert!(rest.is_empty(), "is_odd only has a single output value");
         b.ins()?.return_values([v7].iter().copied())?;
     }
-    b.seal_block()?;
+    b.seal_block(if_not_zero)?;
     let is_even_body = b.finalize()?;
 
     // Create Function: is_odd
@@ -474,7 +472,7 @@ where
     b.switch_to_block(if_zero)?;
     let v3 = b.ins()?.constant(Const::Bool(false))?;
     b.ins()?.return_values([v3].iter().copied())?;
-    b.seal_block()?;
+    b.seal_block(if_zero)?;
 
     b.switch_to_block(if_not_zero)?;
     let v4 = b.read_var(input)?;
@@ -485,7 +483,7 @@ where
         assert!(rest.is_empty(), "is_odd only has a single output value");
         b.ins()?.return_values([v7].iter().copied())?;
     }
-    b.seal_block()?;
+    b.seal_block(if_not_zero)?;
     let is_odd_body = b.finalize()?;
 
     body_builder.push_body(is_even, is_even_body).unwrap();

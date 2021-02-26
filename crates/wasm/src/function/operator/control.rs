@@ -62,8 +62,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     pub(super) fn translate_end(&mut self) -> Result<(), Error> {
         let block = self.blocks.pop_block()?;
         if let Some(runwell_block) = block.block() {
-            let _ = self.builder.switch_to_block(runwell_block).unwrap_or(());
-            let _ = self.builder.seal_block().unwrap_or(());
+            let _ = self.builder.seal_block(runwell_block).unwrap_or(());
         }
         if self.blocks.is_empty() {
             // The popped block was the entry block and thus the

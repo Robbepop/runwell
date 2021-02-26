@@ -336,9 +336,8 @@ impl<'a> FunctionBuilder<'a> {
     /// # Errors
     ///
     /// If the current basic block has already been sealed.
-    pub fn seal_block(&mut self) -> Result<(), Error> {
+    pub fn seal_block(&mut self, block: Block) -> Result<(), Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
-        let block = self.current_block()?;
         let already_sealed = self.ctx.block_sealed.replace(block, true);
         if already_sealed {
             return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
