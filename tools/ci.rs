@@ -25,7 +25,7 @@
 //! - git
 //! - rustup
 //! - cargo
-//! - hunspell with en_US dictionary
+//! - hunspell with `en_US` dictionary
 //!
 //! The scripts will eventually install some other Rust or Cargo components:
 //!
