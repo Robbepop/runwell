@@ -14,6 +14,7 @@
 
 mod builder;
 mod indent;
+mod instance;
 mod res;
 
 pub(crate) use self::indent::Indent;
