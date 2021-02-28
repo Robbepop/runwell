@@ -14,7 +14,8 @@
 
 use crate::TranslateError;
 use ir::primitive::{Type, Value};
-use std::vec::Drain;
+use core::slice;
+use std::{iter::FusedIterator, vec::Drain};
 
 /// Stack of values used for the Wasm emulation stack.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -95,7 +96,7 @@ impl ValueStack {
     pub fn peek_n(
         &self,
         n: usize,
-    ) -> Result<impl Iterator<Item = ValueEntry> + Clone + '_, TranslateError>
+    ) -> Result<PeekIter, TranslateError>
     {
         let len_stack = self.stack.len();
         if len_stack < n {
@@ -104,7 +105,7 @@ impl ValueStack {
                 found: len_stack as u32,
             })
         }
-        Ok(self.stack[(len_stack - n)..].iter().copied())
+        Ok(PeekIter::new(&self.stack[(len_stack - n)..]))
     }
 
     /// Peeks the last inserted value on the stack.
@@ -118,3 +119,46 @@ impl ValueStack {
             })
     }
 }
+
+/// Iterator yielding some amount of the top most stack values.
+#[derive(Debug, Clone)]
+pub struct PeekIter<'a> {
+    iter: slice::Iter<'a, ValueEntry>,
+}
+
+impl<'a> PeekIter<'a> {
+    /// Creates a new peek iterator.
+    fn new(slice: &'a [ValueEntry]) -> Self {
+        Self { iter: slice.iter() }
+    }
+
+    /// Views the underlying data as a subslice of the original data.
+    ///
+    /// This has the same lifetime as the original slice, and so the iterator
+    /// can continue to be used while this exists.
+    #[allow(dead_code)]
+    pub fn as_slice(&self) -> &'a [ValueEntry] {
+        self.iter.as_slice()
+    }
+}
+
+impl<'a> Iterator for PeekIter<'a> {
+    type Item = ValueEntry;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().copied()
+    }
+}
+
+impl<'a> DoubleEndedIterator for PeekIter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back().copied()
+    }
+}
+
+impl<'a> FusedIterator for PeekIter<'a> {}
+impl<'a> ExactSizeIterator for PeekIter<'a> {}
