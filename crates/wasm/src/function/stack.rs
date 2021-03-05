@@ -116,7 +116,7 @@ impl ValueStack {
     ) -> Result<PeekIter, TranslateError>
     {
         let len_stack = self.stack.len();
-        if len_stack < n {
+        if n >= len_stack {
             return Err(TranslateError::MissingStackValue {
                 expected: n as u32,
                 found: len_stack as u32,
