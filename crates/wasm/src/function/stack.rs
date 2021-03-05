@@ -122,7 +122,7 @@ impl ValueStack {
                 found: len_stack as u32,
             })
         }
-        Ok(PeekIter::new(&self.stack[(len_stack - n)..]))
+        Ok(PeekIter::new(&self.stack[(len_stack - n - 1)..]))
     }
 
     /// Peeks the last inserted value on the stack.
