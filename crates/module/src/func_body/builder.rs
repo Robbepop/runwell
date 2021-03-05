@@ -621,6 +621,27 @@ impl<'a> FunctionBuilder<'a> {
         Ok(self.ctx.vars.get(var)?.ty())
     }
 
+    /// Changes the else block of the given if instruction `instr` to `new_else`.
+    ///
+    /// # Panics
+    ///
+    /// If `instr` does not refer to an if instruction.
+    /// If `new_else` does not refer to a valid basic block.
+    pub fn change_jump_of_else(&mut self, instr: Instr, new_else: Block) {
+        let if_instruction = match &mut self.ctx.instrs[instr] {
+            Instruction::Terminal(ir::instr::TerminalInstr::Ite(if_instruction)) => if_instruction,
+            _ => panic!("tried to change jump of else destination for a non-if instruction"),
+        };
+        let old_else = if_instruction.else_block();
+        let if_block = self.ctx.block_preds[old_else]
+            .iter()
+            .copied()
+            .find(|block| self.ctx.block_instrs[*block].contains(&instr))
+            .expect("one of the predecessors must contain the if-instruction");
+        self.ctx.block_preds[old_else].remove(&if_block);
+        self.ctx.block_preds[new_else].insert(if_block);
+    }
+
     /// Returns `true` if the block is reachable.
     ///
     /// A block is unreachable if it has no predecessors and is sealed.
