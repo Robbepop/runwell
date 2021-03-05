@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::TranslateError;
-use ir::primitive::{Type, Value};
 use core::slice;
+use ir::primitive::{Type, Value};
 use std::{iter::FusedIterator, vec::Drain};
 
 /// Stack of values used for the Wasm emulation stack.
@@ -93,10 +93,7 @@ impl ValueStack {
     /// Returns the nth last value from the stack.
     ///
     /// The 0th last value is equal to the last value.
-    pub fn last_n(
-        &self,
-        n: usize
-    ) -> Result<ValueEntry, TranslateError> {
+    pub fn last_n(&self, n: usize) -> Result<ValueEntry, TranslateError> {
         let len_stack = self.stack.len();
         if len_stack < n {
             return Err(TranslateError::MissingStackValue {
@@ -110,11 +107,7 @@ impl ValueStack {
     /// Peeks the last `n` inserted values from the stack.
     ///
     /// The values are peeked in the order in which they have been pushed.
-    pub fn peek_n(
-        &self,
-        n: usize,
-    ) -> Result<PeekIter, TranslateError>
-    {
+    pub fn peek_n(&self, n: usize) -> Result<PeekIter, TranslateError> {
         let len_stack = self.stack.len();
         if n >= len_stack {
             return Err(TranslateError::MissingStackValue {

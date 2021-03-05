@@ -31,10 +31,8 @@ pub enum TranslateError {
         expected
     )]
     MissingStackValue { expected: u32, found: u32 },
-    #[display(
-        fmt = "expected Wasm `Block` or `Loop` due to \
-        validation but block stack was empty"
-    )]
+    #[display(fmt = "expected Wasm `Block` or `Loop` due to \
+        validation but block stack was empty")]
     MissingWasmBlock,
     #[display(
         fmt = "tried to access the {}-th Wasm block from \
