@@ -135,7 +135,7 @@ impl ValueStack {
         self.stack.len()
     }
 
-    /// Returns `true` if the value stack is emtpy.
+    /// Returns `true` if the value stack is empty.
     #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -171,7 +171,7 @@ impl<'a> PeekIter<'a> {
         Self { iter: slice.iter() }
     }
 
-    /// Views the underlying data as a subslice of the original data.
+    /// Views the underlying data as a sub-slice of the original data.
     ///
     /// This has the same lifetime as the original slice, and so the iterator
     /// can continue to be used while this exists.
