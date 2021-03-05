@@ -596,11 +596,11 @@
 
 <span class="doccomment">/// Conditionally either branches to `then` or `else` branch depending on `condition`.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;if {} then {} else {}&quot;</span>, <span class="ident">condition</span>, <span class="ident">br_then</span>, <span class="ident">br_else</span>)]</span>
+<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;if {} then {} else {}&quot;</span>, <span class="ident">condition</span>, <span class="ident">then_block</span>, <span class="ident">else_block</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IfThenElseInstr</span> {
     <span class="ident">condition</span>: <span class="ident">Value</span>,
-    <span class="ident">br_then</span>: <span class="ident">Block</span>,
-    <span class="ident">br_else</span>: <span class="ident">Block</span>,
+    <span class="ident">then_block</span>: <span class="ident">Block</span>,
+    <span class="ident">else_block</span>: <span class="ident">Block</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">IfThenElseInstr</span> {
@@ -608,8 +608,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">condition</span>: <span class="ident">Value</span>, <span class="ident">br_then</span>: <span class="ident">Block</span>, <span class="ident">br_else</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">condition</span>,
-            <span class="ident">br_then</span>,
-            <span class="ident">br_else</span>,
+            <span class="ident">then_block</span>: <span class="ident">br_then</span>,
+            <span class="ident">else_block</span>: <span class="ident">br_else</span>,
         }
     }
 
@@ -621,14 +621,14 @@
 
     <span class="doccomment">/// Returns the block to jump to in case the condition evaluates to `true`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">true_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-        <span class="self">self</span>.<span class="ident">br_then</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">then_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
+        <span class="self">self</span>.<span class="ident">then_block</span>
     }
 
     <span class="doccomment">/// Returns the block to jump to in case the condition evaluates to `false`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">false_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-        <span class="self">self</span>.<span class="ident">br_else</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">else_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
+        <span class="self">self</span>.<span class="ident">else_block</span>
     }
 }
 

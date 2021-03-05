@@ -232,7 +232,7 @@
     <span class="doccomment">/// The Runwell function body builder.</span>
     <span class="ident">builder</span>: <span class="ident">FunctionBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The emulated Wasm stack to translate the Wasm stack machine.</span>
-    <span class="ident">stack</span>: <span class="ident">ValueStack</span>,
+    <span class="ident">value_stack</span>: <span class="ident">ValueStack</span>,
     <span class="doccomment">/// The emulated Wasm stack of control blocks.</span>
     <span class="ident">blocks</span>: <span class="ident">Blocks</span>,
 }
@@ -244,7 +244,7 @@
             .<span class="ident">field</span>(<span class="string">&quot;func&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">func</span>)
             .<span class="ident">field</span>(<span class="string">&quot;res&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>)
             .<span class="ident">field</span>(<span class="string">&quot;builder&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">builder</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;stack&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stack</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;stack&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">value_stack</span>)
             .<span class="ident">field</span>(<span class="string">&quot;blocks&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">blocks</span>)
             .<span class="ident">finish</span>()
     }
@@ -268,7 +268,7 @@
             <span class="ident">func</span>,
             <span class="ident">res</span>,
             <span class="ident">builder</span>: <span class="ident">FunctionBody</span>::<span class="ident">build</span>(<span class="ident">func</span>, <span class="ident">res</span>),
-            <span class="ident">stack</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">value_stack</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">blocks</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
         }
     }

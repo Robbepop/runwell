@@ -59,6 +59,17 @@
 <span id="56">56</span>
 <span id="57">57</span>
 <span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -87,17 +98,18 @@
     )]</span>
     <span class="ident">UnimplementedOperator</span> { <span class="ident">display</span>: <span class="ident">String</span> },
     <span class="attribute">#[<span class="ident">display</span>(
-        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;missing value in emulation stack. found {} but expected {}.&quot;</span>,
+        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;missing value in emulation stack. \
+        found {} but expected {}.&quot;</span>,
         <span class="ident">found</span>,
         <span class="ident">expected</span>
     )]</span>
     <span class="ident">MissingStackValue</span> { <span class="ident">expected</span>: <span class="ident">u32</span>, <span class="ident">found</span>: <span class="ident">u32</span> },
-    <span class="attribute">#[<span class="ident">display</span>(
-        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;expected Wasm `Block` or `Loop` due to validation but block stack was empty&quot;</span>
-    )]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;expected Wasm `Block` or `Loop` due to \
+        validation but block stack was empty&quot;</span>)]</span>
     <span class="ident">MissingWasmBlock</span>,
     <span class="attribute">#[<span class="ident">display</span>(
-        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;tried to access the {}-th Wasm block from the block stack with a length of just {}&quot;</span>,
+        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;tried to access the {}-th Wasm block from \
+        the block stack with a length of just {}&quot;</span>,
         <span class="ident">n</span>,
         <span class="ident">len</span>
     )]</span>
@@ -106,6 +118,16 @@
         <span class="ident">n</span>: <span class="ident">u32</span>,
         <span class="doccomment">/// The current length of the block stack.</span>
         <span class="ident">len</span>: <span class="ident">usize</span>,
+    },
+    <span class="attribute">#[<span class="ident">display</span>(
+        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;tried to operate on the value stack with expected \
+        length of {} but the current length was just {}&quot;</span>,
+        <span class="ident">requested_len</span>,
+        <span class="ident">actual_len</span>
+    )]</span>
+    <span class="ident">InvalidValueStackLength</span> {
+        <span class="ident">actual_len</span>: <span class="ident">usize</span>,
+        <span class="ident">requested_len</span>: <span class="ident">usize</span>,
     },
 }
 

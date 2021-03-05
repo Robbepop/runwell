@@ -371,7 +371,7 @@
                 <span class="self">self</span>.<span class="ident">translate_return_call_indirect</span>(<span class="ident">index</span>, <span class="ident">table_index</span>)<span class="question-mark">?</span>
             }
             <span class="ident">Op</span>::<span class="ident">Drop</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
             }
             <span class="ident">Op</span>::<span class="ident">Select</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">translate_select_op</span>(<span class="prelude-val">None</span>)<span class="question-mark">?</span>,
             <span class="ident">Op</span>::<span class="ident">TypedSelect</span> { <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {

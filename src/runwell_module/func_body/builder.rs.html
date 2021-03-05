@@ -891,6 +891,41 @@
 <span id="888">888</span>
 <span id="889">889</span>
 <span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -1513,6 +1548,41 @@
     <span class="doccomment">/// - If the variable has not been declared.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">var_type</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">var</span>: <span class="ident">Variable</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Type</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">vars</span>.<span class="ident">get</span>(<span class="ident">var</span>)<span class="question-mark">?</span>.<span class="ident">ty</span>())
+    }
+
+    <span class="doccomment">/// Changes the else block of the given if instruction `instr` to `new_else`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If `instr` does not refer to an if instruction.</span>
+    <span class="doccomment">/// If `new_else` does not refer to a valid basic block.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">change_jump_of_else</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">instr</span>: <span class="ident">Instr</span>, <span class="ident">new_else</span>: <span class="ident">Block</span>) {
+        <span class="kw">let</span> <span class="ident">if_instruction</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>[<span class="ident">instr</span>] {
+            <span class="ident">Instruction</span>::<span class="ident">Terminal</span>(<span class="ident">ir</span>::<span class="ident">instr</span>::<span class="ident">TerminalInstr</span>::<span class="ident">Ite</span>(<span class="ident">if_instruction</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">if_instruction</span>,
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;tried to change jump of else destination for a non-if instruction&quot;</span>),
+        };
+        <span class="kw">let</span> <span class="ident">old_else</span> <span class="op">=</span> <span class="ident">if_instruction</span>.<span class="ident">else_block</span>();
+        <span class="kw">let</span> <span class="ident">if_block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_preds</span>[<span class="ident">old_else</span>]
+            .<span class="ident">iter</span>()
+            .<span class="ident">copied</span>()
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">block</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_instrs</span>[<span class="kw-2">*</span><span class="ident">block</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">instr</span>))
+            .<span class="ident">expect</span>(<span class="string">&quot;one of the predecessors must contain the if-instruction&quot;</span>);
+        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_preds</span>[<span class="ident">old_else</span>].<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">if_block</span>);
+        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_preds</span>[<span class="ident">new_else</span>].<span class="ident">insert</span>(<span class="ident">if_block</span>);
+    }
+
+    <span class="doccomment">/// Returns `true` if the block is reachable.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// A block is unreachable if it has no predecessors and is sealed.</span>
+    <span class="doccomment">/// A block counts as reachable if it is not (yet) unreachable.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the given `block` is invalid for the function builder.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_block_reachable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">block</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">let</span> <span class="ident">unreachable</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">block</span>)
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_preds</span>[<span class="ident">block</span>].<span class="ident">is_empty</span>();
+        <span class="op">!</span><span class="ident">unreachable</span>
     }
 
     <span class="doccomment">/// Returns the SSA output values of the instruction if any.</span>

@@ -118,7 +118,7 @@
         });
         <span class="kw">let</span> <span class="ident">len_inputs</span> <span class="op">=</span> <span class="ident">func_type</span>.<span class="ident">inputs</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">stack</span>
+            .<span class="ident">value_stack</span>
             .<span class="ident">pop_n</span>(<span class="ident">len_inputs</span>)
             .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="macro">panic</span><span class="macro">!</span>(
@@ -132,7 +132,7 @@
             <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">instr_values</span>(<span class="ident">instr</span>)<span class="question-mark">?</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>()
         {
             <span class="kw">let</span> <span class="ident">output_type</span> <span class="op">=</span> <span class="ident">func_type</span>.<span class="ident">outputs</span>()[<span class="ident">n</span>];
-            <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">push</span>(<span class="ident">output_value</span>, <span class="ident">output_type</span>);
+            <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">output_value</span>, <span class="ident">output_type</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }

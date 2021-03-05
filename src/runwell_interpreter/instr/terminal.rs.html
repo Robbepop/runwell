@@ -220,9 +220,9 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">condition</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">condition</span>());
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">condition</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">true_target</span>()
+            <span class="self">self</span>.<span class="ident">then_block</span>()
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">false_target</span>()
+            <span class="self">self</span>.<span class="ident">else_block</span>()
         };
         <span class="ident">frame</span>.<span class="ident">switch_to_block</span>(<span class="ident">target</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">InterpretationFlow</span>::<span class="ident">Continue</span>)
