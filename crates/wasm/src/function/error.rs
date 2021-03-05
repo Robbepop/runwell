@@ -48,6 +48,16 @@ pub enum TranslateError {
         /// The current length of the block stack.
         len: usize,
     },
+    #[display(
+        fmt = "tried to operate on the value stack with expected \
+        length of {} but the current length was just {}",
+        requested_len,
+        actual_len
+    )]
+    InvalidValueStackLength {
+        actual_len: usize,
+        requested_len: usize,
+    },
 }
 
 impl TranslateError {
