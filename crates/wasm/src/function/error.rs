@@ -25,17 +25,20 @@ pub enum TranslateError {
     )]
     UnimplementedOperator { display: String },
     #[display(
-        fmt = "missing value in emulation stack. found {} but expected {}.",
+        fmt = "missing value in emulation stack. \
+        found {} but expected {}.",
         found,
         expected
     )]
     MissingStackValue { expected: u32, found: u32 },
     #[display(
-        fmt = "expected Wasm `Block` or `Loop` due to validation but block stack was empty"
+        fmt = "expected Wasm `Block` or `Loop` due to \
+        validation but block stack was empty"
     )]
     MissingWasmBlock,
     #[display(
-        fmt = "tried to access the {}-th Wasm block from the block stack with a length of just {}",
+        fmt = "tried to access the {}-th Wasm block from \
+        the block stack with a length of just {}",
         n,
         len
     )]
