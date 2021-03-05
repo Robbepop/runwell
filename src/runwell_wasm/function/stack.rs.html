@@ -342,7 +342,7 @@
         <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>()
     }
 
-    <span class="doccomment">/// Returns `true` if the value stack is emtpy.</span>
+    <span class="doccomment">/// Returns `true` if the value stack is empty.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
@@ -378,7 +378,7 @@
         <span class="self">Self</span> { <span class="ident">iter</span>: <span class="ident">slice</span>.<span class="ident">iter</span>() }
     }
 
-    <span class="doccomment">/// Views the underlying data as a subslice of the original data.</span>
+    <span class="doccomment">/// Views the underlying data as a sub-slice of the original data.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This has the same lifetime as the original slice, and so the iterator</span>
     <span class="doccomment">/// can continue to be used while this exists.</span>
