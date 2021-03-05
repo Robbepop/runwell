@@ -163,11 +163,11 @@ impl BranchInstr {
 
 /// Conditionally either branches to `then` or `else` branch depending on `condition`.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(fmt = "if {} then {} else {}", condition, br_then, br_else)]
+#[display(fmt = "if {} then {} else {}", condition, then_block, else_block)]
 pub struct IfThenElseInstr {
     condition: Value,
-    br_then: Block,
-    br_else: Block,
+    then_block: Block,
+    else_block: Block,
 }
 
 impl IfThenElseInstr {
@@ -175,8 +175,8 @@ impl IfThenElseInstr {
     pub fn new(condition: Value, br_then: Block, br_else: Block) -> Self {
         Self {
             condition,
-            br_then,
-            br_else,
+            then_block: br_then,
+            else_block: br_else,
         }
     }
 
@@ -188,14 +188,14 @@ impl IfThenElseInstr {
 
     /// Returns the block to jump to in case the condition evaluates to `true`.
     #[inline]
-    pub fn true_target(&self) -> Block {
-        self.br_then
+    pub fn then_block(&self) -> Block {
+        self.then_block
     }
 
     /// Returns the block to jump to in case the condition evaluates to `false`.
     #[inline]
-    pub fn false_target(&self) -> Block {
-        self.br_else
+    pub fn else_block(&self) -> Block {
+        self.else_block
     }
 }
 

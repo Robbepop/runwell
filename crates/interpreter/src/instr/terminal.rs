@@ -82,9 +82,9 @@ impl InterpretInstr for IfThenElseInstr {
     ) -> Result<InterpretationFlow, InterpretationError> {
         let condition = frame.read_register(self.condition());
         let target = if condition != 0 {
-            self.true_target()
+            self.then_block()
         } else {
-            self.false_target()
+            self.else_block()
         };
         frame.switch_to_block(target);
         Ok(InterpretationFlow::Continue)
