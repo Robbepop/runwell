@@ -90,6 +90,23 @@ impl ValueStack {
         Ok(self.stack.drain((len_stack - n)..))
     }
 
+    /// Returns the nth last value from the stack.
+    ///
+    /// The 0th last value is equal to the last value.
+    pub fn last_n(
+        &self,
+        n: usize
+    ) -> Result<ValueEntry, TranslateError> {
+        let len_stack = self.stack.len();
+        if len_stack < n {
+            return Err(TranslateError::MissingStackValue {
+                expected: n as u32,
+                found: len_stack as u32,
+            })
+        }
+        Ok(self.stack[len_stack - n - 1])
+    }
+
     /// Peeks the last `n` inserted values from the stack.
     ///
     /// The values are peeked in the order in which they have been pushed.
@@ -117,6 +134,32 @@ impl ValueStack {
                 expected: 1,
                 found: 0,
             })
+    }
+
+    /// Returns the length of the value stack.
+    pub fn len(&self) -> usize {
+        self.stack.len()
+    }
+
+    /// Returns `true` if the value stack is emtpy.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Truncates the value stack to the given length.
+    ///
+    /// # Errors
+    ///
+    /// If the given length is greater than the current length of the value stack.
+    pub fn truncate(&mut self, len: usize) -> Result<(), TranslateError> {
+        if self.len() < len {
+            return Err(TranslateError::InvalidValueStackLength {
+                actual_len: self.len(),
+                requested_len: len,
+            })
+        }
+        self.stack.truncate(len);
+        Ok(())
     }
 }
 
