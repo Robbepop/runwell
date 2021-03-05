@@ -80,7 +80,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     )
                 })
                 .outputs();
-            let output_values = self.stack.peek_n(outputs.len())?;
+            let output_values = self.value_stack.peek_n(outputs.len())?;
             for (req_type, entry) in
                 outputs.iter().copied().zip(output_values.clone())
             {
@@ -89,7 +89,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             self.builder
                 .ins()?
                 .return_values(output_values.map(|entry| entry.value))?;
-            self.stack.pop_n(outputs.len())?;
+            self.value_stack.pop_n(outputs.len())?;
         }
         Ok(())
     }
