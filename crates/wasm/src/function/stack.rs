@@ -93,6 +93,7 @@ impl ValueStack {
     /// Returns the nth last value from the stack.
     ///
     /// The 0th last value is equal to the last value.
+    #[allow(dead_code)]
     pub fn last_n(&self, n: usize) -> Result<ValueEntry, TranslateError> {
         let len_stack = self.stack.len();
         if len_stack < n {
@@ -135,6 +136,7 @@ impl ValueStack {
     }
 
     /// Returns `true` if the value stack is emtpy.
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -144,6 +146,7 @@ impl ValueStack {
     /// # Errors
     ///
     /// If the given length is greater than the current length of the value stack.
+    #[allow(dead_code)]
     pub fn truncate(&mut self, len: usize) -> Result<(), TranslateError> {
         if self.len() < len {
             return Err(TranslateError::InvalidValueStackLength {
