@@ -621,6 +621,20 @@ impl<'a> FunctionBuilder<'a> {
         Ok(self.ctx.vars.get(var)?.ty())
     }
 
+    /// Returns `true` if the block is reachable.
+    ///
+    /// A block is unreachable if it has no predecessors and is sealed.
+    /// A block counts as reachable if it is not (yet) unreachable.
+    ///
+    /// # Panics
+    ///
+    /// If the given `block` is invalid for the function builder.
+    pub fn is_block_reachable(&self, block: Block) -> bool {
+        let unreachable = self.ctx.block_sealed.get(block)
+            && self.ctx.block_preds[block].is_empty();
+        !unreachable
+    }
+
     /// Returns the SSA output values of the instruction if any.
     pub fn instr_values(&self, instr: Instr) -> Result<&[Value], Error> {
         if !self.ctx.instrs.contains_key(instr) {
