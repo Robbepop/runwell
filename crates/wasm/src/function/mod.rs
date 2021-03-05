@@ -65,7 +65,7 @@ struct FunctionBodyTranslator<'a, 'b> {
     /// The Runwell function body builder.
     builder: FunctionBuilder<'b>,
     /// The emulated Wasm stack to translate the Wasm stack machine.
-    stack: ValueStack,
+    value_stack: ValueStack,
     /// The emulated Wasm stack of control blocks.
     blocks: Blocks,
 }
@@ -77,7 +77,7 @@ impl<'a, 'b> fmt::Debug for FunctionBodyTranslator<'a, 'b> {
             .field("func", &self.func)
             .field("res", &self.res)
             .field("builder", &self.builder)
-            .field("stack", &self.stack)
+            .field("stack", &self.value_stack)
             .field("blocks", &self.blocks)
             .finish()
     }
@@ -101,7 +101,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             func,
             res,
             builder: FunctionBody::build(func, res),
-            stack: Default::default(),
+            value_stack: Default::default(),
             blocks: Default::default(),
         }
     }

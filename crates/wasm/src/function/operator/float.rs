@@ -48,14 +48,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         dst_signed: bool,
         saturating: bool,
     ) -> Result<(), Error> {
-        let source = self.stack.pop1()?;
+        let source = self.value_stack.pop1()?;
         assert_eq!(source.ty, src_type.into());
         let source = source.value;
         let result = self
             .builder
             .ins()?
             .float_to_int(src_type, dst_type, dst_signed, source, saturating)?;
-        self.stack.push(result, dst_type.into());
+        self.value_stack.push(result, dst_type.into());
         Ok(())
     }
 
@@ -143,13 +143,13 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     {
         let from_type = from_type.into();
         let to_type = to_type.into();
-        let source = self.stack.pop1()?;
+        let source = self.value_stack.pop1()?;
         assert_eq!(source.ty, from_type.into());
         let result =
             self.builder
                 .ins()?
                 .demote(from_type, to_type, source.value)?;
-        self.stack.push(result, to_type.into());
+        self.value_stack.push(result, to_type.into());
         Ok(())
     }
 
@@ -165,13 +165,13 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     {
         let from_type = from_type.into();
         let to_type = to_type.into();
-        let source = self.stack.pop1()?;
+        let source = self.value_stack.pop1()?;
         assert_eq!(source.ty, from_type.into());
         let result =
             self.builder
                 .ins()?
                 .promote(from_type, to_type, source.value)?;
-        self.stack.push(result, to_type.into());
+        self.value_stack.push(result, to_type.into());
         Ok(())
     }
 
@@ -181,7 +181,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: CompareFloatOp,
         float_type: FloatType,
     ) -> Result<(), Error> {
-        let (lhs, rhs) = self.stack.pop2()?;
+        let (lhs, rhs) = self.value_stack.pop2()?;
         assert_eq!(lhs.ty, rhs.ty);
         let actual_float_type = Self::extract_float_type(lhs.ty);
         assert_eq!(actual_float_type, float_type);
@@ -199,7 +199,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         float_type: FloatType,
         op: UnaryFloatOp,
     ) -> Result<(), Error> {
-        let source = self.stack.pop1()?;
+        let source = self.value_stack.pop1()?;
         let actual_float_type = Self::extract_float_type(source.ty);
         assert_eq!(actual_float_type, float_type);
         let source = source.value;
@@ -213,7 +213,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             UnaryFloatOp::Truncate => ins.ftruncate(float_type, source)?,
             UnaryFloatOp::Nearest => ins.fnearest(float_type, source)?,
         };
-        self.stack.push(result, float_type.into());
+        self.value_stack.push(result, float_type.into());
         Ok(())
     }
 
@@ -223,7 +223,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         float_type: FloatType,
         op: BinaryFloatOp,
     ) -> Result<(), Error> {
-        let (lhs, rhs) = self.stack.pop2()?;
+        let (lhs, rhs) = self.value_stack.pop2()?;
         assert_eq!(lhs.ty, rhs.ty);
         let actual_float_type = Self::extract_float_type(lhs.ty);
         assert_eq!(actual_float_type, float_type);
@@ -239,7 +239,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             BinaryFloatOp::Max => ins.fmax(float_type, lhs, rhs)?,
             BinaryFloatOp::CopySign => ins.fcopysign(float_type, lhs, rhs)?,
         };
-        self.stack.push(result, float_type.into());
+        self.value_stack.push(result, float_type.into());
         Ok(())
     }
 }

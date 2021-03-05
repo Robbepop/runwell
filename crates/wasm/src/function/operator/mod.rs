@@ -73,7 +73,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.translate_return_call_indirect(index, table_index)?
             }
             Op::Drop => {
-                self.stack.pop1()?;
+                self.value_stack.pop1()?;
             }
             Op::Select => self.translate_select_op(None)?,
             Op::TypedSelect { ty } => {

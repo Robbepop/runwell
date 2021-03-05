@@ -68,11 +68,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         memarg: wasmparser::MemoryImmediate,
         result_type: runwell::Type,
     ) -> Result<(), Error> {
-        let pos = self.stack.pop1()?;
+        let pos = self.value_stack.pop1()?;
         let ptr = self.build_heap_addr(memarg, pos, result_type)?;
         let offset = ImmU32::from(memarg.offset);
         let result = self.builder.ins()?.load(ptr, offset, result_type)?;
-        self.stack.push(result, result_type);
+        self.value_stack.push(result, result_type);
         Ok(())
     }
 
@@ -100,7 +100,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         memarg: wasmparser::MemoryImmediate,
         stored_type: runwell::Type,
     ) -> Result<(), Error> {
-        let (pos, stored_value) = self.stack.pop2()?;
+        let (pos, stored_value) = self.value_stack.pop2()?;
         assert_eq!(stored_value.ty, stored_type);
         let ptr = self.build_heap_addr(memarg, pos, stored_type)?;
         let offset = ImmU32::from(memarg.offset);

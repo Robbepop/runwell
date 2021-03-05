@@ -30,14 +30,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let from_type = from_type.into();
         let to_type = to_type.into();
         assert_eq!(from_type.bit_width(), to_type.bit_width());
-        let source = self.stack.pop1()?;
+        let source = self.value_stack.pop1()?;
         assert_eq!(source.ty, from_type);
         let result = self.builder.ins()?.reinterpret(
             from_type,
             to_type,
             source.value,
         )?;
-        self.stack.push(result, to_type);
+        self.value_stack.push(result, to_type);
         Ok(())
     }
 
@@ -55,7 +55,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let ty = ty.into();
         assert_eq!(const_value.ty(), ty);
         let result = self.builder.ins()?.constant(const_value)?;
-        self.stack.push(result, ty);
+        self.value_stack.push(result, ty);
         Ok(())
     }
 
@@ -64,7 +64,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         required_ty: Option<runwell::Type>,
     ) -> Result<(), Error> {
-        let (if_true, if_false, condition) = self.stack.pop3()?;
+        let (if_true, if_false, condition) = self.value_stack.pop3()?;
         assert_eq!(
             if_true.ty, if_false.ty,
             "due to validation both types must be equal"
@@ -79,7 +79,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             if_true.value,
             if_false.value,
         )?;
-        self.stack.push(result, ty);
+        self.value_stack.push(result, ty);
         Ok(())
     }
 }

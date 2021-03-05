@@ -29,7 +29,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         });
         let len_inputs = func_type.inputs().len();
         let params = self
-            .stack
+            .value_stack
             .pop_n(len_inputs)
             .unwrap_or_else(|_| {
                 panic!(
@@ -43,7 +43,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             self.builder.instr_values(instr)?.iter().enumerate()
         {
             let output_type = func_type.outputs()[n];
-            self.stack.push(output_value, output_type);
+            self.value_stack.push(output_value, output_type);
         }
         Ok(())
     }

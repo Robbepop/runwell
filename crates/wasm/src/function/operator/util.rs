@@ -30,7 +30,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             const_true,
             const_false,
         )?;
-        self.stack.push(bool_to_i32, IntType::I32.into());
+        self.value_stack.push(bool_to_i32, IntType::I32.into());
         Ok(())
     }
 }
