@@ -50,25 +50,6 @@ impl DisplayHook for EdgeEntity {
     }
 }
 
-/// Allows to customize display of branching edges in the Runwell IR.
-///
-/// Some Runwell IR instructions make use of `DisplayEdge` implementers
-/// in order to properly display branching edges.
-///
-/// # Note
-///
-/// Runwell IR instruction use the `Edge` type to signal branches.
-/// However, the `Edge` is just a shallow type that by itself does
-/// not carry any associated information. Instead enclosing types
-/// of Runwell IR instructions are meant to carry information
-/// associated to edges. Those implement `DisplayEdge` and Runwell
-/// IR instructions then can use this trait in order to properly
-/// display branching edges.
-pub trait DisplayEdge {
-    /// Displays the given branching edge using the formatter.
-    fn display_edge(&self, f: &mut fmt::Formatter, edge: Edge) -> fmt::Result;
-}
-
 /// A function entity of the Runwell IR.
 #[derive(Debug, Default)]
 pub struct FunctionEntity;

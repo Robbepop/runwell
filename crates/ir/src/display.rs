@@ -12,7 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::primitive::Edge;
 use core::fmt;
+
+/// Implemented by all Runwell IR instructions to display within context.
+pub trait DisplayInstruction {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+        display_edge: &dyn DisplayEdge,
+    ) -> fmt::Result;
+}
+
+/// Allows to customize display of branching edges in the Runwell IR.
+///
+/// Some Runwell IR instructions make use of `DisplayEdge` implementers
+/// in order to properly display branching edges.
+///
+/// # Note
+///
+/// Runwell IR instruction use the `Edge` type to signal branches.
+/// However, the `Edge` is just a shallow type that by itself does
+/// not carry any associated information. Instead enclosing types
+/// of Runwell IR instructions are meant to carry information
+/// associated to edges. Those implement `DisplayEdge` and Runwell
+/// IR instructions then can use this trait in order to properly
+/// display branching edges.
+pub trait DisplayEdge {
+    /// Displays the given branching edge using the formatter.
+    fn display_edge(&self, f: &mut fmt::Formatter, edge: Edge) -> fmt::Result;
+}
 
 /// A single indentation.
 ///

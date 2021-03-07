@@ -30,7 +30,7 @@ use self::{
     value::{ValueDefinition, ValueUser},
     variable::{Variable, VariableTranslator},
 };
-use crate::{module::Indent, primitive::Instr};
+use crate::primitive::Instr;
 use core::fmt;
 use entity::{
     ComponentVec,
@@ -45,13 +45,14 @@ use ir::{
     primitive::{
         Block,
         BlockEntity,
-        DisplayEdge,
         Edge,
         EdgeEntity,
         Type,
         Value,
         ValueEntity,
     },
+    DisplayEdge,
+    Indent,
 };
 use smallvec::SmallVec;
 

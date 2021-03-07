@@ -29,7 +29,6 @@ pub use self::{
     instruction::{Instr, InstructionBuilder},
     variable::{Variable, VariableTranslator},
 };
-use crate::module::Indent;
 use core::fmt;
 use entity::{
     ComponentVec,
@@ -42,6 +41,7 @@ use entity::{
 use ir::{
     instr::Instruction,
     primitive::{Block, BlockEntity, Type, Value, ValueEntity},
+    Indent,
 };
 use smallvec::SmallVec;
 
