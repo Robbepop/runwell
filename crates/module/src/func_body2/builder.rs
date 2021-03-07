@@ -461,18 +461,18 @@ impl<'a> FunctionBuilder<'a> {
     /// Returns `true` if all incoming edges of the block have the same source block.
     ///
     /// Returns `false` otherwise or if there are no incoming edges for the block.
-    fn has_unique_predecessor_block(&self, block: Block) -> bool {
+    fn get_unique_predecessor_block(&self, block: Block) -> Option<Block> {
         let mut same = None;
         for edge in &self.ctx.block_edges[block] {
             let block = self.ctx.edge_src[*edge];
             if let Some(same) = same {
                 if block != same {
-                    return false
+                    return None
                 }
             }
             same = Some(block);
         }
-        same.is_some()
+        same
     }
 
     /// Reads the given variable starting from the given block.
@@ -494,20 +494,18 @@ impl<'a> FunctionBuilder<'a> {
                 self.create_incomplete_block_parameter(var, var_type, block)?;
             return Ok(value)
         }
-        let value = if self.has_unique_predecessor_block(block) {
-            // Optimize the common case where all incoming edges have the same
-            // source basic block. No incomplete block parameter required in this case.
-            let pred = self.ctx.block_edges[block]
-                .first()
-                .copied()
-                .expect("missing expected predecessor for basic block");
-            let pred_block = self.ctx.edge_dst[pred];
-            self.read_var_in_block(var, pred_block)?
-        } else {
-            // Break potential cycles with incomplete block parameter.
-            let param =
-                self.create_incomplete_block_parameter(var, var_type, block)?;
-            self.add_incomplete_param_args(param)?
+        let value = match self.get_unique_predecessor_block(block) {
+            Some(pred) => {
+                // Optimize the common case where all incoming edges have the same
+                // source basic block. No incomplete block parameter required in this case.
+                self.read_var_in_block(var, pred)?
+            }
+            None => {
+                // Break potential cycles with incomplete block parameter.
+                let param = self
+                    .create_incomplete_block_parameter(var, var_type, block)?;
+                self.add_incomplete_param_args(param)?
+            }
         };
         self.ctx.vars.write_var(var, value, block, var_type)?;
         Ok(value)
