@@ -509,7 +509,8 @@ impl<'a> FunctionBuilder<'a> {
             .vars
             .replace_var(phi_var, phi_block, phi_value, equivalent, phi_type)?;
         for user in users {
-            let got_replaced = self.replace_user_values(user, phi_value, equivalent);
+            let got_replaced =
+                self.replace_user_values(user, phi_value, equivalent);
             if got_replaced && self.ctx.instrs[user].is_phi() {
                 // If the user was an incomplete phi and there was an actual replacement
                 // we have to check if the phi is now trivial as well.
