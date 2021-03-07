@@ -461,10 +461,7 @@ impl<'a> FunctionBuilder<'a> {
         var: Variable,
         phi: Value,
     ) -> Result<Value, Error> {
-        let preds = self.ctx.block_preds[block]
-            .iter()
-            .copied()
-            .collect::<Vec<_>>();
+        let preds = self.ctx.block_preds[block].clone();
         for pred in preds {
             let value = self.read_var_in_block(var, pred)?;
             let incomplete_phi = &mut self.ctx.value_incomplete_phi[phi];
