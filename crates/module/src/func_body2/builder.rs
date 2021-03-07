@@ -753,4 +753,22 @@ impl<'a> FunctionBuilder<'a> {
         let values = self.ctx.instr_values[instr].as_slice();
         Ok(values)
     }
+
+    /// Returns an instruction builder to appends instructions to the current basic block.
+    ///
+    /// # Errors
+    ///
+    /// If the current block is already filled.
+    pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        let block = self.current_block()?;
+        let already_filled = self.ctx.block_filled.get(block);
+        if already_filled {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
+        }
+        Ok(InstructionBuilder::new(self))
+    }
 }
