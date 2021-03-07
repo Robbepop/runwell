@@ -31,6 +31,7 @@ use self::{
     variable::{Variable, VariableTranslator},
 };
 use crate::{module::Indent, primitive::Instr};
+use core::fmt;
 use entity::{
     ComponentVec,
     DefaultComponentMap,
@@ -121,5 +122,69 @@ impl FunctionBody {
         let instruction = &self.instrs[instr];
         let instr_values = self.instr_values(instr);
         Some((instr_values, instruction))
+    }
+
+    /// Display the function body with the given indentation.
+    ///
+    /// # Note
+    ///
+    /// Indentation is important to properly indent the printed function body
+    /// in case the output is part of an entire function with signature.
+    pub(crate) fn display_with_indent(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+        ident: Indent,
+    ) -> fmt::Result {
+        let block_identation = ident;
+        let instr_identation = ident + Indent::single();
+        for block in self.blocks.indices() {
+            writeln!(f, "{}block {}", block_identation, block)?;
+            if let Some((first, rest)) = self.block_params[block].split_first()
+            {
+                write!(f, "(")?;
+                write!(f, "{}: {}", first, self.value_type[*first],)?;
+                for param in rest {
+                    write!(f, ", {}: {}", param, self.value_type[*param],)?;
+                }
+                write!(f, ")")?;
+            }
+            for &instr in &self.block_instrs[block] {
+                let instr_data = &self.instrs[instr];
+                let instr_values = self.instr_values(instr);
+                let instr_values_tuples = instr_values.len() >= 2;
+                write!(f, "{}", instr_identation)?;
+                match instr_values.split_first() {
+                    None => {
+                        writeln!(f, "{}", instr_data)?;
+                    }
+                    Some((&first, rest)) => {
+                        write!(f, "let ")?;
+                        if instr_values_tuples {
+                            write!(f, "(")?;
+                        }
+                        if let Some(first) = first {
+                            let value_type = self.value_type[first];
+                            write!(f, "{}: {}", first, value_type)?;
+                        } else {
+                            write!(f, "_")?;
+                        }
+                        for &value in rest {
+                            if let Some(value) = value {
+                                let value_type = self.value_type[value];
+                                write!(f, ", {}: {}", value, value_type)?;
+                            } else {
+                                write!(f, ", _")?;
+                            }
+                        }
+                        if instr_values_tuples {
+                            write!(f, ")")?;
+                        }
+                        writeln!(f, " = {}", instr_data)?;
+                    }
+                }
+            }
+            writeln!(f, "{}}}", block_identation)?;
+        }
+        Ok(())
     }
 }
