@@ -23,6 +23,8 @@ mod select;
 mod terminal;
 mod terminal_2;
 
+use core::fmt;
+
 pub use self::{
     call::{CallIndirectInstr, CallInstr},
     constant::ConstInstr,
@@ -83,7 +85,14 @@ pub use self::{
     },
 };
 use super::primitive::Value;
-use crate::{primitive::Block, VisitValues, VisitValuesMut};
+use crate::{
+    primitive::Block,
+    DisplayEdge,
+    DisplayInstruction,
+    Indent,
+    VisitValues,
+    VisitValuesMut,
+};
 use derive_more::{Display, From};
 use smallvec::SmallVec;
 
@@ -114,6 +123,9 @@ pub enum Instruction {
     Select(SelectInstr),
     Reinterpret(ReinterpretInstr),
     Terminal(TerminalInstr),
+    #[display(
+        fmt = "error: Display is unimplemented for Terminal2 instructions"
+    )]
     Terminal2(TerminalInstr2),
     Int(IntInstr),
     Float(FloatInstr),
@@ -178,6 +190,36 @@ impl VisitValuesMut for Instruction {
             Self::Int(instr) => instr.visit_values_mut(visitor),
             Self::Float(instr) => instr.visit_values_mut(visitor),
         }
+    }
+}
+
+impl DisplayInstruction for Instruction {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        match self {
+            Self::Call(instr) => write!(f, "{}", instr)?,
+            Self::CallIndirect(instr) => write!(f, "{}", instr)?,
+            Self::Const(instr) => write!(f, "{}", instr)?,
+            Self::MemoryGrow(instr) => write!(f, "{}", instr)?,
+            Self::MemorySize(instr) => write!(f, "{}", instr)?,
+            Self::Phi(instr) => write!(f, "{}", instr)?,
+            Self::HeapAddr(instr) => write!(f, "{}", instr)?,
+            Self::Load(instr) => write!(f, "{}", instr)?,
+            Self::Store(instr) => write!(f, "{}", instr)?,
+            Self::Select(instr) => write!(f, "{}", instr)?,
+            Self::Reinterpret(instr) => write!(f, "{}", instr)?,
+            Self::Terminal(instr) => write!(f, "{}", instr)?,
+            Self::Terminal2(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
+            Self::Int(instr) => write!(f, "{}", instr)?,
+            Self::Float(instr) => write!(f, "{}", instr)?,
+        }
+        Ok(())
     }
 }
 

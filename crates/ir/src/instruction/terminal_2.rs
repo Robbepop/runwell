@@ -15,6 +15,9 @@
 use super::{CallIndirectInstr, CallInstr};
 use crate::{
     primitive::{Edge, Func, FuncType, Table, Value},
+    DisplayEdge,
+    DisplayInstruction,
+    Indent,
     VisitValues,
     VisitValuesMut,
 };
@@ -26,9 +29,8 @@ use smallvec::SmallVec;
 ///
 /// Every basic block is required to have a terminal instruction
 /// as its last instruction.
-#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum TerminalInstr {
-    #[display(fmt = "trap")]
     Trap,
     Return(ReturnInstr),
     Br(BranchInstr),
@@ -69,6 +71,32 @@ impl VisitValuesMut for TerminalInstr {
             Self::TailCallIndirect(instr) => instr.visit_values_mut(visitor),
             Self::BranchTable(instr) => instr.visit_values_mut(visitor),
         }
+    }
+}
+
+impl DisplayInstruction for TerminalInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        match self {
+            TerminalInstr::Trap => write!(f, "trap")?,
+            TerminalInstr::Return(instr) => write!(f, "{}", instr)?,
+            TerminalInstr::Br(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
+            TerminalInstr::Ite(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
+            TerminalInstr::TailCall(instr) => write!(f, "{}", instr)?,
+            TerminalInstr::TailCallIndirect(instr) => write!(f, "{}", instr)?,
+            TerminalInstr::BranchTable(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
+        }
+        Ok(())
     }
 }
 
@@ -162,9 +190,21 @@ impl BranchInstr {
     }
 }
 
+impl DisplayInstruction for BranchInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        _indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        write!(f, "br ")?;
+        displayer.display_edge(f, self.edge())?;
+        Ok(())
+    }
+}
+
 /// Conditionally either branches to `then` or `else` branch depending on `condition`.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(fmt = "if {} then {} else {}", condition, then_edge, else_edge)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct IfThenElseInstr {
     condition: Value,
     then_edge: Edge,
@@ -218,6 +258,21 @@ impl VisitValuesMut for IfThenElseInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.condition);
+    }
+}
+
+impl DisplayInstruction for IfThenElseInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        _indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        write!(f, "if {} then ", self.condition())?;
+        displayer.display_edge(f, self.then_edge())?;
+        write!(f, " else ")?;
+        displayer.display_edge(f, self.then_edge())?;
+        Ok(())
     }
 }
 
@@ -409,6 +464,31 @@ impl Display for BranchTableInstr {
         }
         write!(f, "_ 🠖 {}", self.default_target())?;
         write!(f, "}}")?;
+        Ok(())
+    }
+}
+
+impl DisplayInstruction for BranchTableInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        let target_indentation = indent + Indent::single();
+        write!(f, "match {} {{", self.selector())?;
+        if let Some((first, rest)) = self.target_edges().split_first() {
+            write!(f, "{}0 🠖 ", target_indentation)?;
+            displayer.display_edge(f, *first)?;
+            for (n, edge) in rest.iter().enumerate() {
+                writeln!(f, ",")?;
+                write!(f, "{}{} 🠖 ", target_indentation, n + 1)?;
+                displayer.display_edge(f, *edge)?;
+            }
+            writeln!(f, ",")?;
+        }
+        writeln!(f, "{}_ 🠖 {}", target_indentation, self.default_target())?;
+        write!(f, "{}}}", indent)?;
         Ok(())
     }
 }
