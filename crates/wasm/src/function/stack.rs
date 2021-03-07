@@ -81,7 +81,7 @@ impl ValueStack {
         n: usize,
     ) -> Result<Drain<ValueEntry>, TranslateError> {
         let len_stack = self.stack.len();
-        if n >= len_stack {
+        if n > len_stack {
             return Err(TranslateError::MissingStackValue {
                 expected: n as u32,
                 found: len_stack as u32,
@@ -110,13 +110,13 @@ impl ValueStack {
     /// The values are peeked in the order in which they have been pushed.
     pub fn peek_n(&self, n: usize) -> Result<PeekIter, TranslateError> {
         let len_stack = self.stack.len();
-        if n >= len_stack {
+        if n > len_stack {
             return Err(TranslateError::MissingStackValue {
                 expected: n as u32,
                 found: len_stack as u32,
             })
         }
-        Ok(PeekIter::new(&self.stack[(len_stack - n - 1)..]))
+        Ok(PeekIter::new(&self.stack[(len_stack - n)..]))
     }
 
     /// Peeks the last inserted value on the stack.
