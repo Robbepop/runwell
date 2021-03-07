@@ -21,7 +21,7 @@ pub trait DisplayInstruction {
         &self,
         f: &mut fmt::Formatter,
         indent: Indent,
-        display_edge: &dyn DisplayEdge,
+        displayer: &dyn DisplayEdge,
     ) -> fmt::Result;
 }
 
