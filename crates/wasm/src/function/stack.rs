@@ -81,7 +81,7 @@ impl ValueStack {
         n: usize,
     ) -> Result<Drain<ValueEntry>, TranslateError> {
         let len_stack = self.stack.len();
-        if len_stack < n {
+        if n >= len_stack {
             return Err(TranslateError::MissingStackValue {
                 expected: n as u32,
                 found: len_stack as u32,
@@ -95,7 +95,7 @@ impl ValueStack {
     /// The 0th last value is equal to the last value.
     pub fn last_n(&self, n: usize) -> Result<ValueEntry, TranslateError> {
         let len_stack = self.stack.len();
-        if len_stack < n {
+        if n >= len_stack {
             return Err(TranslateError::MissingStackValue {
                 expected: n as u32,
                 found: len_stack as u32,
