@@ -15,9 +15,18 @@
 #![allow(dead_code)]
 
 mod builder;
+mod error;
+mod instruction;
 mod value;
+mod variable;
 
-use self::value::{ValueDefinition, ValueUser};
+pub use self::error::{FunctionBuilderError, VariableAccess};
+use self::{
+    builder::{FunctionBuilder, FunctionBuilderState},
+    instruction::InstructionBuilder,
+    value::{ValueDefinition, ValueUser},
+    variable::{Variable, VariableTranslator},
+};
 
 /// A virtual, verified Runwell IR function.
 #[derive(Debug)]

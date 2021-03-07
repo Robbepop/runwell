@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::FunctionBuilderError;
+use super::{
+    func_body2::FunctionBuilderError as FunctionBuilderError2,
+    FunctionBuilderError,
+};
 use core::fmt;
 use derive_more::{Display, Error, From};
 
@@ -66,8 +69,15 @@ impl From<FunctionBuilderError> for Error {
     }
 }
 
+impl From<FunctionBuilderError2> for Error {
+    fn from(error: FunctionBuilderError2) -> Self {
+        Self::from_kind(error.into())
+    }
+}
+
 /// An error kind that occurred while translating from Wasm to Runwell IR.
 #[derive(Debug, Display, Error, From, PartialEq, Eq)]
 pub enum ErrorKind {
     FunctionBuilder(FunctionBuilderError),
+    FunctionBuilder2(FunctionBuilderError2),
 }
