@@ -288,7 +288,7 @@
         <span class="ident">n</span>: <span class="ident">usize</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">ValueEntry</span><span class="op">&gt;</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
-        <span class="kw">if</span> <span class="ident">len_stack</span> <span class="op">&lt;</span> <span class="ident">n</span> {
+        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">len_stack</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
                 <span class="ident">expected</span>: <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>,
                 <span class="ident">found</span>: <span class="ident">len_stack</span> <span class="kw">as</span> <span class="ident">u32</span>,
@@ -303,7 +303,7 @@
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_n</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueEntry</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
-        <span class="kw">if</span> <span class="ident">len_stack</span> <span class="op">&lt;</span> <span class="ident">n</span> {
+        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">len_stack</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
                 <span class="ident">expected</span>: <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>,
                 <span class="ident">found</span>: <span class="ident">len_stack</span> <span class="kw">as</span> <span class="ident">u32</span>,
@@ -317,13 +317,13 @@
     <span class="doccomment">/// The values are peeked in the order in which they have been pushed.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">peek_n</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PeekIter</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
-        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">len_stack</span> {
+        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">len_stack</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
                 <span class="ident">expected</span>: <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>,
                 <span class="ident">found</span>: <span class="ident">len_stack</span> <span class="kw">as</span> <span class="ident">u32</span>,
             })
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">PeekIter</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stack</span>[(<span class="ident">len_stack</span> <span class="op">-</span> <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>)..]))
+        <span class="prelude-val">Ok</span>(<span class="ident">PeekIter</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stack</span>[(<span class="ident">len_stack</span> <span class="op">-</span> <span class="ident">n</span>)..]))
     }
 
     <span class="doccomment">/// Peeks the last inserted value on the stack.</span>
