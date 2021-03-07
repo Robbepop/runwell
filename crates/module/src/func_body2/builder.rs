@@ -489,6 +489,17 @@ impl<'a> FunctionBuilder<'a> {
         same
     }
 
+    /// Reads the last assigned value of the variable within the scope of the current basic block.
+    ///
+    /// # Errors
+    ///
+    /// - If the variable has not been declared.
+    pub fn read_var(&mut self, var: Variable) -> Result<Value, Error> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        let current = self.current_block()?;
+        self.read_var_in_block(var, current)
+    }
+
     /// Reads the given variable starting from the given block.
     fn read_var_in_block(
         &mut self,
