@@ -16,6 +16,7 @@
 
 mod error;
 mod func_body;
+mod func_body2;
 mod func_type;
 mod function;
 mod global_var;
