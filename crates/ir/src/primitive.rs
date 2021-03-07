@@ -44,6 +44,12 @@ pub enum EdgeEntity {}
 /// A unique edge entity reference.
 pub type Edge = Idx<EdgeEntity>;
 
+impl DisplayHook for EdgeEntity {
+    fn fmt(idx: Edge, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "edge{}", idx.into_raw())
+    }
+}
+
 /// Allows to customize display of branching edges in the Runwell IR.
 ///
 /// Some Runwell IR instructions make use of `DisplayEdge` implementers
