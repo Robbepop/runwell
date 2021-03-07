@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{FunctionBody, ValueDefinition, ValueUser};
-use crate::{
-    func_body::{FunctionBuilderState, VariableTranslator},
-    primitive::{Instr, Variable},
-    Error,
+use super::{
+    FunctionBody,
     FunctionBuilderError,
-    ModuleResources,
+    InstructionBuilder,
+    ValueDefinition,
+    ValueUser,
+    Variable,
+    VariableTranslator,
 };
+use crate::{primitive::Instr, Error, ModuleResources};
 use core::mem::take;
+use derive_more::Display;
 use entity::{
     ComponentMap,
     ComponentVec,
@@ -69,6 +72,17 @@ impl FunctionBody {
             state: FunctionBuilderState::LocalVariables,
         }
     }
+}
+
+/// The current state of the function body construction.
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FunctionBuilderState {
+    /// Declare local variables used in the function body.
+    #[display(fmt = "local variables")]
+    LocalVariables = 1,
+    /// Define the function body.
+    #[display(fmt = "function body")]
+    Body = 2,
 }
 
 /// A branching edge entity.
