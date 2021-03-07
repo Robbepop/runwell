@@ -49,6 +49,33 @@ jobs:
           command: test
           args: --no-fail-fast
 
+  test-release:
+    name: Test (Opt.)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release --no-fail-fast
+        env:
+          RUSTFLAGS: '-Cdebug-assertions=y -Coverflow-checks=y -Dwarnings'
+
   fmt:
     name: Formatting
     runs-on: ubuntu-latest
