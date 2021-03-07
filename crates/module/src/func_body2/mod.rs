@@ -52,6 +52,7 @@ use ir::{
         ValueEntity,
     },
     DisplayEdge,
+    DisplayInstruction,
     Indent,
 };
 use smallvec::SmallVec;
@@ -134,10 +135,10 @@ impl FunctionBody {
     pub(crate) fn display_with_indent(
         &self,
         f: &mut fmt::Formatter<'_>,
-        ident: Indent,
+        indent: Indent,
     ) -> fmt::Result {
-        let block_identation = ident;
-        let instr_identation = ident + Indent::single();
+        let block_identation = indent;
+        let instr_identation = indent + Indent::single();
         for block in self.blocks.indices() {
             writeln!(f, "{}block {}", block_identation, block)?;
             if let Some((first, rest)) = self.block_params[block].split_first()
@@ -154,35 +155,30 @@ impl FunctionBody {
                 let instr_values = self.instr_values(instr);
                 let instr_values_tuples = instr_values.len() >= 2;
                 write!(f, "{}", instr_identation)?;
-                match instr_values.split_first() {
-                    None => {
-                        writeln!(f, "{}", instr_data)?;
+                if let Some((&first, rest)) = instr_values.split_first() {
+                    write!(f, "let ")?;
+                    if instr_values_tuples {
+                        write!(f, "(")?;
                     }
-                    Some((&first, rest)) => {
-                        write!(f, "let ")?;
-                        if instr_values_tuples {
-                            write!(f, "(")?;
-                        }
-                        if let Some(first) = first {
-                            let value_type = self.value_type[first];
-                            write!(f, "{}: {}", first, value_type)?;
+                    if let Some(first) = first {
+                        let value_type = self.value_type[first];
+                        write!(f, "{}: {}", first, value_type)?;
+                    } else {
+                        write!(f, "_")?;
+                    }
+                    for &value in rest {
+                        if let Some(value) = value {
+                            let value_type = self.value_type[value];
+                            write!(f, ", {}: {}", value, value_type)?;
                         } else {
-                            write!(f, "_")?;
+                            write!(f, ", _")?;
                         }
-                        for &value in rest {
-                            if let Some(value) = value {
-                                let value_type = self.value_type[value];
-                                write!(f, ", {}: {}", value, value_type)?;
-                            } else {
-                                write!(f, ", _")?;
-                            }
-                        }
-                        if instr_values_tuples {
-                            write!(f, ")")?;
-                        }
-                        writeln!(f, " = {}", instr_data)?;
+                    }
+                    if instr_values_tuples {
+                        write!(f, ")")?;
                     }
                 }
+                instr_data.display_instruction(f, instr_identation, self)?;
             }
             writeln!(f, "{}}}", block_identation)?;
         }
