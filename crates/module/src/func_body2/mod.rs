@@ -188,3 +188,18 @@ impl FunctionBody {
         Ok(())
     }
 }
+
+impl DisplayEdge for FunctionBody {
+    fn display_edge(&self, f: &mut fmt::Formatter, edge: Edge) -> fmt::Result {
+        write!(f, "{}", self.edge_destination[edge])?;
+        if let Some((first, rest)) = self.edge_args[edge].split_first() {
+            write!(f, "(")?;
+            write!(f, "{}", first)?;
+            for arg in rest {
+                write!(f, ", {}", arg)?;
+            }
+            write!(f, ")")?;
+        }
+        Ok(())
+    }
+}
