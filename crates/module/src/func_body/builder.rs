@@ -482,11 +482,11 @@ impl<'a> FunctionBuilder<'a> {
         phi_value: Value,
     ) -> Result<Value, Error> {
         let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
-        let equivalent_value = match incomplete_phi.is_trivial(phi_value)? {
-            Some(equivalent_value) => {
+        let equivalent = match incomplete_phi.is_trivial(phi_value)? {
+            Some(equivalent) => {
                 // The phi instruction is trivial and the returned value
                 // is equivalent and shall replace it from now on.
-                equivalent_value
+                equivalent
             }
             None => {
                 // The phi instruction is non-trivial, return it.
@@ -498,27 +498,25 @@ impl<'a> FunctionBuilder<'a> {
         // Additionally this allows us to iterate over users without borrow checker issues.
         //
         // Remove phi from its own users in case it was using itself.
-        let same = equivalent_value;
         let phi_instr = self.phi_value_to_instr(phi_value);
-        self.ctx.value_users[phi_value].remove(&phi_instr);
-        let users = take(&mut self.ctx.value_users[phi_value]);
+        let mut users = take(&mut self.ctx.value_users[phi_value]);
+        users.remove(&phi_instr);
         let phi_block = self.ctx.phi_block[phi_value];
         let phi_var = self.ctx.phi_var[phi_value];
-        let phi_value = self.phi_instr_to_value(phi_instr);
         let phi_type = self.ctx.value_type[phi_value];
         self.ctx.block_phis[phi_block].remove(phi_var);
         self.ctx
             .vars
-            .replace_var(phi_var, phi_block, phi_value, same, phi_type)?;
+            .replace_var(phi_var, phi_block, phi_value, equivalent, phi_type)?;
         for user in users {
-            let got_replaced = self.replace_user_values(user, phi_value, same);
+            let got_replaced = self.replace_user_values(user, phi_value, equivalent);
             if got_replaced && self.ctx.instrs[user].is_phi() {
                 // If the user was an incomplete phi and there was an actual replacement
                 // we have to check if the phi is now trivial as well.
                 self.try_remove_trivial_phi(phi_value)?;
             }
         }
-        Ok(same)
+        Ok(equivalent)
     }
 
     /// Replaces occurrences of `replace_value` with `with_value` for the given user instruction.
