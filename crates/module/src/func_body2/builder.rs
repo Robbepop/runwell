@@ -458,6 +458,23 @@ impl<'a> FunctionBuilder<'a> {
         self.try_remove_trivial_param(param)
     }
 
+    /// Returns `true` if all incoming edges of the block have the same source block.
+    ///
+    /// Returns `false` otherwise or if there are no incoming edges for the block.
+    fn has_unique_predecessor_block(&self, block: Block) -> bool {
+        let mut same = None;
+        for edge in &self.ctx.block_edges[block] {
+            let block = self.ctx.edge_src[*edge];
+            if let Some(same) = same {
+                if block != same {
+                    return false
+                }
+            }
+            same = Some(block);
+        }
+        same.is_some()
+    }
+
     /// Reads the given variable starting from the given block.
     fn read_var_in_block(
         &mut self,
@@ -477,12 +494,9 @@ impl<'a> FunctionBuilder<'a> {
                 self.create_incomplete_block_parameter(var, var_type, block)?;
             return Ok(value)
         }
-        let value = if self.ctx.block_edges[block].len() == 1 {
-            // TODO: We might be able to also skip incomplete block parameter
-            //       if all source blocks of all edges are the same basic block.
-            //
-            // Optimize the common case of one incoming edge:
-            // No incomplete block parameter required.
+        let value = if self.has_unique_predecessor_block(block) {
+            // Optimize the common case where all incoming edges have the same
+            // source basic block. No incomplete block parameter required in this case.
             let pred = self.ctx.block_edges[block]
                 .first()
                 .copied()
