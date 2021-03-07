@@ -31,13 +31,21 @@ use entity::{
     DefaultComponentMap,
     DefaultComponentVec,
     EntityArena,
-    Idx,
     PhantomEntityArena,
     RawIdx,
 };
 use ir::{
     instr::Instruction,
-    primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
+    primitive::{
+        Block,
+        BlockEntity,
+        Edge,
+        EdgeEntity,
+        Func,
+        Type,
+        Value,
+        ValueEntity,
+    },
     VisitValuesMut,
 };
 use smallvec::SmallVec;
@@ -84,17 +92,6 @@ pub enum FunctionBuilderState {
     #[display(fmt = "function body")]
     Body = 2,
 }
-
-/// A branching edge entity.
-///
-/// An entity of this kind represents a single edge between a pair
-/// of two basic blocks with a branch between them. There can be
-/// multiple such edges between the same pair of basic blocks.
-#[derive(Debug)]
-pub enum EdgeEntity {}
-
-/// A unique edge entity reference.
-pub type Edge = Idx<EdgeEntity>;
 
 /// The context that is built during IR function construction.
 #[derive(Debug)]

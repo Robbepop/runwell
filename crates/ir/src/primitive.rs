@@ -33,6 +33,17 @@ impl DisplayHook for Instruction {
     }
 }
 
+/// A branching edge entity.
+///
+/// An entity of this kind represents a single edge between a pair
+/// of two basic blocks with a branch between them. There can be
+/// multiple such edges between the same pair of basic blocks.
+#[derive(Debug)]
+pub enum EdgeEntity {}
+
+/// A unique edge entity reference.
+pub type Edge = Idx<EdgeEntity>;
+
 /// A function entity of the Runwell IR.
 #[derive(Debug, Default)]
 pub struct FunctionEntity;
