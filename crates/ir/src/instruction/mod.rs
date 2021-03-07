@@ -21,6 +21,7 @@ mod memory;
 mod phi;
 mod select;
 mod terminal;
+mod terminal_2;
 
 pub use self::{
     call::{CallIndirectInstr, CallInstr},
@@ -71,6 +72,15 @@ pub use self::{
         TailCallInstr,
         TerminalInstr,
     },
+    terminal_2::{
+        BranchInstr as BranchInstr2,
+        BranchTableInstr as BranchTableInstr2,
+        IfThenElseInstr as IfThenElseInstr2,
+        ReturnInstr as ReturnInstr2,
+        TailCallIndirectInstr as TailCallIndirectInstr2,
+        TailCallInstr as TailCallInstr2,
+        TerminalInstr as TerminalInstr2,
+    },
 };
 use super::primitive::Value;
 use crate::{primitive::Block, VisitValues, VisitValuesMut};
@@ -104,6 +114,7 @@ pub enum Instruction {
     Select(SelectInstr),
     Reinterpret(ReinterpretInstr),
     Terminal(TerminalInstr),
+    Terminal2(TerminalInstr2),
     Int(IntInstr),
     Float(FloatInstr),
 }
@@ -111,7 +122,7 @@ pub enum Instruction {
 impl Instruction {
     /// Returns `true` if the instruction terminates a basic block.
     pub fn is_terminal(&self) -> bool {
-        matches!(self, Self::Terminal(_))
+        matches!(self, Self::Terminal(_) | Self::Terminal2(_))
     }
 
     /// Returns `true` if the instruction is a ϕ-instruction.
@@ -138,6 +149,7 @@ impl VisitValues for Instruction {
             Self::Select(instr) => instr.visit_values(visitor),
             Self::Reinterpret(instr) => instr.visit_values(visitor),
             Self::Terminal(instr) => instr.visit_values(visitor),
+            Self::Terminal2(instr) => instr.visit_values(visitor),
             Self::Int(instr) => instr.visit_values(visitor),
             Self::Float(instr) => instr.visit_values(visitor),
         }
@@ -162,6 +174,7 @@ impl VisitValuesMut for Instruction {
             Self::Select(instr) => instr.visit_values_mut(visitor),
             Self::Reinterpret(instr) => instr.visit_values_mut(visitor),
             Self::Terminal(instr) => instr.visit_values_mut(visitor),
+            Self::Terminal2(instr) => instr.visit_values_mut(visitor),
             Self::Int(instr) => instr.visit_values_mut(visitor),
             Self::Float(instr) => instr.visit_values_mut(visitor),
         }

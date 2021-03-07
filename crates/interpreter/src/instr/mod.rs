@@ -101,6 +101,7 @@ impl InterpretInstr for Instruction {
             Self::Select(instr) => instr.interpret_instr(outputs, frame),
             Self::Reinterpret(instr) => instr.interpret_instr(outputs, frame),
             Self::Terminal(instr) => instr.interpret_instr(outputs, frame),
+            Self::Terminal2(_instr) => unimplemented!(),
             Self::Int(instr) => instr.interpret_instr(outputs, frame),
             Self::Float(instr) => instr.interpret_instr(outputs, frame),
         }
