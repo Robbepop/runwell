@@ -407,16 +407,6 @@ impl<'a> FunctionBuilder<'a> {
         var_type: Type,
         block: Block,
     ) -> Result<Value, Error> {
-        debug_assert!(
-            !self.ctx.block_sealed.get(block),
-            "cannot create incomplete block parameter for sealed block {}",
-            block
-        );
-        debug_assert!(
-            !self.ctx.block_filled.get(block),
-            "cannot create incomplete block parameter for filled block {}",
-            block
-        );
         let value = self.ctx.values.alloc_some(1);
         let pos = self.ctx.block_params[block].len();
         assert!(
