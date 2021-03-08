@@ -86,10 +86,8 @@ impl InterpretInstr for TruncateIntInstr {
             (0x1 << bits) - 1
         }
         let result = match self.dst_type() {
-            IntType::I8 => source & mask(8),
-            IntType::I16 => source & mask(16),
-            IntType::I32 => source & mask(32),
             IntType::I64 => source,
+            int_ty => source & mask(int_ty.bit_width()),
         };
         frame.write_register(return_value, result as u64);
         Ok(InterpretationFlow::Continue)
@@ -107,23 +105,21 @@ impl InterpretInstr for ExtendIntInstr {
         debug_assert!(
             self.src_type().bit_width() <= self.dst_type().bit_width()
         );
+        use IntType::{I1, I16, I32, I64, I8};
         let result = if self.is_signed() {
             match (self.src_type(), self.dst_type()) {
-                (IntType::I8, IntType::I16) => {
-                    source as u8 as i8 as i16 as u16 as u64
-                }
-                (IntType::I8, IntType::I32) => {
-                    source as u8 as i8 as i32 as u32 as u64
-                }
-                (IntType::I8, IntType::I64) => source as u8 as i8 as i64 as u64,
-                (IntType::I16, IntType::I32) => {
-                    source as u16 as i16 as i32 as u32 as u64
-                }
-                (IntType::I32, IntType::I64) => {
-                    source as u32 as i32 as i64 as u64
-                }
+                (I1, I8) => self::I1::from_reg(source).extend_to_i8() as u64,
+                (I1, I16) => self::I1::from_reg(source).extend_to_i16() as u64,
+                (I1, I32) => self::I1::from_reg(source).extend_to_i32() as u64,
+                (I1, I64) => self::I1::from_reg(source).extend_to_i64() as u64,
+                (I8, I16) => source as u8 as i8 as i16 as u16 as u64,
+                (I8, I32) => source as u8 as i8 as i32 as u32 as u64,
+                (I8, I64) => source as u8 as i8 as i64 as u64,
+                (I16, I32) => source as u16 as i16 as i32 as u32 as u64,
+                (I16, I64) => source as u16 as i16 as i64 as u64,
+                (I32, I64) => source as u32 as i32 as i64 as u64,
                 (x, y) if x == y => source,
-                _ => unreachable!(),
+                _ => unreachable!("encountered invalid integer extension"),
             }
         } else {
             // Nothing to do since interpreter registers are `u64`.
@@ -156,9 +152,12 @@ impl InterpretInstr for IntToFloatInstr {
         let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
-        use IntType::{I16, I32, I64, I8};
+        use IntType::{I1, I16, I32, I64, I8};
         let result = match (self.is_signed(), self.src_type(), self.dst_type())
         {
+            (_, I1, _) => {
+                unimplemented!("i1 to float casts are not yet implemented")
+            }
             // uN -> f32
             (false, I8, F32) => (source as u8 as f32).to_bits() as u64,
             (false, I16, F32) => (source as u16 as f32).to_bits() as u64,
@@ -217,19 +216,33 @@ impl InterpretInstr for CompareIntInstr {
             result as u64
         }
         let result = match self.ty() {
+            IntType::I1 => {
+                let lhs = I1::from_reg(lhs);
+                let rhs = I1::from_reg(rhs);
+                match self.op() {
+                    Op::Eq => I1::new(lhs == rhs).into_reg(),
+                    Op::Ne => I1::new(lhs != rhs).into_reg(),
+                    undefined => {
+                        unimplemented!(
+                            "{} comparison between I1 values is undefined",
+                            undefined,
+                        )
+                    }
+                }
+            }
             IntType::I8 => {
-                let lhs = lhs as u8;
-                let rhs = rhs as u8;
+                let lhs = u8::from_reg(lhs);
+                let rhs = u8::from_reg(rhs);
                 cmp(self.op(), lhs, rhs, |lhs| lhs as i8)
             }
             IntType::I16 => {
-                let lhs = lhs as u16;
-                let rhs = rhs as u16;
+                let lhs = u16::from_reg(lhs);
+                let rhs = u16::from_reg(rhs);
                 cmp(self.op(), lhs, rhs, |lhs| lhs as i16)
             }
             IntType::I32 => {
-                let lhs = lhs as u32;
-                let rhs = rhs as u32;
+                let lhs = u32::from_reg(lhs);
+                let rhs = u32::from_reg(rhs);
                 cmp(self.op(), lhs, rhs, |lhs| lhs as i32)
             }
             IntType::I64 => cmp(self.op(), lhs, rhs, |lhs| lhs as i64),
@@ -263,17 +276,23 @@ mod conv {
 pub trait PrimitiveInteger: Copy {
     fn from_reg(reg: u64) -> Self;
     fn into_reg(self) -> u64;
+}
 
+/// Trait used to streamline division operations on primitive integer types.
+pub trait PrimitiveIntegerDivision: PrimitiveInteger {
     fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError>;
     fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError>;
 }
+
 macro_rules! impl_primitive_integer_for {
     ( $( ($type:ty, $reg_to_val:ident, $val_to_reg:ident) ),* $(,)? ) => {
         $(
             impl PrimitiveInteger for $type {
                 fn from_reg(reg: u64) -> Self { conv::$reg_to_val(reg) }
                 fn into_reg(self) -> u64 { conv::$val_to_reg(self) }
+            }
 
+            impl PrimitiveIntegerDivision for $type {
                 fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError> {
                     self.checked_div(rhs).ok_or(InterpretationError::DivisionByZero)
                 }
@@ -295,6 +314,93 @@ impl_primitive_integer_for! {
     (u64, reg_to_u64, u64_to_reg),
 }
 
+/// 1-bit integer type.
+///
+/// Used to implement `PrimitiveInteger` trait so that it can be used on a subset
+/// of the available integer instructions.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct I1 {
+    value: bool,
+}
+
+impl I1 {
+    /// Creates a new `I1` value from the given `bool`.
+    fn new(value: bool) -> Self {
+        Self { value }
+    }
+
+    /// Extends the `I1` value to an `i8` value.
+    pub fn extend_to_i8(self) -> i8 {
+        if self.value {
+            i8::MIN
+        } else {
+            0
+        }
+    }
+
+    /// Extends the `I1` value to an `i16` value.
+    pub fn extend_to_i16(self) -> i16 {
+        if self.value {
+            i16::MIN
+        } else {
+            0
+        }
+    }
+
+    /// Extends the `I1` value to an `i32` value.
+    pub fn extend_to_i32(self) -> i32 {
+        if self.value {
+            i32::MIN
+        } else {
+            0
+        }
+    }
+
+    /// Extends the `I1` value to an `i64` value.
+    pub fn extend_to_i64(self) -> i64 {
+        if self.value {
+            i64::MIN
+        } else {
+            0
+        }
+    }
+}
+
+impl PrimitiveInteger for I1 {
+    fn from_reg(reg: u64) -> Self {
+        debug_assert!(reg <= 1);
+        I1 { value: reg != 0 }
+    }
+
+    fn into_reg(self) -> u64 {
+        self.value as u64
+    }
+}
+
+impl core::ops::BitAnd for I1 {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self::new(self.value & rhs.value)
+    }
+}
+
+impl core::ops::BitOr for I1 {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self::new(self.value | rhs.value)
+    }
+}
+
+impl core::ops::BitXor for I1 {
+    type Output = Self;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self::new(self.value ^ rhs.value)
+    }
+}
+
 impl InterpretInstr for ShiftIntInstr {
     fn interpret_instr(
         &self,
@@ -311,9 +417,12 @@ impl InterpretInstr for ShiftIntInstr {
         {
             f(T::from_reg(lhs), rhs as u32).into_reg()
         }
-        use IntType::{I16, I32, I64, I8};
+        use IntType::{I1, I16, I32, I64, I8};
         use ShiftIntOp::*;
         let result = match (self.op(), self.ty()) {
+            (_, I1) => {
+                unimplemented!("shift operations are undefined for I1 types")
+            }
             (Shl, I8) => eval_shift(src, shamt, u8::wrapping_shl),
             (Shl, I16) => eval_shift(src, shamt, u16::wrapping_shl),
             (Shl, I32) => eval_shift(src, shamt, u32::wrapping_shl),
@@ -351,8 +460,8 @@ impl InterpretInstr for BinaryIntInstr {
         let rhs = frame.read_register(self.rhs());
         use core::ops::{BitAnd, BitOr, BitXor};
         use BinaryIntOp::*;
-        use IntType::{I16, I32, I64, I8};
-        use PrimitiveInteger as PrimInt;
+        use IntType::{I1, I16, I32, I64, I8};
+        use PrimitiveIntegerDivision as PrimDiv;
         fn eval<T, F>(lhs: u64, rhs: u64, f: F) -> u64
         where
             T: PrimitiveInteger,
@@ -366,12 +475,33 @@ impl InterpretInstr for BinaryIntInstr {
             f: F,
         ) -> Result<u64, InterpretationError>
         where
-            T: PrimitiveInteger,
+            T: PrimitiveIntegerDivision,
             F: FnOnce(T, T) -> Result<T, InterpretationError>,
         {
             Ok(f(T::from_reg(lhs), T::from_reg(rhs))?.into_reg())
         }
         let result = match (self.op(), self.ty()) {
+            (And, I1) => eval(lhs, rhs, self::I1::bitand),
+            (And, I8) => eval(lhs, rhs, u8::bitand),
+            (And, I16) => eval(lhs, rhs, u16::bitand),
+            (And, I32) => eval(lhs, rhs, u32::bitand),
+            (And, I64) => eval(lhs, rhs, u64::bitand),
+            (Or, I1) => eval(lhs, rhs, self::I1::bitor),
+            (Or, I8) => eval(lhs, rhs, u8::bitor),
+            (Or, I16) => eval(lhs, rhs, u16::bitor),
+            (Or, I32) => eval(lhs, rhs, u32::bitor),
+            (Or, I64) => eval(lhs, rhs, u64::bitor),
+            (Xor, I1) => eval(lhs, rhs, self::I1::bitxor),
+            (Xor, I8) => eval(lhs, rhs, u8::bitxor),
+            (Xor, I16) => eval(lhs, rhs, u16::bitxor),
+            (Xor, I32) => eval(lhs, rhs, u32::bitxor),
+            (Xor, I64) => eval(lhs, rhs, u64::bitxor),
+            (op, I1) => {
+                unimplemented!(
+                    "binary integer operator {} is not defined on I1 types",
+                    op
+                )
+            }
             (Add, I8) => eval(lhs, rhs, u8::wrapping_add),
             (Add, I16) => eval(lhs, rhs, u16::wrapping_add),
             (Add, I32) => eval(lhs, rhs, u32::wrapping_add),
@@ -384,34 +514,22 @@ impl InterpretInstr for BinaryIntInstr {
             (Mul, I16) => eval(lhs, rhs, u16::wrapping_mul),
             (Mul, I32) => eval(lhs, rhs, u32::wrapping_mul),
             (Mul, I64) => eval(lhs, rhs, u64::wrapping_mul),
-            (Sdiv, I8) => eval_div(lhs, rhs, <i8 as PrimInt>::checked_div)?,
-            (Sdiv, I16) => eval_div(lhs, rhs, <i16 as PrimInt>::checked_div)?,
-            (Sdiv, I32) => eval_div(lhs, rhs, <i32 as PrimInt>::checked_div)?,
-            (Sdiv, I64) => eval_div(lhs, rhs, <i64 as PrimInt>::checked_div)?,
-            (Udiv, I8) => eval_div(lhs, rhs, <u8 as PrimInt>::checked_div)?,
-            (Udiv, I16) => eval_div(lhs, rhs, <u16 as PrimInt>::checked_div)?,
-            (Udiv, I32) => eval_div(lhs, rhs, <u32 as PrimInt>::checked_div)?,
-            (Udiv, I64) => eval_div(lhs, rhs, <u64 as PrimInt>::checked_div)?,
-            (Srem, I8) => eval_div(lhs, rhs, <i8 as PrimInt>::checked_rem)?,
-            (Srem, I16) => eval_div(lhs, rhs, <i16 as PrimInt>::checked_rem)?,
-            (Srem, I32) => eval_div(lhs, rhs, <i32 as PrimInt>::checked_rem)?,
-            (Srem, I64) => eval_div(lhs, rhs, <i64 as PrimInt>::checked_rem)?,
-            (Urem, I8) => eval_div(lhs, rhs, <u8 as PrimInt>::checked_rem)?,
-            (Urem, I16) => eval_div(lhs, rhs, <u16 as PrimInt>::checked_rem)?,
-            (Urem, I32) => eval_div(lhs, rhs, <u32 as PrimInt>::checked_rem)?,
-            (Urem, I64) => eval_div(lhs, rhs, <u64 as PrimInt>::checked_rem)?,
-            (And, I8) => eval(lhs, rhs, u8::bitand),
-            (And, I16) => eval(lhs, rhs, u16::bitand),
-            (And, I32) => eval(lhs, rhs, u32::bitand),
-            (And, I64) => eval(lhs, rhs, u64::bitand),
-            (Or, I8) => eval(lhs, rhs, u8::bitor),
-            (Or, I16) => eval(lhs, rhs, u16::bitor),
-            (Or, I32) => eval(lhs, rhs, u32::bitor),
-            (Or, I64) => eval(lhs, rhs, u64::bitor),
-            (Xor, I8) => eval(lhs, rhs, u8::bitxor),
-            (Xor, I16) => eval(lhs, rhs, u16::bitxor),
-            (Xor, I32) => eval(lhs, rhs, u32::bitxor),
-            (Xor, I64) => eval(lhs, rhs, u64::bitxor),
+            (Sdiv, I8) => eval_div(lhs, rhs, <i8 as PrimDiv>::checked_div)?,
+            (Sdiv, I16) => eval_div(lhs, rhs, <i16 as PrimDiv>::checked_div)?,
+            (Sdiv, I32) => eval_div(lhs, rhs, <i32 as PrimDiv>::checked_div)?,
+            (Sdiv, I64) => eval_div(lhs, rhs, <i64 as PrimDiv>::checked_div)?,
+            (Udiv, I8) => eval_div(lhs, rhs, <u8 as PrimDiv>::checked_div)?,
+            (Udiv, I16) => eval_div(lhs, rhs, <u16 as PrimDiv>::checked_div)?,
+            (Udiv, I32) => eval_div(lhs, rhs, <u32 as PrimDiv>::checked_div)?,
+            (Udiv, I64) => eval_div(lhs, rhs, <u64 as PrimDiv>::checked_div)?,
+            (Srem, I8) => eval_div(lhs, rhs, <i8 as PrimDiv>::checked_rem)?,
+            (Srem, I16) => eval_div(lhs, rhs, <i16 as PrimDiv>::checked_rem)?,
+            (Srem, I32) => eval_div(lhs, rhs, <i32 as PrimDiv>::checked_rem)?,
+            (Srem, I64) => eval_div(lhs, rhs, <i64 as PrimDiv>::checked_rem)?,
+            (Urem, I8) => eval_div(lhs, rhs, <u8 as PrimDiv>::checked_rem)?,
+            (Urem, I16) => eval_div(lhs, rhs, <u16 as PrimDiv>::checked_rem)?,
+            (Urem, I32) => eval_div(lhs, rhs, <u32 as PrimDiv>::checked_rem)?,
+            (Urem, I64) => eval_div(lhs, rhs, <u64 as PrimDiv>::checked_rem)?,
         };
         frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)

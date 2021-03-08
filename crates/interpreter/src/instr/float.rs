@@ -284,9 +284,12 @@ impl InterpretInstr for FloatToIntInstr {
         let return_value = extract_single_output(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
-        use IntType::{I16, I32, I64, I8};
+        use IntType::{I1, I16, I32, I64, I8};
         let result = match (self.is_signed(), self.src_type(), self.dst_type())
         {
+            (_, _, I1) => {
+                unimplemented!("float to i1 casts are not yet implemented")
+            }
             // f32 -> uN
             (false, F32, I8) => reg_f32(source) as u8 as u64,
             (false, F32, I16) => reg_f32(source) as u16 as u64,

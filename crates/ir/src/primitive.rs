@@ -133,8 +133,6 @@ impl DisplayHook for ValueEntity {
     Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 pub enum Type {
-    #[display(fmt = "bool")]
-    Bool,
     #[display(fmt = "ptr")]
     Ptr,
     Int(IntType),
@@ -145,7 +143,6 @@ impl Type {
     /// Returns the bit width of the type.
     pub fn bit_width(&self) -> u32 {
         match self {
-            Self::Bool => 1,
             Self::Ptr => 32,
             Self::Int(int_type) => int_type.bit_width(),
             Self::Float(float_type) => float_type.bit_width(),
@@ -155,7 +152,6 @@ impl Type {
     /// Returns the alignment exponent, `N` in `2^N`.
     pub fn alignment(&self) -> u8 {
         match self {
-            Self::Bool => 0,
             Self::Ptr => 2,
             Self::Int(int_type) => int_type.alignment(),
             Self::Float(float_type) => float_type.alignment(),
@@ -166,6 +162,8 @@ impl Type {
 /// Any fixed-size integer type.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IntType {
+    #[display(fmt = "i1")]
+    I1,
     #[display(fmt = "i8")]
     I8,
     #[display(fmt = "i16")]
@@ -180,6 +178,7 @@ impl IntType {
     /// Returns the bit width of the fixed-size integer type.
     pub fn bit_width(&self) -> u32 {
         match self {
+            Self::I1 => 1,
             Self::I8 => 8,
             Self::I16 => 16,
             Self::I32 => 32,
@@ -190,6 +189,7 @@ impl IntType {
     /// Returns the alignment exponent, `N` in `2^N`.
     pub fn alignment(&self) -> u8 {
         match self {
+            Self::I1 => 0,
             Self::I8 => 0,
             Self::I16 => 1,
             Self::I32 => 2,
@@ -230,7 +230,6 @@ impl FloatType {
     Debug, Display, From, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 pub enum Const {
-    Bool(bool),
     Ptr(u32),
     Int(IntConst),
     Float(FloatConst),
@@ -240,7 +239,6 @@ impl Const {
     /// Returns the type of the constant value.
     pub fn ty(&self) -> Type {
         match self {
-            Self::Bool(_) => Type::Bool,
             Self::Ptr(_) => Type::Ptr,
             Self::Int(int_const) => int_const.ty(),
             Self::Float(float_const) => float_const.ty(),
@@ -250,7 +248,6 @@ impl Const {
     /// Returns the underlying 64-bits of the constant.
     pub fn into_bits64(self) -> u64 {
         match self {
-            Self::Bool(bool_const) => bool_const as u64,
             Self::Ptr(ptr_value) => ptr_value as u64,
             Self::Int(int_const) => int_const.into_bits64(),
             Self::Float(float_const) => float_const.into_bits64(),
@@ -261,6 +258,7 @@ impl Const {
 /// A constant fixed-size integer value.
 #[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum IntConst {
+    I1(bool),
     I8(i8),
     I16(i16),
     I32(i32),
@@ -270,17 +268,24 @@ pub enum IntConst {
 impl IntConst {
     /// Returns the type of the constant fixed-size integer.
     pub fn ty(&self) -> Type {
+        self.int_ty().into()
+    }
+
+    /// Returns the type of the constant fixed-size integer.
+    pub fn int_ty(&self) -> IntType {
         match self {
-            Self::I8(_) => IntType::I8.into(),
-            Self::I16(_) => IntType::I16.into(),
-            Self::I32(_) => IntType::I32.into(),
-            Self::I64(_) => IntType::I64.into(),
+            Self::I1(_) => IntType::I1,
+            Self::I8(_) => IntType::I8,
+            Self::I16(_) => IntType::I16,
+            Self::I32(_) => IntType::I32,
+            Self::I64(_) => IntType::I64,
         }
     }
 
     /// Returns the underlying 64-bits of the constant.
     pub fn into_bits64(self) -> u64 {
         match self {
+            Self::I1(value) => value as u64,
             Self::I8(value) => value as u8 as u64,
             Self::I16(value) => value as u16 as u64,
             Self::I32(value) => value as u32 as u64,

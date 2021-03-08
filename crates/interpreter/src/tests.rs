@@ -111,14 +111,11 @@ fn bits_into_const(module: &Module, func: Func, bits: Vec<u64>) -> Vec<Const> {
         .zip(outputs)
         .map(|(bits, ty)| {
             match ty {
-                Type::Bool => {
-                    assert!(bits <= 1);
-                    Const::Bool(bits != 0)
-                }
                 Type::Ptr => {
                     assert!(bits & ((0x1 << 16) - 1) == 0);
                     Const::Ptr(bits as u32)
                 }
+                Type::Int(IntType::I1) => IntConst::I1(bits != 0).into(),
                 Type::Int(IntType::I8) => IntConst::I8(bits as i8).into(),
                 Type::Int(IntType::I16) => IntConst::I16(bits as i16).into(),
                 Type::Int(IntType::I32) => IntConst::I32(bits as i32).into(),
@@ -459,7 +456,7 @@ where
     let func_type = type_builder.push_type({
         let mut b = FunctionType::build();
         b.push_input(IntType::I32);
-        b.push_output(Type::Bool);
+        b.push_output(IntType::I1);
         b.finalize()
     });
     // Pre declare functions used before they are defined.
@@ -492,7 +489,7 @@ where
         .if_then_else(v2, if_zero, if_not_zero, vec![], vec![])?;
 
     b.switch_to_block(if_zero)?;
-    let v3 = b.ins()?.constant(Const::Bool(true))?;
+    let v3 = b.ins()?.constant(IntConst::I1(true))?;
     b.ins()?.return_values([v3].iter().copied())?;
     b.seal_block(if_zero)?;
 
@@ -532,7 +529,7 @@ where
         .if_then_else(v2, if_zero, if_not_zero, vec![], vec![])?;
 
     b.switch_to_block(if_zero)?;
-    let v3 = b.ins()?.constant(Const::Bool(false))?;
+    let v3 = b.ins()?.constant(IntConst::I1(false))?;
     b.ins()?.return_values([v3].iter().copied())?;
     b.seal_block(if_zero)?;
 
@@ -568,11 +565,11 @@ fn ping_pong_calls() -> Result<(), module::Error> {
 
         let is_even_result = evaluate_func_in_ctx(&mut ctx, is_even, &[input]);
         let is_even_result = bits_into_const(&module, is_even, is_even_result);
-        assert_eq!(is_even_result, vec![Const::Bool(x % 2 == 0)]);
+        assert_eq!(is_even_result, vec![IntConst::I1(x % 2 == 0).into()]);
 
         let is_odd_result = evaluate_func_in_ctx(&mut ctx, is_odd, &[input]);
         let is_odd_result = bits_into_const(&module, is_odd, is_odd_result);
-        assert_eq!(is_odd_result, vec![Const::Bool(x % 2 == 1)]);
+        assert_eq!(is_odd_result, vec![IntConst::I1(x % 2 == 1).into()]);
     }
     Ok(())
 }
@@ -590,11 +587,11 @@ fn ping_pong_tail_calls() -> Result<(), module::Error> {
 
         let is_even_result = evaluate_func_in_ctx(&mut ctx, is_even, &[input]);
         let is_even_result = bits_into_const(&module, is_even, is_even_result);
-        assert_eq!(is_even_result, vec![Const::Bool(x % 2 == 0)]);
+        assert_eq!(is_even_result, vec![IntConst::I1(x % 2 == 0).into()]);
 
         let is_odd_result = evaluate_func_in_ctx(&mut ctx, is_odd, &[input]);
         let is_odd_result = bits_into_const(&module, is_odd, is_odd_result);
-        assert_eq!(is_odd_result, vec![Const::Bool(x % 2 == 1)]);
+        assert_eq!(is_odd_result, vec![IntConst::I1(x % 2 == 1).into()]);
     }
 
     Ok(())

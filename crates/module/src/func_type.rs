@@ -139,7 +139,7 @@ mod tests {
         use ir::primitive::{FloatType, IntType};
         let mut b = FunctionType::build();
         b.push_input(IntType::I32);
-        b.push_input(Type::Bool);
+        b.push_input(IntType::I1);
         b.push_input(FloatType::F64);
         b.push_output(IntType::I64);
         b.push_output(FloatType::F32);
@@ -159,7 +159,11 @@ mod tests {
         let dummy_func_type = dummy_func_type();
         assert_eq!(
             dummy_func_type.inputs(),
-            &[IntType::I32.into(), Type::Bool, FloatType::F64.into()]
+            &[
+                IntType::I32.into(),
+                IntType::I1.into(),
+                FloatType::F64.into()
+            ]
         );
         assert_eq!(
             dummy_func_type.outputs(),
@@ -181,12 +185,12 @@ mod tests {
         let dummy_func_type = dummy_func_type();
         assert_eq!(
             format!("{:?}", dummy_func_type),
-            "FunctionType { inputs: [Int(I32), Bool, Float(F64)], outputs: [Int(I64), Float(F32)] }"
+            "FunctionType { inputs: [Int(I32), Int(I1), Float(F64)], outputs: [Int(I64), Float(F32)] }"
                 .to_string()
         );
         assert_eq!(
             format!("{}", dummy_func_type),
-            "[i32, bool, f64] => [i64, f32]".to_string()
+            "[i32, i1, f64] => [i64, f32]".to_string()
         );
     }
 }

@@ -14,7 +14,7 @@
 
 use super::super::FunctionBodyTranslator;
 use crate::Error;
-use ir::primitive::{IntConst, IntType, Value};
+use ir::primitive::{IntType, Value};
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Translates a Runwell `bool` result into an equivalent Wasm `i32` result.
@@ -22,13 +22,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         bool_result: Value,
     ) -> Result<(), Error> {
-        let const_true = self.builder.ins()?.constant(IntConst::I32(0))?;
-        let const_false = self.builder.ins()?.constant(IntConst::I32(1))?;
-        let bool_to_i32 = self.builder.ins()?.select(
-            IntType::I32.into(),
+        let bool_to_i32 = self.builder.ins()?.iextend(
+            IntType::I1,
+            IntType::I32,
             bool_result,
-            const_true,
-            const_false,
+            false,
         )?;
         self.value_stack.push(bool_to_i32, IntType::I32.into());
         Ok(())

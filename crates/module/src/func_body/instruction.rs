@@ -536,7 +536,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
-            self.append_value_instr(instruction.into(), Type::Bool)?;
+            self.append_value_instr(instruction.into(), IntType::I1.into())?;
         self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
@@ -707,7 +707,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareFloatInstr::new(op, ty, lhs, rhs);
         let (value, instr) =
-            self.append_value_instr(instruction.into(), Type::Bool)?;
+            self.append_value_instr(instruction.into(), IntType::I1.into())?;
         self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
@@ -1046,7 +1046,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         A1: IntoIterator<Item = Value>,
         A2: IntoIterator<Item = Value>,
     {
-        self.expect_type(condition, Type::Bool)?;
+        self.expect_type(condition, IntType::I1.into())?;
         let block = self.builder.current_block()?;
         let then_edge =
             self.add_branching_edge(then_target, block, then_args)?;
