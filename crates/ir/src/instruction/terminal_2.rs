@@ -271,7 +271,7 @@ impl DisplayInstruction for IfThenElseInstr {
         write!(f, "if {} then ", self.condition())?;
         displayer.display_edge(f, self.then_edge())?;
         write!(f, " else ")?;
-        displayer.display_edge(f, self.then_edge())?;
+        displayer.display_edge(f, self.else_edge())?;
         Ok(())
     }
 }
