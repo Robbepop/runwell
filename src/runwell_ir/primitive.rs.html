@@ -382,6 +382,11 @@
 <span id="379">379</span>
 <span id="380">380</span>
 <span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -518,8 +523,6 @@
     <span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Type</span> {
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;bool&quot;</span>)]</span>
-    <span class="ident">Bool</span>,
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;ptr&quot;</span>)]</span>
     <span class="ident">Ptr</span>,
     <span class="ident">Int</span>(<span class="ident">IntType</span>),
@@ -530,7 +533,6 @@
     <span class="doccomment">/// Returns the bit width of the type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bit_width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
             <span class="self">Self</span>::<span class="ident">Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
             <span class="self">Self</span>::<span class="ident">Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">bit_width</span>(),
             <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">float_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_type</span>.<span class="ident">bit_width</span>(),
@@ -540,7 +542,6 @@
     <span class="doccomment">/// Returns the alignment exponent, `N` in `2^N`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alignment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
             <span class="self">Self</span>::<span class="ident">Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
             <span class="self">Self</span>::<span class="ident">Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">alignment</span>(),
             <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">float_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_type</span>.<span class="ident">alignment</span>(),
@@ -551,6 +552,8 @@
 <span class="doccomment">/// Any fixed-size integer type.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">IntType</span> {
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;i1&quot;</span>)]</span>
+    <span class="ident">I1</span>,
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;i8&quot;</span>)]</span>
     <span class="ident">I8</span>,
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;i16&quot;</span>)]</span>
@@ -565,6 +568,7 @@
     <span class="doccomment">/// Returns the bit width of the fixed-size integer type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bit_width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="kw">match</span> <span class="self">self</span> {
+            <span class="self">Self</span>::<span class="ident">I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
             <span class="self">Self</span>::<span class="ident">I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">8</span>,
             <span class="self">Self</span>::<span class="ident">I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">16</span>,
             <span class="self">Self</span>::<span class="ident">I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
@@ -575,6 +579,7 @@
     <span class="doccomment">/// Returns the alignment exponent, `N` in `2^N`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alignment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
         <span class="kw">match</span> <span class="self">self</span> {
+            <span class="self">Self</span>::<span class="ident">I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
             <span class="self">Self</span>::<span class="ident">I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
             <span class="self">Self</span>::<span class="ident">I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
             <span class="self">Self</span>::<span class="ident">I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
@@ -615,7 +620,6 @@
     <span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Const</span> {
-    <span class="ident">Bool</span>(<span class="ident">bool</span>),
     <span class="ident">Ptr</span>(<span class="ident">u32</span>),
     <span class="ident">Int</span>(<span class="ident">IntConst</span>),
     <span class="ident">Float</span>(<span class="ident">FloatConst</span>),
@@ -625,7 +629,6 @@
     <span class="doccomment">/// Returns the type of the constant value.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">Bool</span>,
             <span class="self">Self</span>::<span class="ident">Ptr</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">Ptr</span>,
             <span class="self">Self</span>::<span class="ident">Int</span>(<span class="ident">int_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_const</span>.<span class="ident">ty</span>(),
             <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">float_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_const</span>.<span class="ident">ty</span>(),
@@ -635,7 +638,6 @@
     <span class="doccomment">/// Returns the underlying 64-bits of the constant.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_bits64</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Bool</span>(<span class="ident">bool_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool_const</span> <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="self">Self</span>::<span class="ident">Ptr</span>(<span class="ident">ptr_value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ptr_value</span> <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="self">Self</span>::<span class="ident">Int</span>(<span class="ident">int_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_const</span>.<span class="ident">into_bits64</span>(),
             <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">float_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_const</span>.<span class="ident">into_bits64</span>(),
@@ -646,6 +648,7 @@
 <span class="doccomment">/// A constant fixed-size integer value.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">IntConst</span> {
+    <span class="ident">I1</span>(<span class="ident">bool</span>),
     <span class="ident">I8</span>(<span class="ident">i8</span>),
     <span class="ident">I16</span>(<span class="ident">i16</span>),
     <span class="ident">I32</span>(<span class="ident">i32</span>),
@@ -655,17 +658,24 @@
 <span class="kw">impl</span> <span class="ident">IntConst</span> {
     <span class="doccomment">/// Returns the type of the constant fixed-size integer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
+        <span class="self">self</span>.<span class="ident">int_ty</span>().<span class="ident">into</span>()
+    }
+
+    <span class="doccomment">/// Returns the type of the constant fixed-size integer.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">int_ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IntType</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">I8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I8</span>.<span class="ident">into</span>(),
-            <span class="self">Self</span>::<span class="ident">I16</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I16</span>.<span class="ident">into</span>(),
-            <span class="self">Self</span>::<span class="ident">I32</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>(),
-            <span class="self">Self</span>::<span class="ident">I64</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I64</span>.<span class="ident">into</span>(),
+            <span class="self">Self</span>::<span class="ident">I1</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I1</span>,
+            <span class="self">Self</span>::<span class="ident">I8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I8</span>,
+            <span class="self">Self</span>::<span class="ident">I16</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I16</span>,
+            <span class="self">Self</span>::<span class="ident">I32</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I32</span>,
+            <span class="self">Self</span>::<span class="ident">I64</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType</span>::<span class="ident">I64</span>,
         }
     }
 
     <span class="doccomment">/// Returns the underlying 64-bits of the constant.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_bits64</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
+            <span class="self">Self</span>::<span class="ident">I1</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="self">Self</span>::<span class="ident">I8</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="self">Self</span>::<span class="ident">I16</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="self">Self</span>::<span class="ident">I32</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>,

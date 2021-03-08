@@ -315,6 +315,9 @@
 <span id="312">312</span>
 <span id="313">313</span>
 <span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -602,9 +605,12 @@
         <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">src</span>());
         <span class="kw">use</span> <span class="ident">FloatType</span>::{<span class="ident">F32</span>, <span class="ident">F64</span>};
-        <span class="kw">use</span> <span class="ident">IntType</span>::{<span class="ident">I16</span>, <span class="ident">I32</span>, <span class="ident">I64</span>, <span class="ident">I8</span>};
+        <span class="kw">use</span> <span class="ident">IntType</span>::{<span class="ident">I1</span>, <span class="ident">I16</span>, <span class="ident">I32</span>, <span class="ident">I64</span>, <span class="ident">I8</span>};
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">is_signed</span>(), <span class="self">self</span>.<span class="ident">src_type</span>(), <span class="self">self</span>.<span class="ident">dst_type</span>())
         {
+            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">I1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;float to i1 casts are not yet implemented&quot;</span>)
+            }
             <span class="comment">// f32 -&gt; uN</span>
             (<span class="bool-val">false</span>, <span class="ident">F32</span>, <span class="ident">I8</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">false</span>, <span class="ident">F32</span>, <span class="ident">I16</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
