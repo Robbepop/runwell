@@ -24,15 +24,15 @@ mod variable;
 pub use self::{
     builder::FunctionBuilder,
     error::{FunctionBuilderError, VariableAccess},
-    instruction::InstructionBuilder,
+    instruction::{Instr, InstructionBuilder},
+    variable::Variable,
 };
 use self::{
     builder::FunctionBuilderState,
     replacer::Replacer,
     value::{ValueDefinition, ValueUser},
-    variable::{Variable, VariableTranslator},
+    variable::{VariableTranslator},
 };
-use crate::primitive::Instr;
 use core::fmt;
 use entity::{
     ComponentVec,

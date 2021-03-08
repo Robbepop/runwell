@@ -34,7 +34,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let loop_header = self.builder.create_block()?;
         let wasm_block = WasmBlock::new(loop_header, ty)?;
         self.blocks.push_block(wasm_block);
-        self.builder.ins()?.br(loop_header)?;
+        self.builder.ins()?.br(loop_header, vec![])?;
         self.builder.switch_to_block(loop_header)?;
         Ok(())
     }

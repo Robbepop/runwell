@@ -15,7 +15,6 @@
 #![forbid(unsafe_code)]
 
 mod error;
-mod func_body;
 mod func_body2;
 mod func_type;
 mod function;
@@ -28,7 +27,7 @@ mod table;
 
 pub use self::{
     error::{Error, ErrorKind},
-    func_body::{FunctionBody, FunctionBuilderError},
+    func_body2::{FunctionBody, FunctionBuilderError},
     function::Function,
     module::{Module, ModuleResources},
 };
@@ -36,7 +35,10 @@ pub use self::{
 /// Module section builder types.
 pub mod builder {
     pub use super::{
-        func_body::{FunctionBuilder, InstructionBuilder},
+        func_body2::{
+            FunctionBuilder,
+            InstructionBuilder,
+        },
         func_type::FunctionTypeBuilder,
         module::{
             ModuleBuilder,
@@ -57,7 +59,7 @@ pub mod builder {
 /// Primitive Wasm types that implement conversion to Runwell types.
 pub mod primitive {
     pub use super::{
-        func_body::{Instr, Variable},
+        func_body2::{Instr, Variable},
         func_type::FunctionType,
         global_var::{Global, GlobalVariable, GlobalVariableEntity},
         import_name::ImportName,
