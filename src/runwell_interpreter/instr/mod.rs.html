@@ -171,6 +171,8 @@
 <span id="168">168</span>
 <span id="169">169</span>
 <span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -188,8 +190,10 @@
 
 <span class="kw">mod</span> <span class="ident">float</span>;
 <span class="kw">mod</span> <span class="ident">int</span>;
+<span class="kw">mod</span> <span class="ident">primitive</span>;
 <span class="kw">mod</span> <span class="ident">terminal</span>;
 
+<span class="kw">use</span> <span class="self">self</span>::<span class="ident">primitive</span>::{<span class="ident">PrimitiveInteger</span>, <span class="ident">PrimitiveIntegerDivision</span>, <span class="ident">I1</span>};
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">InterpretationError</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">core</span>::<span class="ident">ActivationFrame</span>;
 <span class="kw">use</span> <span class="ident">ir</span>::{

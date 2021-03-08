@@ -318,6 +318,16 @@
 <span id="315">315</span>
 <span id="316">316</span>
 <span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -333,14 +343,15 @@
 <span class="comment">// See the License for the specific language governing permissions and</span>
 <span class="comment">// limitations under the License.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">core</span>::<span class="ident">ActivationFrame</span>;
-
 <span class="kw">use</span> <span class="kw">super</span>::{
     <span class="ident">extract_single_output</span>,
     <span class="ident">InterpretInstr</span>,
     <span class="ident">InterpretationError</span>,
     <span class="ident">InterpretationFlow</span>,
+    <span class="ident">PrimitiveInteger</span>,
+    <span class="ident">I1</span>,
 };
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">core</span>::<span class="ident">ActivationFrame</span>;
 <span class="kw">use</span> <span class="ident">ir</span>::{
     <span class="ident">instr</span>::{
         <span class="ident">operands</span>::{<span class="ident">BinaryFloatOp</span>, <span class="ident">CompareFloatOp</span>, <span class="ident">UnaryFloatOp</span>},
@@ -608,25 +619,34 @@
         <span class="kw">use</span> <span class="ident">IntType</span>::{<span class="ident">I1</span>, <span class="ident">I16</span>, <span class="ident">I32</span>, <span class="ident">I64</span>, <span class="ident">I8</span>};
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">is_signed</span>(), <span class="self">self</span>.<span class="ident">src_type</span>(), <span class="self">self</span>.<span class="ident">dst_type</span>())
         {
-            (<span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">I1</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;float to i1 casts are not yet implemented&quot;</span>)
-            }
             <span class="comment">// f32 -&gt; uN</span>
+            (<span class="bool-val">false</span>, <span class="ident">F32</span>, <span class="ident">I1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>::<span class="ident">I1</span>::<span class="ident">from_reg</span>(<span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">into_reg</span>()
+            }
             (<span class="bool-val">false</span>, <span class="ident">F32</span>, <span class="ident">I8</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">false</span>, <span class="ident">F32</span>, <span class="ident">I16</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">false</span>, <span class="ident">F32</span>, <span class="ident">I32</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">false</span>, <span class="ident">F32</span>, <span class="ident">I64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="comment">// f64 -&gt; uN</span>
+            (<span class="bool-val">false</span>, <span class="ident">F64</span>, <span class="ident">I1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>::<span class="ident">I1</span>::<span class="ident">from_reg</span>(<span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">into_reg</span>()
+            }
             (<span class="bool-val">false</span>, <span class="ident">F64</span>, <span class="ident">I8</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">false</span>, <span class="ident">F64</span>, <span class="ident">I16</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">false</span>, <span class="ident">F64</span>, <span class="ident">I32</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">false</span>, <span class="ident">F64</span>, <span class="ident">I64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="comment">// f32 -&gt; iN</span>
+            (<span class="bool-val">true</span>, <span class="ident">F32</span>, <span class="ident">I1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>::<span class="ident">I1</span>::<span class="ident">new</span>((<span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i64</span>).<span class="ident">is_negative</span>()).<span class="ident">into_reg</span>()
+            }
             (<span class="bool-val">true</span>, <span class="ident">F32</span>, <span class="ident">I8</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i8</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">true</span>, <span class="ident">F32</span>, <span class="ident">I16</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i16</span> <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">true</span>, <span class="ident">F32</span>, <span class="ident">I32</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i32</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">true</span>, <span class="ident">F32</span>, <span class="ident">I64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f32</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i64</span> <span class="kw">as</span> <span class="ident">u64</span>,
             <span class="comment">// f64 -&gt; iN</span>
+            (<span class="bool-val">true</span>, <span class="ident">F64</span>, <span class="ident">I1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>::<span class="ident">I1</span>::<span class="ident">new</span>((<span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i64</span>).<span class="ident">is_negative</span>()).<span class="ident">into_reg</span>()
+            }
             (<span class="bool-val">true</span>, <span class="ident">F64</span>, <span class="ident">I8</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i8</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">true</span>, <span class="ident">F64</span>, <span class="ident">I16</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i16</span> <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
             (<span class="bool-val">true</span>, <span class="ident">F64</span>, <span class="ident">I32</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">reg_f64</span>(<span class="ident">source</span>) <span class="kw">as</span> <span class="ident">i32</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>,
