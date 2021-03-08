@@ -36,7 +36,7 @@ use entity::{
     RawIdx,
 };
 use ir::{
-    instr::{Instruction, TerminalInstr2},
+    instr::{Instruction, TerminalInstr},
     primitive::{
         Block,
         BlockEntity,
@@ -705,7 +705,6 @@ impl<'a> FunctionBuilder<'a> {
     ) -> bool {
         debug_assert_ne!(replace_value, with_value);
         let user_instr = &mut self.ctx.instrs[instr];
-        debug_assert!(!user_instr.is_phi());
         let mut is_user = false;
         user_instr.visit_values_mut(|value| {
             if *value == replace_value {
@@ -750,7 +749,7 @@ impl<'a> FunctionBuilder<'a> {
         new_destination: Block,
     ) {
         let if_instruction = match &mut self.ctx.instrs[instr] {
-            Instruction::Terminal2(TerminalInstr2::Ite(if_instruction)) => if_instruction,
+            Instruction::Terminal(TerminalInstr::Ite(if_instruction)) => if_instruction,
             _ => panic!("tried to change jump of else destination for a non-if instruction"),
         };
         let else_edge = if_instruction.else_edge();
@@ -1003,7 +1002,7 @@ impl<'a> FunctionBuilder<'a> {
                 // The old instructions will be dropped so whatever we put in there does not matter.
                 let instruction = replace(
                     instruction,
-                    Instruction::Terminal2(TerminalInstr2::Trap),
+                    Instruction::Terminal(TerminalInstr::Trap),
                 );
                 let new_instr = body.instrs.alloc(instruction);
                 instr_replace.insert(old_instr, new_instr);

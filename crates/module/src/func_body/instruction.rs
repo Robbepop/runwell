@@ -33,7 +33,7 @@ use ir::{
         },
         BinaryFloatInstr,
         BinaryIntInstr,
-        BranchInstr2,
+        BranchInstr,
         CallInstr,
         CompareFloatInstr,
         CompareIntInstr,
@@ -42,7 +42,7 @@ use ir::{
         ExtendIntInstr,
         FloatToIntInstr,
         HeapAddrInstr,
-        IfThenElseInstr2,
+        IfThenElseInstr,
         Instruction,
         IntToFloatInstr,
         LoadInstr,
@@ -1023,7 +1023,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     {
         let block = self.builder.current_block()?;
         let edge = self.add_branching_edge(target, block, args)?;
-        let instr = self.append_instr(BranchInstr2::new(edge))?;
+        let instr = self.append_instr(BranchInstr::new(edge))?;
         Ok(instr)
     }
 
@@ -1052,7 +1052,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             self.add_branching_edge(then_target, block, then_args)?;
         let else_edge =
             self.add_branching_edge(else_target, block, else_args)?;
-        let instr = self.append_instr(IfThenElseInstr2::new(
+        let instr = self.append_instr(IfThenElseInstr::new(
             condition, then_edge, else_edge,
         ))?;
         self.register_uses(instr, [condition].iter().copied());
