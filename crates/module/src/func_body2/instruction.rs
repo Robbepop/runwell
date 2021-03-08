@@ -104,6 +104,13 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         instruction: Instruction,
         output_type: Type,
     ) -> Result<(Value, Instr), Error> {
+        let block = self.builder.current_block()?;
+        if self.builder.ctx.block_filled.get(block) {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
+        }
         let instr =
             self.append_multi_value_instr(instruction, &[output_type])?;
         let value = self.builder.ctx.instr_values[instr][0];
@@ -958,8 +965,14 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     where
         I: Into<Instruction>,
     {
-        let instruction = instruction.into();
         let block = self.builder.current_block()?;
+        if self.builder.ctx.block_filled.get(block) {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = instruction.into();
         let is_terminal = instruction.is_terminal();
         let instr = self.builder.ctx.instrs.alloc(instruction);
         self.builder.ctx.block_instrs[block].push(instr);
@@ -1063,13 +1076,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     where
         A: IntoIterator<Item = Value>,
     {
-        if !self.builder.ctx.block_filled.get(source) {
-            return Err(FunctionBuilderError::UnfilledPredecessor {
-                block: destination,
-                unfilled_pred: source,
-            })
-            .map_err(Into::into)
-        }
         if self.builder.ctx.block_sealed.get(destination) {
             return Err(FunctionBuilderError::PredecessorForSealedBlock {
                 sealed_block: destination,
