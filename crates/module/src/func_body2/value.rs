@@ -35,25 +35,3 @@ pub enum ValueDefinition {
     /// The value is associated to the nth output of the instruction.
     Instr(Instr, u32),
 }
-
-impl ValueDefinition {
-    /// Returns `Some(n)` if the value is defined as a block's nth parameter.
-    ///
-    /// Return `None` otherwise.
-    pub fn filter_map_param(self) -> Option<(Block, u32)> {
-        if let Self::Param(block, pos) = self {
-            return Some((block, pos))
-        }
-        None
-    }
-
-    /// Returns `Some(n)` if the value is defined as an instruction's nth returned value.
-    ///
-    /// Return `None` otherwise.
-    pub fn filter_map_instr(self) -> Option<(Instr, u32)> {
-        if let Self::Instr(instr, pos) = self {
-            return Some((instr, pos))
-        }
-        None
-    }
-}
