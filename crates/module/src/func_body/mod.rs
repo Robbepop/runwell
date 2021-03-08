@@ -128,6 +128,21 @@ impl FunctionBody {
         Some((instr_values, instruction))
     }
 
+    /// Returns the destination of the given edge.
+    pub fn edge_destination(&self, edge: Edge) -> Block {
+        self.edge_destination[edge]
+    }
+
+    /// Returns the block arguments of the given edge.
+    pub fn edge_args(&self, edge: Edge) -> &[Value] {
+        &self.edge_args[edge]
+    }
+
+    /// Returns the value parameters for the given block.
+    pub fn block_params(&self, block: Block) -> &[Value] {
+        &self.block_params[block]
+    }
+
     /// Display the function body with the given indentation.
     ///
     /// # Note
