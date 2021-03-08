@@ -941,6 +941,7 @@ impl<'a> FunctionBuilder<'a> {
         body.edges = self.ctx.edges.clone();
         for edge in self.ctx.edges.indices() {
             let edge_destination = self.ctx.edge_dst[edge];
+            body.edge_destination.insert(edge, edge_destination);
             for (index, old_arg) in self.ctx.edge_args[edge].iter().enumerate()
             {
                 debug_assert!(index < u16::MAX as usize);
@@ -950,7 +951,6 @@ impl<'a> FunctionBuilder<'a> {
                 }
                 let new_arg = value_replace.get(*old_arg);
                 body.edge_args[edge].push(new_arg);
-                body.edge_destination.insert(edge, edge_destination);
             }
         }
         // Cut away dead block parameters.
