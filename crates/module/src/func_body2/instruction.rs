@@ -33,7 +33,7 @@ use ir::{
         },
         BinaryFloatInstr,
         BinaryIntInstr,
-        BranchInstr,
+        BranchInstr2,
         CallInstr,
         CompareFloatInstr,
         CompareIntInstr,
@@ -42,7 +42,7 @@ use ir::{
         ExtendIntInstr,
         FloatToIntInstr,
         HeapAddrInstr,
-        IfThenElseInstr,
+        IfThenElseInstr2,
         Instruction,
         IntToFloatInstr,
         LoadInstr,
@@ -58,7 +58,17 @@ use ir::{
         UnaryFloatInstr,
         UnaryIntInstr,
     },
-    primitive::{Block, Const, FloatType, Func, IntType, Mem, Type, Value},
+    primitive::{
+        Block,
+        Const,
+        Edge,
+        FloatType,
+        Func,
+        IntType,
+        Mem,
+        Type,
+        Value,
+    },
     ImmU32,
 };
 
@@ -999,8 +1009,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         A: IntoIterator<Item = Value>,
     {
         let block = self.builder.current_block()?;
-        let instr = self.append_instr(BranchInstr::new(target))?;
-        self.add_branching_edge(target, block, args)?;
+        let edge = self.add_branching_edge(target, block, args)?;
+        let instr = self.append_instr(BranchInstr2::new(edge))?;
         Ok(instr)
     }
 
@@ -1025,13 +1035,13 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     {
         self.expect_type(condition, Type::Bool)?;
         let block = self.builder.current_block()?;
-        let instr = self.append_instr(IfThenElseInstr::new(
-            condition,
-            then_target,
-            else_target,
+        let then_edge =
+            self.add_branching_edge(then_target, block, then_args)?;
+        let else_edge =
+            self.add_branching_edge(else_target, block, else_args)?;
+        let instr = self.append_instr(IfThenElseInstr2::new(
+            condition, then_edge, else_edge,
         ))?;
-        self.add_branching_edge(then_target, block, then_args)?;
-        self.add_branching_edge(else_target, block, else_args)?;
         self.register_uses(instr, [condition].iter().copied());
         Ok(instr)
     }
@@ -1049,7 +1059,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         destination: Block,
         source: Block,
         args: A,
-    ) -> Result<(), Error>
+    ) -> Result<Edge, Error>
     where
         A: IntoIterator<Item = Value>,
     {
@@ -1073,6 +1083,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         debug_assert!(self.builder.ctx.edge_args[edge].is_empty());
         self.builder.ctx.edge_args[edge].extend(args);
         self.builder.ctx.block_edges[destination].push(edge);
-        Ok(())
+        Ok(edge)
     }
 }
