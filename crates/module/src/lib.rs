@@ -35,10 +35,7 @@ pub use self::{
 /// Module section builder types.
 pub mod builder {
     pub use super::{
-        func_body::{
-            FunctionBuilder,
-            InstructionBuilder,
-        },
+        func_body::{FunctionBuilder, InstructionBuilder},
         func_type::FunctionTypeBuilder,
         module::{
             ModuleBuilder,

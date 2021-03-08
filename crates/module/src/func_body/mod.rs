@@ -31,7 +31,7 @@ use self::{
     builder::FunctionBuilderState,
     replacer::Replacer,
     value::{ValueDefinition, ValueUser},
-    variable::{VariableTranslator},
+    variable::VariableTranslator,
 };
 use core::fmt;
 use entity::{

@@ -140,8 +140,7 @@ pub struct FunctionBuilderContext {
     /// Block parameters.
     pub block_params: DefaultComponentVec<Block, SmallVec<[Value; 4]>>,
     /// Contains the indices of all incomplete parameters per block.
-    pub block_incomplete_params:
-        DefaultComponentMap<Block, HashSet<u32>>,
+    pub block_incomplete_params: DefaultComponentMap<Block, HashSet<u32>>,
     /// Required information to remove block parameter if it becomes trivial.
     pub param_var: ComponentMap<Value, Variable>,
     /// The arguments for the block parameters of the branching edge.
@@ -366,7 +365,9 @@ impl<'a> FunctionBuilder<'a> {
         let len_params = self.ctx.block_incomplete_params[block].len();
         for index in 0..len_params {
             debug_assert!(index < u16::MAX as usize);
-            if !self.ctx.block_incomplete_params[block].contains(&(index as u32)) {
+            if !self.ctx.block_incomplete_params[block]
+                .contains(&(index as u32))
+            {
                 // The incomplete block parameter has already been resolved.
                 continue
             }

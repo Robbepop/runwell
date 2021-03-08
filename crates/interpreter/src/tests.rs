@@ -482,7 +482,8 @@ where
     let v0 = b.read_var(input)?;
     let v1 = b.ins()?.constant(IntConst::I32(0))?;
     let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Eq, v0, v1)?;
-    b.ins()?.if_then_else(v2, if_zero, if_not_zero, vec![], vec![])?;
+    b.ins()?
+        .if_then_else(v2, if_zero, if_not_zero, vec![], vec![])?;
 
     b.switch_to_block(if_zero)?;
     let v3 = b.ins()?.constant(Const::Bool(false))?;
