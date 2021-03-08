@@ -35,7 +35,7 @@ use entity::{
     RawIdx,
 };
 use ir::{
-    instr::Instruction,
+    instr::{Instruction, TerminalInstr2},
     primitive::{
         Block,
         BlockEntity,
@@ -734,6 +734,38 @@ impl<'a> FunctionBuilder<'a> {
     /// - If the variable has not been declared.
     pub fn var_type(&mut self, var: Variable) -> Result<Type, Error> {
         Ok(self.ctx.vars.get(var)?.ty())
+    }
+
+    /// Changes the else block of the given if instruction `instr` to `new_else`.
+    ///
+    /// # Panics
+    ///
+    /// If `instr` does not refer to an if instruction.
+    /// If `new_else` does not refer to a valid basic block.
+    pub fn change_jump_of_else(
+        &mut self,
+        instr: Instr,
+        new_destination: Block,
+    ) {
+        let if_instruction = match &mut self.ctx.instrs[instr] {
+            Instruction::Terminal2(TerminalInstr2::Ite(if_instruction)) => if_instruction,
+            _ => panic!("tried to change jump of else destination for a non-if instruction"),
+        };
+        let else_edge = if_instruction.else_edge();
+        let old_destination = self.ctx.edge_dst[else_edge];
+        let edge_index = self.ctx.block_edges[old_destination]
+            .iter()
+            .copied()
+            .position(|edge| edge == else_edge)
+            .unwrap_or_else(|| panic!(
+                "unexpected missing edge in block upon changing else destination. \
+                else_edge = {}, old_destination = {}, new_destination = {}",
+                else_edge,
+                old_destination,
+                new_destination,
+            ));
+        self.ctx.block_edges[old_destination].swap_remove(edge_index);
+        self.ctx.block_edges[new_destination].push(else_edge);
     }
 
     /// Returns `true` if the block is reachable.
