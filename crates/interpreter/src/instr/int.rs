@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::core::ActivationFrame;
-
 use super::{
     extract_single_output,
     InterpretInstr,
     InterpretationError,
     InterpretationFlow,
+    PrimitiveInteger,
+    PrimitiveIntegerDivision,
+    I1,
 };
+use crate::core::ActivationFrame;
 use ir::{
     instr::{
         operands::{BinaryIntOp, CompareIntOp, ShiftIntOp, UnaryIntOp},
@@ -155,25 +157,31 @@ impl InterpretInstr for IntToFloatInstr {
         use IntType::{I1, I16, I32, I64, I8};
         let result = match (self.is_signed(), self.src_type(), self.dst_type())
         {
-            (_, I1, _) => {
-                unimplemented!("i1 to float casts are not yet implemented")
-            }
             // uN -> f32
+            (false, I1, F32) => ((source != 0) as u8 as f32).to_bits() as u64,
             (false, I8, F32) => (source as u8 as f32).to_bits() as u64,
             (false, I16, F32) => (source as u16 as f32).to_bits() as u64,
             (false, I32, F32) => (source as u32 as f32).to_bits() as u64,
             (false, I64, F32) => (source as u64 as f32).to_bits() as u64,
             // uN -> f64
+            (false, I1, F64) => ((source != 0) as u8 as f64).to_bits() as u64,
             (false, I8, F64) => (source as u8 as f64).to_bits(),
             (false, I16, F64) => (source as u16 as f64).to_bits(),
             (false, I32, F64) => (source as u32 as f64).to_bits(),
             (false, I64, F64) => (source as u64 as f64).to_bits(),
             // iN -> f32
+            (true, I1, F32) => {
+                (self::I1::from_reg(source).extend_to_i8() as f32).to_bits()
+                    as u64
+            }
             (true, I8, F32) => (source as u8 as i8 as f32).to_bits() as u64,
             (true, I16, F32) => (source as u16 as i16 as f32).to_bits() as u64,
             (true, I32, F32) => (source as u32 as i32 as f32).to_bits() as u64,
             (true, I64, F32) => (source as u64 as i64 as f32).to_bits() as u64,
             // iN -> f64
+            (true, I1, F64) => {
+                (self::I1::from_reg(source).extend_to_i8() as f64).to_bits()
+            }
             (true, I8, F64) => (source as u8 as i8 as f64).to_bits(),
             (true, I16, F64) => (source as u16 as i16 as f64).to_bits(),
             (true, I32, F64) => (source as u32 as i32 as f64).to_bits(),
@@ -249,155 +257,6 @@ impl InterpretInstr for CompareIntInstr {
         };
         frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
-    }
-}
-
-#[rustfmt::skip]
-mod conv {
-    pub fn reg_to_i8(reg: u64) -> i8 { reg as u8 as i8 }
-    pub fn reg_to_i16(reg: u64) -> i16 { reg as u16 as i16 }
-    pub fn reg_to_i32(reg: u64) -> i32 { reg as u32 as i32 }
-    pub fn reg_to_i64(reg: u64) -> i64 { reg as u64 as i64 }
-    pub fn reg_to_u8(reg: u64) -> u8 { reg as u8 }
-    pub fn reg_to_u16(reg: u64) -> u16 { reg as u16 }
-    pub fn reg_to_u32(reg: u64) -> u32 { reg as u32 }
-    pub fn reg_to_u64(reg: u64) -> u64 { reg }
-    pub fn i8_to_reg(val: i8) -> u64 { val as u8 as u64 }
-    pub fn i16_to_reg(val: i16) -> u64 { val as u16 as u64 }
-    pub fn i32_to_reg(val: i32) -> u64 { val as u32 as u64 }
-    pub fn i64_to_reg(val: i64) -> u64 { val as u64 }
-    pub fn u8_to_reg(val: u8) -> u64 { val as u64 }
-    pub fn u16_to_reg(val: u16) -> u64 { val as u64 }
-    pub fn u32_to_reg(val: u32) -> u64 { val as u64 }
-    pub fn u64_to_reg(val: u64) -> u64 { val }
-}
-
-/// Trait used to streamline operations on primitive types.
-pub trait PrimitiveInteger: Copy {
-    fn from_reg(reg: u64) -> Self;
-    fn into_reg(self) -> u64;
-}
-
-/// Trait used to streamline division operations on primitive integer types.
-pub trait PrimitiveIntegerDivision: PrimitiveInteger {
-    fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError>;
-    fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError>;
-}
-
-macro_rules! impl_primitive_integer_for {
-    ( $( ($type:ty, $reg_to_val:ident, $val_to_reg:ident) ),* $(,)? ) => {
-        $(
-            impl PrimitiveInteger for $type {
-                fn from_reg(reg: u64) -> Self { conv::$reg_to_val(reg) }
-                fn into_reg(self) -> u64 { conv::$val_to_reg(self) }
-            }
-
-            impl PrimitiveIntegerDivision for $type {
-                fn checked_div(self, rhs: Self) -> Result<Self, InterpretationError> {
-                    self.checked_div(rhs).ok_or(InterpretationError::DivisionByZero)
-                }
-                fn checked_rem(self, rhs: Self) -> Result<Self, InterpretationError> {
-                    self.checked_rem(rhs).ok_or(InterpretationError::DivisionByZero)
-                }
-            }
-        )*
-    };
-}
-impl_primitive_integer_for! {
-    ( i8, reg_to_i8 , i8_to_reg ),
-    (i16, reg_to_i16, i16_to_reg),
-    (i32, reg_to_i32, i32_to_reg),
-    (i64, reg_to_i64, i64_to_reg),
-    ( u8, reg_to_u8 , u8_to_reg ),
-    (u16, reg_to_u16, u16_to_reg),
-    (u32, reg_to_u32, u32_to_reg),
-    (u64, reg_to_u64, u64_to_reg),
-}
-
-/// 1-bit integer type.
-///
-/// Used to implement `PrimitiveInteger` trait so that it can be used on a subset
-/// of the available integer instructions.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct I1 {
-    value: bool,
-}
-
-impl I1 {
-    /// Creates a new `I1` value from the given `bool`.
-    fn new(value: bool) -> Self {
-        Self { value }
-    }
-
-    /// Extends the `I1` value to an `i8` value.
-    pub fn extend_to_i8(self) -> i8 {
-        if self.value {
-            i8::MIN
-        } else {
-            0
-        }
-    }
-
-    /// Extends the `I1` value to an `i16` value.
-    pub fn extend_to_i16(self) -> i16 {
-        if self.value {
-            i16::MIN
-        } else {
-            0
-        }
-    }
-
-    /// Extends the `I1` value to an `i32` value.
-    pub fn extend_to_i32(self) -> i32 {
-        if self.value {
-            i32::MIN
-        } else {
-            0
-        }
-    }
-
-    /// Extends the `I1` value to an `i64` value.
-    pub fn extend_to_i64(self) -> i64 {
-        if self.value {
-            i64::MIN
-        } else {
-            0
-        }
-    }
-}
-
-impl PrimitiveInteger for I1 {
-    fn from_reg(reg: u64) -> Self {
-        debug_assert!(reg <= 1);
-        I1 { value: reg != 0 }
-    }
-
-    fn into_reg(self) -> u64 {
-        self.value as u64
-    }
-}
-
-impl core::ops::BitAnd for I1 {
-    type Output = Self;
-
-    fn bitand(self, rhs: Self) -> Self::Output {
-        Self::new(self.value & rhs.value)
-    }
-}
-
-impl core::ops::BitOr for I1 {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        Self::new(self.value | rhs.value)
-    }
-}
-
-impl core::ops::BitXor for I1 {
-    type Output = Self;
-
-    fn bitxor(self, rhs: Self) -> Self::Output {
-        Self::new(self.value ^ rhs.value)
     }
 }
 

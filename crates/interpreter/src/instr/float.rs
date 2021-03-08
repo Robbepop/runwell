@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::core::ActivationFrame;
-
 use super::{
     extract_single_output,
     InterpretInstr,
     InterpretationError,
     InterpretationFlow,
+    PrimitiveInteger,
+    I1,
 };
+use crate::core::ActivationFrame;
 use ir::{
     instr::{
         operands::{BinaryFloatOp, CompareFloatOp, UnaryFloatOp},
@@ -287,25 +288,34 @@ impl InterpretInstr for FloatToIntInstr {
         use IntType::{I1, I16, I32, I64, I8};
         let result = match (self.is_signed(), self.src_type(), self.dst_type())
         {
-            (_, _, I1) => {
-                unimplemented!("float to i1 casts are not yet implemented")
-            }
             // f32 -> uN
+            (false, F32, I1) => {
+                self::I1::from_reg(reg_f32(source) as u64).into_reg()
+            }
             (false, F32, I8) => reg_f32(source) as u8 as u64,
             (false, F32, I16) => reg_f32(source) as u16 as u64,
             (false, F32, I32) => reg_f32(source) as u32 as u64,
             (false, F32, I64) => reg_f32(source) as u64,
             // f64 -> uN
+            (false, F64, I1) => {
+                self::I1::from_reg(reg_f64(source) as u64).into_reg()
+            }
             (false, F64, I8) => reg_f64(source) as u8 as u64,
             (false, F64, I16) => reg_f64(source) as u16 as u64,
             (false, F64, I32) => reg_f64(source) as u32 as u64,
             (false, F64, I64) => reg_f64(source) as u64,
             // f32 -> iN
+            (true, F32, I1) => {
+                self::I1::new((reg_f32(source) as i64).is_negative()).into_reg()
+            }
             (true, F32, I8) => reg_f32(source) as i8 as u8 as u64,
             (true, F32, I16) => reg_f32(source) as i16 as u16 as u64,
             (true, F32, I32) => reg_f32(source) as i32 as u32 as u64,
             (true, F32, I64) => reg_f32(source) as i64 as u64,
             // f64 -> iN
+            (true, F64, I1) => {
+                self::I1::new((reg_f64(source) as i64).is_negative()).into_reg()
+            }
             (true, F64, I8) => reg_f64(source) as i8 as u8 as u64,
             (true, F64, I16) => reg_f64(source) as i16 as u16 as u64,
             (true, F64, I32) => reg_f64(source) as i32 as u32 as u64,

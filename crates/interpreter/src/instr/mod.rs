@@ -14,8 +14,10 @@
 
 mod float;
 mod int;
+mod primitive;
 mod terminal;
 
+use self::primitive::{PrimitiveInteger, PrimitiveIntegerDivision, I1};
 use super::InterpretationError;
 use crate::core::ActivationFrame;
 use ir::{
