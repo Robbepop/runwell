@@ -139,10 +139,10 @@ impl FunctionBody {
         f: &mut fmt::Formatter<'_>,
         indent: Indent,
     ) -> fmt::Result {
-        let block_identation = indent;
-        let instr_identation = indent + Indent::single();
+        let block_indentation = indent;
+        let instr_indentation = indent + Indent::single();
         for block in self.blocks.indices() {
-            writeln!(f, "{}block {}", block_identation, block)?;
+            write!(f, "{}block {}", block_indentation, block)?;
             if let Some((first, rest)) = self.block_params[block].split_first()
             {
                 write!(f, "(")?;
@@ -152,11 +152,12 @@ impl FunctionBody {
                 }
                 write!(f, ")")?;
             }
+            writeln!(f, " {{")?;
             for &instr in &self.block_instrs[block] {
                 let instr_data = &self.instrs[instr];
                 let instr_values = self.instr_values(instr);
                 let instr_values_tuples = instr_values.len() >= 2;
-                write!(f, "{}", instr_identation)?;
+                write!(f, "{}", instr_indentation)?;
                 if let Some((&first, rest)) = instr_values.split_first() {
                     write!(f, "let ")?;
                     if instr_values_tuples {
@@ -179,10 +180,12 @@ impl FunctionBody {
                     if instr_values_tuples {
                         write!(f, ")")?;
                     }
+                    write!(f, " = ")?;
                 }
-                instr_data.display_instruction(f, instr_identation, self)?;
+                instr_data.display_instruction(f, instr_indentation, self)?;
+                writeln!(f)?;
             }
-            writeln!(f, "{}}}", block_identation)?;
+            writeln!(f, "{}}}", block_indentation)?;
         }
         Ok(())
     }
