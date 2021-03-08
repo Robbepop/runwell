@@ -54,6 +54,9 @@ use smallvec::SmallVec;
 /// Type alias to Rust's `HashSet` but using `ahash` as hasher which is more efficient.
 type HashSet<T> = std::collections::HashSet<T, ahash::RandomState>;
 
+/// Type alias to Rust's `HashMap` but using `ahash` as hasher which is more efficient.
+type HashMap<K, V> = std::collections::HashMap<K, V, ahash::RandomState>;
+
 /// Incrementally guides the construction process to build a Runwell IR function.
 #[derive(Debug)]
 pub struct FunctionBuilder<'a> {
@@ -897,34 +900,63 @@ impl<'a> FunctionBuilder<'a> {
         body: &mut FunctionBody,
     ) -> Replacer<Value> {
         let mut value_replace = <Replacer<Value>>::default();
+        let mut dead_params =
+            <DefaultComponentMap<Block, HashSet<u32>>>::default();
         // Replace all values and update references for all their associated data.
         for old_value in self.ctx.values.indices() {
             let is_alive = !self.ctx.value_users[old_value].is_empty();
-            if !is_alive {
-                // Skip non-alive value.
-                continue
-            }
-            let new_value = body.values.alloc_some(1);
-            body.value_type
-                .insert(new_value, self.ctx.value_type[old_value]);
-            body.value_definition
-                .insert(new_value, self.ctx.value_definition[old_value]);
-            value_replace.insert(old_value, new_value);
-            if let ValueDefinition::Param(_block, _n) =
-                self.ctx.value_definition[old_value]
-            {
-                // The dead value is a block parameter.
-                //
-                // We need to remove the dead block parameter and the arguments
-                // of all incoming edges for it.
-                unimplemented!()
+            match is_alive {
+                true => {
+                    let new_value = body.values.alloc_some(1);
+                    body.value_type
+                        .insert(new_value, self.ctx.value_type[old_value]);
+                    body.value_definition.insert(
+                        new_value,
+                        self.ctx.value_definition[old_value],
+                    );
+                    value_replace.insert(old_value, new_value);
+                }
+                false => {
+                    if let ValueDefinition::Param(block, n) =
+                        self.ctx.value_definition[old_value]
+                    {
+                        // The dead value is a block parameter.
+                        //
+                        // We need to remove the dead block parameter and the arguments
+                        // of all incoming edges for it.
+                        dead_params[block].insert(n);
+                    }
+                }
             }
         }
         // Replace all block parameter arguments of all edges.
+        body.edges = self.ctx.edges.clone();
         for edge in self.ctx.edges.indices() {
-            for old_arg in &mut self.ctx.edge_args[edge] {
+            let edge_destination = self.ctx.edge_dst[edge];
+            for (index, old_arg) in self.ctx.edge_args[edge].iter().enumerate()
+            {
+                debug_assert!(index < u16::MAX as usize);
+                let index = index as u32;
+                if dead_params[edge_destination].contains(&index) {
+                    continue
+                }
                 let new_arg = value_replace.get(*old_arg);
-                *old_arg = new_arg;
+                body.edge_args[edge].push(new_arg);
+                body.edge_destination.insert(edge, edge_destination);
+            }
+        }
+        // Cut away dead block parameters.
+        for block in self.ctx.blocks.indices() {
+            let dead_params = &dead_params[block];
+            for (index, &param) in
+                self.ctx.block_params[block].iter().enumerate()
+            {
+                debug_assert!(index < u16::MAX as usize);
+                let index = index as u32;
+                if dead_params.contains(&index) {
+                    continue
+                }
+                body.block_params[block].push(param);
             }
         }
         value_replace
