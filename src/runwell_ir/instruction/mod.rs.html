@@ -187,6 +187,28 @@
 <span id="184">184</span>
 <span id="185">185</span>
 <span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -208,9 +230,10 @@
 <span class="kw">mod</span> <span class="ident">float</span>;
 <span class="kw">mod</span> <span class="ident">int</span>;
 <span class="kw">mod</span> <span class="ident">memory</span>;
-<span class="kw">mod</span> <span class="ident">phi</span>;
 <span class="kw">mod</span> <span class="ident">select</span>;
 <span class="kw">mod</span> <span class="ident">terminal</span>;
+
+<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
     <span class="ident">call</span>::{<span class="ident">CallIndirectInstr</span>, <span class="ident">CallInstr</span>},
@@ -250,7 +273,6 @@
         <span class="ident">MemorySizeInstr</span>,
         <span class="ident">StoreInstr</span>,
     },
-    <span class="ident">phi</span>::<span class="ident">PhiInstr</span>,
     <span class="ident">select</span>::<span class="ident">SelectInstr</span>,
     <span class="ident">terminal</span>::{
         <span class="ident">BranchInstr</span>,
@@ -263,7 +285,13 @@
     },
 };
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">primitive</span>::<span class="ident">Value</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">primitive</span>::<span class="ident">Block</span>, <span class="ident">VisitValues</span>, <span class="ident">VisitValuesMut</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">DisplayEdge</span>,
+    <span class="ident">DisplayInstruction</span>,
+    <span class="ident">Indent</span>,
+    <span class="ident">VisitValues</span>,
+    <span class="ident">VisitValuesMut</span>,
+};
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
 
@@ -272,12 +300,6 @@
 <span class="doccomment">/// This has the exact amount of inline elements required for the</span>
 <span class="doccomment">/// small vector to have the same stack size as the `Vec&lt;Value&gt;` type.</span>
 <span class="kw">type</span> <span class="ident">SmallValueVec</span> <span class="op">=</span> <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">Value</span>; <span class="number">4</span>]<span class="op">&gt;</span>;
-
-<span class="doccomment">/// A space-optimized vector containing basic blocks.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This has the exact amount of inline elements required for the</span>
-<span class="doccomment">/// small vector to have the same stack size as the `Vec&lt;Block&gt;` type.</span>
-<span class="kw">type</span> <span class="ident">SmallBlockVec</span> <span class="op">=</span> <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">Block</span>; <span class="number">4</span>]<span class="op">&gt;</span>;
 
 <span class="doccomment">/// An SSA instruction from the Runwell IR.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
@@ -288,11 +310,13 @@
     <span class="ident">MemoryGrow</span>(<span class="ident">MemoryGrowInstr</span>),
     <span class="ident">MemorySize</span>(<span class="ident">MemorySizeInstr</span>),
     <span class="ident">HeapAddr</span>(<span class="ident">HeapAddrInstr</span>),
-    <span class="ident">Phi</span>(<span class="ident">PhiInstr</span>),
     <span class="ident">Load</span>(<span class="ident">LoadInstr</span>),
     <span class="ident">Store</span>(<span class="ident">StoreInstr</span>),
     <span class="ident">Select</span>(<span class="ident">SelectInstr</span>),
     <span class="ident">Reinterpret</span>(<span class="ident">ReinterpretInstr</span>),
+    <span class="attribute">#[<span class="ident">display</span>(
+        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;error: Display is unimplemented for Terminal2 instructions&quot;</span>
+    )]</span>
     <span class="ident">Terminal</span>(<span class="ident">TerminalInstr</span>),
     <span class="ident">Int</span>(<span class="ident">IntInstr</span>),
     <span class="ident">Float</span>(<span class="ident">FloatInstr</span>),
@@ -302,11 +326,6 @@
     <span class="doccomment">/// Returns `true` if the instruction terminates a basic block.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_terminal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="macro">matches</span><span class="macro">!</span>(<span class="self">self</span>, <span class="self">Self</span>::<span class="ident">Terminal</span>(<span class="kw">_</span>))
-    }
-
-    <span class="doccomment">/// Returns `true` if the instruction is a ϕ-instruction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_phi</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="macro">matches</span><span class="macro">!</span>(<span class="self">self</span>, <span class="self">Self</span>::<span class="ident">Phi</span>(<span class="kw">_</span>))
     }
 }
 
@@ -321,7 +340,6 @@
             <span class="self">Self</span>::<span class="ident">Const</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">MemoryGrow</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">MemorySize</span>(<span class="ident">__instr</span>) <span class="op">=</span><span class="op">&gt;</span> (),
-            <span class="self">Self</span>::<span class="ident">Phi</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">HeapAddr</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">Load</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">Store</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values</span>(<span class="ident">visitor</span>),
@@ -345,7 +363,6 @@
             <span class="self">Self</span>::<span class="ident">Const</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">MemoryGrow</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">MemorySize</span>(<span class="ident">__instr</span>) <span class="op">=</span><span class="op">&gt;</span> (),
-            <span class="self">Self</span>::<span class="ident">Phi</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">HeapAddr</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">Load</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">Store</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
@@ -355,6 +372,34 @@
             <span class="self">Self</span>::<span class="ident">Int</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
             <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">visit_values_mut</span>(<span class="ident">visitor</span>),
         }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">Instruction</span> {
+    <span class="kw">fn</span> <span class="ident">display_instruction</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">indent</span>: <span class="ident">Indent</span>,
+        <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="self">Self</span>::<span class="ident">Call</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">CallIndirect</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Const</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">MemoryGrow</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">MemorySize</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">HeapAddr</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Load</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Store</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Select</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Reinterpret</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Terminal</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">instr</span>.<span class="ident">display_instruction</span>(<span class="ident">f</span>, <span class="ident">indent</span>, <span class="ident">displayer</span>)<span class="question-mark">?</span>
+            }
+            <span class="self">Self</span>::<span class="ident">Int</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+        }
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -370,7 +415,6 @@
         <span class="comment">// Also assert the sizes of the biggest known concrete instructions.</span>
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TerminalInstr</span><span class="op">&gt;</span>(), <span class="number">40</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">BranchTableInstr</span><span class="op">&gt;</span>(), <span class="number">32</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">PhiInstr</span><span class="op">&gt;</span>(), <span class="number">24</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">CallIndirectInstr</span><span class="op">&gt;</span>(), <span class="number">32</span>);
     }
 }

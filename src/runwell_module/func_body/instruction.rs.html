@@ -1061,6 +1061,40 @@
 <span id="1058">1058</span>
 <span id="1059">1059</span>
 <span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -1076,7 +1110,12 @@
 <span class="comment">// See the License for the specific language governing permissions and</span>
 <span class="comment">// limitations under the License.</span>
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">builder</span>::<span class="ident">ValueAssoc</span>, <span class="ident">FunctionBuilder</span>, <span class="ident">FunctionBuilderError</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{
+    <span class="ident">FunctionBuilder</span>,
+    <span class="ident">FunctionBuilderError</span>,
+    <span class="ident">ValueDefinition</span>,
+    <span class="ident">ValueUser</span>,
+};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">entity</span>::<span class="ident">Idx</span>;
 <span class="kw">use</span> <span class="ident">ir</span>::{
@@ -1117,7 +1156,17 @@
         <span class="ident">UnaryFloatInstr</span>,
         <span class="ident">UnaryIntInstr</span>,
     },
-    <span class="ident">primitive</span>::{<span class="ident">Block</span>, <span class="ident">Const</span>, <span class="ident">FloatType</span>, <span class="ident">Func</span>, <span class="ident">IntType</span>, <span class="ident">Mem</span>, <span class="ident">Type</span>, <span class="ident">Value</span>},
+    <span class="ident">primitive</span>::{
+        <span class="ident">Block</span>,
+        <span class="ident">Const</span>,
+        <span class="ident">Edge</span>,
+        <span class="ident">FloatType</span>,
+        <span class="ident">Func</span>,
+        <span class="ident">IntType</span>,
+        <span class="ident">Mem</span>,
+        <span class="ident">Type</span>,
+        <span class="ident">Value</span>,
+    },
     <span class="ident">ImmU32</span>,
 };
 
@@ -1153,6 +1202,13 @@
         <span class="ident">instruction</span>: <span class="ident">Instruction</span>,
         <span class="ident">output_type</span>: <span class="ident">Type</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Value</span>, <span class="ident">Instr</span>), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">get</span>(<span class="ident">block</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadyFilled</span> {
+                <span class="ident">block</span>,
+            })
+            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        }
         <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">append_multi_value_instr</span>(<span class="ident">instruction</span>, <span class="kw-2">&amp;</span>[<span class="ident">output_type</span>])<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">instr_values</span>[<span class="ident">instr</span>][<span class="number">0</span>];
@@ -1198,8 +1254,8 @@
             <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">n</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">u32</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="self">self</span>.<span class="ident">builder</span>
                 .<span class="ident">ctx</span>
-                .<span class="ident">value_assoc</span>
-                .<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">ValueAssoc</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>, <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>));
+                .<span class="ident">value_definition</span>
+                .<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">ValueDefinition</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>, <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>));
         }
         <span class="kw">if</span> <span class="ident">is_terminal</span> {
             <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">set</span>(<span class="ident">block</span>, <span class="bool-val">true</span>);
@@ -1238,7 +1294,7 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;encountered unexpected instruction kind&quot;</span>),
         };
         <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="ident">call_instruction</span>.<span class="ident">params</span>().<span class="ident">iter</span>().<span class="ident">copied</span>() {
-            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">param</span>].<span class="ident">insert</span>(<span class="ident">instr</span>);
+            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">param</span>].<span class="ident">insert</span>(<span class="ident">ValueUser</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>));
         }
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
@@ -1274,7 +1330,7 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;encountered unexpected instruction kind&quot;</span>),
         };
         <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="ident">call_instruction</span>.<span class="ident">params</span>().<span class="ident">iter</span>().<span class="ident">copied</span>() {
-            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">param</span>].<span class="ident">insert</span>(<span class="ident">instr</span>);
+            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">param</span>].<span class="ident">insert</span>(<span class="ident">ValueUser</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>));
         }
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
@@ -1299,7 +1355,7 @@
         <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
     {
         <span class="kw">for</span> <span class="ident">value</span> <span class="kw">in</span> <span class="ident">uses</span> {
-            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">value</span>].<span class="ident">insert</span>(<span class="ident">instr</span>);
+            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">value</span>].<span class="ident">insert</span>(<span class="ident">ValueUser</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>));
         }
     }
 
@@ -2007,8 +2063,14 @@
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">get</span>(<span class="ident">block</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadyFilled</span> {
+                <span class="ident">block</span>,
+            })
+            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        }
+        <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">is_terminal</span> <span class="op">=</span> <span class="ident">instruction</span>.<span class="ident">is_terminal</span>();
         <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>.<span class="ident">alloc</span>(<span class="ident">instruction</span>);
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_instrs</span>[<span class="ident">block</span>].<span class="ident">push</span>(<span class="ident">instr</span>);
@@ -2053,10 +2115,13 @@
     }
 
     <span class="doccomment">/// Unconditionally jumps to the target basic block.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">br</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instr</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">br</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target</span>: <span class="ident">Block</span>, <span class="ident">args</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instr</span>, <span class="ident">Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">A</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
+    {
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_instr</span>(<span class="ident">BranchInstr</span>::<span class="ident">new</span>(<span class="ident">target</span>))<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">add_predecessor</span>(<span class="ident">target</span>, <span class="ident">block</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">edge</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_branching_edge</span>(<span class="ident">target</span>, <span class="ident">block</span>, <span class="ident">args</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_instr</span>(<span class="ident">BranchInstr</span>::<span class="ident">new</span>(<span class="ident">edge</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
 
@@ -2067,59 +2132,62 @@
 
     <span class="doccomment">/// Conditionally jumps to either `then_target` or `else_target` depending on</span>
     <span class="doccomment">/// the value of `condition`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">if_then_else</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">if_then_else</span><span class="op">&lt;</span><span class="ident">A1</span>, <span class="ident">A2</span><span class="op">&gt;</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">condition</span>: <span class="ident">Value</span>,
         <span class="ident">then_target</span>: <span class="ident">Block</span>,
         <span class="ident">else_target</span>: <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instr</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="ident">then_args</span>: <span class="ident">A1</span>,
+        <span class="ident">else_args</span>: <span class="ident">A2</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instr</span>, <span class="ident">Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">A1</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
+        <span class="ident">A2</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
+    {
         <span class="self">self</span>.<span class="ident">expect_type</span>(<span class="ident">condition</span>, <span class="ident">Type</span>::<span class="ident">Bool</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">then_edge</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">add_branching_edge</span>(<span class="ident">then_target</span>, <span class="ident">block</span>, <span class="ident">then_args</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">else_edge</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">add_branching_edge</span>(<span class="ident">else_target</span>, <span class="ident">block</span>, <span class="ident">else_args</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_instr</span>(<span class="ident">IfThenElseInstr</span>::<span class="ident">new</span>(
-            <span class="ident">condition</span>,
-            <span class="ident">then_target</span>,
-            <span class="ident">else_target</span>,
+            <span class="ident">condition</span>, <span class="ident">then_edge</span>, <span class="ident">else_edge</span>,
         ))<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">add_predecessor</span>(<span class="ident">then_target</span>, <span class="ident">block</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">add_predecessor</span>(<span class="ident">else_target</span>, <span class="ident">block</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">register_uses</span>(<span class="ident">instr</span>, [<span class="ident">condition</span>].<span class="ident">iter</span>().<span class="ident">copied</span>());
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
 
-    <span class="doccomment">/// Adds a new predecessor basic block to the block.</span>
+    <span class="doccomment">/// Adds a new branching edge between the basic blocks with the given arguments.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// - If the new predecessor is not yet filled.</span>
     <span class="doccomment">/// - If the block that gains a new predecessor has already been sealed.</span>
     <span class="doccomment">/// - If the new predecessor is already a predecessor of the block.</span>
-    <span class="kw">fn</span> <span class="ident">add_predecessor</span>(
+    <span class="doccomment">/// - If the given arguments cannot be applied to the destination block.</span>
+    <span class="kw">fn</span> <span class="ident">add_branching_edge</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">block</span>: <span class="ident">Block</span>,
-        <span class="ident">new_pred</span>: <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">get</span>(<span class="ident">new_pred</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">UnfilledPredecessor</span> {
-                <span class="ident">block</span>,
-                <span class="ident">unfilled_pred</span>: <span class="ident">new_pred</span>,
-            })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
-        }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">block</span>) {
+        <span class="ident">destination</span>: <span class="ident">Block</span>,
+        <span class="ident">source</span>: <span class="ident">Block</span>,
+        <span class="ident">args</span>: <span class="ident">A</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Edge</span>, <span class="ident">Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">A</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
+    {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">destination</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">PredecessorForSealedBlock</span> {
-                <span class="ident">sealed_block</span>: <span class="ident">block</span>,
-                <span class="ident">new_pred</span>,
+                <span class="ident">sealed_block</span>: <span class="ident">destination</span>,
+                <span class="ident">new_pred</span>: <span class="ident">source</span>,
             })
             .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
         }
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_preds</span>[<span class="ident">block</span>].<span class="ident">insert</span>(<span class="ident">new_pred</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BranchAlreadyExists</span> {
-                <span class="ident">from</span>: <span class="ident">new_pred</span>,
-                <span class="ident">to</span>: <span class="ident">block</span>,
-            })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
-        }
-        <span class="prelude-val">Ok</span>(())
+        <span class="kw">let</span> <span class="ident">edge</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">edges</span>.<span class="ident">alloc_some</span>(<span class="number">1</span>);
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">edge_src</span>.<span class="ident">insert</span>(<span class="ident">edge</span>, <span class="ident">source</span>);
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">edge_dst</span>.<span class="ident">insert</span>(<span class="ident">edge</span>, <span class="ident">destination</span>);
+        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">edge_args</span>[<span class="ident">edge</span>].<span class="ident">is_empty</span>());
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">edge_args</span>[<span class="ident">edge</span>].<span class="ident">extend</span>(<span class="ident">args</span>);
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">destination</span>].<span class="ident">push</span>(<span class="ident">edge</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">edge</span>)
     }
 }
 </pre></div>

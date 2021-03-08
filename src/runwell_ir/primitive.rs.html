@@ -365,6 +365,23 @@
 <span id="362">362</span>
 <span id="363">363</span>
 <span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -398,6 +415,23 @@
         <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;instr({})&quot;</span>, <span class="ident">idx</span>.<span class="ident">into_raw</span>())
+    }
+}
+
+<span class="doccomment">/// A branching edge entity.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// An entity of this kind represents a single edge between a pair</span>
+<span class="doccomment">/// of two basic blocks with a branch between them. There can be</span>
+<span class="doccomment">/// multiple such edges between the same pair of basic blocks.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">EdgeEntity</span> {}
+
+<span class="doccomment">/// A unique edge entity reference.</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Edge</span> <span class="op">=</span> <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">EdgeEntity</span><span class="op">&gt;</span>;
+
+<span class="kw">impl</span> <span class="ident">DisplayHook</span> <span class="kw">for</span> <span class="ident">EdgeEntity</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="ident">idx</span>: <span class="ident">Edge</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;edge{}&quot;</span>, <span class="ident">idx</span>.<span class="ident">into_raw</span>())
     }
 }
 

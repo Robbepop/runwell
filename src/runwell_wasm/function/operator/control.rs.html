@@ -175,7 +175,7 @@
         <span class="kw">let</span> <span class="ident">loop_header</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">create_block</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">wasm_block</span> <span class="op">=</span> <span class="ident">WasmBlock</span>::<span class="ident">new</span>(<span class="ident">loop_header</span>, <span class="ident">ty</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">blocks</span>.<span class="ident">push_block</span>(<span class="ident">wasm_block</span>);
-        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">br</span>(<span class="ident">loop_header</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">br</span>(<span class="ident">loop_header</span>, <span class="macro">vec</span><span class="macro">!</span>[])<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">switch_to_block</span>(<span class="ident">loop_header</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }

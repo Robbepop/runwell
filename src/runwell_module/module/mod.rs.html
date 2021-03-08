@@ -79,8 +79,6 @@
 <span id="76">76</span>
 <span id="77">77</span>
 <span id="78">78</span>
-<span id="79">79</span>
-<span id="80">80</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -97,10 +95,8 @@
 <span class="comment">// limitations under the License.</span>
 
 <span class="kw">mod</span> <span class="ident">builder</span>;
-<span class="kw">mod</span> <span class="ident">indent</span>;
 <span class="kw">mod</span> <span class="ident">res</span>;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="self">self</span>::<span class="ident">indent</span>::<span class="ident">Indent</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
     <span class="ident">builder</span>::{
         <span class="ident">ExportKind</span>,
@@ -123,7 +119,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Function</span>, <span class="ident">FunctionBody</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>;
 <span class="kw">use</span> <span class="ident">entity</span>::<span class="ident">ComponentVec</span>;
-<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span>::<span class="ident">Func</span>;
+<span class="kw">use</span> <span class="ident">ir</span>::{<span class="ident">primitive</span>::<span class="ident">Func</span>, <span class="ident">Indent</span>};
 
 <span class="doccomment">/// A constructed and validated Runwell module.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>

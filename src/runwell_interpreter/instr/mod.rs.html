@@ -171,27 +171,6 @@
 <span id="168">168</span>
 <span id="169">169</span>
 <span id="170">170</span>
-<span id="171">171</span>
-<span id="172">172</span>
-<span id="173">173</span>
-<span id="174">174</span>
-<span id="175">175</span>
-<span id="176">176</span>
-<span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
-<span id="181">181</span>
-<span id="182">182</span>
-<span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -218,7 +197,6 @@
         <span class="ident">CallInstr</span>,
         <span class="ident">ConstInstr</span>,
         <span class="ident">Instruction</span>,
-        <span class="ident">PhiInstr</span>,
         <span class="ident">ReinterpretInstr</span>,
         <span class="ident">SelectInstr</span>,
     },
@@ -289,7 +267,6 @@
             <span class="self">Self</span>::<span class="ident">Const</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">interpret_instr</span>(<span class="ident">outputs</span>, <span class="ident">frame</span>),
             <span class="self">Self</span>::<span class="ident">MemoryGrow</span>(<span class="ident">_instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             <span class="self">Self</span>::<span class="ident">MemorySize</span>(<span class="ident">_instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
-            <span class="self">Self</span>::<span class="ident">Phi</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">interpret_instr</span>(<span class="ident">outputs</span>, <span class="ident">frame</span>),
             <span class="self">Self</span>::<span class="ident">HeapAddr</span>(<span class="ident">_instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             <span class="self">Self</span>::<span class="ident">Load</span>(<span class="ident">_instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             <span class="self">Self</span>::<span class="ident">Store</span>(<span class="ident">_instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
@@ -299,25 +276,6 @@
             <span class="self">Self</span>::<span class="ident">Int</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">interpret_instr</span>(<span class="ident">outputs</span>, <span class="ident">frame</span>),
             <span class="self">Self</span>::<span class="ident">Float</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">interpret_instr</span>(<span class="ident">outputs</span>, <span class="ident">frame</span>),
         }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">InterpretInstr</span> <span class="kw">for</span> <span class="ident">PhiInstr</span> {
-    <span class="kw">fn</span> <span class="ident">interpret_instr</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
-        <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
-        <span class="kw">let</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">frame</span>
-            .<span class="ident">last_block</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;phi instruction is missing predecessor&quot;</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">operand_for</span>(<span class="ident">last_block</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;phi instruction missing value for predecessor&quot;</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="ident">result</span>);
-        <span class="ident">frame</span>.<span class="ident">write_register</span>(<span class="ident">return_value</span>, <span class="ident">result</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">InterpretationFlow</span>::<span class="ident">Continue</span>)
     }
 }
 

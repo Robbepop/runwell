@@ -430,6 +430,91 @@
 <span id="427">427</span>
 <span id="428">428</span>
 <span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -445,22 +530,25 @@
 <span class="comment">// See the License for the specific language governing permissions and</span>
 <span class="comment">// limitations under the License.</span>
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">CallIndirectInstr</span>, <span class="ident">CallInstr</span>, <span class="ident">SmallBlockVec</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">CallIndirectInstr</span>, <span class="ident">CallInstr</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">primitive</span>::{<span class="ident">Block</span>, <span class="ident">Func</span>, <span class="ident">FuncType</span>, <span class="ident">Table</span>, <span class="ident">Value</span>},
+    <span class="ident">primitive</span>::{<span class="ident">Edge</span>, <span class="ident">Func</span>, <span class="ident">FuncType</span>, <span class="ident">Table</span>, <span class="ident">Value</span>},
+    <span class="ident">DisplayEdge</span>,
+    <span class="ident">DisplayInstruction</span>,
+    <span class="ident">Indent</span>,
     <span class="ident">VisitValues</span>,
     <span class="ident">VisitValuesMut</span>,
 };
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>};
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
+<span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
 
 <span class="doccomment">/// A terminal SSA instruction.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Every basic block is required to have a terminal instruction</span>
 <span class="doccomment">/// as its last instruction.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">From</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TerminalInstr</span> {
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;trap&quot;</span>)]</span>
     <span class="ident">Trap</span>,
     <span class="ident">Return</span>(<span class="ident">ReturnInstr</span>),
     <span class="ident">Br</span>(<span class="ident">BranchInstr</span>),
@@ -504,10 +592,36 @@
     }
 }
 
+<span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">TerminalInstr</span> {
+    <span class="kw">fn</span> <span class="ident">display_instruction</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">indent</span>: <span class="ident">Indent</span>,
+        <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">TerminalInstr</span>::<span class="ident">Trap</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;trap&quot;</span>)<span class="question-mark">?</span>,
+            <span class="ident">TerminalInstr</span>::<span class="ident">Return</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="ident">TerminalInstr</span>::<span class="ident">Br</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">instr</span>.<span class="ident">display_instruction</span>(<span class="ident">f</span>, <span class="ident">indent</span>, <span class="ident">displayer</span>)<span class="question-mark">?</span>
+            }
+            <span class="ident">TerminalInstr</span>::<span class="ident">Ite</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">instr</span>.<span class="ident">display_instruction</span>(<span class="ident">f</span>, <span class="ident">indent</span>, <span class="ident">displayer</span>)<span class="question-mark">?</span>
+            }
+            <span class="ident">TerminalInstr</span>::<span class="ident">TailCall</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="ident">TerminalInstr</span>::<span class="ident">TailCallIndirect</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="ident">TerminalInstr</span>::<span class="ident">BranchTable</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">instr</span>.<span class="ident">display_instruction</span>(<span class="ident">f</span>, <span class="ident">indent</span>, <span class="ident">displayer</span>)<span class="question-mark">?</span>
+            }
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
 <span class="doccomment">/// Returns the returned value from to the function&#39;s caller.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReturnInstr</span> {
-    <span class="ident">return_values</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>,
+    <span class="ident">return_values</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">Value</span>; <span class="number">4</span>]<span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ReturnInstr</span> {
@@ -537,7 +651,7 @@
         <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
     {
         <span class="self">Self</span> {
-            <span class="ident">return_values</span>: <span class="ident">return_values</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">return_values</span>: <span class="ident">return_values</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">SmallVec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
         }
     }
 
@@ -576,40 +690,55 @@
 
 <span class="doccomment">/// Unconditionally branches to another basic block.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;br {}&quot;</span>, <span class="ident">target</span>)]</span>
+<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;br {}&quot;</span>, <span class="ident">edge</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BranchInstr</span> {
-    <span class="ident">target</span>: <span class="ident">Block</span>,
+    <span class="ident">edge</span>: <span class="ident">Edge</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">BranchInstr</span> {
-    <span class="doccomment">/// Creates a new branch instruction branching to the given basic block.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">target</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">target</span> }
+    <span class="doccomment">/// Creates a new unconditional branch instruction using the given branching edge.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">edge</span>: <span class="ident">Edge</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">edge</span> }
     }
 
-    <span class="doccomment">/// Returns the target block to jump to.</span>
+    <span class="doccomment">/// Returns the branching edge of the unconditional branch.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-        <span class="self">self</span>.<span class="ident">target</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">edge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Edge</span> {
+        <span class="self">self</span>.<span class="ident">edge</span>
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">BranchInstr</span> {
+    <span class="kw">fn</span> <span class="ident">display_instruction</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">_indent</span>: <span class="ident">Indent</span>,
+        <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;br &quot;</span>)<span class="question-mark">?</span>;
+        <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="self">self</span>.<span class="ident">edge</span>())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
 <span class="doccomment">/// Conditionally either branches to `then` or `else` branch depending on `condition`.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;if {} then {} else {}&quot;</span>, <span class="ident">condition</span>, <span class="ident">then_block</span>, <span class="ident">else_block</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IfThenElseInstr</span> {
     <span class="ident">condition</span>: <span class="ident">Value</span>,
-    <span class="ident">then_block</span>: <span class="ident">Block</span>,
-    <span class="ident">else_block</span>: <span class="ident">Block</span>,
+    <span class="ident">then_edge</span>: <span class="ident">Edge</span>,
+    <span class="ident">else_edge</span>: <span class="ident">Edge</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">IfThenElseInstr</span> {
-    <span class="doccomment">/// Creates a new if-then-else instruction branching to either `then` or `else` depending on `condition`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">condition</span>: <span class="ident">Value</span>, <span class="ident">br_then</span>: <span class="ident">Block</span>, <span class="ident">br_else</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="doccomment">/// Creates a new conditional branch instruction.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Branches either to `then_edge` branching edge in case `condition` is</span>
+    <span class="doccomment">/// non-zero (or `true`) or to `else_edge` branching edge otherwise.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">condition</span>: <span class="ident">Value</span>, <span class="ident">then_edge</span>: <span class="ident">Edge</span>, <span class="ident">else_edge</span>: <span class="ident">Edge</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">condition</span>,
-            <span class="ident">then_block</span>: <span class="ident">br_then</span>,
-            <span class="ident">else_block</span>: <span class="ident">br_else</span>,
+            <span class="ident">then_edge</span>,
+            <span class="ident">else_edge</span>,
         }
     }
 
@@ -619,16 +748,16 @@
         <span class="self">self</span>.<span class="ident">condition</span>
     }
 
-    <span class="doccomment">/// Returns the block to jump to in case the condition evaluates to `true`.</span>
+    <span class="doccomment">/// Returns the branching edge taken in case the condition evaluates to `true`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">then_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-        <span class="self">self</span>.<span class="ident">then_block</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">then_edge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Edge</span> {
+        <span class="self">self</span>.<span class="ident">then_edge</span>
     }
 
-    <span class="doccomment">/// Returns the block to jump to in case the condition evaluates to `false`.</span>
+    <span class="doccomment">/// Returns the branching edge taken in case the condition evaluates to `false`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">else_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-        <span class="self">self</span>.<span class="ident">else_block</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">else_edge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Edge</span> {
+        <span class="self">self</span>.<span class="ident">else_edge</span>
     }
 }
 
@@ -647,6 +776,21 @@
         <span class="ident">V</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>,
     {
         <span class="ident">visitor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">condition</span>);
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">IfThenElseInstr</span> {
+    <span class="kw">fn</span> <span class="ident">display_instruction</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">_indent</span>: <span class="ident">Indent</span>,
+        <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;if {} then &quot;</span>, <span class="self">self</span>.<span class="ident">condition</span>())<span class="question-mark">?</span>;
+        <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="self">self</span>.<span class="ident">then_edge</span>())<span class="question-mark">?</span>;
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; else &quot;</span>)<span class="question-mark">?</span>;
+        <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="self">self</span>.<span class="ident">else_edge</span>())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -774,37 +918,37 @@
 <span class="doccomment">/// A branching table mapping indices to branching targets.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BranchTableInstr</span> {
-    <span class="ident">case</span>: <span class="ident">Value</span>,
-    <span class="ident">default</span>: <span class="ident">Block</span>,
-    <span class="ident">targets</span>: <span class="ident">SmallBlockVec</span>,
+    <span class="ident">selector</span>: <span class="ident">Value</span>,
+    <span class="ident">default_edge</span>: <span class="ident">Edge</span>,
+    <span class="ident">target_edges</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">Edge</span>; <span class="number">4</span>]<span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">BranchTableInstr</span> {
     <span class="doccomment">/// Creates a new branching table with the given case, default target and targets.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">case</span>: <span class="ident">Value</span>, <span class="ident">default</span>: <span class="ident">Block</span>, <span class="ident">targets</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">selector</span>: <span class="ident">Value</span>, <span class="ident">default_edge</span>: <span class="ident">Edge</span>, <span class="ident">target_edges</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
     <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Block</span><span class="op">&gt;</span>,
+        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Edge</span><span class="op">&gt;</span>,
     {
         <span class="self">Self</span> {
-            <span class="ident">case</span>,
-            <span class="ident">default</span>,
-            <span class="ident">targets</span>: <span class="ident">targets</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
+            <span class="ident">selector</span>,
+            <span class="ident">default_edge</span>,
+            <span class="ident">target_edges</span>: <span class="ident">target_edges</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
         }
     }
 
-    <span class="doccomment">/// Returns the case value determining where to jump to.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">case</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">case</span>
+    <span class="doccomment">/// Returns the selector value determining where to jump to.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
+        <span class="self">self</span>.<span class="ident">selector</span>
     }
 
     <span class="doccomment">/// Returns a slice over all target jumps.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">targets</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">Block</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">targets</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">target_edges</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">Edge</span>] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">target_edges</span>
     }
 
     <span class="doccomment">/// Returns the default target to jump to.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-        <span class="self">self</span>.<span class="ident">default</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Edge</span> {
+        <span class="self">self</span>.<span class="ident">default_edge</span>
     }
 }
 
@@ -813,7 +957,7 @@
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">FnMut</span>(<span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>,
     {
-        <span class="ident">visitor</span>(<span class="self">self</span>.<span class="ident">case</span>);
+        <span class="ident">visitor</span>(<span class="self">self</span>.<span class="ident">selector</span>);
     }
 }
 
@@ -822,21 +966,47 @@
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>,
     {
-        <span class="ident">visitor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">case</span>);
+        <span class="ident">visitor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">selector</span>);
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">BranchTableInstr</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;br_table {} [ &quot;</span>, <span class="self">self</span>.<span class="ident">case</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">first</span>, <span class="ident">rest</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">targets</span>.<span class="ident">split_first</span>() {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;br_table {} {{&quot;</span>, <span class="self">self</span>.<span class="ident">selector</span>())<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">first</span>, <span class="ident">rest</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">target_edges</span>.<span class="ident">split_first</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;0 🠖 {}&quot;</span>, <span class="ident">first</span>)<span class="question-mark">?</span>;
-            <span class="kw">for</span> (<span class="ident">n</span>, <span class="ident">target</span>) <span class="kw">in</span> <span class="ident">rest</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;, {} 🠖 {}&quot;</span>, <span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">target</span>)<span class="question-mark">?</span>;
+            <span class="kw">for</span> (<span class="ident">n</span>, <span class="ident">edge</span>) <span class="kw">in</span> <span class="ident">rest</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;, {} 🠖 {}&quot;</span>, <span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">edge</span>)<span class="question-mark">?</span>;
             }
+            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
         }
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;_ 🠖 {}&quot;</span>, <span class="self">self</span>.<span class="ident">default_target</span>())<span class="question-mark">?</span>;
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; ]&quot;</span>)<span class="question-mark">?</span>;
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;}}&quot;</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">BranchTableInstr</span> {
+    <span class="kw">fn</span> <span class="ident">display_instruction</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">indent</span>: <span class="ident">Indent</span>,
+        <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="kw">let</span> <span class="ident">target_indentation</span> <span class="op">=</span> <span class="ident">indent</span> <span class="op">+</span> <span class="ident">Indent</span>::<span class="ident">single</span>();
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;match {} {{&quot;</span>, <span class="self">self</span>.<span class="ident">selector</span>())<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">first</span>, <span class="ident">rest</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">target_edges</span>().<span class="ident">split_first</span>() {
+            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}0 🠖 &quot;</span>, <span class="ident">target_indentation</span>)<span class="question-mark">?</span>;
+            <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="kw-2">*</span><span class="ident">first</span>)<span class="question-mark">?</span>;
+            <span class="kw">for</span> (<span class="ident">n</span>, <span class="ident">edge</span>) <span class="kw">in</span> <span class="ident">rest</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+                <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;,&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}{} 🠖 &quot;</span>, <span class="ident">target_indentation</span>, <span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+                <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="kw-2">*</span><span class="ident">edge</span>)<span class="question-mark">?</span>;
+            }
+            <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;,&quot;</span>)<span class="question-mark">?</span>;
+        }
+        <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}_ 🠖 {}&quot;</span>, <span class="ident">target_indentation</span>, <span class="self">self</span>.<span class="ident">default_target</span>())<span class="question-mark">?</span>;
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="ident">indent</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
