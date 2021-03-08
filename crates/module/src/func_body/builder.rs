@@ -12,29 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! From the paper "Simple and Efficient SSA Construction" by Buchwald and others:
-//!
-//! We call a basic block sealed if no further predecessors will be added to the block.
-//! As only filled blocks may have successors, predecessors are always filled.
-//! Note that a sealed block is not necessarily filled. Intuitively,
-//! a filled block contains all its instructions and can provide variable definitions for its successors.
-//! Conversely, a sealed block may look up variable definitions in
-//! its predecessors as all predecessors are known.
-
 use super::{
-    incomplete_phi::IncompletePhi,
-    instruction::{Instr, InstructionBuilder},
-    variable::Variable,
     FunctionBody,
     FunctionBuilderError,
+    InstructionBuilder,
+    Replacer,
+    ValueDefinition,
+    ValueUser,
+    Variable,
     VariableTranslator,
 };
-use crate::{Error, ModuleResources};
-use core::{
-    fmt::Debug,
-    hash::Hash,
-    mem::{replace, take},
-};
+use crate::{primitive::Instr, Error, ModuleResources};
+use core::mem::{replace, take};
 use derive_more::Display;
 use entity::{
     ComponentMap,
@@ -47,15 +36,35 @@ use entity::{
     RawIdx,
 };
 use ir::{
-    instr::{Instruction, PhiInstr},
-    primitive::{Block, BlockEntity, Func, Type, Value, ValueEntity},
+    instr::{Instruction, TerminalInstr},
+    primitive::{
+        Block,
+        BlockEntity,
+        Edge,
+        EdgeEntity,
+        Func,
+        Type,
+        Value,
+        ValueEntity,
+    },
     VisitValuesMut,
 };
 use smallvec::SmallVec;
-use std::collections::HashMap;
 
 /// Type alias to Rust's `HashSet` but using `ahash` as hasher which is more efficient.
 type HashSet<T> = std::collections::HashSet<T, ahash::RandomState>;
+
+/// Type alias to Rust's `HashMap` but using `ahash` as hasher which is more efficient.
+type HashMap<K, V> = std::collections::HashMap<K, V, ahash::RandomState>;
+
+/// Incrementally guides the construction process to build a Runwell IR function.
+#[derive(Debug)]
+pub struct FunctionBuilder<'a> {
+    pub(super) ctx: FunctionBuilderContext,
+    pub(super) func: Func,
+    pub(super) res: &'a ModuleResources,
+    state: FunctionBuilderState,
+}
 
 impl FunctionBody {
     /// Creates a function builder to incrementally construct the function.
@@ -77,32 +86,46 @@ impl FunctionBody {
     }
 }
 
-/// Incrementally guides the construction process to build a Runwell IR function.
-#[derive(Debug)]
-pub struct FunctionBuilder<'a> {
-    pub(super) ctx: FunctionBuilderContext,
-    pub(super) func: Func,
-    pub(super) res: &'a ModuleResources,
-    state: FunctionBuilderState,
+/// The current state of the function body construction.
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FunctionBuilderState {
+    /// Declare local variables used in the function body.
+    #[display(fmt = "local variables")]
+    LocalVariables = 1,
+    /// Define the function body.
+    #[display(fmt = "function body")]
+    Body = 2,
 }
 
 /// The context that is built during IR function construction.
 #[derive(Debug)]
 pub struct FunctionBuilderContext {
+    /// The current basic block that is being operated on.
+    pub current: Block,
     /// Arena for all block entities.
     pub blocks: PhantomEntityArena<BlockEntity>,
+    /// Arena for all branching edges.
+    pub edges: PhantomEntityArena<EdgeEntity>,
     /// Arena for all SSA value entities.
     pub values: PhantomEntityArena<ValueEntity>,
     /// Arena for all IR instructions.
     pub instrs: EntityArena<Instruction>,
-    /// Block predecessors.
+    /// All incoming edges for the block.
     ///
-    /// Only filled blocks may have successors, predecessors are always filled.
-    pub block_preds: DefaultComponentVec<Block, HashSet<Block>>,
-    /// The phi functions of every basic block.
+    /// # Note
     ///
-    /// Every basic block can have up to one phi instruction per variable in use.
-    pub block_phis: DefaultComponentMap<Block, ComponentMap<Variable, Instr>>,
+    /// Due to conditional branch instructions and branching tables is is
+    /// possible to have multiple edges between the same pair of blocks.
+    ///
+    /// The outer `Block` represents the destination basic block that stores
+    /// a mapping for every of its predecessor blocks and their edges.
+    ///
+    /// So this mapping stores both the predecessors of a basic block as well
+    /// as all the edges between the two.
+    ///
+    /// We optimize for the case of a single branching edge between a pair of
+    /// two basic blocks because this is a very common case.
+    pub block_edges: DefaultComponentVec<Block, SmallVec<[Edge; 4]>>,
     /// Is `true` if block is sealed.
     ///
     /// A sealed block knows all its predecessors.
@@ -114,40 +137,31 @@ pub struct FunctionBuilderContext {
     pub block_filled: DefaultComponentBitVec<Block>,
     /// Block instructions.
     pub block_instrs: DefaultComponentVec<Block, SmallVec<[Instr; 4]>>,
-    /// Required information to remove phi from its block if it becomes trivial.
-    pub phi_block: ComponentMap<Value, Block>,
-    /// Required information to remove phi from its block if it becomes trivial.
-    pub phi_var: ComponentMap<Value, Variable>,
-    /// Incomplete phi nodes for all blocks.
-    ///
-    /// This stores a mapping from each variable in a basic block to
-    /// some value that must be associated to the phi instruction in
-    /// the same block representing bindings for the variable.
-    pub block_incomplete_phis:
-        DefaultComponentMap<Block, ComponentMap<Variable, Value>>,
+    /// Block parameters.
+    pub block_params: DefaultComponentVec<Block, SmallVec<[Value; 4]>>,
+    /// Contains the indices of all incomplete parameters per block.
+    pub block_incomplete_params: DefaultComponentMap<Block, HashSet<u32>>,
+    /// Required information to remove block parameter if it becomes trivial.
+    pub param_var: ComponentMap<Value, Variable>,
+    /// The arguments for the block parameters of the branching edge.
+    pub edge_args: DefaultComponentVec<Edge, SmallVec<[Value; 4]>>,
+    /// The source basic block for the edge.
+    pub edge_src: ComponentVec<Edge, Block>,
+    /// The destination basic block for the edge.
+    pub edge_dst: ComponentVec<Edge, Block>,
     /// Optional associated values for instructions.
     ///
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
     /// has no SSA value association.
     pub instr_values: DefaultComponentMap<Instr, SmallVec<[Value; 4]>>,
-    /// The incomplete phi instruction in case the value represents one.
-    ///
-    /// Incomplete phis are use throughout the function body construction
-    /// instead of actually creating phi instructions. Phi instructions are
-    /// first created upon finalization of the function body.
-    ///
-    /// The construction algorithm works solely on incomplete phis, even
-    /// though a phi instruction might be deemed complete during function
-    /// body construction.
-    pub value_incomplete_phi: ComponentMap<Value, IncompletePhi>,
     /// Types for all values.
     pub value_type: ComponentVec<Value, Type>,
     /// The association of the SSA value.
     ///
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
-    pub value_assoc: ComponentVec<Value, ValueAssoc>,
+    pub value_definition: ComponentVec<Value, ValueDefinition>,
     /// Stores all users of all values.
     ///
     /// This information is required to replace an unnecessary phi
@@ -157,9 +171,7 @@ pub struct FunctionBuilderContext {
     ///
     /// Also this information can be used for optimizations when replacing
     /// one instruction with another.
-    pub value_users: DefaultComponentMap<Value, HashSet<Instr>>,
-    /// The current basic block that is being operated on.
-    pub current: Block,
+    pub value_users: DefaultComponentMap<Value, HashSet<ValueUser>>,
     /// The variable translator.
     ///
     /// This translates local variables from the source language that
@@ -171,55 +183,27 @@ impl Default for FunctionBuilderContext {
     fn default() -> Self {
         Self {
             blocks: Default::default(),
+            edges: Default::default(),
             values: Default::default(),
             instrs: Default::default(),
-            block_preds: Default::default(),
-            block_phis: Default::default(),
+            block_params: Default::default(),
+            block_edges: Default::default(),
             block_sealed: Default::default(),
             block_filled: Default::default(),
             block_instrs: Default::default(),
-            block_incomplete_phis: Default::default(),
-            phi_block: Default::default(),
-            phi_var: Default::default(),
+            block_incomplete_params: Default::default(),
+            param_var: Default::default(),
+            edge_args: Default::default(),
+            edge_src: Default::default(),
+            edge_dst: Default::default(),
             instr_values: Default::default(),
-            value_incomplete_phi: Default::default(),
             value_type: Default::default(),
-            value_assoc: Default::default(),
+            value_definition: Default::default(),
             value_users: Default::default(),
             current: Block::from_raw(RawIdx::from_u32(0)),
             vars: Default::default(),
         }
     }
-}
-
-/// The association of the SSA value.
-///
-/// Every SSA value has an association to either an IR instruction
-/// or to an input parameter of the IR function under construction.
-#[derive(Debug, Copy, Clone)]
-pub enum ValueAssoc {
-    /// The value is associated to the nth input of the function.
-    Input(u32),
-    /// The value is associated to the nth output of the instruction.
-    Instr(Instr, u32),
-}
-
-impl ValueAssoc {
-    /// Returns `true` if the value is associated to a function input parameter.
-    pub fn is_input(self) -> bool {
-        matches!(self, Self::Input(_))
-    }
-}
-
-/// The current state of the function body construction.
-#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum FunctionBuilderState {
-    /// Declare local variables used in the function body.
-    #[display(fmt = "local variables")]
-    LocalVariables = 1,
-    /// Define the function body.
-    #[display(fmt = "function body")]
-    Body = 2,
 }
 
 impl<'a> FunctionBuilder<'a> {
@@ -243,10 +227,11 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Creates the entry block of the constructed function.
     fn create_entry_block(ctx: &mut FunctionBuilderContext) -> Block {
-        if !ctx.blocks.is_empty() {
-            // Do not create an entry block if there is already one.
-            return ctx.current
-        }
+        assert!(
+            ctx.blocks.is_empty(),
+            "function body unexpectedly already has basic blocks: {:?}",
+            ctx.blocks,
+        );
         let entry_block = ctx.blocks.alloc_some(1);
         ctx.block_sealed.set(entry_block, true);
         ctx.current = entry_block;
@@ -260,16 +245,45 @@ impl<'a> FunctionBuilder<'a> {
     ) {
         let entry_block = Self::create_entry_block(ctx);
         for (n, input_type) in inputs.iter().copied().enumerate() {
+            debug_assert!(
+                n < u16::MAX as usize,
+                "encountered too many function input parameters. \
+                found {} but cannot handle more than {}.",
+                n,
+                u16::MAX,
+            );
+            let n = n as u32;
             let val = ctx.values.alloc_some(1);
             ctx.value_type.insert(val, input_type);
-            ctx.value_assoc.insert(val, ValueAssoc::Input(n as u32));
-            ctx.vars.declare_vars(1, input_type).expect(
-                "unexpected failure to declare function input variable",
-            );
-            let input_var = Variable::from_raw(RawIdx::from_u32(n as u32));
+            ctx.value_definition
+                .insert(val, ValueDefinition::Param(entry_block, n));
+            ctx.block_params[entry_block].push(val);
+            ctx.vars.declare_vars(1, input_type)
+                .unwrap_or_else(|err| {
+                    panic!(
+                        "unexpected failure to declare the function input variable \
+                        at position {} of type {}: {:?}",
+                        n,
+                        input_type,
+                        err,
+                    )
+                });
+            let input_var = Variable::from_raw(RawIdx::from_u32(n));
             ctx.vars
                 .write_var(input_var, val, entry_block, input_type)
-                .expect("unexpected failure to write just declared variable");
+                .unwrap_or_else(|err| {
+                    panic!(
+                        "unexpected failure to assign variable {} of type {} to {}. \
+                        The variable has just been declared as function input {} in \
+                        entry block {}: {:?}",
+                        input_var,
+                        val,
+                        input_type,
+                        n,
+                        entry_block,
+                        err,
+                    )
+                })
         }
     }
 
@@ -345,30 +359,22 @@ impl<'a> FunctionBuilder<'a> {
             })
             .map_err(Into::into)
         }
-        // Popping incomplete phis by replacing with new empty component map.
-        let incomplete_phis = take(&mut self.ctx.block_incomplete_phis[block]);
-        for (variable, &value) in incomplete_phis.iter() {
-            self.add_phi_operands(block, variable, value)?;
+        // The list of block parameters start with user provided block parameters
+        // followed by the block parameters generated through SSA construction.
+        // Only block parameters generated by the SSA construction may be incomplete.
+        let len_params = self.ctx.block_incomplete_params[block].len();
+        for index in 0..len_params {
+            debug_assert!(index < u16::MAX as usize);
+            if !self.ctx.block_incomplete_params[block]
+                .contains(&(index as u32))
+            {
+                // The incomplete block parameter has already been resolved.
+                continue
+            }
+            let param = self.ctx.block_params[block][index];
+            self.add_incomplete_param_args(param)?;
         }
         Ok(())
-    }
-
-    /// Returns an instruction builder to appends instructions to the current basic block.
-    ///
-    /// # Errors
-    ///
-    /// If the current block is already filled.
-    pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
-        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
-        let block = self.current_block()?;
-        let already_filled = self.ctx.block_filled.get(block);
-        if already_filled {
-            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
-                block,
-            })
-            .map_err(Into::into)
-        }
-        Ok(InstructionBuilder::new(self))
     }
 
     /// Assigns the value to the variable for the current basic block.
@@ -391,29 +397,145 @@ impl<'a> FunctionBuilder<'a> {
         Ok(())
     }
 
-    /// Creates a new phi instruction.
-    fn create_phi_instruction(
+    /// Creates a user provided block parameter with the given type.
+    ///
+    /// Returns the value that is defined as the new block parameter.
+    ///
+    /// # Errors
+    ///
+    /// If the block already contains non-user provided parameters or
+    /// instructions. Basically this operation can only be used directly
+    /// after creating a new basic block.
+    pub fn create_block_parameter(
+        &mut self,
+        block: Block,
+        param_type: Type,
+    ) -> Result<Value, Error> {
+        if !self.ctx.block_instrs[block].is_empty() {
+            panic!("cannot add a user provided block parameter to a basic block that has instructions already");
+        }
+        if !self.ctx.block_incomplete_params[block].is_empty() {
+            panic!("cannot add a user provided block parameter to a basic block that already has SSA parameters");
+        }
+        let value = self.ctx.values.alloc_some(1);
+        let pos = self.ctx.block_params[block].len();
+        assert!(
+            pos < u16::MAX as usize,
+            "there are {} block parameters for block {} \
+            while the maximum amount of block parameters is {}",
+            pos,
+            block,
+            u16::MAX,
+        );
+        self.ctx
+            .value_definition
+            .insert(value, ValueDefinition::Param(block, pos as u32));
+        self.ctx.value_type.insert(value, param_type);
+        self.ctx.block_params[block].push(value);
+        Ok(value)
+    }
+
+    /// Creates a new incomplete block parameter.
+    ///
+    /// These block parameters are driven by the SSA value construction
+    /// and can be placed during basic block construction unlike the user
+    /// provided block parameters.
+    fn create_incomplete_block_parameter(
         &mut self,
         var: Variable,
         var_type: Type,
         block: Block,
     ) -> Result<Value, Error> {
-        let instr = self.ctx.instrs.alloc(PhiInstr::default().into());
         let value = self.ctx.values.alloc_some(1);
+        let pos = self.ctx.block_params[block].len();
+        assert!(
+            pos < u16::MAX as usize,
+            "there are {} block parameters for block {} \
+            while the maximum amount of block parameters is {}",
+            pos,
+            block,
+            u16::MAX,
+        );
         self.ctx
-            .value_incomplete_phi
-            .insert(value, Default::default());
-        self.ctx
-            .value_assoc
-            .insert(value, ValueAssoc::Instr(instr, 0));
+            .value_definition
+            .insert(value, ValueDefinition::Param(block, pos as u32));
         self.ctx.value_type.insert(value, var_type);
-        self.ctx.phi_var.insert(value, var);
-        self.ctx.phi_block.insert(value, block);
-        self.ctx.block_phis[block].insert(var, instr);
-        self.ctx.block_incomplete_phis[block].insert(var, value);
+        self.ctx.block_params[block].push(value);
+        self.ctx.block_incomplete_params[block].insert(pos as u32);
+        self.ctx.param_var.insert(value, var);
         self.ctx.vars.write_var(var, value, block, var_type)?;
-        self.ctx.instr_values[instr].push(value);
         Ok(value)
+    }
+
+    /// Returns the associated block and index for the block parameter value.
+    ///
+    /// # Panics
+    ///
+    /// If the given value is not defined as a block parameter.
+    fn expect_block_param(&self, param: Value) -> (Block, u32) {
+        match self.ctx.value_definition[param] {
+            ValueDefinition::Param(block, index) => (block, index),
+            ValueDefinition::Instr(instr, index) => {
+                panic!(
+                "encountered a block parameter that is falsely defined as the \
+                return value at index {} of instruction {}",
+                index,
+                instr,
+            )
+            }
+        }
+    }
+
+    /// Add arguments to the incomplete block parameter.
+    ///
+    /// # Note
+    ///
+    /// After this procedure the incomplete block parameter will be completed.
+    /// This procedure can only run once a basic block has been sealed.
+    fn add_incomplete_param_args(
+        &mut self,
+        param: Value,
+    ) -> Result<Value, Error> {
+        let param_var = self.ctx.param_var[param];
+        let (param_block, index) = self.expect_block_param(param);
+        let incoming_edges = self.ctx.block_edges[param_block].clone();
+        for edge in incoming_edges {
+            let edge_src = self.ctx.edge_src[edge];
+            let value = self.read_var_in_block(param_var, edge_src)?;
+            let edge_args = &mut self.ctx.edge_args[edge];
+            debug_assert_eq!(edge_args.len(), index as usize);
+            edge_args.push(value);
+            self.ctx.value_users[value].insert(ValueUser::Param(param));
+        }
+        self.try_remove_trivial_param(param)
+    }
+
+    /// Returns `true` if all incoming edges of the block have the same source block.
+    ///
+    /// Returns `false` otherwise or if there are no incoming edges for the block.
+    fn get_unique_predecessor_block(&self, block: Block) -> Option<Block> {
+        let mut same = None;
+        for edge in &self.ctx.block_edges[block] {
+            let block = self.ctx.edge_src[*edge];
+            if let Some(same) = same {
+                if block != same {
+                    return None
+                }
+            }
+            same = Some(block);
+        }
+        same
+    }
+
+    /// Reads the last assigned value of the variable within the scope of the current basic block.
+    ///
+    /// # Errors
+    ///
+    /// - If the variable has not been declared.
+    pub fn read_var(&mut self, var: Variable) -> Result<Value, Error> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        let current = self.current_block()?;
+        self.read_var_in_block(var, current)
     }
 
     /// Reads the given variable starting from the given block.
@@ -431,45 +553,25 @@ impl<'a> FunctionBuilder<'a> {
         let var_type = var_info.ty();
         if !self.ctx.block_sealed.get(block) {
             // Incomplete phi node required.
-            let value = self.create_phi_instruction(var, var_type, block)?;
+            let value =
+                self.create_incomplete_block_parameter(var, var_type, block)?;
             return Ok(value)
         }
-        let value = if self.ctx.block_preds[block].len() == 1 {
-            // Optimize the common case of one predecessor: No phi needed.
-            let pred = self.ctx.block_preds[block]
-                .iter()
-                .next()
-                .copied()
-                .expect("missing expected predecessor for basic block");
-            self.read_var_in_block(var, pred)?
-        } else {
-            // Break potential cycles with operandless phi instruction.
-            let phi_value =
-                self.create_phi_instruction(var, var_type, block)?;
-            self.add_phi_operands(block, var, phi_value)?
+        let value = match self.get_unique_predecessor_block(block) {
+            Some(pred) => {
+                // Optimize the common case where all incoming edges have the same
+                // source basic block. No incomplete block parameter required in this case.
+                self.read_var_in_block(var, pred)?
+            }
+            None => {
+                // Break potential cycles with incomplete block parameter.
+                let param = self
+                    .create_incomplete_block_parameter(var, var_type, block)?;
+                self.add_incomplete_param_args(param)?
+            }
         };
         self.ctx.vars.write_var(var, value, block, var_type)?;
         Ok(value)
-    }
-
-    /// Add operands to the phi instruction.
-    ///
-    /// Note that this procedure can only run once a basic block has been sealed.
-    fn add_phi_operands(
-        &mut self,
-        block: Block,
-        var: Variable,
-        phi: Value,
-    ) -> Result<Value, Error> {
-        let preds = self.ctx.block_preds[block].clone();
-        for pred in preds {
-            let value = self.read_var_in_block(var, pred)?;
-            let incomplete_phi = &mut self.ctx.value_incomplete_phi[phi];
-            incomplete_phi.append_operand(pred, value);
-            let phi_instr = self.phi_value_to_instr(phi);
-            self.ctx.value_users[value].insert(phi_instr);
-        }
-        self.try_remove_trivial_phi(phi)
     }
 
     /// Checks if the given phi instruction is trivial replacing it if true.
@@ -477,135 +579,192 @@ impl<'a> FunctionBuilder<'a> {
     /// Replacement is a recursive operation that replaces all uses of the
     /// phi instruction with its only non-phi operand. During this process
     /// other phi instruction users might become trivial and cascade the effect.
-    fn try_remove_trivial_phi(
+    fn try_remove_trivial_param(
         &mut self,
-        phi_value: Value,
+        param: Value,
     ) -> Result<Value, Error> {
-        let incomplete_phi = &self.ctx.value_incomplete_phi[phi_value];
-        let equivalent = match incomplete_phi.is_trivial(phi_value)? {
+        let equivalent = match self.is_param_trivial(param)? {
             Some(equivalent) => {
-                // The phi instruction is trivial and the returned value
-                // is equivalent and shall replace it from now on.
+                // The block parameter is trivial and the returned value
+                // is found to be equivalent to it and shall replace all
+                // uses of the block parameter from now on.
                 equivalent
             }
             None => {
-                // The phi instruction is non-trivial, return it.
-                return Ok(phi_value)
+                // The block parameter was found to be non-trivial.
+                return Ok(param)
             }
         };
-        // Phi was determined to be trivial and can be removed.
-        // Insert a default into its phi users to replace the current users with an empty set.
-        // Additionally this allows us to iterate over users without borrow checker issues.
+        // The block parameter was determined to be trivial and must be replaced with
+        // the `equivalent` for all of its users.
         //
-        // Remove phi from its own users in case it was using itself.
-        let phi_instr = self.phi_value_to_instr(phi_value);
-        let mut users = take(&mut self.ctx.value_users[phi_value]);
-        users.remove(&phi_instr);
-        let phi_block = self.ctx.phi_block[phi_value];
-        let phi_var = self.ctx.phi_var[phi_value];
-        let phi_type = self.ctx.value_type[phi_value];
-        self.ctx.block_phis[phi_block].remove(phi_var);
+        // We `take` all users of the block parameter. This allows us to iterate over
+        // all users without borrow checker problems while at the same time clearing the
+        // set of users which is exactly what we want to happen.
+        let (block, index) = self.expect_block_param(param);
+        let param_var = self.ctx.param_var[param];
+        let param_type = self.ctx.value_type[param];
+        self.ctx.block_incomplete_params[block].remove(&index);
         self.ctx
             .vars
-            .replace_var(phi_var, phi_block, phi_value, equivalent, phi_type)?;
-        for user in users {
-            let got_replaced =
-                self.replace_user_values(user, phi_value, equivalent);
-            if got_replaced && self.ctx.instrs[user].is_phi() {
-                // If the user was an incomplete phi and there was an actual replacement
-                // we have to check if the phi is now trivial as well.
-                self.try_remove_trivial_phi(phi_value)?;
-            }
+            .replace_var(param_var, block, param, equivalent, param_type)?;
+        let mut param_users = take(&mut self.ctx.value_users[param]);
+        // Remove the trivial block parameter from its own set of users before iteration.
+        param_users.remove(&ValueUser::Param(param));
+        for user in param_users {
+            match user {
+                ValueUser::Instr(i) => {
+                    self.replace_value_for_instr(i, param, equivalent);
+                }
+                ValueUser::Param(p) => {
+                    self.replace_value_for_param(p, param, equivalent);
+                    // If the user is another block parameter and there was an actual replacement
+                    // we have to check if the block parameter user is now trivial as well.
+                    self.try_remove_trivial_param(p)?;
+                }
+            };
         }
         Ok(equivalent)
     }
 
-    /// Replaces occurrences of `replace_value` with `with_value` for the given user instruction.
+    /// Checks if the incomplete block parameter is trivial.
+    ///
+    /// A block parameter is trivial if all edges provide the same value
+    /// or the value of the block parameter itself as the argument.
+    ///
+    /// - If trivial the `Value` to which the incomplete block parameter is
+    ///   equivalent is returned.
+    /// - If the incomplete block parameter is yet deemed non-trivial
+    ///   `None` is returned.
+    ///
+    /// # Errors
+    ///
+    /// If the incomplete block parameter is unreachable or in the entry block.
+    pub fn is_param_trivial(
+        &self,
+        param: Value,
+    ) -> Result<Option<Value>, Error> {
+        let (block, index) = self.expect_block_param(param);
+        let mut same: Option<Value> = None;
+        for &edge in &self.ctx.block_edges[block] {
+            let arg = self.ctx.edge_args[edge][index as usize];
+            if Some(arg) == same || arg == param {
+                // Unique value or self reference.
+                continue
+            }
+            if same.is_some() {
+                // The block parameter has at least two distinct arguments: non-trivial
+                return Ok(None)
+            }
+            same = Some(arg);
+        }
+        match same {
+            None => {
+                // The block parameter is unreachable or in the entry block.
+                // The paper we implement replaces it with an undefined instruction
+                // but we simply bail out with an error.
+                Err(FunctionBuilderError::UnreachablePhi { value: param })
+                    .map_err(Into::into)
+            }
+            Some(same) => {
+                // The block parameter was determined to be trivial and should
+                // be replaced by the `same` value in all of its users.
+                Ok(Some(same))
+            }
+        }
+    }
+
+    /// Replaces all occurrences of `replace_value` with `with_value` for the block parameter.
+    ///
+    /// The block parameter is meant to be a user of `replace_value` if any of its
+    /// incoming edges uses `replace_value` as an argument to the block parameter.
+    /// After this procedure this branching edge will no longer be a user of
+    /// `replace_value` and instead be a user of `with_value`.
+    ///
+    /// Naturally `replace_user` and `with_value` must be distinct values.
     ///
     /// # Note
     ///
     /// - This also updates value users on the fly if replacements took place.
     /// - Returns `true` if an actual replacement took place.
-    fn replace_user_values(
+    ///
+    /// # Panics
+    ///
+    /// If the given `param` is not defined as a block parameter.
+    fn replace_value_for_param(
         &mut self,
-        user: Instr,
+        param: Value,
         replace_value: Value,
         with_value: Value,
     ) -> bool {
-        let user_instr = &mut self.ctx.instrs[user];
-        let got_replaced = match user_instr.is_phi() {
-            false => {
-                // Returns `true` if a value actually got replaced.
-                let mut replaced = false;
-                user_instr.visit_values_mut(|value| {
-                    if *value == replace_value {
-                        *value = with_value;
-                        replaced = true;
-                    }
-                    true
-                });
-                replaced
+        debug_assert_ne!(replace_value, with_value);
+        let (block, index) = self.expect_block_param(param);
+        let incoming_edges = &mut self.ctx.block_edges[block];
+        let mut is_user = false;
+        for edge in incoming_edges {
+            let edge_args = &mut self.ctx.edge_args[*edge];
+            let param_arg = &mut edge_args[index as usize];
+            if *param_arg == replace_value {
+                *param_arg = with_value;
+                is_user = true;
             }
-            true => {
-                // Due to incomplete phi instruction we need to treat them differently.
-                let phi_value = self.phi_instr_to_value(user);
-                let inc_phi = &mut self.ctx.value_incomplete_phi[phi_value];
-                // Returns `true` if a value actually got replaced.
-                inc_phi.replace_value(replace_value, with_value)
-            }
-        };
-        if got_replaced {
-            // Register the instruction as user if there was an actual replacement.
-            self.ctx.value_users[with_value].insert(user);
         }
-        got_replaced
-    }
-
-    /// Returns the associated value of the phi instruction.
-    ///
-    /// # Panics
-    ///
-    /// If the given `Instr` is not a phi instruction.
-    fn phi_instr_to_value(&self, phi_instr: Instr) -> Value {
-        assert!(self.ctx.instrs[phi_instr].is_phi());
-        assert_eq!(
-            self.ctx.instr_values[phi_instr].len(),
-            1,
-            "phi instructions must have exactly one output value"
+        let value_user = ValueUser::Param(param);
+        if is_user {
+            // Register the block parameter as user of the
+            // new value if it was a user of the old one.
+            self.ctx.value_users[with_value].insert(value_user);
+            debug_assert!(
+                self.ctx.value_users[with_value].contains(&value_user)
+            );
+        }
+        debug_assert!(
+            !self.ctx.value_users[replace_value].contains(&value_user)
         );
-        self.ctx.instr_values[phi_instr][0]
+        is_user
     }
 
-    /// Returns the associated `Instr` for the phi value.
+    /// Replaces all occurrences of `replace_value` with `with_value` for the instruction.
     ///
-    /// # Panics
+    /// The instruction is meant to be a user of `replace_value` if it refers to it
+    /// in some way. After this procedure that instruction will no longer be a user
+    /// of `replace_value` and instead be a user of `with_value`.
     ///
-    /// If the given phi value is not associated to a phi instruction.
-    fn phi_value_to_instr(&self, phi_value: Value) -> Instr {
-        match self.ctx.value_assoc[phi_value] {
-            ValueAssoc::Instr(instr, 0) => {
-                assert!(self.ctx.instrs[instr].is_phi());
-                instr
+    /// Naturally `replace_user` and `with_value` must be distinct values.
+    ///
+    /// # Note
+    ///
+    /// - This also updates value users on the fly if replacements took place.
+    /// - Returns `true` if an actual replacement took place.
+    fn replace_value_for_instr(
+        &mut self,
+        instr: Instr,
+        replace_value: Value,
+        with_value: Value,
+    ) -> bool {
+        debug_assert_ne!(replace_value, with_value);
+        let user_instr = &mut self.ctx.instrs[instr];
+        let mut is_user = false;
+        user_instr.visit_values_mut(|value| {
+            if *value == replace_value {
+                *value = with_value;
+                is_user = true;
             }
-            ValueAssoc::Instr(instr, n) => {
-                panic!(
-                    "found {} to be the {}-th output of a phi instruction {} which is illegal",
-                    phi_value, n, instr,
-                )
-            }
-            _ => panic!("unexpected non-instruction value"),
+            true
+        });
+        let value_user = ValueUser::Instr(instr);
+        if is_user {
+            // Register the instruction as user of the
+            // new value if it was a user of the old one.
+            self.ctx.value_users[with_value].insert(value_user);
+            debug_assert!(
+                self.ctx.value_users[with_value].contains(&value_user)
+            );
         }
-    }
-
-    /// Reads the last assigned value of the variable within the scope of the current basic block.
-    ///
-    /// # Errors
-    ///
-    /// - If the variable has not been declared.
-    pub fn read_var(&mut self, var: Variable) -> Result<Value, Error> {
-        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
-        let current = self.current_block()?;
-        self.read_var_in_block(var, current)
+        debug_assert!(
+            !self.ctx.value_users[replace_value].contains(&value_user)
+        );
+        is_user
     }
 
     /// Returns the type of the variable.
@@ -623,19 +782,30 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// If `instr` does not refer to an if instruction.
     /// If `new_else` does not refer to a valid basic block.
-    pub fn change_jump_of_else(&mut self, instr: Instr, new_else: Block) {
+    pub fn change_jump_of_else(
+        &mut self,
+        instr: Instr,
+        new_destination: Block,
+    ) {
         let if_instruction = match &mut self.ctx.instrs[instr] {
-            Instruction::Terminal(ir::instr::TerminalInstr::Ite(if_instruction)) => if_instruction,
+            Instruction::Terminal(TerminalInstr::Ite(if_instruction)) => if_instruction,
             _ => panic!("tried to change jump of else destination for a non-if instruction"),
         };
-        let old_else = if_instruction.else_block();
-        let if_block = self.ctx.block_preds[old_else]
+        let else_edge = if_instruction.else_edge();
+        let old_destination = self.ctx.edge_dst[else_edge];
+        let edge_index = self.ctx.block_edges[old_destination]
             .iter()
             .copied()
-            .find(|block| self.ctx.block_instrs[*block].contains(&instr))
-            .expect("one of the predecessors must contain the if-instruction");
-        self.ctx.block_preds[old_else].remove(&if_block);
-        self.ctx.block_preds[new_else].insert(if_block);
+            .position(|edge| edge == else_edge)
+            .unwrap_or_else(|| panic!(
+                "unexpected missing edge in block upon changing else destination. \
+                else_edge = {}, old_destination = {}, new_destination = {}",
+                else_edge,
+                old_destination,
+                new_destination,
+            ));
+        self.ctx.block_edges[old_destination].swap_remove(edge_index);
+        self.ctx.block_edges[new_destination].push(else_edge);
     }
 
     /// Returns `true` if the block is reachable.
@@ -648,7 +818,7 @@ impl<'a> FunctionBuilder<'a> {
     /// If the given `block` is invalid for the function builder.
     pub fn is_block_reachable(&self, block: Block) -> bool {
         let unreachable = self.ctx.block_sealed.get(block)
-            && self.ctx.block_preds[block].is_empty();
+            && self.ctx.block_edges[block].is_empty();
         !unreachable
     }
 
@@ -662,6 +832,24 @@ impl<'a> FunctionBuilder<'a> {
         }
         let values = self.ctx.instr_values[instr].as_slice();
         Ok(values)
+    }
+
+    /// Returns an instruction builder to appends instructions to the current basic block.
+    ///
+    /// # Errors
+    ///
+    /// If the current block is already filled.
+    pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        let block = self.current_block()?;
+        let already_filled = self.ctx.block_filled.get(block);
+        if already_filled {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
+        }
+        Ok(InstructionBuilder::new(self))
     }
 
     /// Finalizes construction of the built function.
@@ -679,15 +867,18 @@ impl<'a> FunctionBuilder<'a> {
         let mut body = FunctionBody {
             blocks: Default::default(),
             block_instrs: Default::default(),
+            block_params: Default::default(),
             values: Default::default(),
             value_type: Default::default(),
-            value_assoc: Default::default(),
+            value_definition: Default::default(),
             instrs: Default::default(),
             instr_values: Default::default(),
+            edges: Default::default(),
+            edge_args: Default::default(),
+            edge_destination: Default::default(),
         };
-        let (replace_values, incomplete_phis) =
-            self.initialize_values(&mut body);
-        self.initialize_instrs(&replace_values, incomplete_phis, &mut body);
+        let replace_values = self.initialize_values(&mut body);
+        self.initialize_instrs(&replace_values, &mut body);
         Ok(body)
     }
 
@@ -740,45 +931,71 @@ impl<'a> FunctionBuilder<'a> {
     /// to compact their representation in memory.
     ///
     /// Returns a mapping that stores all the SSA value replacements for all alive SSA values.
-    /// Also returns all incomplete phi instructions with their values updated.
-    /// These two return values are going to be used in the `initialize_instrs` procedure.
     fn initialize_values(
         &mut self,
         body: &mut FunctionBody,
-    ) -> (Replacer<Value>, ComponentMap<Value, IncompletePhi>) {
+    ) -> Replacer<Value> {
         let mut value_replace = <Replacer<Value>>::default();
-        let mut value_incomplete_phi =
-            <ComponentMap<Value, IncompletePhi>>::default();
+        let mut dead_params =
+            <DefaultComponentMap<Block, HashSet<u32>>>::default();
         // Replace all values and update references for all their associated data.
         for old_value in self.ctx.values.indices() {
-            if !self.ctx.value_users[old_value].is_empty()
-                || self.ctx.value_assoc[old_value].is_input()
-            {
-                let new_value = body.values.alloc_some(1);
-                body.value_type
-                    .insert(new_value, self.ctx.value_type[old_value]);
-                body.value_assoc
-                    .insert(new_value, self.ctx.value_assoc[old_value]);
-                if let Some(incomplete_phi) =
-                    self.ctx.value_incomplete_phi.get_mut(old_value)
-                {
-                    value_incomplete_phi
-                        .insert(new_value, take(incomplete_phi));
+            let is_alive = !self.ctx.value_users[old_value].is_empty();
+            match is_alive {
+                true => {
+                    let new_value = body.values.alloc_some(1);
+                    body.value_type
+                        .insert(new_value, self.ctx.value_type[old_value]);
+                    body.value_definition.insert(
+                        new_value,
+                        self.ctx.value_definition[old_value],
+                    );
+                    value_replace.insert(old_value, new_value);
                 }
-                value_replace.insert(old_value, new_value);
+                false => {
+                    if let ValueDefinition::Param(block, n) =
+                        self.ctx.value_definition[old_value]
+                    {
+                        // The dead value is a block parameter.
+                        //
+                        // We need to remove the dead block parameter and the arguments
+                        // of all incoming edges for it.
+                        dead_params[block].insert(n);
+                    }
+                }
             }
         }
-        // Replace all old value operands of all incomplete phi instructions.
-        for value in body.values.indices() {
-            if let Some(incomplete_phi) = value_incomplete_phi.get_mut(value) {
-                incomplete_phi.visit_values_mut(|old_value| {
-                    let new_value = value_replace.get(*old_value);
-                    *old_value = new_value;
-                    true
-                });
+        // Replace all block parameter arguments of all edges.
+        body.edges = self.ctx.edges.clone();
+        for edge in self.ctx.edges.indices() {
+            let edge_destination = self.ctx.edge_dst[edge];
+            body.edge_destination.insert(edge, edge_destination);
+            for (index, old_arg) in self.ctx.edge_args[edge].iter().enumerate()
+            {
+                debug_assert!(index < u16::MAX as usize);
+                let index = index as u32;
+                if dead_params[edge_destination].contains(&index) {
+                    continue
+                }
+                let new_arg = value_replace.get(*old_arg);
+                body.edge_args[edge].push(new_arg);
             }
         }
-        (value_replace, value_incomplete_phi)
+        // Cut away dead block parameters.
+        for block in self.ctx.blocks.indices() {
+            let dead_params = &dead_params[block];
+            for (index, &param) in
+                self.ctx.block_params[block].iter().enumerate()
+            {
+                debug_assert!(index < u16::MAX as usize);
+                let index = index as u32;
+                if dead_params.contains(&index) {
+                    continue
+                }
+                body.block_params[block].push(param);
+            }
+        }
+        value_replace
     }
 
     /// For every instruction returns a `bool` indicating if it is alive within the function body.
@@ -789,19 +1006,11 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// - This information can later be used to remove dead instructions from the function body.
     /// - An instruction is said to be alive if it is used at least once in any of the basic blocks.
-    /// - Since phi instructions are not part of the block instructions during function body construction
-    ///   we need to treat them specially.
     fn get_alive_instrs(&self) -> DefaultComponentBitVec<Instr> {
         let mut is_alive = <DefaultComponentBitVec<Instr>>::default();
         for block in self.ctx.blocks.indices() {
             for instr in self.ctx.block_instrs[block].iter().copied() {
                 is_alive.set(instr, true);
-            }
-            for (_phi_var, &phi_instr) in &self.ctx.block_phis[block] {
-                let phi_value = self.phi_instr_to_value(phi_instr);
-                if !self.ctx.value_users[phi_value].is_empty() {
-                    is_alive.set(phi_instr, true);
-                }
             }
         }
         is_alive
@@ -815,7 +1024,6 @@ impl<'a> FunctionBuilder<'a> {
     fn initialize_instrs(
         &mut self,
         value_replace: &Replacer<Value>,
-        value_incomplete_phi: ComponentMap<Value, IncompletePhi>,
         body: &mut FunctionBody,
     ) {
         let is_instr_alive = self.get_alive_instrs();
@@ -829,10 +1037,12 @@ impl<'a> FunctionBuilder<'a> {
                     *old_value = new_value;
                     true
                 });
-                // Swap out updated instruction with a placeholder phi instruction.
+                // Swap out updated instruction with a placeholder trap instruction.
                 // The old instructions will be dropped so whatever we put in there does not matter.
-                let instruction =
-                    replace(instruction, Instruction::Phi(PhiInstr::default()));
+                let instruction = replace(
+                    instruction,
+                    Instruction::Terminal(TerminalInstr::Trap),
+                );
                 let new_instr = body.instrs.alloc(instruction);
                 instr_replace.insert(old_instr, new_instr);
                 // Replace all values associated to the output of all instructions.
@@ -845,19 +1055,6 @@ impl<'a> FunctionBuilder<'a> {
         // Simply copy over the same basic block structure.
         // We do not yet eliminate trivial or dead basic blocks.
         body.blocks = self.ctx.blocks.clone();
-        // Convert all incomplete phis into complete phis and add them to the
-        // start of each of their associated basic blocks.
-        for block in self.ctx.blocks.indices() {
-            for &phi_instr in self.ctx.block_phis[block].components() {
-                let phi_value = self.phi_instr_to_value(phi_instr);
-                let incomplete_phi = &value_incomplete_phi[phi_value];
-                let _ = replace(
-                    &mut body.instrs[phi_instr],
-                    PhiInstr::new(incomplete_phi.operands()).into(),
-                );
-                body.block_instrs[block].push(phi_instr);
-            }
-        }
         // Replace instruction references of block instructions.
         for block in self.ctx.blocks.indices() {
             for old_instr in self.ctx.block_instrs[block].iter().copied() {
@@ -867,55 +1064,12 @@ impl<'a> FunctionBuilder<'a> {
         }
         // Replace value association of all alive values.
         for value in body.values.indices() {
-            if let ValueAssoc::Instr(old_instr, _) =
-                &mut body.value_assoc[value]
+            if let ValueDefinition::Instr(old_instr, _) =
+                &mut body.value_definition[value]
             {
                 let new_instr = instr_replace.get(*old_instr);
                 *old_instr = new_instr;
             }
         }
-    }
-}
-
-/// A replacement mapping.
-#[derive(Debug)]
-pub struct Replacer<T> {
-    replace: HashMap<T, T, ahash::RandomState>,
-}
-
-impl<T> Default for Replacer<T> {
-    fn default() -> Self {
-        Self {
-            replace: Default::default(),
-        }
-    }
-}
-
-impl<T> Replacer<T>
-where
-    T: Debug + Hash + Eq + Copy,
-{
-    /// Inserts a replacement for `old_value` to `new_value`.
-    ///
-    /// # Panics
-    ///
-    /// If this replacement has already been inserted.
-    pub fn insert(&mut self, old_value: T, new_value: T) {
-        if self.replace.insert(old_value, new_value).is_some() {
-            panic!(
-                "encountered duplicate replacement insert of {:?} -> {:?}",
-                old_value, new_value,
-            )
-        }
-    }
-
-    /// Returns the replacement of `old_value` or returns `old_value` back.
-    pub fn get(&self, old_value: T) -> T {
-        self.replace.get(&old_value).copied().unwrap_or(old_value)
-    }
-
-    /// Returns the replacement of `old_value` or returns `None`.
-    pub fn try_get(&self, old_value: T) -> Option<T> {
-        self.replace.get(&old_value).copied()
     }
 }

@@ -13,10 +13,8 @@
 // limitations under the License.
 
 mod builder;
-mod indent;
 mod res;
 
-pub(crate) use self::indent::Indent;
 pub use self::{
     builder::{
         ExportKind,
@@ -39,7 +37,7 @@ pub use self::{
 use crate::{Function, FunctionBody};
 use core::fmt;
 use entity::ComponentVec;
-use ir::primitive::Func;
+use ir::{primitive::Func, Indent};
 
 /// A constructed and validated Runwell module.
 #[derive(Debug)]

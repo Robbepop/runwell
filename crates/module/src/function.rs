@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{module::Indent, primitive::FunctionType, FunctionBody};
+use crate::{primitive::FunctionType, FunctionBody};
 use core::fmt;
 use entity::RawIdx;
-use ir::primitive::{Func, Type, Value};
+use ir::{
+    primitive::{Func, Type, Value},
+    Indent,
+};
 
 /// A Runwell function.
 ///

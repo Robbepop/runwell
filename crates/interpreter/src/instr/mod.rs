@@ -23,7 +23,6 @@ use ir::{
         CallInstr,
         ConstInstr,
         Instruction,
-        PhiInstr,
         ReinterpretInstr,
         SelectInstr,
     },
@@ -94,7 +93,6 @@ impl InterpretInstr for Instruction {
             Self::Const(instr) => instr.interpret_instr(outputs, frame),
             Self::MemoryGrow(_instr) => unimplemented!(),
             Self::MemorySize(_instr) => unimplemented!(),
-            Self::Phi(instr) => instr.interpret_instr(outputs, frame),
             Self::HeapAddr(_instr) => unimplemented!(),
             Self::Load(_instr) => unimplemented!(),
             Self::Store(_instr) => unimplemented!(),
@@ -104,25 +102,6 @@ impl InterpretInstr for Instruction {
             Self::Int(instr) => instr.interpret_instr(outputs, frame),
             Self::Float(instr) => instr.interpret_instr(outputs, frame),
         }
-    }
-}
-
-impl InterpretInstr for PhiInstr {
-    fn interpret_instr(
-        &self,
-        outputs: &[Option<Value>],
-        mut frame: ActivationFrame,
-    ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
-        let last_block = frame
-            .last_block()
-            .expect("phi instruction is missing predecessor");
-        let result = self
-            .operand_for(last_block)
-            .expect("phi instruction missing value for predecessor");
-        let result = frame.read_register(result);
-        frame.write_register(return_value, result);
-        Ok(InterpretationFlow::Continue)
     }
 }
 

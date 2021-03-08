@@ -170,7 +170,13 @@ fn if_then_else_works() {
         let v1 = b.ins()?.constant(IntConst::I32(1))?;
         let v2 = b.ins()?.constant(IntConst::I32(2))?;
         let v3 = b.ins()?.icmp(IntType::I32, CompareIntOp::Ule, v1, v2)?;
-        let _v4 = b.ins()?.if_then_else(v3, then_block, else_block)?;
+        let _v4 = b.ins()?.if_then_else(
+            v3,
+            then_block,
+            else_block,
+            vec![],
+            vec![],
+        )?;
         b.switch_to_block(then_block)?;
         let v5 = b.ins()?.constant(IntConst::I32(10))?;
         b.ins()?.return_values([v5].iter().copied())?;
@@ -234,7 +240,7 @@ fn global_identity_using_local() {
             let v0 = b.read_var(input)?;
             b.write_var(local, v0)?;
             let exit_block = b.create_block()?;
-            b.ins()?.br(exit_block)?;
+            b.ins()?.br(exit_block, vec![])?;
             b.switch_to_block(exit_block)?;
             let v0 = b.read_var(local)?;
             b.ins()?.return_values([v0].iter().copied())?;
@@ -271,23 +277,75 @@ fn inconveniently_written_min() {
             let v0 = b.read_var(lhs)?;
             let v1 = b.read_var(rhs)?;
             let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v0, v1)?;
-            b.ins()?.if_then_else(v2, then_block, else_block)?;
+            b.ins()?.if_then_else(
+                v2,
+                then_block,
+                else_block,
+                vec![],
+                vec![],
+            )?;
 
             b.switch_to_block(then_block)?;
             b.seal_block(then_block)?;
             let v3 = b.read_var(lhs)?;
             b.write_var(result, v3)?;
-            b.ins()?.br(exit_block)?;
+            b.ins()?.br(exit_block, vec![])?;
 
             b.switch_to_block(else_block)?;
             b.seal_block(else_block)?;
             let v4 = b.read_var(rhs)?;
             b.write_var(result, v4)?;
-            b.ins()?.br(exit_block)?;
+            b.ins()?.br(exit_block, vec![])?;
 
             b.switch_to_block(exit_block)?;
             let v5 = b.read_var(result)?;
             b.ins()?.return_values([v5].iter().copied())?;
+            b.seal_block(exit_block)?;
+
+            Ok(())
+        },
+    );
+    let mut ctx = EvaluationContext::new(&module);
+    for x in -10..10 {
+        for y in -5..15 {
+            let x = IntConst::I32(x).into();
+            let y = IntConst::I32(y).into();
+            let result = evaluate_func_in_ctx(&mut ctx, func, &[x, y]);
+            let result = bits_into_const(&module, func, result);
+            assert_eq!(result, vec![if x < y { x } else { y }]);
+        }
+    }
+}
+
+#[test]
+fn inconveniently_written_min_2() {
+    let (func, module) = module_with_func(
+        &[IntType::I32.into(); 2][..],
+        &[IntType::I32.into()],
+        |b| {
+            b.declare_variables(1, IntType::I32.into())?;
+            b.body()?;
+
+            let exit_block = b.create_block()?;
+            let param =
+                b.create_block_parameter(exit_block, IntType::I32.into())?;
+
+            let lhs = Variable::from_raw(RawIdx::from_u32(0));
+            let rhs = Variable::from_raw(RawIdx::from_u32(1));
+
+            let v0 = b.read_var(lhs)?;
+            let v1 = b.read_var(rhs)?;
+            let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v0, v1)?;
+            b.ins()?.if_then_else(
+                v2,
+                exit_block,
+                exit_block,
+                vec![v0],
+                vec![v1],
+            )?;
+
+            b.switch_to_block(exit_block)?;
+            b.ins()?.return_values([param].iter().copied())?;
             b.seal_block(exit_block)?;
 
             Ok(())
@@ -352,22 +410,24 @@ fn counting_loop_works() {
 
             let v0 = b.ins()?.constant(IntConst::I32(0))?;
             let v1 = b.ins()?.constant(IntConst::I32(1))?;
+
             b.write_var(counter, v0)?;
             b.write_var(one, v1)?;
-            b.ins()?.br(loop_head)?;
+            b.ins()?.br(loop_head, vec![])?;
 
             b.switch_to_block(loop_head)?;
             let v2 = b.read_var(counter)?;
             let v3 = b.read_var(input)?;
             let v4 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v2, v3)?;
-            b.ins()?.if_then_else(v4, loop_body, loop_exit)?;
+            b.ins()?
+                .if_then_else(v4, loop_body, loop_exit, vec![], vec![])?;
 
             b.switch_to_block(loop_body)?;
             let v5 = b.read_var(counter)?;
             let v6 = b.read_var(one)?;
             let v7 = b.ins()?.iadd(IntType::I32, v5, v6)?;
             b.write_var(counter, v7)?;
-            b.ins()?.br(loop_head)?;
+            b.ins()?.br(loop_head, vec![])?;
             b.seal_block(loop_body)?;
 
             b.seal_block(loop_head)?;
@@ -428,7 +488,8 @@ where
     let v0 = b.read_var(input)?;
     let v1 = b.ins()?.constant(IntConst::I32(0))?;
     let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Eq, v0, v1)?;
-    b.ins()?.if_then_else(v2, if_zero, if_not_zero)?;
+    b.ins()?
+        .if_then_else(v2, if_zero, if_not_zero, vec![], vec![])?;
 
     b.switch_to_block(if_zero)?;
     let v3 = b.ins()?.constant(Const::Bool(true))?;
@@ -467,7 +528,8 @@ where
     let v0 = b.read_var(input)?;
     let v1 = b.ins()?.constant(IntConst::I32(0))?;
     let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Eq, v0, v1)?;
-    b.ins()?.if_then_else(v2, if_zero, if_not_zero)?;
+    b.ins()?
+        .if_then_else(v2, if_zero, if_not_zero, vec![], vec![])?;
 
     b.switch_to_block(if_zero)?;
     let v3 = b.ins()?.constant(Const::Bool(false))?;

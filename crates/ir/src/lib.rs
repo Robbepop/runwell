@@ -16,11 +16,13 @@
 
 #![forbid(unsafe_code)]
 
+mod display;
 mod instruction;
 pub mod primitive;
 mod value_visitor;
 
 pub use self::{
+    display::{DisplayEdge, DisplayInstruction, Indent},
     instruction::ImmU32,
     value_visitor::{VisitValues, VisitValuesMut},
 };
@@ -63,7 +65,6 @@ pub mod instr {
         LoadInstr,
         MemoryGrowInstr,
         MemorySizeInstr,
-        PhiInstr,
         PromoteFloatInstr,
         ReinterpretInstr,
         ReturnInstr,

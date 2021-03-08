@@ -69,7 +69,7 @@ impl InterpretInstr for BranchInstr {
         _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        frame.switch_to_block(self.target());
+        frame.continue_along_edge(self.edge());
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -81,12 +81,12 @@ impl InterpretInstr for IfThenElseInstr {
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let condition = frame.read_register(self.condition());
-        let target = if condition != 0 {
-            self.then_block()
+        let edge = if condition != 0 {
+            self.then_edge()
         } else {
-            self.else_block()
+            self.else_edge()
         };
-        frame.switch_to_block(target);
+        frame.continue_along_edge(edge);
         Ok(InterpretationFlow::Continue)
     }
 }
@@ -122,13 +122,13 @@ impl InterpretInstr for BranchTableInstr {
         _outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let case = frame.read_register(self.case());
-        let target = self
-            .targets()
-            .get(case as usize)
+        let selected = frame.read_register(self.selector());
+        let target_edge = self
+            .target_edges()
+            .get(selected as usize)
             .copied()
             .unwrap_or_else(|| self.default_target());
-        frame.switch_to_block(target);
+        frame.continue_along_edge(target_edge);
         Ok(InterpretationFlow::Continue)
     }
 }

@@ -12,24 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(dead_code)]
+
 mod builder;
 mod error;
-mod incomplete_phi;
 mod instruction;
+mod replacer;
+mod value;
 mod variable;
 
 pub use self::{
-    builder::{
-        FunctionBuilder,
-        FunctionBuilderContext,
-        FunctionBuilderState,
-        ValueAssoc,
-    },
+    builder::FunctionBuilder,
     error::{FunctionBuilderError, VariableAccess},
     instruction::{Instr, InstructionBuilder},
-    variable::{Variable, VariableTranslator},
+    variable::Variable,
 };
-use crate::module::Indent;
+use self::{
+    builder::FunctionBuilderState,
+    replacer::Replacer,
+    value::{ValueDefinition, ValueUser},
+    variable::VariableTranslator,
+};
 use core::fmt;
 use entity::{
     ComponentVec,
@@ -41,7 +44,18 @@ use entity::{
 };
 use ir::{
     instr::Instruction,
-    primitive::{Block, BlockEntity, Type, Value, ValueEntity},
+    primitive::{
+        Block,
+        BlockEntity,
+        Edge,
+        EdgeEntity,
+        Type,
+        Value,
+        ValueEntity,
+    },
+    DisplayEdge,
+    DisplayInstruction,
+    Indent,
 };
 use smallvec::SmallVec;
 
@@ -52,15 +66,23 @@ pub struct FunctionBody {
     blocks: PhantomEntityArena<BlockEntity>,
     /// Arena for all SSA value entities.
     values: PhantomEntityArena<ValueEntity>,
+    /// Arena for all branching edge entities.
+    edges: PhantomEntityArena<EdgeEntity>,
     /// Arena for all IR instructions.
     instrs: EntityArena<Instruction>,
+    /// The basic block value parameters.
+    block_params: DefaultComponentVec<Block, SmallVec<[Value; 4]>>,
     /// Block instructions.
     ///
     /// # Note
     ///
     /// Also contains all the phi instructions at the block start.
     block_instrs: DefaultComponentVec<Block, SmallVec<[Instr; 4]>>,
-    /// Optional associated values for instructions.
+    /// The arguments for the destination block parameters.
+    edge_args: DefaultComponentVec<Edge, SmallVec<[Value; 4]>>,
+    /// The destination basic block of the edge.
+    edge_destination: ComponentVec<Edge, Block>,
+    /// Return values of the instruction.
     ///
     /// Not all instructions can be associated with an SSA value.
     /// For example `store` is not in pure SSA form and therefore
@@ -72,7 +94,7 @@ pub struct FunctionBody {
     ///
     /// Every SSA value has an association to either an IR instruction
     /// or to an input parameter of the IR function under construction.
-    value_assoc: ComponentVec<Value, ValueAssoc>,
+    value_definition: ComponentVec<Value, ValueDefinition>,
 }
 
 impl FunctionBody {
@@ -106,6 +128,21 @@ impl FunctionBody {
         Some((instr_values, instruction))
     }
 
+    /// Returns the destination of the given edge.
+    pub fn edge_destination(&self, edge: Edge) -> Block {
+        self.edge_destination[edge]
+    }
+
+    /// Returns the block arguments of the given edge.
+    pub fn edge_args(&self, edge: Edge) -> &[Value] {
+        &self.edge_args[edge]
+    }
+
+    /// Returns the value parameters for the given block.
+    pub fn block_params(&self, block: Block) -> &[Value] {
+        &self.block_params[block]
+    }
+
     /// Display the function body with the given indentation.
     ///
     /// # Note
@@ -115,61 +152,71 @@ impl FunctionBody {
     pub(crate) fn display_with_indent(
         &self,
         f: &mut fmt::Formatter<'_>,
-        ident: Indent,
+        indent: Indent,
     ) -> fmt::Result {
-        let block_ident = ident;
-        let instr_ident = ident + Indent::single();
-        let mut passed_entry = false;
+        let block_indentation = indent;
+        let instr_indentation = indent + Indent::single();
         for block in self.blocks.indices() {
-            if !passed_entry {
-                passed_entry = true;
-                writeln!(f, "{}block {{", block_ident)?;
-            } else {
-                writeln!(f, "{}block {} {{", block_ident, block)?;
+            write!(f, "{}block {}", block_indentation, block)?;
+            if let Some((first, rest)) = self.block_params[block].split_first()
+            {
+                write!(f, "(")?;
+                write!(f, "{}: {}", first, self.value_type[*first],)?;
+                for param in rest {
+                    write!(f, ", {}: {}", param, self.value_type[*param],)?;
+                }
+                write!(f, ")")?;
             }
+            writeln!(f, " {{")?;
             for &instr in &self.block_instrs[block] {
                 let instr_data = &self.instrs[instr];
                 let instr_values = self.instr_values(instr);
                 let instr_values_tuples = instr_values.len() >= 2;
-                write!(f, "{}", instr_ident)?;
-                match instr_values.split_first() {
-                    None => {
-                        writeln!(f, "{}", instr_data)?;
+                write!(f, "{}", instr_indentation)?;
+                if let Some((&first, rest)) = instr_values.split_first() {
+                    write!(f, "let ")?;
+                    if instr_values_tuples {
+                        write!(f, "(")?;
                     }
-                    Some((&first, rest)) => {
-                        write!(f, "let ")?;
-                        if instr_values_tuples {
-                            write!(f, "(")?;
-                        }
-                        if let Some(first) = first {
-                            let value_type = self.value_type[first];
-                            write!(f, "{}: {}", first, value_type)?;
+                    if let Some(first) = first {
+                        let value_type = self.value_type[first];
+                        write!(f, "{}: {}", first, value_type)?;
+                    } else {
+                        write!(f, "_")?;
+                    }
+                    for &value in rest {
+                        if let Some(value) = value {
+                            let value_type = self.value_type[value];
+                            write!(f, ", {}: {}", value, value_type)?;
                         } else {
-                            write!(f, "_")?;
+                            write!(f, ", _")?;
                         }
-                        for &value in rest {
-                            if let Some(value) = value {
-                                let value_type = self.value_type[value];
-                                write!(f, ", {}: {}", value, value_type)?;
-                            } else {
-                                write!(f, ", _")?;
-                            }
-                        }
-                        if instr_values_tuples {
-                            write!(f, ")")?;
-                        }
-                        writeln!(f, " = {}", instr_data)?;
                     }
+                    if instr_values_tuples {
+                        write!(f, ")")?;
+                    }
+                    write!(f, " = ")?;
                 }
+                instr_data.display_instruction(f, instr_indentation, self)?;
+                writeln!(f)?;
             }
-            writeln!(f, "{}}}", block_ident)?;
+            writeln!(f, "{}}}", block_indentation)?;
         }
         Ok(())
     }
 }
 
-impl fmt::Display for FunctionBody {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.display_with_indent(f, Default::default())
+impl DisplayEdge for FunctionBody {
+    fn display_edge(&self, f: &mut fmt::Formatter, edge: Edge) -> fmt::Result {
+        write!(f, "{}", self.edge_destination[edge])?;
+        if let Some((first, rest)) = self.edge_args[edge].split_first() {
+            write!(f, "(")?;
+            write!(f, "{}", first)?;
+            for arg in rest {
+                write!(f, ", {}", arg)?;
+            }
+            write!(f, ")")?;
+        }
+        Ok(())
     }
 }

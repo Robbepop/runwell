@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{builder::ValueAssoc, FunctionBuilder, FunctionBuilderError};
+use super::{
+    FunctionBuilder,
+    FunctionBuilderError,
+    ValueDefinition,
+    ValueUser,
+};
 use crate::Error;
 use entity::Idx;
 use ir::{
@@ -53,7 +58,17 @@ use ir::{
         UnaryFloatInstr,
         UnaryIntInstr,
     },
-    primitive::{Block, Const, FloatType, Func, IntType, Mem, Type, Value},
+    primitive::{
+        Block,
+        Const,
+        Edge,
+        FloatType,
+        Func,
+        IntType,
+        Mem,
+        Type,
+        Value,
+    },
     ImmU32,
 };
 
@@ -89,6 +104,13 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         instruction: Instruction,
         output_type: Type,
     ) -> Result<(Value, Instr), Error> {
+        let block = self.builder.current_block()?;
+        if self.builder.ctx.block_filled.get(block) {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
+        }
         let instr =
             self.append_multi_value_instr(instruction, &[output_type])?;
         let value = self.builder.ctx.instr_values[instr][0];
@@ -134,8 +156,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             assert!(n <= u32::MAX as usize);
             self.builder
                 .ctx
-                .value_assoc
-                .insert(value, ValueAssoc::Instr(instr, n as u32));
+                .value_definition
+                .insert(value, ValueDefinition::Instr(instr, n as u32));
         }
         if is_terminal {
             self.builder.ctx.block_filled.set(block, true);
@@ -174,7 +196,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             _ => panic!("encountered unexpected instruction kind"),
         };
         for param in call_instruction.params().iter().copied() {
-            self.builder.ctx.value_users[param].insert(instr);
+            self.builder.ctx.value_users[param].insert(ValueUser::Instr(instr));
         }
         Ok(instr)
     }
@@ -210,7 +232,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             _ => panic!("encountered unexpected instruction kind"),
         };
         for param in call_instruction.params().iter().copied() {
-            self.builder.ctx.value_users[param].insert(instr);
+            self.builder.ctx.value_users[param].insert(ValueUser::Instr(instr));
         }
         Ok(instr)
     }
@@ -235,7 +257,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         T: IntoIterator<Item = Value>,
     {
         for value in uses {
-            self.builder.ctx.value_users[value].insert(instr);
+            self.builder.ctx.value_users[value].insert(ValueUser::Instr(instr));
         }
     }
 
@@ -943,8 +965,14 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     where
         I: Into<Instruction>,
     {
-        let instruction = instruction.into();
         let block = self.builder.current_block()?;
+        if self.builder.ctx.block_filled.get(block) {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadyFilled {
+                block,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = instruction.into();
         let is_terminal = instruction.is_terminal();
         let instr = self.builder.ctx.instrs.alloc(instruction);
         self.builder.ctx.block_instrs[block].push(instr);
@@ -989,10 +1017,13 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     }
 
     /// Unconditionally jumps to the target basic block.
-    pub fn br(mut self, target: Block) -> Result<Instr, Error> {
+    pub fn br<A>(mut self, target: Block, args: A) -> Result<Instr, Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
         let block = self.builder.current_block()?;
-        let instr = self.append_instr(BranchInstr::new(target))?;
-        self.add_predecessor(target, block)?;
+        let edge = self.add_branching_edge(target, block, args)?;
+        let instr = self.append_instr(BranchInstr::new(edge))?;
         Ok(instr)
     }
 
@@ -1003,58 +1034,61 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
 
     /// Conditionally jumps to either `then_target` or `else_target` depending on
     /// the value of `condition`.
-    pub fn if_then_else(
+    pub fn if_then_else<A1, A2>(
         mut self,
         condition: Value,
         then_target: Block,
         else_target: Block,
-    ) -> Result<Instr, Error> {
+        then_args: A1,
+        else_args: A2,
+    ) -> Result<Instr, Error>
+    where
+        A1: IntoIterator<Item = Value>,
+        A2: IntoIterator<Item = Value>,
+    {
         self.expect_type(condition, Type::Bool)?;
         let block = self.builder.current_block()?;
+        let then_edge =
+            self.add_branching_edge(then_target, block, then_args)?;
+        let else_edge =
+            self.add_branching_edge(else_target, block, else_args)?;
         let instr = self.append_instr(IfThenElseInstr::new(
-            condition,
-            then_target,
-            else_target,
+            condition, then_edge, else_edge,
         ))?;
-        self.add_predecessor(then_target, block)?;
-        self.add_predecessor(else_target, block)?;
         self.register_uses(instr, [condition].iter().copied());
         Ok(instr)
     }
 
-    /// Adds a new predecessor basic block to the block.
+    /// Adds a new branching edge between the basic blocks with the given arguments.
     ///
     /// # Errors
     ///
     /// - If the new predecessor is not yet filled.
     /// - If the block that gains a new predecessor has already been sealed.
     /// - If the new predecessor is already a predecessor of the block.
-    fn add_predecessor(
+    /// - If the given arguments cannot be applied to the destination block.
+    fn add_branching_edge<A>(
         &mut self,
-        block: Block,
-        new_pred: Block,
-    ) -> Result<(), Error> {
-        if !self.builder.ctx.block_filled.get(new_pred) {
-            return Err(FunctionBuilderError::UnfilledPredecessor {
-                block,
-                unfilled_pred: new_pred,
-            })
-            .map_err(Into::into)
-        }
-        if self.builder.ctx.block_sealed.get(block) {
+        destination: Block,
+        source: Block,
+        args: A,
+    ) -> Result<Edge, Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
+        if self.builder.ctx.block_sealed.get(destination) {
             return Err(FunctionBuilderError::PredecessorForSealedBlock {
-                sealed_block: block,
-                new_pred,
+                sealed_block: destination,
+                new_pred: source,
             })
             .map_err(Into::into)
         }
-        if !self.builder.ctx.block_preds[block].insert(new_pred) {
-            return Err(FunctionBuilderError::BranchAlreadyExists {
-                from: new_pred,
-                to: block,
-            })
-            .map_err(Into::into)
-        }
-        Ok(())
+        let edge = self.builder.ctx.edges.alloc_some(1);
+        self.builder.ctx.edge_src.insert(edge, source);
+        self.builder.ctx.edge_dst.insert(edge, destination);
+        debug_assert!(self.builder.ctx.edge_args[edge].is_empty());
+        self.builder.ctx.edge_args[edge].extend(args);
+        self.builder.ctx.block_edges[destination].push(edge);
+        Ok(edge)
     }
 }

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::FunctionBuilderState;
-use crate::{func_body::Variable, primitive::Instr};
+use super::{FunctionBuilderState, Variable};
+use crate::primitive::Instr;
 use derive_more::{Display, Error};
 use ir::primitive::{Block, FloatType, IntType, Type, Value};
 
