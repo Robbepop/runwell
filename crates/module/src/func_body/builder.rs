@@ -397,6 +397,44 @@ impl<'a> FunctionBuilder<'a> {
         Ok(())
     }
 
+    /// Creates a user provided block parameter with the given type.
+    ///
+    /// Returns the value that is defined as the new block parameter.
+    ///
+    /// # Errors
+    ///
+    /// If the block already contains non-user provided parameters or
+    /// instructions. Basically this operation can only be used directly
+    /// after creating a new basic block.
+    pub fn create_block_parameter(
+        &mut self,
+        block: Block,
+        param_type: Type,
+    ) -> Result<Value, Error> {
+        if !self.ctx.block_instrs[block].is_empty() {
+            panic!("cannot add a user provided block parameter to a basic block that has instructions already");
+        }
+        if !self.ctx.block_incomplete_params[block].is_empty() {
+            panic!("cannot add a user provided block parameter to a basic block that already has SSA parameters");
+        }
+        let value = self.ctx.values.alloc_some(1);
+        let pos = self.ctx.block_params[block].len();
+        assert!(
+            pos < u16::MAX as usize,
+            "there are {} block parameters for block {} \
+            while the maximum amount of block parameters is {}",
+            pos,
+            block,
+            u16::MAX,
+        );
+        self.ctx
+            .value_definition
+            .insert(value, ValueDefinition::Param(block, pos as u32));
+        self.ctx.value_type.insert(value, param_type);
+        self.ctx.block_params[block].push(value);
+        Ok(value)
+    }
+
     /// Creates a new incomplete block parameter.
     ///
     /// These block parameters are driven by the SSA value construction
