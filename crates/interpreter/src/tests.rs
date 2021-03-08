@@ -318,6 +318,52 @@ fn inconveniently_written_min() {
 }
 
 #[test]
+fn inconveniently_written_min_2() {
+    let (func, module) = module_with_func(
+        &[IntType::I32.into(); 2][..],
+        &[IntType::I32.into()],
+        |b| {
+            b.declare_variables(1, IntType::I32.into())?;
+            b.body()?;
+
+            let exit_block = b.create_block()?;
+            let param =
+                b.create_block_parameter(exit_block, IntType::I32.into())?;
+
+            let lhs = Variable::from_raw(RawIdx::from_u32(0));
+            let rhs = Variable::from_raw(RawIdx::from_u32(1));
+
+            let v0 = b.read_var(lhs)?;
+            let v1 = b.read_var(rhs)?;
+            let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v0, v1)?;
+            b.ins()?.if_then_else(
+                v2,
+                exit_block,
+                exit_block,
+                vec![v0],
+                vec![v1],
+            )?;
+
+            b.switch_to_block(exit_block)?;
+            b.ins()?.return_values([param].iter().copied())?;
+            b.seal_block(exit_block)?;
+
+            Ok(())
+        },
+    );
+    let mut ctx = EvaluationContext::new(&module);
+    for x in -10..10 {
+        for y in -5..15 {
+            let x = IntConst::I32(x).into();
+            let y = IntConst::I32(y).into();
+            let result = evaluate_func_in_ctx(&mut ctx, func, &[x, y]);
+            let result = bits_into_const(&module, func, result);
+            assert_eq!(result, vec![if x < y { x } else { y }]);
+        }
+    }
+}
+
+#[test]
 fn binary_swap_works() {
     let (func, module) = module_with_func(
         &[IntType::I32.into(); 2][..],
