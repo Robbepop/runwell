@@ -17,6 +17,7 @@
 mod builder;
 mod error;
 mod instruction;
+mod replacer;
 mod value;
 mod variable;
 
@@ -27,6 +28,7 @@ pub use self::{
 };
 use self::{
     builder::FunctionBuilderState,
+    replacer::Replacer,
     value::{ValueDefinition, ValueUser},
     variable::{Variable, VariableTranslator},
 };

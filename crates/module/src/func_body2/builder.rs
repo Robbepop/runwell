@@ -16,13 +16,14 @@ use super::{
     FunctionBody,
     FunctionBuilderError,
     InstructionBuilder,
+    Replacer,
     ValueDefinition,
     ValueUser,
     Variable,
     VariableTranslator,
 };
 use crate::{primitive::Instr, Error, ModuleResources};
-use core::mem::take;
+use core::mem::{replace, take};
 use derive_more::Display;
 use entity::{
     ComponentMap,
@@ -810,5 +811,197 @@ impl<'a> FunctionBuilder<'a> {
             .map_err(Into::into)
         }
         Ok(InstructionBuilder::new(self))
+    }
+
+    /// Finalizes construction of the built function.
+    ///
+    /// Returns the built function.
+    ///
+    /// # Errors
+    ///
+    /// If not all basic blocks in the function are sealed and filled.
+    pub fn finalize(mut self) -> Result<FunctionBody, Error> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        self.ensure_all_blocks_sealed()?;
+        self.ensure_all_blocks_filled()?;
+
+        let mut body = FunctionBody {
+            blocks: Default::default(),
+            block_instrs: Default::default(),
+            block_params: Default::default(),
+            values: Default::default(),
+            value_type: Default::default(),
+            value_definition: Default::default(),
+            instrs: Default::default(),
+            instr_values: Default::default(),
+            edges: Default::default(),
+            edge_args: Default::default(),
+            edge_destination: Default::default(),
+        };
+        let replace_values = self.initialize_values(&mut body);
+        self.initialize_instrs(&replace_values, &mut body);
+        Ok(body)
+    }
+
+    /// Ensures that all basic blocks are sealed and returns an `Error` if not.
+    fn ensure_all_blocks_sealed(&self) -> Result<(), Error> {
+        let is_block_unsealed =
+            |block: &Block| -> bool { !self.ctx.block_sealed.get(*block) };
+        let len_unsealed_blocks =
+            self.ctx.blocks.indices().filter(is_block_unsealed).count();
+        if len_unsealed_blocks > 0 {
+            return Err(FunctionBuilderError::UnsealedBlocksUponFinalize {
+                unsealed: {
+                    self.ctx
+                        .blocks
+                        .indices()
+                        .filter(is_block_unsealed)
+                        .collect::<Vec<_>>()
+                },
+            })
+            .map_err(Into::into)
+        }
+        Ok(())
+    }
+
+    /// Ensures that all basic blocks are filled and returns an `Error` if not.
+    fn ensure_all_blocks_filled(&self) -> Result<(), Error> {
+        let is_block_unfilled =
+            |block: &Block| -> bool { !self.ctx.block_filled.get(*block) };
+        let len_unfilled_blocks =
+            self.ctx.blocks.indices().filter(is_block_unfilled).count();
+        if len_unfilled_blocks > 0 {
+            return Err(FunctionBuilderError::UnfilledBlocksUponFinalize {
+                unfilled: {
+                    self.ctx
+                        .blocks
+                        .indices()
+                        .filter(is_block_unfilled)
+                        .collect::<Vec<_>>()
+                },
+            })
+            .map_err(Into::into)
+        }
+        Ok(())
+    }
+
+    /// Initializes all values of the finalized constructed function body.
+    ///
+    /// This eliminates all dead SSA values that are no longer in use at the end of construction.
+    /// This also updates all data that is associated to the remaining alive SSA values in order
+    /// to compact their representation in memory.
+    ///
+    /// Returns a mapping that stores all the SSA value replacements for all alive SSA values.
+    fn initialize_values(
+        &mut self,
+        body: &mut FunctionBody,
+    ) -> Replacer<Value> {
+        let mut value_replace = <Replacer<Value>>::default();
+        // Replace all values and update references for all their associated data.
+        for old_value in self.ctx.values.indices() {
+            let is_alive = !self.ctx.value_users[old_value].is_empty();
+            if !is_alive {
+                // Skip non-alive value.
+                continue
+            }
+            let new_value = body.values.alloc_some(1);
+            body.value_type
+                .insert(new_value, self.ctx.value_type[old_value]);
+            body.value_definition
+                .insert(new_value, self.ctx.value_definition[old_value]);
+            value_replace.insert(old_value, new_value);
+            if let ValueDefinition::Param(_block, _n) =
+                self.ctx.value_definition[old_value]
+            {
+                // The dead value is a block parameter.
+                //
+                // We need to remove the dead block parameter and the arguments
+                // of all incoming edges for it.
+                unimplemented!()
+            }
+        }
+        // Replace all block parameter arguments of all edges.
+        for edge in self.ctx.edges.indices() {
+            for old_arg in &mut self.ctx.edge_args[edge] {
+                let new_arg = value_replace.get(*old_arg);
+                *old_arg = new_arg;
+            }
+        }
+        value_replace
+    }
+
+    /// For every instruction returns a `bool` indicating if it is alive within the function body.
+    ///
+    /// Is only called and used from the `initialize_instrs` procedure.
+    ///
+    /// # Note
+    ///
+    /// - This information can later be used to remove dead instructions from the function body.
+    /// - An instruction is said to be alive if it is used at least once in any of the basic blocks.
+    fn get_alive_instrs(&self) -> DefaultComponentBitVec<Instr> {
+        let mut is_alive = <DefaultComponentBitVec<Instr>>::default();
+        for block in self.ctx.blocks.indices() {
+            for instr in self.ctx.block_instrs[block].iter().copied() {
+                is_alive.set(instr, true);
+            }
+        }
+        is_alive
+    }
+
+    /// Initializes all instructions of the finalized constructed function body.
+    ///
+    /// This eliminates all dead instructions that are no longer in use at the end of construction.
+    /// This also updates all the data that is associated to the remaining alive instructions in order
+    /// to compact their representation in memory.
+    fn initialize_instrs(
+        &mut self,
+        value_replace: &Replacer<Value>,
+        body: &mut FunctionBody,
+    ) {
+        let is_instr_alive = self.get_alive_instrs();
+        let mut instr_replace = <Replacer<Instr>>::default();
+        // Fetch all alive instructions.
+        for (old_instr, instruction) in &mut self.ctx.instrs {
+            if is_instr_alive.get(old_instr) {
+                // Replace all old values in the instruction with new values.
+                instruction.visit_values_mut(|old_value| {
+                    let new_value = value_replace.get(*old_value);
+                    *old_value = new_value;
+                    true
+                });
+                // Swap out updated instruction with a placeholder trap instruction.
+                // The old instructions will be dropped so whatever we put in there does not matter.
+                let instruction = replace(
+                    instruction,
+                    Instruction::Terminal2(TerminalInstr2::Trap),
+                );
+                let new_instr = body.instrs.alloc(instruction);
+                instr_replace.insert(old_instr, new_instr);
+                // Replace all values associated to the output of all instructions.
+                for old_value in &self.ctx.instr_values[old_instr] {
+                    let maybe_new_value = value_replace.try_get(*old_value);
+                    body.instr_values[new_instr].push(maybe_new_value);
+                }
+            }
+        }
+        // Simply copy over the same basic block structure.
+        // We do not yet eliminate trivial or dead basic blocks.
+        body.blocks = self.ctx.blocks.clone();
+        // Replace instruction references of block instructions.
+        for block in self.ctx.blocks.indices() {
+            for old_instr in self.ctx.block_instrs[block].iter().copied() {
+                let new_instr = instr_replace.get(old_instr);
+                body.block_instrs[block].push(new_instr);
+            }
+        }
+        // Replace value association of all alive values.
+        for value in body.values.indices() {
+            if let ValueDefinition::Instr(old_instr, _) =
+                &mut body.value_definition[value]
+            {
+                let new_instr = instr_replace.get(*old_instr);
+                *old_instr = new_instr;
+            }
+        }
     }
 }
