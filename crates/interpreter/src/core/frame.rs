@@ -22,8 +22,6 @@ pub struct Frame {
     func: Func,
     /// The currently executing basic block.
     current_block: Block,
-    /// The last executing basic block of none.
-    last_block: Option<Block>,
     /// The currently executing instruction of the currently executing basic block.
     instruction_counter: usize,
     /// The stack pointer on the global stack for the frame.
@@ -36,7 +34,6 @@ impl Frame {
         Self {
             func,
             current_block: entry_block,
-            last_block: None,
             instruction_counter: 0,
             stack_pointer,
         }
@@ -47,21 +44,15 @@ impl Frame {
         self.func
     }
 
-    /// Switches the currently executed basic block.
-    pub fn switch_to_block(&mut self, block: Block) {
-        let last_block = replace(&mut self.current_block, block);
-        self.last_block = Some(last_block);
+    /// Continue execution by using the given edge.
+    pub fn switch_to_block(&mut self, new_block: Block) {
+        let _ = replace(&mut self.current_block, new_block);
         self.instruction_counter = 0;
     }
 
     /// Returns the currently executed basic block.
     pub fn current_block(&self) -> Block {
         self.current_block
-    }
-
-    /// Returns the last executed basic block if any.
-    pub fn last_block(&self) -> Option<Block> {
-        self.last_block
     }
 
     /// Bumps the instruction counter by one and returns its value before the bump.

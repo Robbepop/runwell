@@ -16,7 +16,7 @@ use super::{
     frame::Frame,
     stack::{Ptr, Register, Stack},
 };
-use ir::primitive::{Block, Value};
+use ir::primitive::{Block, Edge, Value};
 use module::Module;
 
 /// A temporary activation frame used for instruction interpretation.
@@ -56,19 +56,23 @@ impl<'a> ActivationFrame<'a> {
         self.stack.read_register(ptr)
     }
 
-    /// Switches the currently executed basic block.
-    pub fn switch_to_block(&mut self, block: Block) {
-        self.frame.switch_to_block(block);
+    /// Continue execution by using the given edge.
+    pub fn continue_along_edge(&mut self, edge: Edge) {
+        let function = self.module.get_function(self.frame.func()).unwrap();
+        let destination = function.body().edge_destination(edge);
+        let args = function.body().edge_args(edge);
+        let params = function.body().block_params(destination);
+        assert_eq!(args.len(), params.len());
+        for (param, arg) in params.iter().copied().zip(args.iter().copied()) {
+            let value = self.read_register(arg);
+            self.write_register(param, value);
+        }
+        self.frame.switch_to_block(destination);
     }
 
     /// Returns the currently executed basic block.
     pub fn current_block(&self) -> Block {
         self.frame.current_block()
-    }
-
-    /// Returns the last executed basic block if any.
-    pub fn last_block(&self) -> Option<Block> {
-        self.frame.last_block()
     }
 
     /// Bumps the instruction counter by one and returns its value before the bump.
