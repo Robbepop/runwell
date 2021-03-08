@@ -12,22 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{CallIndirectInstr, CallInstr, SmallBlockVec};
+use super::{CallIndirectInstr, CallInstr};
 use crate::{
-    primitive::{Block, Func, FuncType, Table, Value},
+    primitive::{Edge, Func, FuncType, Table, Value},
+    DisplayEdge,
+    DisplayInstruction,
+    Indent,
     VisitValues,
     VisitValuesMut,
 };
 use core::fmt::{self, Display};
 use derive_more::{Display, From};
+use smallvec::SmallVec;
 
 /// A terminal SSA instruction.
 ///
 /// Every basic block is required to have a terminal instruction
 /// as its last instruction.
-#[derive(Debug, Display, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+#[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum TerminalInstr {
-    #[display(fmt = "trap")]
     Trap,
     Return(ReturnInstr),
     Br(BranchInstr),
@@ -71,10 +74,36 @@ impl VisitValuesMut for TerminalInstr {
     }
 }
 
+impl DisplayInstruction for TerminalInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        match self {
+            TerminalInstr::Trap => write!(f, "trap")?,
+            TerminalInstr::Return(instr) => write!(f, "{}", instr)?,
+            TerminalInstr::Br(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
+            TerminalInstr::Ite(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
+            TerminalInstr::TailCall(instr) => write!(f, "{}", instr)?,
+            TerminalInstr::TailCallIndirect(instr) => write!(f, "{}", instr)?,
+            TerminalInstr::BranchTable(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
+        }
+        Ok(())
+    }
+}
+
 /// Returns the returned value from to the function's caller.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct ReturnInstr {
-    return_values: Vec<Value>,
+    return_values: SmallVec<[Value; 4]>,
 }
 
 impl fmt::Display for ReturnInstr {
@@ -104,7 +133,7 @@ impl ReturnInstr {
         T: IntoIterator<Item = Value>,
     {
         Self {
-            return_values: return_values.into_iter().collect::<Vec<_>>(),
+            return_values: return_values.into_iter().collect::<SmallVec<_>>(),
         }
     }
 
@@ -143,40 +172,55 @@ impl VisitValuesMut for ReturnInstr {
 
 /// Unconditionally branches to another basic block.
 #[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(fmt = "br {}", target)]
+#[display(fmt = "br {}", edge)]
 pub struct BranchInstr {
-    target: Block,
+    edge: Edge,
 }
 
 impl BranchInstr {
-    /// Creates a new branch instruction branching to the given basic block.
-    pub fn new(target: Block) -> Self {
-        Self { target }
+    /// Creates a new unconditional branch instruction using the given branching edge.
+    pub fn new(edge: Edge) -> Self {
+        Self { edge }
     }
 
-    /// Returns the target block to jump to.
+    /// Returns the branching edge of the unconditional branch.
     #[inline]
-    pub fn target(&self) -> Block {
-        self.target
+    pub fn edge(&self) -> Edge {
+        self.edge
+    }
+}
+
+impl DisplayInstruction for BranchInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        _indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        write!(f, "br ")?;
+        displayer.display_edge(f, self.edge())?;
+        Ok(())
     }
 }
 
 /// Conditionally either branches to `then` or `else` branch depending on `condition`.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(fmt = "if {} then {} else {}", condition, then_block, else_block)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct IfThenElseInstr {
     condition: Value,
-    then_block: Block,
-    else_block: Block,
+    then_edge: Edge,
+    else_edge: Edge,
 }
 
 impl IfThenElseInstr {
-    /// Creates a new if-then-else instruction branching to either `then` or `else` depending on `condition`.
-    pub fn new(condition: Value, br_then: Block, br_else: Block) -> Self {
+    /// Creates a new conditional branch instruction.
+    ///
+    /// Branches either to `then_edge` branching edge in case `condition` is
+    /// non-zero (or `true`) or to `else_edge` branching edge otherwise.
+    pub fn new(condition: Value, then_edge: Edge, else_edge: Edge) -> Self {
         Self {
             condition,
-            then_block: br_then,
-            else_block: br_else,
+            then_edge,
+            else_edge,
         }
     }
 
@@ -186,16 +230,16 @@ impl IfThenElseInstr {
         self.condition
     }
 
-    /// Returns the block to jump to in case the condition evaluates to `true`.
+    /// Returns the branching edge taken in case the condition evaluates to `true`.
     #[inline]
-    pub fn then_block(&self) -> Block {
-        self.then_block
+    pub fn then_edge(&self) -> Edge {
+        self.then_edge
     }
 
-    /// Returns the block to jump to in case the condition evaluates to `false`.
+    /// Returns the branching edge taken in case the condition evaluates to `false`.
     #[inline]
-    pub fn else_block(&self) -> Block {
-        self.else_block
+    pub fn else_edge(&self) -> Edge {
+        self.else_edge
     }
 }
 
@@ -214,6 +258,21 @@ impl VisitValuesMut for IfThenElseInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.condition);
+    }
+}
+
+impl DisplayInstruction for IfThenElseInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        _indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        write!(f, "if {} then ", self.condition())?;
+        displayer.display_edge(f, self.then_edge())?;
+        write!(f, " else ")?;
+        displayer.display_edge(f, self.else_edge())?;
+        Ok(())
     }
 }
 
@@ -341,37 +400,37 @@ impl VisitValuesMut for TailCallIndirectInstr {
 /// A branching table mapping indices to branching targets.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct BranchTableInstr {
-    case: Value,
-    default: Block,
-    targets: SmallBlockVec,
+    selector: Value,
+    default_edge: Edge,
+    target_edges: SmallVec<[Edge; 4]>,
 }
 
 impl BranchTableInstr {
     /// Creates a new branching table with the given case, default target and targets.
-    pub fn new<I>(case: Value, default: Block, targets: I) -> Self
+    pub fn new<T>(selector: Value, default_edge: Edge, target_edges: T) -> Self
     where
-        I: IntoIterator<Item = Block>,
+        T: IntoIterator<Item = Edge>,
     {
         Self {
-            case,
-            default,
-            targets: targets.into_iter().collect(),
+            selector,
+            default_edge,
+            target_edges: target_edges.into_iter().collect(),
         }
     }
 
-    /// Returns the case value determining where to jump to.
-    pub fn case(&self) -> Value {
-        self.case
+    /// Returns the selector value determining where to jump to.
+    pub fn selector(&self) -> Value {
+        self.selector
     }
 
     /// Returns a slice over all target jumps.
-    pub fn targets(&self) -> &[Block] {
-        &self.targets
+    pub fn target_edges(&self) -> &[Edge] {
+        &self.target_edges
     }
 
     /// Returns the default target to jump to.
-    pub fn default_target(&self) -> Block {
-        self.default
+    pub fn default_target(&self) -> Edge {
+        self.default_edge
     }
 }
 
@@ -380,7 +439,7 @@ impl VisitValues for BranchTableInstr {
     where
         V: FnMut(Value) -> bool,
     {
-        visitor(self.case);
+        visitor(self.selector);
     }
 }
 
@@ -389,21 +448,47 @@ impl VisitValuesMut for BranchTableInstr {
     where
         V: FnMut(&mut Value) -> bool,
     {
-        visitor(&mut self.case);
+        visitor(&mut self.selector);
     }
 }
 
 impl Display for BranchTableInstr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "br_table {} [ ", self.case)?;
-        if let Some((first, rest)) = self.targets.split_first() {
+        write!(f, "br_table {} {{", self.selector())?;
+        if let Some((first, rest)) = self.target_edges.split_first() {
             write!(f, "0 🠖 {}", first)?;
-            for (n, target) in rest.iter().enumerate() {
-                write!(f, ", {} 🠖 {}", n + 1, target)?;
+            for (n, edge) in rest.iter().enumerate() {
+                write!(f, ", {} 🠖 {}", n + 1, edge)?;
             }
+            write!(f, ", ")?;
         }
         write!(f, "_ 🠖 {}", self.default_target())?;
-        write!(f, " ]")?;
+        write!(f, "}}")?;
+        Ok(())
+    }
+}
+
+impl DisplayInstruction for BranchTableInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+        displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        let target_indentation = indent + Indent::single();
+        write!(f, "match {} {{", self.selector())?;
+        if let Some((first, rest)) = self.target_edges().split_first() {
+            write!(f, "{}0 🠖 ", target_indentation)?;
+            displayer.display_edge(f, *first)?;
+            for (n, edge) in rest.iter().enumerate() {
+                writeln!(f, ",")?;
+                write!(f, "{}{} 🠖 ", target_indentation, n + 1)?;
+                displayer.display_edge(f, *edge)?;
+            }
+            writeln!(f, ",")?;
+        }
+        writeln!(f, "{}_ 🠖 {}", target_indentation, self.default_target())?;
+        write!(f, "{}}}", indent)?;
         Ok(())
     }
 }

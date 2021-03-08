@@ -18,10 +18,8 @@ mod conv;
 mod float;
 mod int;
 mod memory;
-mod phi;
 mod select;
 mod terminal;
-mod terminal_2;
 
 use core::fmt;
 
@@ -63,7 +61,6 @@ pub use self::{
         MemorySizeInstr,
         StoreInstr,
     },
-    phi::PhiInstr,
     select::SelectInstr,
     terminal::{
         BranchInstr,
@@ -74,19 +71,9 @@ pub use self::{
         TailCallInstr,
         TerminalInstr,
     },
-    terminal_2::{
-        BranchInstr as BranchInstr2,
-        BranchTableInstr as BranchTableInstr2,
-        IfThenElseInstr as IfThenElseInstr2,
-        ReturnInstr as ReturnInstr2,
-        TailCallIndirectInstr as TailCallIndirectInstr2,
-        TailCallInstr as TailCallInstr2,
-        TerminalInstr as TerminalInstr2,
-    },
 };
 use super::primitive::Value;
 use crate::{
-    primitive::Block,
     DisplayEdge,
     DisplayInstruction,
     Indent,
@@ -102,12 +89,6 @@ use smallvec::SmallVec;
 /// small vector to have the same stack size as the `Vec<Value>` type.
 type SmallValueVec = SmallVec<[Value; 4]>;
 
-/// A space-optimized vector containing basic blocks.
-///
-/// This has the exact amount of inline elements required for the
-/// small vector to have the same stack size as the `Vec<Block>` type.
-type SmallBlockVec = SmallVec<[Block; 4]>;
-
 /// An SSA instruction from the Runwell IR.
 #[derive(Debug, Display, From, PartialEq, Eq, Hash, Clone)]
 pub enum Instruction {
@@ -117,16 +98,14 @@ pub enum Instruction {
     MemoryGrow(MemoryGrowInstr),
     MemorySize(MemorySizeInstr),
     HeapAddr(HeapAddrInstr),
-    Phi(PhiInstr),
     Load(LoadInstr),
     Store(StoreInstr),
     Select(SelectInstr),
     Reinterpret(ReinterpretInstr),
-    Terminal(TerminalInstr),
     #[display(
         fmt = "error: Display is unimplemented for Terminal2 instructions"
     )]
-    Terminal2(TerminalInstr2),
+    Terminal(TerminalInstr),
     Int(IntInstr),
     Float(FloatInstr),
 }
@@ -134,12 +113,7 @@ pub enum Instruction {
 impl Instruction {
     /// Returns `true` if the instruction terminates a basic block.
     pub fn is_terminal(&self) -> bool {
-        matches!(self, Self::Terminal(_) | Self::Terminal2(_))
-    }
-
-    /// Returns `true` if the instruction is a ϕ-instruction.
-    pub fn is_phi(&self) -> bool {
-        matches!(self, Self::Phi(_))
+        matches!(self, Self::Terminal(_))
     }
 }
 
@@ -154,14 +128,12 @@ impl VisitValues for Instruction {
             Self::Const(instr) => instr.visit_values(visitor),
             Self::MemoryGrow(instr) => instr.visit_values(visitor),
             Self::MemorySize(__instr) => (),
-            Self::Phi(instr) => instr.visit_values(visitor),
             Self::HeapAddr(instr) => instr.visit_values(visitor),
             Self::Load(instr) => instr.visit_values(visitor),
             Self::Store(instr) => instr.visit_values(visitor),
             Self::Select(instr) => instr.visit_values(visitor),
             Self::Reinterpret(instr) => instr.visit_values(visitor),
             Self::Terminal(instr) => instr.visit_values(visitor),
-            Self::Terminal2(instr) => instr.visit_values(visitor),
             Self::Int(instr) => instr.visit_values(visitor),
             Self::Float(instr) => instr.visit_values(visitor),
         }
@@ -179,14 +151,12 @@ impl VisitValuesMut for Instruction {
             Self::Const(instr) => instr.visit_values_mut(visitor),
             Self::MemoryGrow(instr) => instr.visit_values_mut(visitor),
             Self::MemorySize(__instr) => (),
-            Self::Phi(instr) => instr.visit_values_mut(visitor),
             Self::HeapAddr(instr) => instr.visit_values_mut(visitor),
             Self::Load(instr) => instr.visit_values_mut(visitor),
             Self::Store(instr) => instr.visit_values_mut(visitor),
             Self::Select(instr) => instr.visit_values_mut(visitor),
             Self::Reinterpret(instr) => instr.visit_values_mut(visitor),
             Self::Terminal(instr) => instr.visit_values_mut(visitor),
-            Self::Terminal2(instr) => instr.visit_values_mut(visitor),
             Self::Int(instr) => instr.visit_values_mut(visitor),
             Self::Float(instr) => instr.visit_values_mut(visitor),
         }
@@ -206,14 +176,12 @@ impl DisplayInstruction for Instruction {
             Self::Const(instr) => write!(f, "{}", instr)?,
             Self::MemoryGrow(instr) => write!(f, "{}", instr)?,
             Self::MemorySize(instr) => write!(f, "{}", instr)?,
-            Self::Phi(instr) => write!(f, "{}", instr)?,
             Self::HeapAddr(instr) => write!(f, "{}", instr)?,
             Self::Load(instr) => write!(f, "{}", instr)?,
             Self::Store(instr) => write!(f, "{}", instr)?,
             Self::Select(instr) => write!(f, "{}", instr)?,
             Self::Reinterpret(instr) => write!(f, "{}", instr)?,
-            Self::Terminal(instr) => write!(f, "{}", instr)?,
-            Self::Terminal2(instr) => {
+            Self::Terminal(instr) => {
                 instr.display_instruction(f, indent, displayer)?
             }
             Self::Int(instr) => write!(f, "{}", instr)?,
@@ -235,7 +203,6 @@ mod tests {
         // Also assert the sizes of the biggest known concrete instructions.
         assert_eq!(size_of::<TerminalInstr>(), 40);
         assert_eq!(size_of::<BranchTableInstr>(), 32);
-        assert_eq!(size_of::<PhiInstr>(), 24);
         assert_eq!(size_of::<CallIndirectInstr>(), 32);
     }
 }
