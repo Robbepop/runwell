@@ -26,10 +26,19 @@ use core::marker::PhantomData;
 ///   so this arena type is just a glorified counter.
 ///
 /// For efficiency and safety reasons it is not possible to remove entities.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PhantomEntityArena<T> {
     current: u32,
     marker: PhantomData<fn() -> T>,
+}
+
+impl<T> Clone for PhantomEntityArena<T> {
+    fn clone(&self) -> Self {
+        Self {
+            current: self.current,
+            marker: Default::default(),
+        }
+    }
 }
 
 impl<T> Default for PhantomEntityArena<T> {
