@@ -1009,7 +1009,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     pub fn return_values<T>(mut self, return_values: T) -> Result<Instr, Error>
     where
         T: IntoIterator<Item = Value>,
-        <T as IntoIterator>::IntoIter: Clone,
     {
         let return_values = return_values.into_iter();
         let func_type = self
@@ -1022,19 +1021,20 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
                     self.builder.func
                 )
             });
-        let expected_outputs = func_type.outputs().iter().copied();
-        let return_types = return_values
-            .clone()
-            .map(|val| self.builder.ctx.value_type[val]);
-        if !return_types.clone().eq(expected_outputs.clone()) {
+        let return_instr = ReturnInstr::new(return_values);
+        let returned_types = return_instr
+            .return_values()
+            .iter()
+            .map(|&value| self.builder.ctx.value_type[value]);
+        let expected_return_types = func_type.outputs().iter().copied();
+        if !expected_return_types.clone().eq(returned_types.clone()) {
             return Err(FunctionBuilderError::UnmatchingFunctionReturnType {
-                returned_types: return_types.collect(),
-                expected_types: expected_outputs.collect(),
+                returned_types: returned_types.collect(),
+                expected_types: expected_return_types.collect(),
             })
             .map_err(Into::into)
         }
-        let ret_instr = ReturnInstr::new(return_values.clone());
-        let instr = self.append_instr(ret_instr)?;
+        let instr = self.append_instr(return_instr)?;
         Ok(instr)
     }
 
