@@ -961,7 +961,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ) -> Result<Value, Error> {
         self.expect_type(ptr, Type::Ptr)?;
         let instruction = LoadInstr::new(ty, ptr, offset);
-        let (value, _instr) = self.append_value_instr(instruction.into(), ty)?;
+        let (value, _instr) =
+            self.append_value_instr(instruction.into(), ty)?;
         Ok(value)
     }
 
