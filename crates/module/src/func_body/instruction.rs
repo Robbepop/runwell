@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use super::{
+    builder::FunctionBuilderContext,
     FunctionBuilder,
     FunctionBuilderError,
     ValueDefinition,
@@ -70,6 +71,7 @@ use ir::{
         Value,
     },
     ImmU32,
+    VisitValues,
 };
 
 /// The unique index of a basic block entity of the Runwell IR.
@@ -113,6 +115,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         }
         let instr =
             self.append_multi_value_instr(instruction, &[output_type])?;
+        self.register_uses(instr);
         let value = self.builder.ctx.instr_values[instr][0];
         Ok((value, instr))
     }
@@ -248,17 +251,20 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         Ok(value)
     }
 
-    /// Registers that the instruction uses the given values.
+    /// Registers all values that are used by the instruction.
     ///
-    /// This information is later used to remove trivial phi nodes
-    /// recursively and can later be used to down propagate other simplifications.
-    fn register_uses<T>(&mut self, instr: Instr, uses: T)
-    where
-        T: IntoIterator<Item = Value>,
-    {
-        for value in uses {
-            self.builder.ctx.value_users[value].insert(ValueUser::Instr(instr));
-        }
+    /// This is automated by the value visitor implementation of all instructions.
+    fn register_uses(&mut self, instr: Instr) {
+        let FunctionBuilderContext {
+            instrs,
+            value_users,
+            ..
+        } = &mut self.builder.ctx;
+        let instruction = &instrs[instr];
+        instruction.visit_values(|value| {
+            value_users[value].insert(ValueUser::Instr(instr));
+            true
+        })
     }
 
     /// Returns `Ok` if the type of the value matches the expected type.
@@ -292,9 +298,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ) -> Result<Value, Error> {
         self.expect_type(source, int_type.into())?;
         let instruction = UnaryIntInstr::new(op, int_type, source);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), int_type.into())?;
-        self.register_uses(instr, [source].iter().copied());
         Ok(value)
     }
 
@@ -337,9 +342,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(shift_amount, IntType::I32.into())?;
         let instruction =
             ShiftIntInstr::new(op, int_type, source, shift_amount);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), int_type.into())?;
-        self.register_uses(instr, [source, shift_amount].iter().copied());
         Ok(value)
     }
 
@@ -404,9 +408,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = BinaryIntInstr::new(op, ty, lhs, rhs);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
-        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -535,9 +538,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareIntInstr::new(op, ty, lhs, rhs);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), IntType::I1.into())?;
-        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -550,9 +552,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ) -> Result<Value, Error> {
         self.expect_type(source, ty.into())?;
         let instruction = UnaryFloatInstr::new(op, ty, source);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
-        self.register_uses(instr, [source].iter().copied());
         Ok(value)
     }
 
@@ -610,9 +611,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = BinaryFloatInstr::new(op, ty, lhs, rhs);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), ty.into())?;
-        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -706,9 +706,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(lhs, ty.into())?;
         self.expect_type(rhs, ty.into())?;
         let instruction = CompareFloatInstr::new(op, ty, lhs, rhs);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), IntType::I1.into())?;
-        self.register_uses(instr, [lhs, rhs].iter().copied());
         Ok(value)
     }
 
@@ -762,11 +761,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         for &target_result in instruction.target_results() {
             self.expect_type(target_result, result_type)?;
         }
-        // TODO: Remove call to clone.
-        let (value, instr) =
-            self.append_value_instr(instruction.clone().into(), result_type)?;
-        self.register_uses(instr, [selector, default_result].iter().copied());
-        self.register_uses(instr, instruction.target_results().iter().copied());
+        let (value, _instr) =
+            self.append_value_instr(instruction.into(), result_type)?;
         Ok(value)
     }
 
@@ -796,9 +792,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .map_err(Into::into)
         }
         let instruction = ReinterpretInstr::new(from_type, to_type, src);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), to_type)?;
-        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -823,9 +818,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .map_err(Into::into)
         }
         let instruction = ExtendIntInstr::new(signed, from_type, to_type, src);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -849,9 +843,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .map_err(Into::into)
         }
         let instruction = TruncateIntInstr::new(from_type, to_type, src);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -874,9 +867,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .map_err(Into::into)
         }
         let instruction = PromoteFloatInstr::new(from_type, to_type, src);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -899,9 +891,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .map_err(Into::into)
         }
         let instruction = DemoteFloatInstr::new(from_type, to_type, src);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), to_type.into())?;
-        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -922,9 +913,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         let instruction = FloatToIntInstr::new(
             src_type, dst_type, dst_signed, src, saturating,
         );
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), dst_type.into())?;
-        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -940,9 +930,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         src: Value,
     ) -> Result<Value, Error> {
         let instruction = IntToFloatInstr::new(signed, src_type, dst_type, src);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), dst_type.into())?;
-        self.register_uses(instr, [src].iter().copied());
         Ok(value)
     }
 
@@ -958,9 +947,8 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ) -> Result<Value, Error> {
         self.expect_type(pos, IntType::I32.into())?;
         let instruction = HeapAddrInstr::new(mem, pos, size);
-        let (value, instr) =
+        let (value, _instr) =
             self.append_value_instr(instruction.into(), Type::Ptr)?;
-        self.register_uses(instr, [pos].iter().copied());
         Ok(value)
     }
 
@@ -973,8 +961,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ) -> Result<Value, Error> {
         self.expect_type(ptr, Type::Ptr)?;
         let instruction = LoadInstr::new(ty, ptr, offset);
-        let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
-        self.register_uses(instr, [ptr].iter().copied());
+        let (value, _instr) = self.append_value_instr(instruction.into(), ty)?;
         Ok(value)
     }
 
@@ -989,7 +976,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         self.expect_type(ptr, Type::Ptr)?;
         let instruction = StoreInstr::new(ptr, offset, stored_value, ty);
         let instr = self.append_instr(instruction)?;
-        self.register_uses(instr, [ptr, stored_value].iter().copied());
         Ok(instr)
     }
 
@@ -1014,6 +1000,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         if is_terminal {
             self.builder.ctx.block_filled.set(block, true);
         }
+        self.register_uses(instr);
         Ok(instr)
     }
 
@@ -1047,7 +1034,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         }
         let ret_instr = ReturnInstr::new(return_values.clone());
         let instr = self.append_instr(ret_instr)?;
-        self.register_uses(instr, return_values);
         Ok(instr)
     }
 
@@ -1090,7 +1076,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         let instr = self.append_instr(IfThenElseInstr::new(
             condition, then_edge, else_edge,
         ))?;
-        self.register_uses(instr, [condition].iter().copied());
         Ok(instr)
     }
 
