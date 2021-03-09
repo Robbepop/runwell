@@ -320,7 +320,6 @@ fn inconveniently_written_min_2() {
         &[IntType::I32.into(); 2][..],
         &[IntType::I32.into()],
         |b| {
-            b.declare_variables(1, IntType::I32.into())?;
             b.body()?;
 
             let exit_block = b.create_block()?;
