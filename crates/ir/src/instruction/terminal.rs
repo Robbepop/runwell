@@ -22,7 +22,7 @@ use crate::{
     VisitValuesMut,
 };
 use core::fmt::{self, Display};
-use derive_more::{Display, From};
+use derive_more::From;
 use smallvec::SmallVec;
 
 /// A terminal SSA instruction.
@@ -171,8 +171,7 @@ impl VisitValuesMut for ReturnInstr {
 }
 
 /// Unconditionally branches to another basic block.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(fmt = "br {}", edge)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct BranchInstr {
     edge: Edge,
 }
