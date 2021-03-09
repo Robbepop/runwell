@@ -373,12 +373,7 @@ fn conveniently_written_min() {
             let v0 = b.read_var(lhs)?;
             let v1 = b.read_var(rhs)?;
             let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v0, v1)?;
-            let v3 = b.ins()?.select(
-                IntType::I32.into(),
-                v2,
-                v0,
-                v1,
-            )?;
+            let v3 = b.ins()?.select(IntType::I32.into(), v2, v0, v1)?;
             b.ins()?.return_values([v3].iter().copied())?;
 
             Ok(())
