@@ -452,22 +452,6 @@ impl VisitValuesMut for BranchTableInstr {
     }
 }
 
-impl Display for BranchTableInstr {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "br_table {} {{", self.selector())?;
-        if let Some((first, rest)) = self.target_edges.split_first() {
-            write!(f, "0 🠖 {}", first)?;
-            for (n, edge) in rest.iter().enumerate() {
-                write!(f, ", {} 🠖 {}", n + 1, edge)?;
-            }
-            write!(f, ", ")?;
-        }
-        write!(f, "_ 🠖 {}", self.default_target())?;
-        write!(f, "}}")?;
-        Ok(())
-    }
-}
-
 impl DisplayInstruction for BranchTableInstr {
     fn display_instruction(
         &self,
