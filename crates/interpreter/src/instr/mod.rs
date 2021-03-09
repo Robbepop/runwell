@@ -25,8 +25,8 @@ use ir::{
         CallInstr,
         ConstInstr,
         Instruction,
+        MatchSelectInstr,
         ReinterpretInstr,
-        SelectInstr,
     },
     primitive::{Func, Value},
 };
@@ -119,20 +119,20 @@ impl InterpretInstr for ConstInstr {
     }
 }
 
-impl InterpretInstr for SelectInstr {
+impl InterpretInstr for MatchSelectInstr {
     fn interpret_instr(
         &self,
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         let return_value = extract_single_output(outputs);
-        let condition = frame.read_register(self.condition());
-        let result_value = if condition != 0 {
-            self.true_value()
-        } else {
-            self.false_value()
-        };
-        let result = frame.read_register(result_value);
+        let selected = frame.read_register(self.selector());
+        let target_result = self
+            .target_results()
+            .get(selected as usize)
+            .copied()
+            .unwrap_or_else(|| self.default_result());
+        let result = frame.read_register(target_result);
         frame.write_register(return_value, result);
         Ok(InterpretationFlow::Continue)
     }

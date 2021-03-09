@@ -61,7 +61,7 @@ pub use self::{
         MemorySizeInstr,
         StoreInstr,
     },
-    select::SelectInstr,
+    select::MatchSelectInstr,
     terminal::{
         BranchInstr,
         BranchTableInstr,
@@ -100,7 +100,10 @@ pub enum Instruction {
     HeapAddr(HeapAddrInstr),
     Load(LoadInstr),
     Store(StoreInstr),
-    Select(SelectInstr),
+    #[display(
+        fmt = "error: Display is unimplemented for multi-select instruction"
+    )]
+    Select(MatchSelectInstr),
     Reinterpret(ReinterpretInstr),
     #[display(
         fmt = "error: Display is unimplemented for Terminal2 instructions"
@@ -179,7 +182,9 @@ impl DisplayInstruction for Instruction {
             Self::HeapAddr(instr) => write!(f, "{}", instr)?,
             Self::Load(instr) => write!(f, "{}", instr)?,
             Self::Store(instr) => write!(f, "{}", instr)?,
-            Self::Select(instr) => write!(f, "{}", instr)?,
+            Self::Select(instr) => {
+                instr.display_instruction(f, indent, displayer)?
+            }
             Self::Reinterpret(instr) => write!(f, "{}", instr)?,
             Self::Terminal(instr) => {
                 instr.display_instruction(f, indent, displayer)?

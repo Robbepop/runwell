@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::core::ActivationFrame;
-
 use super::{InterpretInstr, InterpretationError, InterpretationFlow};
+use crate::core::ActivationFrame;
 use ir::{
     instr::{
         BranchInstr,

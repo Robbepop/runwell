@@ -12,93 +12,138 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use core::fmt;
+
 use crate::{
-    primitive::{Type, Value},
+    primitive::{IntType, Type, Value},
+    DisplayEdge,
+    DisplayInstruction,
+    Indent,
     VisitValues,
     VisitValuesMut,
 };
-use derive_more::Display;
+use smallvec::{smallvec, SmallVec};
 
-/// Choose a value based on a condition without IR-level branching.
+/// Selects a value from a table of values without IR-level branching.
 ///
 /// # Note
 ///
-/// This might result in branching operations when translated to
-/// machine code.
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[display(
-    fmt = "select<{}> {} then {} else {}",
-    ty,
-    condition,
-    value_true,
-    value_false
-)]
-pub struct SelectInstr {
-    /// The condition value.
-    condition: Value,
-    /// The type of the returned value.
-    ty: Type,
-    /// The value if `condition` evaluates to `true`.
-    value_true: Value,
-    /// The value if `condition` evaluates to `false`.
-    value_false: Value,
+/// This might result in conditional branches when translating to
+/// machine code on some architectures.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub struct MatchSelectInstr {
+    /// The type of the selector.
+    selector_type: IntType,
+    /// The shared type of all result values.
+    result_type: Type,
+    /// Represents the `selector` value, followed by the default
+    /// result and all target results.
+    ///
+    /// By definition always stores at least two values.
+    selector_and_results: SmallVec<[Value; 4]>,
 }
 
-impl SelectInstr {
+impl MatchSelectInstr {
     /// Creates a new select operation.
-    pub fn new(
-        condition: Value,
-        ty: Type,
-        value_true: Value,
-        value_false: Value,
-    ) -> Self {
+    pub fn new<T>(
+        selector: Value,
+        selector_type: IntType,
+        result_type: Type,
+        default_result: Value,
+        target_results: T,
+    ) -> Self
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        let mut selector_and_results = smallvec![selector, default_result];
+        selector_and_results.extend(target_results);
         Self {
-            condition,
-            ty,
-            value_true,
-            value_false,
+            selector_type,
+            result_type,
+            selector_and_results,
         }
     }
 
-    /// Returns the value of the condition.
-    pub fn condition(&self) -> Value {
-        self.condition
+    /// Returns the type of the selector.
+    pub fn selector_type(&self) -> IntType {
+        self.selector_type
     }
 
-    /// Returns the type of the operands.
-    pub fn ty(&self) -> Type {
-        self.ty
+    /// Returns the shared type of all result values.
+    pub fn result_type(&self) -> Type {
+        self.result_type
     }
 
-    /// Returns the value returned if the condition evaluates to `true`.
-    pub fn true_value(&self) -> Value {
-        self.value_true
+    /// Returns the value of the selector.
+    pub fn selector(&self) -> Value {
+        self.selector_and_results[0]
     }
 
-    /// Returns the value returned if the condition evaluates to `false`.
-    pub fn false_value(&self) -> Value {
-        self.value_false
+    /// Returns the value of the default result.
+    ///
+    /// This is taken if no other target result matches
+    /// the selector.
+    pub fn default_result(&self) -> Value {
+        self.selector_and_results[1]
+    }
+
+    /// Returns a slice over all target results.
+    pub fn target_results(&self) -> &[Value] {
+        &self.selector_and_results[2..]
     }
 }
 
-impl VisitValues for SelectInstr {
+impl VisitValues for MatchSelectInstr {
     fn visit_values<V>(&self, mut visitor: V)
     where
         V: FnMut(Value) -> bool,
     {
-        let _ = visitor(self.condition)
-            && visitor(self.value_true)
-            && visitor(self.value_false);
+        for value in self.selector_and_results.iter().copied() {
+            if !visitor(value) {
+                break
+            }
+        }
     }
 }
 
-impl VisitValuesMut for SelectInstr {
+impl VisitValuesMut for MatchSelectInstr {
     fn visit_values_mut<V>(&mut self, mut visitor: V)
     where
         V: FnMut(&mut Value) -> bool,
     {
-        let _ = visitor(&mut self.condition)
-            && visitor(&mut self.value_true)
-            && visitor(&mut self.value_false);
+        for value in self.selector_and_results.iter_mut() {
+            if !visitor(value) {
+                break
+            }
+        }
+    }
+}
+
+impl DisplayInstruction for MatchSelectInstr {
+    fn display_instruction(
+        &self,
+        f: &mut fmt::Formatter,
+        indent: Indent,
+        _displayer: &dyn DisplayEdge,
+    ) -> fmt::Result {
+        let target_indentation = indent + Indent::single();
+        write!(
+            f,
+            "match<{}, {}> {} {{",
+            self.selector_type(),
+            self.result_type(),
+            self.selector()
+        )?;
+        if let Some((first, rest)) = self.target_results().split_first() {
+            write!(f, "{}0 🠖 {}", target_indentation, first)?;
+            for (n, result) in rest.iter().enumerate() {
+                writeln!(f, ",")?;
+                write!(f, "{}{} 🠖 {}", target_indentation, n + 1, result)?;
+            }
+            writeln!(f, ",")?;
+        }
+        writeln!(f, "{}_ 🠖 {}", target_indentation, self.default_result())?;
+        write!(f, "{}}}", indent)?;
+        Ok(())
     }
 }

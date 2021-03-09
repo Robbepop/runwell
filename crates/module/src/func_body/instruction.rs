@@ -46,10 +46,10 @@ use ir::{
         Instruction,
         IntToFloatInstr,
         LoadInstr,
+        MatchSelectInstr,
         PromoteFloatInstr,
         ReinterpretInstr,
         ReturnInstr,
-        SelectInstr,
         ShiftIntInstr,
         StoreInstr,
         TailCallInstr,
@@ -718,20 +718,55 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ///
     /// This is very similar to an if-then-else instruction that does not require jumps.
     pub fn select(
-        mut self,
+        self,
         ty: Type,
         condition: Value,
         if_true: Value,
         if_false: Value,
     ) -> Result<Value, Error> {
-        self.expect_type(if_true, ty)?;
-        self.expect_type(if_false, ty)?;
-        let instruction = SelectInstr::new(condition, ty, if_true, if_false);
-        let (value, instr) = self.append_value_instr(instruction.into(), ty)?;
-        self.register_uses(
-            instr,
-            [condition, if_true, if_false].iter().copied(),
+        self.match_select(
+            IntType::I1,
+            ty,
+            condition,
+            if_true,
+            [if_false].iter().copied(),
+        )
+    }
+
+    /// Selects from the given target result values or the default given a selector.
+    ///
+    /// # Note
+    ///
+    /// This mirrors the branching table construct but using value semantics instead
+    /// of taking branches.
+    pub fn match_select<T>(
+        mut self,
+        selector_type: IntType,
+        result_type: Type,
+        selector: Value,
+        default_result: Value,
+        target_results: T,
+    ) -> Result<Value, Error>
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        self.expect_type(selector, selector_type.into())?;
+        self.expect_type(default_result, result_type)?;
+        let instruction = MatchSelectInstr::new(
+            selector,
+            selector_type,
+            result_type,
+            default_result,
+            target_results,
         );
+        for &target_result in instruction.target_results() {
+            self.expect_type(target_result, result_type)?;
+        }
+        // TODO: Remove call to clone.
+        let (value, instr) =
+            self.append_value_instr(instruction.clone().into(), result_type)?;
+        self.register_uses(instr, [selector, default_result].iter().copied());
+        self.register_uses(instr, instruction.target_results().iter().copied());
         Ok(value)
     }
 

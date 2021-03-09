@@ -14,7 +14,7 @@
 
 use super::super::FunctionBodyTranslator;
 use crate::{Const, Error};
-use ir::primitive as runwell;
+use ir::primitive::{self as runwell, IntType};
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Translates a Wasm reinterpret operator.
@@ -73,9 +73,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             assert_eq!(if_true.ty, required_ty);
         }
         let ty = if_true.ty;
+        let condition_i1 = self.builder.ins()?.itruncate(
+            IntType::I32,
+            IntType::I1,
+            condition.value,
+        )?;
         let result = self.builder.ins()?.select(
             ty,
-            condition.value,
+            condition_i1,
             if_true.value,
             if_false.value,
         )?;
