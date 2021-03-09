@@ -197,7 +197,7 @@ impl DisplayInstruction for BranchInstr {
         _indent: Indent,
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
-        write!(f, "br ")?;
+        write!(f, "branch ")?;
         displayer.display_edge(f, self.edge())?;
         Ok(())
     }
