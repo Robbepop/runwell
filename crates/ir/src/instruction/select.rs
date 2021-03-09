@@ -127,7 +127,7 @@ impl DisplayInstruction for MatchSelectInstr {
         _displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
         let target_indentation = indent + Indent::single();
-        write!(
+        writeln!(
             f,
             "match<{}, {}> {} {{",
             self.selector_type(),
@@ -135,14 +135,28 @@ impl DisplayInstruction for MatchSelectInstr {
             self.selector()
         )?;
         if let Some((first, rest)) = self.target_results().split_first() {
-            write!(f, "{}0 🠖 {}", target_indentation, first)?;
+            let first_matcher = match self.selector_type() {
+                IntType::I1 => "false",
+                _ => "0",
+            };
+            write!(f, "{}{} 🠖 {}", target_indentation, first_matcher, first)?;
             for (n, result) in rest.iter().enumerate() {
                 writeln!(f, ",")?;
                 write!(f, "{}{} 🠖 {}", target_indentation, n + 1, result)?;
             }
             writeln!(f, ",")?;
         }
-        writeln!(f, "{}_ 🠖 {}", target_indentation, self.default_result())?;
+        let default_matcher = match self.selector_type() {
+            IntType::I1 => "true ",
+            _ => "_",
+        };
+        writeln!(
+            f,
+            "{}{} 🠖 {}",
+            target_indentation,
+            default_matcher,
+            self.default_result()
+        )?;
         write!(f, "{}}}", indent)?;
         Ok(())
     }
