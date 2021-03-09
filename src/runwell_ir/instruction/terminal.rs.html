@@ -498,23 +498,6 @@
 <span id="495">495</span>
 <span id="496">496</span>
 <span id="497">497</span>
-<span id="498">498</span>
-<span id="499">499</span>
-<span id="500">500</span>
-<span id="501">501</span>
-<span id="502">502</span>
-<span id="503">503</span>
-<span id="504">504</span>
-<span id="505">505</span>
-<span id="506">506</span>
-<span id="507">507</span>
-<span id="508">508</span>
-<span id="509">509</span>
-<span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -540,7 +523,7 @@
     <span class="ident">VisitValuesMut</span>,
 };
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>};
-<span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
+<span class="kw">use</span> <span class="ident">derive_more</span>::<span class="ident">From</span>;
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
 
 <span class="doccomment">/// A terminal SSA instruction.</span>
@@ -689,8 +672,7 @@
 }
 
 <span class="doccomment">/// Unconditionally branches to another basic block.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;br {}&quot;</span>, <span class="ident">edge</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BranchInstr</span> {
     <span class="ident">edge</span>: <span class="ident">Edge</span>,
 }
@@ -715,7 +697,7 @@
         <span class="ident">_indent</span>: <span class="ident">Indent</span>,
         <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;br &quot;</span>)<span class="question-mark">?</span>;
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;branch &quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="self">self</span>.<span class="ident">edge</span>())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -967,22 +949,6 @@
         <span class="ident">V</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>,
     {
         <span class="ident">visitor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">selector</span>);
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">BranchTableInstr</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;br_table {} {{&quot;</span>, <span class="self">self</span>.<span class="ident">selector</span>())<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">first</span>, <span class="ident">rest</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">target_edges</span>.<span class="ident">split_first</span>() {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;0 🠖 {}&quot;</span>, <span class="ident">first</span>)<span class="question-mark">?</span>;
-            <span class="kw">for</span> (<span class="ident">n</span>, <span class="ident">edge</span>) <span class="kw">in</span> <span class="ident">rest</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;, {} 🠖 {}&quot;</span>, <span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">edge</span>)<span class="question-mark">?</span>;
-            }
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
-        }
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;_ 🠖 {}&quot;</span>, <span class="self">self</span>.<span class="ident">default_target</span>())<span class="question-mark">?</span>;
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;}}&quot;</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(())
     }
 }
 
