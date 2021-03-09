@@ -476,7 +476,7 @@ impl DisplayInstruction for BranchTableInstr {
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
         let target_indentation = indent + Indent::single();
-        write!(f, "match {} {{", self.selector())?;
+        writeln!(f, "match {} {{", self.selector())?;
         if let Some((first, rest)) = self.target_edges().split_first() {
             write!(f, "{}0 🠖 ", target_indentation)?;
             displayer.display_edge(f, *first)?;
