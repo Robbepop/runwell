@@ -209,6 +209,11 @@
 <span id="206">206</span>
 <span id="207">207</span>
 <span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -273,7 +278,7 @@
         <span class="ident">MemorySizeInstr</span>,
         <span class="ident">StoreInstr</span>,
     },
-    <span class="ident">select</span>::<span class="ident">SelectInstr</span>,
+    <span class="ident">select</span>::<span class="ident">MatchSelectInstr</span>,
     <span class="ident">terminal</span>::{
         <span class="ident">BranchInstr</span>,
         <span class="ident">BranchTableInstr</span>,
@@ -312,7 +317,10 @@
     <span class="ident">HeapAddr</span>(<span class="ident">HeapAddrInstr</span>),
     <span class="ident">Load</span>(<span class="ident">LoadInstr</span>),
     <span class="ident">Store</span>(<span class="ident">StoreInstr</span>),
-    <span class="ident">Select</span>(<span class="ident">SelectInstr</span>),
+    <span class="attribute">#[<span class="ident">display</span>(
+        <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;error: Display is unimplemented for multi-select instruction&quot;</span>
+    )]</span>
+    <span class="ident">Select</span>(<span class="ident">MatchSelectInstr</span>),
     <span class="ident">Reinterpret</span>(<span class="ident">ReinterpretInstr</span>),
     <span class="attribute">#[<span class="ident">display</span>(
         <span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;error: Display is unimplemented for Terminal2 instructions&quot;</span>
@@ -391,7 +399,9 @@
             <span class="self">Self</span>::<span class="ident">HeapAddr</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
             <span class="self">Self</span>::<span class="ident">Load</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
             <span class="self">Self</span>::<span class="ident">Store</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::<span class="ident">Select</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::<span class="ident">Select</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">instr</span>.<span class="ident">display_instruction</span>(<span class="ident">f</span>, <span class="ident">indent</span>, <span class="ident">displayer</span>)<span class="question-mark">?</span>
+            }
             <span class="self">Self</span>::<span class="ident">Reinterpret</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">instr</span>)<span class="question-mark">?</span>,
             <span class="self">Self</span>::<span class="ident">Terminal</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">instr</span>.<span class="ident">display_instruction</span>(<span class="ident">f</span>, <span class="ident">indent</span>, <span class="ident">displayer</span>)<span class="question-mark">?</span>

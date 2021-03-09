@@ -201,8 +201,8 @@
         <span class="ident">CallInstr</span>,
         <span class="ident">ConstInstr</span>,
         <span class="ident">Instruction</span>,
+        <span class="ident">MatchSelectInstr</span>,
         <span class="ident">ReinterpretInstr</span>,
-        <span class="ident">SelectInstr</span>,
     },
     <span class="ident">primitive</span>::{<span class="ident">Func</span>, <span class="ident">Value</span>},
 };
@@ -295,20 +295,20 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">InterpretInstr</span> <span class="kw">for</span> <span class="ident">SelectInstr</span> {
+<span class="kw">impl</span> <span class="ident">InterpretInstr</span> <span class="kw">for</span> <span class="ident">MatchSelectInstr</span> {
     <span class="kw">fn</span> <span class="ident">interpret_instr</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
         <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
-        <span class="kw">let</span> <span class="ident">condition</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">condition</span>());
-        <span class="kw">let</span> <span class="ident">result_value</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">condition</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">true_value</span>()
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">false_value</span>()
-        };
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="ident">result_value</span>);
+        <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">selector</span>());
+        <span class="kw">let</span> <span class="ident">target_result</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">target_results</span>()
+            .<span class="ident">get</span>(<span class="ident">selected</span> <span class="kw">as</span> <span class="ident">usize</span>)
+            .<span class="ident">copied</span>()
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">default_result</span>());
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="ident">target_result</span>);
         <span class="ident">frame</span>.<span class="ident">write_register</span>(<span class="ident">return_value</span>, <span class="ident">result</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">InterpretationFlow</span>::<span class="ident">Continue</span>)
     }
