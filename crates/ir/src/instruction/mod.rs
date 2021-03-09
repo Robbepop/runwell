@@ -80,7 +80,7 @@ use crate::{
     VisitValues,
     VisitValuesMut,
 };
-use derive_more::{Display, From};
+use derive_more::From;
 use smallvec::SmallVec;
 
 /// A space-optimized vector containing values.
@@ -90,7 +90,7 @@ use smallvec::SmallVec;
 type SmallValueVec = SmallVec<[Value; 4]>;
 
 /// An SSA instruction from the Runwell IR.
-#[derive(Debug, Display, From, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, From, PartialEq, Eq, Hash, Clone)]
 pub enum Instruction {
     Call(CallInstr),
     CallIndirect(CallIndirectInstr),
@@ -100,14 +100,8 @@ pub enum Instruction {
     HeapAddr(HeapAddrInstr),
     Load(LoadInstr),
     Store(StoreInstr),
-    #[display(
-        fmt = "error: Display is unimplemented for multi-select instruction"
-    )]
     Select(MatchSelectInstr),
     Reinterpret(ReinterpretInstr),
-    #[display(
-        fmt = "error: Display is unimplemented for Terminal2 instructions"
-    )]
     Terminal(TerminalInstr),
     Int(IntInstr),
     Float(FloatInstr),
