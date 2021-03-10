@@ -410,12 +410,12 @@
     <span class="kw">fn</span> <span class="ident">size_of_instruction_is_kept_small</span>() {
         <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>;
         <span class="comment">// Ideally we keep the size of generic instructions as small as possible.</span>
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>(), <span class="number">48</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>(), <span class="number">56</span>);
         <span class="comment">// Also assert the sizes of the biggest known concrete instructions.</span>
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TerminalInstr</span><span class="op">&gt;</span>(), <span class="number">40</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">BranchTableInstr</span><span class="op">&gt;</span>(), <span class="number">32</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">CallIndirectInstr</span><span class="op">&gt;</span>(), <span class="number">32</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">MatchSelectInstr</span><span class="op">&gt;</span>(), <span class="number">32</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">MatchSelectInstr</span><span class="op">&gt;</span>(), <span class="number">48</span>);
     }
 }
 </pre></div>
