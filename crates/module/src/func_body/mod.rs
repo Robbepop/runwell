@@ -156,6 +156,7 @@ impl FunctionBody {
     ) -> fmt::Result {
         let block_indentation = indent;
         let instr_indentation = indent + Indent::single();
+        writeln!(f, "{}#[entry]", block_indentation)?;
         for block in self.blocks.indices() {
             write!(f, "{}block {}", block_indentation, block)?;
             if let Some((first, rest)) = self.block_params[block].split_first()
