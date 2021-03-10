@@ -203,5 +203,6 @@ mod tests {
         assert_eq!(size_of::<TerminalInstr>(), 40);
         assert_eq!(size_of::<BranchTableInstr>(), 32);
         assert_eq!(size_of::<CallIndirectInstr>(), 32);
+        assert_eq!(size_of::<MatchSelectInstr>(), 32);
     }
 }
