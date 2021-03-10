@@ -159,16 +159,15 @@ impl FunctionBody {
         writeln!(f, "{}#[entry]", block_indentation)?;
         for block in self.blocks.indices() {
             write!(f, "{}block {}", block_indentation, block)?;
+            write!(f, "(")?;
             if let Some((first, rest)) = self.block_params[block].split_first()
             {
-                write!(f, "(")?;
                 write!(f, "{}: {}", first, self.value_type[*first],)?;
                 for param in rest {
                     write!(f, ", {}: {}", param, self.value_type[*param],)?;
                 }
-                write!(f, ")")?;
             }
-            writeln!(f, " {{")?;
+            writeln!(f, ") {{")?;
             for &instr in &self.block_instrs[block] {
                 let instr_data = &self.instrs[instr];
                 let instr_values = self.instr_values(instr);
