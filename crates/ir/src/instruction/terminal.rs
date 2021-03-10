@@ -465,7 +465,7 @@ impl DisplayInstruction for BranchTableInstr {
             displayer.display_edge(f, *first)?;
             for (n, edge) in rest.iter().enumerate() {
                 writeln!(f, ",")?;
-                write!(f, "{}{} 🠖 ", target_indentation, n + 1)?;
+                write!(f, "{}{} 🠖 branch ", target_indentation, n + 1)?;
                 displayer.display_edge(f, *edge)?;
             }
             writeln!(f, ",")?;
