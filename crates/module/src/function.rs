@@ -14,9 +14,8 @@
 
 use crate::{primitive::FunctionType, FunctionBody};
 use core::fmt;
-use entity::RawIdx;
 use ir::{
-    primitive::{Func, Type, Value},
+    primitive::{Func, Type},
     Indent,
 };
 
@@ -83,20 +82,11 @@ impl<'a> Function<'a> {
         f: &mut fmt::Formatter,
         indent: Indent,
     ) -> Result<(), fmt::Error> {
-        let inputs = self
-            .inputs()
-            .iter()
-            .enumerate()
-            .map(|(n, ty)| {
-                let val = Value::from_raw(RawIdx::from_u32(n as u32));
-                (val, ty)
-            })
-            .collect::<Vec<_>>();
         write!(f, "{}fn {}(", indent, self.idx())?;
-        if let Some(((first_value, first_type), rest)) = inputs.split_first() {
-            write!(f, "{}: {}", first_value, first_type)?;
-            for (rest_value, rest_type) in rest {
-                write!(f, ", {}: {}", rest_value, rest_type)?;
+        if let Some((first, rest)) = self.inputs().split_first() {
+            write!(f, "{}", first)?;
+            for input_type in rest {
+                write!(f, ", {}", input_type)?;
             }
         }
         write!(f, ")")?;
