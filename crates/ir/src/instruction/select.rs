@@ -97,7 +97,7 @@ impl MatchSelectInstr {
         let len_before = self.selector_and_result_values.len();
         self.selector_and_result_values.extend(results);
         let len_after = self.selector_and_result_values.len();
-        assert_eq!(len_after - len_before, self.selector_and_result_types.len(),)
+        assert_eq!(len_after - len_before, self.result_types().len())
     }
 
     /// Creates a new select operation returning one value tuple out of a set of value tuples.
