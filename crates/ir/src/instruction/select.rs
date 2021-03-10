@@ -151,15 +151,15 @@ impl MatchSelectInstr {
     where
         T: IntoIterator<Item = Value>,
     {
-        let mut selector_and_result_types = smallvec![selector_type.into()];
-        selector_and_result_types.extend([result_type].iter().copied());
-        let mut selector_and_result_values = smallvec![selector];
-        selector_and_result_values.extend(target_results);
-        selector_and_result_values.push(default_result);
-        Self {
-            selector_and_result_types,
-            selector_and_result_values,
+        let mut builder = Self::new_multi(
+            selector,
+            selector_type,
+            [result_type].iter().copied(),
+        );
+        for target_result in target_results {
+            builder.push_results([target_result].iter().copied());
         }
+        builder.finish([default_result].iter().copied())
     }
 
     /// Returns the type of the selector.
