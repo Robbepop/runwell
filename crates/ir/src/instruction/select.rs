@@ -48,6 +48,8 @@ pub struct MatchSelectInstr {
 pub struct MatchSelectInstrBuilder {
     /// The instruction under construction.
     instr: MatchSelectInstr,
+    /// The number of already processed match arms.
+    len_arms: u64,
 }
 
 impl MatchSelectInstrBuilder {
@@ -61,7 +63,17 @@ impl MatchSelectInstrBuilder {
     where
         T: IntoIterator<Item = Value>,
     {
+        let selector_type = self.instr.selector_type();
+        let max_selector = selector_type.max_unsigned_value();
+        if self.len_arms == max_selector {
+            panic!(
+                "cannot have more than {} match arms with a selector type of {}",
+                max_selector,
+                selector_type,
+            )
+        }
         self.instr.push_results(results);
+        self.len_arms += 1;
     }
 
     /// Pushes the default results tuple to the constructed `MatchSelectInstr`.
@@ -124,6 +136,7 @@ impl MatchSelectInstr {
                 selector_and_result_types,
                 selector_and_result_values: smallvec![selector],
             },
+            len_arms: 0,
         }
     }
 
