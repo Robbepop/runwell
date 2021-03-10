@@ -139,10 +139,10 @@ impl DisplayInstruction for MatchSelectInstr {
                 IntType::I1 => "false",
                 _ => "0",
             };
-            write!(f, "{}{} 🠖 {}", target_indentation, first_matcher, first)?;
+            write!(f, "{}{} => {}", target_indentation, first_matcher, first)?;
             for (n, result) in rest.iter().enumerate() {
                 writeln!(f, ",")?;
-                write!(f, "{}{} 🠖 {}", target_indentation, n + 1, result)?;
+                write!(f, "{}{} => {}", target_indentation, n + 1, result)?;
             }
             writeln!(f, ",")?;
         }
@@ -152,7 +152,7 @@ impl DisplayInstruction for MatchSelectInstr {
         };
         writeln!(
             f,
-            "{}{} 🠖 {}",
+            "{}{} => {}",
             target_indentation,
             default_matcher,
             self.default_result()

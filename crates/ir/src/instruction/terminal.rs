@@ -461,16 +461,16 @@ impl DisplayInstruction for BranchTableInstr {
         let target_indentation = indent + Indent::single();
         writeln!(f, "match {} {{", self.selector())?;
         if let Some((first, rest)) = self.target_edges().split_first() {
-            write!(f, "{}0 🠖 ", target_indentation)?;
+            write!(f, "{}0 => ", target_indentation)?;
             displayer.display_edge(f, *first)?;
             for (n, edge) in rest.iter().enumerate() {
                 writeln!(f, ",")?;
-                write!(f, "{}{} 🠖 branch ", target_indentation, n + 1)?;
+                write!(f, "{}{} => branch ", target_indentation, n + 1)?;
                 displayer.display_edge(f, *edge)?;
             }
             writeln!(f, ",")?;
         }
-        writeln!(f, "{}_ 🠖 {}", target_indentation, self.default_target())?;
+        writeln!(f, "{}_ => {}", target_indentation, self.default_target())?;
         write!(f, "{}}}", indent)?;
         Ok(())
     }
