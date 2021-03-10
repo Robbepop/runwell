@@ -962,16 +962,16 @@
         <span class="kw">let</span> <span class="ident">target_indentation</span> <span class="op">=</span> <span class="ident">indent</span> <span class="op">+</span> <span class="ident">Indent</span>::<span class="ident">single</span>();
         <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;match {} {{&quot;</span>, <span class="self">self</span>.<span class="ident">selector</span>())<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">first</span>, <span class="ident">rest</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">target_edges</span>().<span class="ident">split_first</span>() {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}0 🠖 &quot;</span>, <span class="ident">target_indentation</span>)<span class="question-mark">?</span>;
+            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}0 =&gt; &quot;</span>, <span class="ident">target_indentation</span>)<span class="question-mark">?</span>;
             <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="kw-2">*</span><span class="ident">first</span>)<span class="question-mark">?</span>;
             <span class="kw">for</span> (<span class="ident">n</span>, <span class="ident">edge</span>) <span class="kw">in</span> <span class="ident">rest</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
                 <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;,&quot;</span>)<span class="question-mark">?</span>;
-                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}{} 🠖 &quot;</span>, <span class="ident">target_indentation</span>, <span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}{} =&gt; branch &quot;</span>, <span class="ident">target_indentation</span>, <span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
                 <span class="ident">displayer</span>.<span class="ident">display_edge</span>(<span class="ident">f</span>, <span class="kw-2">*</span><span class="ident">edge</span>)<span class="question-mark">?</span>;
             }
             <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;,&quot;</span>)<span class="question-mark">?</span>;
         }
-        <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}_ 🠖 {}&quot;</span>, <span class="ident">target_indentation</span>, <span class="self">self</span>.<span class="ident">default_target</span>())<span class="question-mark">?</span>;
+        <span class="macro">writeln</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}_ =&gt; {}&quot;</span>, <span class="ident">target_indentation</span>, <span class="self">self</span>.<span class="ident">default_target</span>())<span class="question-mark">?</span>;
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="ident">indent</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
