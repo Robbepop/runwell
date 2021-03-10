@@ -78,7 +78,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             IntType::I1,
             condition.value,
         )?;
-        let result = self.builder.ins()?.select(
+        let result = self.builder.ins()?.bool_select(
             ty,
             condition_i1,
             if_true.value,

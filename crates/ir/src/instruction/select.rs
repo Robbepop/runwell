@@ -32,19 +32,102 @@ use smallvec::{smallvec, SmallVec};
 /// machine code on some architectures.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct MatchSelectInstr {
-    /// The type of the selector.
-    selector_type: IntType,
-    /// The shared type of all result values.
-    result_type: Type,
-    /// Represents the `selector` value, followed by the default
-    /// result and all target results.
+    /// Contains the selector integer type followed by all result types.
     ///
     /// By definition always stores at least two values.
-    selector_and_results: SmallVec<[Value; 4]>,
+    selector_and_result_types: SmallVec<[Type; 8]>,
+    /// Represents the `selector` value followed by all match arm
+    /// result values and finally including the default result values.
+    ///
+    /// By definition always stores at least two values.
+    selector_and_result_values: SmallVec<[Value; 4]>,
+}
+
+/// Builder used to incrementally build up a multi-value returning match select instruction.
+#[derive(Debug)]
+pub struct MatchSelectInstrBuilder {
+    /// The instruction under construction.
+    instr: MatchSelectInstr,
+}
+
+impl MatchSelectInstrBuilder {
+    /// Pushes another results tuple match arm to the constructed `MatchSelectInstr`.
+    ///
+    /// # Panics
+    ///
+    /// If the `results` tuple iterator does not yield exactly as many values as there
+    /// are expected return types for the constructed `MatchSelectInstr`.
+    pub fn push_results<T>(&mut self, results: T)
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        self.instr.push_results(results);
+    }
+
+    /// Pushes the default results tuple to the constructed `MatchSelectInstr`.
+    ///
+    /// # Panics
+    ///
+    /// If the `results` tuple iterator does not yield exactly as many values as there
+    /// are expected return types for the constructed `MatchSelectInstr`.
+    pub fn finish<T>(mut self, default_results: T) -> MatchSelectInstr
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        self.instr.push_results(default_results);
+        self.instr
+    }
 }
 
 impl MatchSelectInstr {
-    /// Creates a new select operation.
+    /// Pushes another result tuple match arm to the multi-match select instruction.
+    ///
+    /// # Note
+    ///
+    /// This is a private API meant to be used primarily by the `MatchSelectInstrBuilder`.
+    ///
+    /// # Panics
+    ///
+    /// If the `results` tuple iterator does not yield exactly as many values as there
+    /// are expected return types for the constructed `MatchSelectInstr`.
+    fn push_results<T>(&mut self, results: T)
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        let len_before = self.selector_and_result_values.len();
+        self.selector_and_result_values.extend(results);
+        let len_after = self.selector_and_result_values.len();
+        assert_eq!(len_after - len_before, self.selector_and_result_types.len(),)
+    }
+
+    /// Creates a new select operation returning one value tuple out of a set of value tuples.
+    ///
+    /// # Panics
+    ///
+    /// If the `result_types` iterator yields zero types.
+    pub fn new_multi<T>(
+        selector: Value,
+        selector_type: IntType,
+        result_types: T,
+    ) -> MatchSelectInstrBuilder
+    where
+        T: IntoIterator<Item = Type>,
+    {
+        let mut selector_and_result_types = smallvec![selector_type.into()];
+        selector_and_result_types.extend(result_types);
+        assert!(
+            selector_and_result_types.len() > 1,
+            "encountered 0 result types for the match select instruction but require at least 1",
+        );
+        MatchSelectInstrBuilder {
+            instr: Self {
+                selector_and_result_types,
+                selector_and_result_values: smallvec![selector],
+            },
+        }
+    }
+
+    /// Creates a new select operation returning a single value out of a set of values.
     pub fn new<T>(
         selector: Value,
         selector_type: IntType,
@@ -55,41 +138,55 @@ impl MatchSelectInstr {
     where
         T: IntoIterator<Item = Value>,
     {
-        let mut selector_and_results = smallvec![selector, default_result];
-        selector_and_results.extend(target_results);
+        let mut selector_and_result_types = smallvec![selector_type.into()];
+        selector_and_result_types.extend([result_type].iter().copied());
+        let mut selector_and_result_values = smallvec![selector];
+        selector_and_result_values.extend(target_results);
+        selector_and_result_values.push(default_result);
         Self {
-            selector_type,
-            result_type,
-            selector_and_results,
+            selector_and_result_types,
+            selector_and_result_values,
         }
     }
 
     /// Returns the type of the selector.
     pub fn selector_type(&self) -> IntType {
-        self.selector_type
+        match self.selector_and_result_types[0] {
+            Type::Int(int_type) => int_type,
+            _ => unreachable!(
+                "by construction cannot contain a non-integer type in the first position"
+            ),
+        }
     }
 
     /// Returns the shared type of all result values.
-    pub fn result_type(&self) -> Type {
-        self.result_type
+    pub fn result_types(&self) -> &[Type] {
+        &self.selector_and_result_types[1..]
     }
 
     /// Returns the value of the selector.
     pub fn selector(&self) -> Value {
-        self.selector_and_results[0]
+        self.selector_and_result_values[0]
     }
 
     /// Returns the value of the default result.
     ///
     /// This is taken if no other target result matches
     /// the selector.
-    pub fn default_result(&self) -> Value {
-        self.selector_and_results[1]
+    pub fn default_results(&self) -> &[Value] {
+        let len_values = self.selector_and_result_values.len();
+        let len_results = self.result_types().len();
+        &self.selector_and_result_values[(len_values - len_results)..]
     }
 
-    /// Returns a slice over all target results.
-    pub fn target_results(&self) -> &[Value] {
-        &self.selector_and_results[2..]
+    /// Returns a slice over the target results associated to the given index if any.
+    pub fn target_results(&self, at: usize) -> Option<&[Value]> {
+        let len_values = self.selector_and_result_values.len();
+        let len_results = self.result_types().len();
+        let target_results =
+            &self.selector_and_result_values[1..(len_values - len_results)];
+        let offset = at * len_results;
+        target_results.get(offset..(offset + len_results))
     }
 }
 
@@ -98,7 +195,7 @@ impl VisitValues for MatchSelectInstr {
     where
         V: FnMut(Value) -> bool,
     {
-        for value in self.selector_and_results.iter().copied() {
+        for value in self.selector_and_result_values.iter().copied() {
             if !visitor(value) {
                 break
             }
@@ -111,7 +208,7 @@ impl VisitValuesMut for MatchSelectInstr {
     where
         V: FnMut(&mut Value) -> bool,
     {
-        for value in self.selector_and_results.iter_mut() {
+        for value in self.selector_and_result_values.iter_mut() {
             if !visitor(value) {
                 break
             }
@@ -127,36 +224,57 @@ impl DisplayInstruction for MatchSelectInstr {
         _displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
         let target_indentation = indent + Indent::single();
-        writeln!(
-            f,
-            "match<{}, {}> {} {{",
-            self.selector_type(),
-            self.result_type(),
-            self.selector()
-        )?;
-        if let Some((first, rest)) = self.target_results().split_first() {
-            let first_matcher = match self.selector_type() {
-                IntType::I1 => "false",
-                _ => "0",
+        write!(f, "match<{}, ", self.selector_type())?;
+        if let Some((first, rest)) = self.result_types().split_first() {
+            if rest.is_empty() {
+                write!(f, "{}", first)?;
+            } else {
+                write!(f, "({}", first)?;
+                for ty in rest {
+                    write!(f, ", {}", ty)?;
+                }
+                write!(f, ")")?;
+            }
+        }
+        writeln!(f, "> {{")?;
+        let mut current = 0;
+        while let Some(results) = self.target_results(current) {
+            match self.selector_type() {
+                IntType::I1 => write!(f, "{}false", target_indentation)?,
+                _ => write!(f, "{}{}", target_indentation, current)?,
             };
-            write!(f, "{}{} => {}", target_indentation, first_matcher, first)?;
-            for (n, result) in rest.iter().enumerate() {
-                writeln!(f, ",")?;
-                write!(f, "{}{} => {}", target_indentation, n + 1, result)?;
+            write!(f, " => ")?;
+            if let Some((first, rest)) = results.split_first() {
+                if rest.is_empty() {
+                    write!(f, "{}", first)?;
+                } else {
+                    write!(f, "({}", first)?;
+                    for result in rest {
+                        write!(f, ", {}", result)?;
+                    }
+                    write!(f, ")")?;
+                }
             }
             writeln!(f, ",")?;
+            current += 1;
         }
-        let default_matcher = match self.selector_type() {
-            IntType::I1 => "true ",
-            _ => "_",
+        match self.selector_type() {
+            IntType::I1 => write!(f, "{}true ", target_indentation)?,
+            _ => write!(f, "{}_", target_indentation)?,
         };
-        writeln!(
-            f,
-            "{}{} => {}",
-            target_indentation,
-            default_matcher,
-            self.default_result()
-        )?;
+        write!(f, " => ")?;
+        if let Some((first, rest)) = self.default_results().split_first() {
+            if rest.is_empty() {
+                write!(f, "{}", first)?;
+            } else {
+                write!(f, "({}", first)?;
+                for result in rest {
+                    write!(f, ", {}", result)?;
+                }
+                write!(f, ")")?;
+            }
+        }
+        writeln!(f, ",")?;
         write!(f, "{}}}", indent)?;
         Ok(())
     }

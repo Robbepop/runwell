@@ -125,15 +125,16 @@ impl InterpretInstr for MatchSelectInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
         let selected = frame.read_register(self.selector());
-        let target_result = self
-            .target_results()
-            .get(selected as usize)
-            .copied()
-            .unwrap_or_else(|| self.default_result());
-        let result = frame.read_register(target_result);
-        frame.write_register(return_value, result);
+        let target_results = self
+            .target_results(selected as usize)
+            .unwrap_or_else(|| self.default_results());
+        for (&target_result, output) in target_results.iter().zip(outputs) {
+            let output =
+                output.expect("encountered missing single output SSA value");
+            let result = frame.read_register(target_result);
+            frame.write_register(output, result);
+        }
         Ok(InterpretationFlow::Continue)
     }
 }

@@ -716,7 +716,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     /// # Note
     ///
     /// This is very similar to an if-then-else instruction that does not require jumps.
-    pub fn select(
+    pub fn bool_select(
         self,
         ty: Type,
         condition: Value,
@@ -758,8 +758,11 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             default_result,
             target_results,
         );
-        for &target_result in instruction.target_results() {
-            self.expect_type(target_result, result_type)?;
+        let mut at = 0;
+        while let Some(results) = instruction.target_results(at) {
+            assert_eq!(results.len(), 1);
+            self.expect_type(results[0], result_type)?;
+            at += 1;
         }
         let (value, _instr) =
             self.append_value_instr(instruction.into(), result_type)?;

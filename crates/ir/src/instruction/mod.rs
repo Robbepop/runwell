@@ -198,11 +198,11 @@ mod tests {
     fn size_of_instruction_is_kept_small() {
         use core::mem::size_of;
         // Ideally we keep the size of generic instructions as small as possible.
-        assert_eq!(size_of::<Instruction>(), 48);
+        assert_eq!(size_of::<Instruction>(), 56);
         // Also assert the sizes of the biggest known concrete instructions.
         assert_eq!(size_of::<TerminalInstr>(), 40);
         assert_eq!(size_of::<BranchTableInstr>(), 32);
         assert_eq!(size_of::<CallIndirectInstr>(), 32);
-        assert_eq!(size_of::<MatchSelectInstr>(), 32);
+        assert_eq!(size_of::<MatchSelectInstr>(), 48);
     }
 }
