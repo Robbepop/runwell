@@ -196,6 +196,17 @@ impl IntType {
             Self::I64 => 3,
         }
     }
+
+    /// Returns the maximum unsigned value representable by the integer type.
+    pub fn max_unsigned_value(&self) -> u64 {
+        match self {
+            Self::I1 => 1,
+            Self::I8 => u8::MAX as u64,
+            Self::I16 => u16::MAX as u64,
+            Self::I32 => u32::MAX as u64,
+            Self::I64 => u64::MAX as u64,
+        }
+    }
 }
 
 /// Any floating point number type.
