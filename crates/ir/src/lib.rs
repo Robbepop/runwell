@@ -37,6 +37,7 @@ pub mod instr {
         #[doc(inline)]
         pub use super::super::instruction::{
             MatchSelectInstrBuilder,
+            MatchSelectResultsIter,
         };
     }
     /// The operands for some instructions.

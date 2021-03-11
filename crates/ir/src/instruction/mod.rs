@@ -64,6 +64,7 @@ pub use self::{
     select::{
         MatchSelectInstr,
         MatchSelectInstrBuilder,
+        MatchSelectResultsIter,
     },
     terminal::{
         BranchInstr,

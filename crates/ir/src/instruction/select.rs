@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::fmt;
-
 use crate::{
     primitive::{IntType, Type, Value},
     DisplayEdge,
@@ -22,6 +20,7 @@ use crate::{
     VisitValues,
     VisitValuesMut,
 };
+use core::{fmt, iter::FusedIterator};
 use smallvec::{smallvec, SmallVec};
 
 /// Selects a value from a table of values without IR-level branching.
@@ -139,7 +138,7 @@ impl MatchSelectInstr {
             "match arm returns {} values while all match arms are required to return {} values",
             arm_returns,
             self.result_types().len(),
-        )
+        );
     }
 
     /// Creates a new select operation returning one value tuple out of a set of value tuples.
@@ -224,14 +223,56 @@ impl MatchSelectInstr {
 
     /// Returns a slice over the target results associated to the given index if any.
     pub fn target_results(&self, at: usize) -> Option<&[Value]> {
+        self.iter_results().nth(at)
+    }
+
+    /// Returns an iterator over the result values of all match arms.
+    pub fn iter_results(&self) -> MatchSelectResultsIter {
         let len_values = self.selector_and_result_values.len();
         let len_results = self.result_types().len();
         let target_results =
             &self.selector_and_result_values[1..(len_values - len_results)];
-        let offset = at * len_results;
-        target_results.get(offset..(offset + len_results))
+        MatchSelectResultsIter {
+            iter: target_results.chunks_exact(len_results),
+        }
     }
 }
+
+/// Iterator over the result values of all match arms of a `MatchSelectInstr`.
+#[derive(Debug)]
+pub struct MatchSelectResultsIter<'a> {
+    /// The underlying iterator over the match arm values.
+    iter: core::slice::ChunksExact<'a, Value>,
+}
+
+impl<'a> Iterator for MatchSelectResultsIter<'a> {
+    type Item = &'a [Value];
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth(n)
+    }
+}
+
+impl<'a> DoubleEndedIterator for MatchSelectResultsIter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.iter.next_back()
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.iter.nth_back(n)
+    }
+}
+
+impl<'a> ExactSizeIterator for MatchSelectResultsIter<'a> {}
+impl<'a> FusedIterator for MatchSelectResultsIter<'a> {}
 
 impl VisitValues for MatchSelectInstr {
     fn visit_values<V>(&self, mut visitor: V)
