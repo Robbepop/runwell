@@ -32,6 +32,7 @@ use ir::{
             UnaryFloatOp,
             UnaryIntOp,
         },
+        utils::MatchSelectInstrBuilder,
         BinaryFloatInstr,
         BinaryIntInstr,
         BranchInstr,
@@ -73,6 +74,7 @@ use ir::{
     ImmU32,
     VisitValues,
 };
+use smallvec::SmallVec;
 
 /// The unique index of a basic block entity of the Runwell IR.
 pub type Instr = Idx<Instruction>;
@@ -165,6 +167,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         if is_terminal {
             self.builder.ctx.block_filled.set(block, true);
         }
+        self.register_uses(instr);
         Ok(instr)
     }
 
@@ -730,6 +733,125 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             if_true,
             [if_false].iter().copied(),
         )
+    }
+}
+
+/// Builder to construct a match select instruction returning multiple values per arm.
+#[derive(Debug)]
+pub struct MatchSelectInstructionBuilder<'a, 'b: 'a> {
+    /// The underlying instruction builder for the function body.
+    instr_builder: InstructionBuilder<'a, 'b>,
+    /// The underlying builder for the multi-select instruction.
+    match_builder: MatchSelectInstrBuilder,
+}
+
+impl<'a, 'b: 'a> MatchSelectInstructionBuilder<'a, 'b> {
+    /// Pushes another results tuple match arm to the constructed `MatchSelectInstr`.
+    ///
+    /// # Panics
+    ///
+    /// If the `results` tuple iterator does not yield exactly as many values as there
+    /// are expected return types for the constructed `MatchSelectInstr`.
+    ///
+    /// # Errors
+    ///
+    /// If the `results` tuple value types do not match the expected results types.
+    pub fn push_results<T>(&mut self, results: T) -> Result<(), Error>
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        self.match_builder.push_results(results);
+        let pushed_values = self.match_builder.last_pushed_values();
+        let result_types = self.match_builder.result_types();
+        for (default_result, expected_type) in pushed_values
+            .iter()
+            .copied()
+            .zip(result_types.iter().copied())
+        {
+            self.instr_builder
+                .expect_type(default_result, expected_type)?;
+        }
+        Ok(())
+    }
+
+    /// Pushes the default results tuple to the constructed `MatchSelectInstr`.
+    ///
+    /// # Panics
+    ///
+    /// If the `default_results` tuple iterator does not yield exactly as many values as there
+    /// are expected return types for the constructed `MatchSelectInstr`.
+    ///
+    /// # Errors
+    ///
+    /// If the `default_results` tuple value types do not match the expected results types.
+    pub fn finish<T>(self, default_results: T) -> Result<Instr, Error>
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        let Self {
+            mut instr_builder,
+            match_builder,
+        } = self;
+        let instruction = match_builder.finish(default_results);
+        for (default_result, expected_type) in instruction
+            .default_results()
+            .iter()
+            .copied()
+            .zip(instruction.result_types().iter().copied())
+        {
+            instr_builder.expect_type(default_result, expected_type)?;
+        }
+        // Having to allocate heap memory for more than 8 returned types
+        // per match arm is not ideal, however, having 8 return types per
+        // match arm is by far a common case either.
+        //
+        // We choose `[Type; 8]` because up to this point the `SmallVec`
+        // yields the same `size_of`.
+        let result_types = instruction
+            .result_types()
+            .iter()
+            .copied()
+            .collect::<SmallVec<[Type; 8]>>();
+        let instr = instr_builder
+            .append_multi_value_instr(instruction.into(), &result_types)?;
+        Ok(instr)
+    }
+}
+
+impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
+    /// Selects from the given target result values or the default given a selector.
+    ///
+    /// # Note
+    ///
+    /// This can be used in order to construct `MatchSelectInstr` instructions where
+    /// match arms are required to return more than just a single value. Since the
+    /// construction is more complex than with just a single returned value per match
+    /// arm users are free to use the simpler [`match_select`][1] or [`bool_select`][2]
+    /// constructors.
+    ///
+    /// [1]: `InstructionBuilder::match_select`
+    /// [2]: `InstructionBuilder::bool_select`
+    ///
+    /// # Note
+    ///
+    /// This mirrors the branching table construct but using value semantics instead
+    /// of taking branches.
+    pub fn match_select_multi<T>(
+        self,
+        selector_type: IntType,
+        selector: Value,
+        result_types: T,
+    ) -> Result<MatchSelectInstructionBuilder<'a, 'b>, Error>
+    where
+        T: IntoIterator<Item = Type>,
+    {
+        self.expect_type(selector, selector_type.into())?;
+        let match_builder =
+            MatchSelectInstr::new_multi(selector, selector_type, result_types);
+        Ok(MatchSelectInstructionBuilder {
+            instr_builder: self,
+            match_builder,
+        })
     }
 
     /// Selects from the given target result values or the default given a selector.
