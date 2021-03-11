@@ -635,10 +635,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [1]: `MatchSelectInstrBuilder::push_results`</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_pushed_values</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">Value</span>] {
-        <span class="self">self</span>.<span class="ident">instr</span>
-            .<span class="ident">iter_results</span>()
-            .<span class="ident">next_back</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;unexpected missing last pushed values&quot;</span>)
+        <span class="comment">// As a hacky workaround we can make use of `default_results` here since</span>
+        <span class="comment">// it currently always returns the last set of values which is exactly</span>
+        <span class="comment">// what we need here.</span>
+        <span class="self">self</span>.<span class="ident">instr</span>.<span class="ident">default_results</span>()
     }
 
     <span class="doccomment">/// Returns the shared type of all result values.</span>
