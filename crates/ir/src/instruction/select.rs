@@ -89,6 +89,30 @@ impl MatchSelectInstrBuilder {
         self.instr.push_results(default_results);
         self.instr
     }
+
+    /// Returns the values that have been pushed latest as match arm.
+    ///
+    /// # Panics
+    ///
+    /// If no values have yet been pushed using [`push_results`][1].
+    ///
+    /// [1]: `MatchSelectInstrBuilder::push_results`
+    pub fn last_pushed_values(&self) -> &[Value] {
+        self.instr
+            .iter_results()
+            .next_back()
+            .expect("unexpected missing last pushed values")
+    }
+
+    /// Returns the shared type of all result values.
+    ///
+    /// # Note
+    ///
+    /// This helper method might be required for using code
+    /// in order to type check the pushed result values.
+    pub fn result_types(&self) -> &[Type] {
+        self.instr.result_types()
+    }
 }
 
 impl MatchSelectInstr {
