@@ -79,7 +79,7 @@ impl MatchSelectInstrBuilder {
     ///
     /// # Panics
     ///
-    /// If the `results` tuple iterator does not yield exactly as many values as there
+    /// If the `default_results` tuple iterator does not yield exactly as many values as there
     /// are expected return types for the constructed `MatchSelectInstr`.
     pub fn finish<T>(mut self, default_results: T) -> MatchSelectInstr
     where
