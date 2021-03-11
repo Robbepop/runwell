@@ -298,3 +298,172 @@ impl DisplayInstruction for MatchSelectInstr {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::DebugDisplayEdge;
+    use entity::RawIdx;
+    use indoc::indoc;
+
+    fn v(value: u32) -> Value {
+        Value::from_raw(RawIdx::from_u32(value))
+    }
+
+    #[test]
+    fn new_bool_selector_works() {
+        let instr = MatchSelectInstr::new(
+            v(0),
+            IntType::I1,
+            IntType::I32.into(),
+            v(1),
+            vec![v(2)],
+        );
+        assert_eq!(instr.selector(), v(0));
+        assert_eq!(instr.selector_type(), IntType::I1);
+        assert_eq!(instr.result_types(), &[IntType::I32.into()]);
+        assert_eq!(instr.default_results(), &[v(1)]);
+        assert_eq!(instr.target_results(0), Some(&[v(2)][..]));
+        assert_eq!(instr.target_results(1), None);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "cannot have more than 1 match arms with a selector type of i1"
+    )]
+    fn bool_selector_with_too_many_arms_fails() {
+        let _instr = MatchSelectInstr::new(
+            v(0),
+            IntType::I1,
+            IntType::I32.into(),
+            v(1),
+            vec![v(2), v(3)],
+        );
+    }
+
+    #[test]
+    fn new_i32_selector_works() {
+        let target_results = vec![v(2), v(3), v(4), v(5)];
+        let instr = MatchSelectInstr::new(
+            v(0),
+            IntType::I32,
+            IntType::I8.into(),
+            v(1),
+            target_results.iter().copied(),
+        );
+        assert_eq!(instr.selector(), v(0));
+        assert_eq!(instr.selector_type(), IntType::I32);
+        assert_eq!(instr.result_types(), &[IntType::I8.into()]);
+        assert_eq!(instr.default_results(), &[v(1)]);
+        for (n, expected) in target_results.iter().copied().enumerate() {
+            assert_eq!(instr.target_results(n), Some(&[expected][..]));
+        }
+        assert_eq!(instr.target_results(target_results.len()), None);
+    }
+
+    #[test]
+    fn selector_returning_multi_value_works() {
+        let match_arms =
+            vec![vec![v(0), v(1)], vec![v(2), v(3)], vec![v(4), v(5)]];
+        let default_arm = vec![v(6), v(7)];
+        let result_types = vec![IntType::I32.into(), IntType::I32.into()];
+        let instr = {
+            let mut instr = MatchSelectInstr::new_multi(
+                v(0),
+                IntType::I32,
+                result_types.clone(),
+            );
+            for match_arm in match_arms.iter() {
+                instr.push_results(match_arm.iter().copied());
+            }
+            instr.finish(default_arm.clone())
+        };
+        assert_eq!(instr.selector(), v(0));
+        assert_eq!(instr.selector_type(), IntType::I32);
+        assert_eq!(instr.result_types(), &result_types);
+        assert_eq!(instr.default_results(), &default_arm);
+        for (n, expected) in match_arms.iter().enumerate() {
+            assert_eq!(instr.target_results(n), Some(expected.as_slice()));
+        }
+        assert_eq!(instr.target_results(match_arms.len()), None);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "match arm returns 3 values while all match arms are required to return 2 values"
+    )]
+    fn match_arm_does_not_respect_result_types() {
+        let match_arms = vec![
+            vec![v(0), v(1)],
+            vec![v(2), v(3)],
+            vec![v(4), v(5), v(6)], /* This match arm does not respect result types. */
+        ];
+        let result_types = vec![IntType::I32.into(), IntType::I32.into()];
+        let mut instr = MatchSelectInstr::new_multi(
+            v(0),
+            IntType::I32,
+            result_types.clone(),
+        );
+        for match_arm in match_arms.iter() {
+            instr.push_results(match_arm.iter().copied());
+        }
+    }
+
+    fn assert_display_instruction(instr: &dyn DisplayInstruction, expected: &str) {
+        let mut display_output = String::new();
+        instr
+            .display_instruction(
+                &mut display_output,
+                Indent::default(),
+                &mut DebugDisplayEdge::default(),
+            )
+            .unwrap();
+        assert_eq!(display_output.as_str(), expected);
+    }
+
+    #[test]
+    fn bool_select_display_works() {
+        let instr = MatchSelectInstr::new(
+            v(0),
+            IntType::I1,
+            IntType::I32.into(),
+            v(1),
+            vec![v(2)],
+        );
+        assert_display_instruction(
+            &instr,
+            indoc! {"
+                match<i1, i32> v0 {
+                    false => v2,
+                    true  => v1,
+                }"
+            }
+        );
+    }
+
+    #[test]
+    fn multi_value_display_works() {
+        let instr = {
+            let mut instr = MatchSelectInstr::new_multi(
+                v(0),
+                IntType::I32,
+                vec![IntType::I32.into(), IntType::I32.into()],
+            );
+            instr.push_results(vec![v(0), v(1)]);
+            instr.push_results(vec![v(2), v(3)]);
+            instr.push_results(vec![v(4), v(5)]);
+            instr.finish(vec![v(6), v(7)])
+        };
+        assert_display_instruction(
+            &instr,
+            indoc! {"
+                match<i32, (i32, i32)> v0 {
+                    0 => (v0, v1),
+                    1 => (v2, v3),
+                    2 => (v4, v5),
+                    _ => (v6, v7),
+                }"
+            }
+        );
+    }
+}

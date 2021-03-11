@@ -9,6 +9,9 @@ entity = { package = "runwell_entity", path = "../entity" }
 derive_more = "0.99.2"
 smallvec = { version = "1.6", features = ["union"] }
 
+[dev-dependencies]
+indoc = "1"
+
 [features]
 default = ["std"]
 bench = ["std"]
