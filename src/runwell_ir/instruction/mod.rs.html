@@ -209,6 +209,10 @@
 <span id="206">206</span>
 <span id="207">207</span>
 <span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -273,7 +277,11 @@
         <span class="ident">MemorySizeInstr</span>,
         <span class="ident">StoreInstr</span>,
     },
-    <span class="ident">select</span>::<span class="ident">MatchSelectInstr</span>,
+    <span class="ident">select</span>::{
+        <span class="ident">MatchSelectInstr</span>,
+        <span class="ident">MatchSelectInstrBuilder</span>,
+        <span class="ident">MatchSelectResultsIter</span>,
+    },
     <span class="ident">terminal</span>::{
         <span class="ident">BranchInstr</span>,
         <span class="ident">BranchTableInstr</span>,
