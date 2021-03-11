@@ -97,10 +97,10 @@ impl MatchSelectInstrBuilder {
     ///
     /// [1]: `MatchSelectInstrBuilder::push_results`
     pub fn last_pushed_values(&self) -> &[Value] {
-        self.instr
-            .iter_results()
-            .next_back()
-            .expect("unexpected missing last pushed values")
+        // As a hacky workaround we can make use of `default_results` here since
+        // it currently always returns the last set of values which is exactly
+        // what we need here.
+        self.instr.default_results()
     }
 
     /// Returns the shared type of all result values.
