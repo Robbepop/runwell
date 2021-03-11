@@ -399,11 +399,8 @@ mod tests {
             vec![v(4), v(5), v(6)], /* This match arm does not respect result types. */
         ];
         let result_types = vec![IntType::I32.into(), IntType::I32.into()];
-        let mut instr = MatchSelectInstr::new_multi(
-            v(0),
-            IntType::I32,
-            result_types,
-        );
+        let mut instr =
+            MatchSelectInstr::new_multi(v(0), IntType::I32, result_types);
         for match_arm in match_arms.iter() {
             instr.push_results(match_arm.iter().copied());
         }
