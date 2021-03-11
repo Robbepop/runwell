@@ -402,7 +402,7 @@ mod tests {
         let mut instr = MatchSelectInstr::new_multi(
             v(0),
             IntType::I32,
-            result_types.clone(),
+            result_types,
         );
         for match_arm in match_arms.iter() {
             instr.push_results(match_arm.iter().copied());
