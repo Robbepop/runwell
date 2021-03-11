@@ -109,7 +109,13 @@ impl MatchSelectInstr {
         let len_before = self.selector_and_result_values.len();
         self.selector_and_result_values.extend(results);
         let len_after = self.selector_and_result_values.len();
-        assert_eq!(len_after - len_before, self.result_types().len())
+        let arm_returns = len_after - len_before;
+        assert_eq!(
+            arm_returns, self.result_types().len(),
+            "match arm returns {} values while all match arms are required to return {} values",
+            arm_returns,
+            self.result_types().len(),
+        )
     }
 
     /// Creates a new select operation returning one value tuple out of a set of value tuples.
