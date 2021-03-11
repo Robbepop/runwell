@@ -418,7 +418,7 @@ mod tests {
             .display_instruction(
                 &mut display_output,
                 Indent::default(),
-                &mut DebugDisplayEdge::default(),
+                &DebugDisplayEdge::default(),
             )
             .unwrap();
         assert_eq!(display_output.as_str(), expected);
