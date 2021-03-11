@@ -360,6 +360,47 @@ fn inconveniently_written_min_2() {
 }
 
 #[test]
+fn swap_2() {
+    let (func, module) = module_with_func(
+        &[IntType::I32.into(); 2][..],
+        &[IntType::I32.into(); 2][..],
+        |b| {
+            b.body()?;
+
+            let lhs = Variable::from_raw(RawIdx::from_u32(0));
+            let rhs = Variable::from_raw(RawIdx::from_u32(1));
+
+            let v0 = b.read_var(lhs)?;
+            let v1 = b.read_var(rhs)?;
+            let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v0, v1)?;
+            let mut builder = b.ins()?.match_select_multi(
+                IntType::I1.into(),
+                v2,
+                [IntType::I32.into(), IntType::I32.into()].iter().copied(),
+            )?;
+            builder.push_results([v1, v0].iter().copied())?;
+            let instr = builder.finish([v0, v1].iter().copied())?;
+            let returned_values =
+                b.instr_values(instr)?.iter().copied().collect::<Vec<_>>();
+            b.ins()?.return_values(returned_values)?;
+
+            Ok(())
+        },
+    );
+    let mut ctx = EvaluationContext::new(&module);
+    for x in -10..10 {
+        for y in -5..15 {
+            let x = IntConst::I32(x).into();
+            let y = IntConst::I32(y).into();
+            let result = evaluate_func_in_ctx(&mut ctx, func, &[x, y]);
+            let result = bits_into_const(&module, func, result);
+            use core::cmp::{min, max};
+            assert_eq!(result, vec![min(x, y), max(x, y)]);
+        }
+    }
+}
+
+#[test]
 fn conveniently_written_min() {
     let (func, module) = module_with_func(
         &[IntType::I32.into(); 2][..],
