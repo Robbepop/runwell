@@ -61,7 +61,10 @@ pub use self::{
         MemorySizeInstr,
         StoreInstr,
     },
-    select::MatchSelectInstr,
+    select::{
+        MatchSelectInstr,
+        MatchSelectInstrBuilder,
+    },
     terminal::{
         BranchInstr,
         BranchTableInstr,

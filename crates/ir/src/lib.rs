@@ -32,6 +32,13 @@ use self::display::DebugDisplayEdge;
 
 /// All Runwell IR SSA instructions.
 pub mod instr {
+    /// Utility types to construct or interact with some instructions.
+    pub mod utils {
+        #[doc(inline)]
+        pub use super::super::instruction::{
+            MatchSelectInstrBuilder,
+        };
+    }
     /// The operands for some instructions.
     pub mod operands {
         #[doc(inline)]
