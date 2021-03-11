@@ -19,7 +19,7 @@ use core::fmt;
 pub trait DisplayInstruction {
     fn display_instruction(
         &self,
-        f: &mut fmt::Formatter,
+        f: &mut dyn fmt::Write,
         indent: Indent,
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result;
@@ -41,7 +41,7 @@ pub trait DisplayInstruction {
 /// display branching edges.
 pub trait DisplayEdge {
     /// Displays the given branching edge using the formatter.
-    fn display_edge(&self, f: &mut fmt::Formatter, edge: Edge) -> fmt::Result;
+    fn display_edge(&self, f: &mut dyn fmt::Write, edge: Edge) -> fmt::Result;
 }
 
 /// A single indentation.

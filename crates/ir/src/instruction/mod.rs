@@ -163,7 +163,7 @@ impl VisitValuesMut for Instruction {
 impl DisplayInstruction for Instruction {
     fn display_instruction(
         &self,
-        f: &mut fmt::Formatter,
+        f: &mut dyn fmt::Write,
         indent: Indent,
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {

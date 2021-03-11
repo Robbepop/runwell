@@ -77,7 +77,7 @@ impl VisitValuesMut for TerminalInstr {
 impl DisplayInstruction for TerminalInstr {
     fn display_instruction(
         &self,
-        f: &mut fmt::Formatter,
+        f: &mut dyn fmt::Write,
         indent: Indent,
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
@@ -192,7 +192,7 @@ impl BranchInstr {
 impl DisplayInstruction for BranchInstr {
     fn display_instruction(
         &self,
-        f: &mut fmt::Formatter,
+        f: &mut dyn fmt::Write,
         _indent: Indent,
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
@@ -263,7 +263,7 @@ impl VisitValuesMut for IfThenElseInstr {
 impl DisplayInstruction for IfThenElseInstr {
     fn display_instruction(
         &self,
-        f: &mut fmt::Formatter,
+        f: &mut dyn fmt::Write,
         _indent: Indent,
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
@@ -454,7 +454,7 @@ impl VisitValuesMut for BranchTableInstr {
 impl DisplayInstruction for BranchTableInstr {
     fn display_instruction(
         &self,
-        f: &mut fmt::Formatter,
+        f: &mut dyn fmt::Write,
         indent: Indent,
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {

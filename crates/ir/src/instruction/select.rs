@@ -232,7 +232,7 @@ impl VisitValuesMut for MatchSelectInstr {
 impl DisplayInstruction for MatchSelectInstr {
     fn display_instruction(
         &self,
-        f: &mut fmt::Formatter,
+        f: &mut dyn fmt::Write,
         indent: Indent,
         _displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
