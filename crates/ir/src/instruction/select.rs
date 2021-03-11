@@ -409,7 +409,10 @@ mod tests {
         }
     }
 
-    fn assert_display_instruction(instr: &dyn DisplayInstruction, expected: &str) {
+    fn assert_display_instruction(
+        instr: &dyn DisplayInstruction,
+        expected: &str,
+    ) {
         let mut display_output = String::new();
         instr
             .display_instruction(
@@ -437,7 +440,7 @@ mod tests {
                     false => v2,
                     true  => v1,
                 }"
-            }
+            },
         );
     }
 
@@ -463,7 +466,7 @@ mod tests {
                     2 => (v4, v5),
                     _ => (v6, v7),
                 }"
-            }
+            },
         );
     }
 }
