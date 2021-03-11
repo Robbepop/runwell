@@ -394,7 +394,7 @@ fn swap_2() {
             let y = IntConst::I32(y).into();
             let result = evaluate_func_in_ctx(&mut ctx, func, &[x, y]);
             let result = bits_into_const(&module, func, result);
-            use core::cmp::{min, max};
+            use core::cmp::{max, min};
             assert_eq!(result, vec![min(x, y), max(x, y)]);
         }
     }
