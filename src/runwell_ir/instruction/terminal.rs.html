@@ -578,7 +578,7 @@
 <span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">TerminalInstr</span> {
     <span class="kw">fn</span> <span class="ident">display_instruction</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">fmt</span>::<span class="ident">Write</span>,
         <span class="ident">indent</span>: <span class="ident">Indent</span>,
         <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
@@ -693,7 +693,7 @@
 <span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">BranchInstr</span> {
     <span class="kw">fn</span> <span class="ident">display_instruction</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">fmt</span>::<span class="ident">Write</span>,
         <span class="ident">_indent</span>: <span class="ident">Indent</span>,
         <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
@@ -764,7 +764,7 @@
 <span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">IfThenElseInstr</span> {
     <span class="kw">fn</span> <span class="ident">display_instruction</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">fmt</span>::<span class="ident">Write</span>,
         <span class="ident">_indent</span>: <span class="ident">Indent</span>,
         <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
@@ -955,7 +955,7 @@
 <span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">BranchTableInstr</span> {
     <span class="kw">fn</span> <span class="ident">display_instruction</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">fmt</span>::<span class="ident">Write</span>,
         <span class="ident">indent</span>: <span class="ident">Indent</span>,
         <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {

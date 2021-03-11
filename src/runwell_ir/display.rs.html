@@ -75,6 +75,19 @@
 <span id="72">72</span>
 <span id="73">73</span>
 <span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -97,7 +110,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DisplayInstruction</span> {
     <span class="kw">fn</span> <span class="ident">display_instruction</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">fmt</span>::<span class="ident">Write</span>,
         <span class="ident">indent</span>: <span class="ident">Indent</span>,
         <span class="ident">displayer</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DisplayEdge</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>;
@@ -119,7 +132,20 @@
 <span class="doccomment">/// display branching edges.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DisplayEdge</span> {
     <span class="doccomment">/// Displays the given branching edge using the formatter.</span>
-    <span class="kw">fn</span> <span class="ident">display_edge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>, <span class="ident">edge</span>: <span class="ident">Edge</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>;
+    <span class="kw">fn</span> <span class="ident">display_edge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">fmt</span>::<span class="ident">Write</span>, <span class="ident">edge</span>: <span class="ident">Edge</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>;
+}
+
+<span class="doccomment">/// A stub `DisplayEdge` implementer that represents edges without further knowledge.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>))]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DebugDisplayEdge</span> {}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">impl</span> <span class="ident">DisplayEdge</span> <span class="kw">for</span> <span class="ident">DebugDisplayEdge</span> {
+    <span class="kw">fn</span> <span class="ident">display_edge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">fmt</span>::<span class="ident">Write</span>, <span class="ident">edge</span>: <span class="ident">Edge</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">edge</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="doccomment">/// A single indentation.</span>
