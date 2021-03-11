@@ -27,6 +27,9 @@ pub use self::{
     value_visitor::{VisitValues, VisitValuesMut},
 };
 
+#[cfg(test)]
+use self::display::DebugDisplayEdge;
+
 /// All Runwell IR SSA instructions.
 pub mod instr {
     /// The operands for some instructions.
