@@ -249,7 +249,7 @@ impl DisplayInstruction for MatchSelectInstr {
                 write!(f, ")")?;
             }
         }
-        writeln!(f, "> {{")?;
+        writeln!(f, "> {} {{", self.selector())?;
         let mut current = 0;
         while let Some(results) = self.target_results(current) {
             match self.selector_type() {
