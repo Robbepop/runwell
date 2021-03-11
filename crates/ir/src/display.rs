@@ -44,6 +44,19 @@ pub trait DisplayEdge {
     fn display_edge(&self, f: &mut dyn fmt::Write, edge: Edge) -> fmt::Result;
 }
 
+/// A stub `DisplayEdge` implementer that represents edges without further knowledge.
+#[cfg(test)]
+#[cfg_attr(test, derive(Debug, Default))]
+pub struct DebugDisplayEdge {}
+
+#[cfg(test)]
+impl DisplayEdge for DebugDisplayEdge {
+    fn display_edge(&self, f: &mut dyn fmt::Write, edge: Edge) -> fmt::Result {
+        write!(f, "{}", edge)?;
+        Ok(())
+    }
+}
+
 /// A single indentation.
 ///
 /// Used for printing modules, functions, function bodies at different indentation levels.
