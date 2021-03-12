@@ -775,6 +775,24 @@ impl<'a, 'b: 'a> MatchSelectInstructionBuilder<'a, 'b> {
         Ok(())
     }
 
+    /// Pushes another results tuple match arm to the constructed `MatchSelectInstr`.
+    ///
+    /// # Panics
+    ///
+    /// If the `results` tuple iterator does not yield exactly as many values as there
+    /// are expected return types for the constructed `MatchSelectInstr`.
+    ///
+    /// # Errors
+    ///
+    /// If the `results` tuple value types do not match the expected results types.
+    pub fn with_results<T>(mut self, results: T) -> Result<Self, Error>
+    where
+        T: IntoIterator<Item = Value>,
+    {
+        self.push_results(results)?;
+        Ok(self)
+    }
+
     /// Pushes the default results tuple to the constructed `MatchSelectInstr`.
     ///
     /// # Panics
