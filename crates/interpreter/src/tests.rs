@@ -374,7 +374,7 @@ fn swap_2() {
             let v1 = b.read_var(rhs)?;
             let v2 = b.ins()?.icmp(IntType::I32, CompareIntOp::Slt, v0, v1)?;
             let mut builder = b.ins()?.match_select_multi(
-                IntType::I1.into(),
+                IntType::I1,
                 v2,
                 [IntType::I32.into(), IntType::I32.into()].iter().copied(),
             )?;
