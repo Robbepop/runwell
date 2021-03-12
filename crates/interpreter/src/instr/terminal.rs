@@ -17,8 +17,8 @@ use crate::core::ActivationFrame;
 use ir::{
     instr::{
         BranchInstr,
-        BranchTableInstr,
         IfThenElseInstr,
+        MatchBranchInstr,
         ReturnInstr,
         TailCallIndirectInstr,
         TailCallInstr,
@@ -115,7 +115,7 @@ impl InterpretInstr for TailCallIndirectInstr {
     }
 }
 
-impl InterpretInstr for BranchTableInstr {
+impl InterpretInstr for MatchBranchInstr {
     fn interpret_instr(
         &self,
         _outputs: &[Option<Value>],

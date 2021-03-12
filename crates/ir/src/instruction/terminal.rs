@@ -39,7 +39,7 @@ pub enum TerminalInstr {
     Ite(IfThenElseInstr),
     TailCall(TailCallInstr),
     TailCallIndirect(TailCallIndirectInstr),
-    BranchTable(BranchTableInstr),
+    BranchTable(MatchBranchInstr),
 }
 
 impl VisitValues for TerminalInstr {
@@ -470,13 +470,13 @@ impl VisitValuesMut for TailCallIndirectInstr {
 
 /// A branching table mapping indices to branching targets.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-pub struct BranchTableInstr {
+pub struct MatchBranchInstr {
     selector: Value,
     default_edge: Edge,
     target_edges: SmallVec<[Edge; 4]>,
 }
 
-impl BranchTableInstr {
+impl MatchBranchInstr {
     /// Creates a new branching table with the given case, default target and targets.
     pub fn new<T>(selector: Value, default_edge: Edge, target_edges: T) -> Self
     where
@@ -510,7 +510,7 @@ impl BranchTableInstr {
     }
 }
 
-impl VisitValues for BranchTableInstr {
+impl VisitValues for MatchBranchInstr {
     fn visit_values<V>(&self, mut visitor: V)
     where
         V: FnMut(Value) -> bool,
@@ -519,7 +519,7 @@ impl VisitValues for BranchTableInstr {
     }
 }
 
-impl VisitValuesMut for BranchTableInstr {
+impl VisitValuesMut for MatchBranchInstr {
     fn visit_values_mut<V>(&mut self, mut visitor: V)
     where
         V: FnMut(&mut Value) -> bool,
@@ -528,7 +528,7 @@ impl VisitValuesMut for BranchTableInstr {
     }
 }
 
-impl VisitEdges for BranchTableInstr {
+impl VisitEdges for MatchBranchInstr {
     fn visit_edges<V>(&self, mut visitor: V)
     where
         V: FnMut(Edge) -> bool,
@@ -544,7 +544,7 @@ impl VisitEdges for BranchTableInstr {
     }
 }
 
-impl VisitEdgesMut for BranchTableInstr {
+impl VisitEdgesMut for MatchBranchInstr {
     fn visit_edges_mut<V>(&mut self, mut visitor: V)
     where
         V: FnMut(&mut Edge) -> bool,
@@ -560,7 +560,7 @@ impl VisitEdgesMut for BranchTableInstr {
     }
 }
 
-impl DisplayInstruction for BranchTableInstr {
+impl DisplayInstruction for MatchBranchInstr {
     fn display_instruction(
         &self,
         f: &mut dyn fmt::Write,
@@ -600,7 +600,7 @@ impl_from_terminal_instr_for_instr! {
     ReturnInstr,
     BranchInstr,
     IfThenElseInstr,
-    BranchTableInstr,
+    MatchBranchInstr,
     TailCallInstr,
     TailCallIndirectInstr,
 }

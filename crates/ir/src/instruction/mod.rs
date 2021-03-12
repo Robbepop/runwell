@@ -68,8 +68,8 @@ pub use self::{
     },
     terminal::{
         BranchInstr,
-        BranchTableInstr,
         IfThenElseInstr,
+        MatchBranchInstr,
         ReturnInstr,
         TailCallIndirectInstr,
         TailCallInstr,
@@ -230,7 +230,7 @@ mod tests {
         assert_eq!(size_of::<Instruction>(), 56);
         // Also assert the sizes of the biggest known concrete instructions.
         assert_eq!(size_of::<TerminalInstr>(), 40);
-        assert_eq!(size_of::<BranchTableInstr>(), 32);
+        assert_eq!(size_of::<MatchBranchInstr>(), 32);
         assert_eq!(size_of::<CallIndirectInstr>(), 32);
         assert_eq!(size_of::<MatchSelectInstr>(), 48);
     }
