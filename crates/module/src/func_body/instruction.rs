@@ -44,7 +44,6 @@ use ir::{
         ExtendIntInstr,
         FloatToIntInstr,
         HeapAddrInstr,
-        IfThenElseInstr,
         Instruction,
         IntToFloatInstr,
         LoadInstr,
@@ -1201,7 +1200,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     /// Conditionally jumps to either `then_target` or `else_target` depending on
     /// the value of `condition`.
     pub fn if_then_else<A1, A2>(
-        mut self,
+        self,
         condition: Value,
         then_target: Block,
         else_target: Block,
@@ -1212,14 +1211,10 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         A1: IntoIterator<Item = Value>,
         A2: IntoIterator<Item = Value>,
     {
-        self.expect_type(condition, IntType::I1.into())?;
-        let then_edge =
-            self.add_branching_edge_from_current(then_target, then_args)?;
-        let else_edge =
-            self.add_branching_edge_from_current(else_target, else_args)?;
-        let instr = self.append_instr(IfThenElseInstr::new(
-            condition, then_edge, else_edge,
-        ))?;
+        let instr = self
+            .match_branch(IntType::I1, condition)?
+            .with_edge(else_target, else_args)?
+            .finish(then_target, then_args)?;
         Ok(instr)
     }
 }
@@ -1291,14 +1286,11 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     ///
     /// This is the conditional jump that selects one of a set of match arms
     /// with different branching edges.
-    pub fn match_branch<A>(
+    pub fn match_branch(
         self,
         selector_type: IntType,
         selector: Value,
-    ) -> Result<MatchBranchBuilder<'a, 'b>, Error>
-    where
-        A: IntoIterator<Item = Value>,
-    {
+    ) -> Result<MatchBranchBuilder<'a, 'b>, Error> {
         self.expect_type(selector, selector_type.into())?;
         let builder = MatchBranchBuilder {
             instr_builder: self,
