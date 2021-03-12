@@ -78,9 +78,12 @@ pub use self::{
 };
 use super::primitive::Value;
 use crate::{
+    primitive::Edge,
     DisplayEdge,
     DisplayInstruction,
     Indent,
+    VisitEdges,
+    VisitEdgesMut,
     VisitValues,
     VisitValuesMut,
 };
@@ -160,6 +163,28 @@ impl VisitValuesMut for Instruction {
             Self::Terminal(instr) => instr.visit_values_mut(visitor),
             Self::Int(instr) => instr.visit_values_mut(visitor),
             Self::Float(instr) => instr.visit_values_mut(visitor),
+        }
+    }
+}
+
+impl VisitEdges for Instruction {
+    fn visit_edges<V>(&self, visitor: V)
+    where
+        V: FnMut(Edge) -> bool,
+    {
+        if let Self::Terminal(instr) = self {
+            instr.visit_edges(visitor);
+        }
+    }
+}
+
+impl VisitEdgesMut for Instruction {
+    fn visit_edges_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Edge) -> bool,
+    {
+        if let Self::Terminal(instr) = self {
+            instr.visit_edges_mut(visitor);
         }
     }
 }

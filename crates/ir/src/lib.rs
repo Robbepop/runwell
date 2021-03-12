@@ -17,12 +17,14 @@
 #![forbid(unsafe_code)]
 
 mod display;
+mod edge_visitor;
 mod instruction;
 pub mod primitive;
 mod value_visitor;
 
 pub use self::{
     display::{DisplayEdge, DisplayInstruction, Indent},
+    edge_visitor::{VisitEdges, VisitEdgesMut},
     instruction::ImmU32,
     value_visitor::{VisitValues, VisitValuesMut},
 };

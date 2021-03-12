@@ -18,6 +18,8 @@ use crate::{
     DisplayEdge,
     DisplayInstruction,
     Indent,
+    VisitEdges,
+    VisitEdgesMut,
     VisitValues,
     VisitValuesMut,
 };
@@ -70,6 +72,40 @@ impl VisitValuesMut for TerminalInstr {
             Self::TailCall(instr) => instr.visit_values_mut(visitor),
             Self::TailCallIndirect(instr) => instr.visit_values_mut(visitor),
             Self::BranchTable(instr) => instr.visit_values_mut(visitor),
+        }
+    }
+}
+
+impl VisitEdges for TerminalInstr {
+    fn visit_edges<V>(&self, visitor: V)
+    where
+        V: FnMut(Edge) -> bool,
+    {
+        match self {
+            Self::Br(instr) => instr.visit_edges(visitor),
+            Self::Ite(instr) => instr.visit_edges(visitor),
+            Self::BranchTable(instr) => instr.visit_edges(visitor),
+            Self::Trap
+            | Self::Return(_)
+            | Self::TailCall(_)
+            | Self::TailCallIndirect(_) => (),
+        }
+    }
+}
+
+impl VisitEdgesMut for TerminalInstr {
+    fn visit_edges_mut<V>(&mut self, visitor: V)
+    where
+        V: FnMut(&mut Edge) -> bool,
+    {
+        match self {
+            Self::Br(instr) => instr.visit_edges_mut(visitor),
+            Self::Ite(instr) => instr.visit_edges_mut(visitor),
+            Self::BranchTable(instr) => instr.visit_edges_mut(visitor),
+            Self::Trap
+            | Self::Return(_)
+            | Self::TailCall(_)
+            | Self::TailCallIndirect(_) => (),
         }
     }
 }
@@ -202,6 +238,24 @@ impl DisplayInstruction for BranchInstr {
     }
 }
 
+impl VisitEdges for BranchInstr {
+    fn visit_edges<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Edge) -> bool,
+    {
+        visitor(self.edge);
+    }
+}
+
+impl VisitEdgesMut for BranchInstr {
+    fn visit_edges_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Edge) -> bool,
+    {
+        visitor(&mut self.edge);
+    }
+}
+
 /// Conditionally either branches to `then` or `else` branch depending on `condition`.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct IfThenElseInstr {
@@ -272,6 +326,24 @@ impl DisplayInstruction for IfThenElseInstr {
         write!(f, " else ")?;
         displayer.display_edge(f, self.else_edge())?;
         Ok(())
+    }
+}
+
+impl VisitEdges for IfThenElseInstr {
+    fn visit_edges<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Edge) -> bool,
+    {
+        let _ = visitor(self.then_edge()) && visitor(self.else_edge());
+    }
+}
+
+impl VisitEdgesMut for IfThenElseInstr {
+    fn visit_edges_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Edge) -> bool,
+    {
+        let _ = visitor(&mut self.then_edge) && visitor(&mut self.else_edge);
     }
 }
 
@@ -427,6 +499,11 @@ impl BranchTableInstr {
         &self.target_edges
     }
 
+    /// Returns an exclusive slice over all target jumps.
+    fn target_edges_mut(&mut self) -> &mut [Edge] {
+        &mut self.target_edges
+    }
+
     /// Returns the default target to jump to.
     pub fn default_target(&self) -> Edge {
         self.default_edge
@@ -448,6 +525,38 @@ impl VisitValuesMut for BranchTableInstr {
         V: FnMut(&mut Value) -> bool,
     {
         visitor(&mut self.selector);
+    }
+}
+
+impl VisitEdges for BranchTableInstr {
+    fn visit_edges<V>(&self, mut visitor: V)
+    where
+        V: FnMut(Edge) -> bool,
+    {
+        if !visitor(self.default_edge) {
+            return
+        };
+        for &edge in self.target_edges() {
+            if !visitor(edge) {
+                break
+            }
+        }
+    }
+}
+
+impl VisitEdgesMut for BranchTableInstr {
+    fn visit_edges_mut<V>(&mut self, mut visitor: V)
+    where
+        V: FnMut(&mut Edge) -> bool,
+    {
+        if !visitor(&mut self.default_edge) {
+            return
+        };
+        for edge in self.target_edges_mut() {
+            if !visitor(edge) {
+                break
+            }
+        }
     }
 }
 
