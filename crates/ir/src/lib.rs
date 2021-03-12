@@ -38,6 +38,7 @@ pub mod instr {
     pub mod utils {
         #[doc(inline)]
         pub use super::super::instruction::{
+            MatchBranchInstrBuilder,
             MatchSelectInstrBuilder,
             MatchSelectResultsIter,
         };

@@ -70,6 +70,7 @@ pub use self::{
         BranchInstr,
         IfThenElseInstr,
         MatchBranchInstr,
+        MatchBranchInstrBuilder,
         ReturnInstr,
         TailCallIndirectInstr,
         TailCallInstr,
@@ -229,8 +230,8 @@ mod tests {
         // Ideally we keep the size of generic instructions as small as possible.
         assert_eq!(size_of::<Instruction>(), 56);
         // Also assert the sizes of the biggest known concrete instructions.
-        assert_eq!(size_of::<TerminalInstr>(), 40);
-        assert_eq!(size_of::<MatchBranchInstr>(), 32);
+        assert_eq!(size_of::<TerminalInstr>(), 48);
+        assert_eq!(size_of::<MatchBranchInstr>(), 40);
         assert_eq!(size_of::<CallIndirectInstr>(), 32);
         assert_eq!(size_of::<MatchSelectInstr>(), 48);
     }

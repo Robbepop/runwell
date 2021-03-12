@@ -32,7 +32,7 @@ use ir::{
             UnaryFloatOp,
             UnaryIntOp,
         },
-        utils::MatchSelectInstrBuilder,
+        utils::{MatchBranchInstrBuilder, MatchSelectInstrBuilder},
         BinaryFloatInstr,
         BinaryIntInstr,
         BranchInstr,
@@ -48,6 +48,7 @@ use ir::{
         Instruction,
         IntToFloatInstr,
         LoadInstr,
+        MatchBranchInstr,
         MatchSelectInstr,
         PromoteFloatInstr,
         ReinterpretInstr,
@@ -1194,15 +1195,120 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         A2: IntoIterator<Item = Value>,
     {
         self.expect_type(condition, IntType::I1.into())?;
-        let block = self.builder.current_block()?;
         let then_edge =
-            self.add_branching_edge(then_target, block, then_args)?;
+            self.add_branching_edge_from_current(then_target, then_args)?;
         let else_edge =
-            self.add_branching_edge(else_target, block, else_args)?;
+            self.add_branching_edge_from_current(else_target, else_args)?;
         let instr = self.append_instr(IfThenElseInstr::new(
             condition, then_edge, else_edge,
         ))?;
         Ok(instr)
+    }
+}
+
+/// Builder used in order to construct `MatchBranchInstr` instructions.
+#[derive(Debug)]
+pub struct MatchBranchBuilder<'a, 'b: 'a> {
+    /// The underlying instruction builder for the function body.
+    instr_builder: InstructionBuilder<'a, 'b>,
+    /// The instruction under construction.
+    match_instr: MatchBranchInstrBuilder,
+}
+
+impl<'a, 'b: 'a> MatchBranchBuilder<'a, 'b> {
+    /// Pushes another edge to the `MatchBranchInstr` under construction.
+    pub fn push_edge<A>(
+        &mut self,
+        destination: Block,
+        args: A,
+    ) -> Result<(), Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
+        let current = self.instr_builder.builder.current_block()?;
+        let edge = self.instr_builder.add_branching_edge(
+            destination,
+            current,
+            args,
+        )?;
+        self.match_instr.push_edge(edge);
+        Ok(())
+    }
+
+    /// Pushes another edge to the `MatchBranchInstr` under construction.
+    pub fn with_edge<A>(
+        mut self,
+        destination: Block,
+        args: A,
+    ) -> Result<Self, Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
+        self.push_edge(destination, args)?;
+        Ok(self)
+    }
+
+    /// Finishes construction of the `MatchBranchInstr`.
+    pub fn finish<A>(
+        mut self,
+        default_destination: Block,
+        default_args: A,
+    ) -> Result<Instr, Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
+        let default_edge = self.instr_builder.add_branching_edge_from_current(
+            default_destination,
+            default_args,
+        )?;
+        let instr = self
+            .instr_builder
+            .append_instr(self.match_instr.finish(default_edge))?;
+        Ok(instr)
+    }
+}
+
+impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
+    /// Constructs a match-branch instruction.
+    ///
+    /// This is the conditional jump that selects one of a set of match arms
+    /// with different branching edges.
+    pub fn match_branch<A>(
+        self,
+        selector_type: IntType,
+        selector: Value,
+    ) -> Result<MatchBranchBuilder<'a, 'b>, Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
+        self.expect_type(selector, selector_type.into())?;
+        let builder = MatchBranchBuilder {
+            instr_builder: self,
+            match_instr: MatchBranchInstr::build(selector_type, selector),
+        };
+        Ok(builder)
+    }
+
+    /// Adds a new branching edge between the current block and the
+    /// destination using the given arguments.
+    ///
+    /// # Errors
+    ///
+    /// - If the new predecessor is not yet filled.
+    /// - If the block that gains a new predecessor has already been sealed.
+    /// - If the new predecessor is already a predecessor of the block.
+    /// - If the given arguments cannot be applied to the destination block.
+    fn add_branching_edge_from_current<A>(
+        &mut self,
+        destination: Block,
+        args: A,
+    ) -> Result<Edge, Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
+        let current = self.builder.current_block()?;
+        let edge = self.add_branching_edge(destination, current, args)?;
+        Ok(edge)
     }
 
     /// Adds a new branching edge between the basic blocks with the given arguments.

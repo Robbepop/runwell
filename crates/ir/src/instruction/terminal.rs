@@ -14,7 +14,7 @@
 
 use super::{CallIndirectInstr, CallInstr};
 use crate::{
-    primitive::{Edge, Func, FuncType, Table, Value},
+    primitive::{Edge, Func, FuncType, IntType, Table, Value},
     DisplayEdge,
     DisplayInstruction,
     Indent,
@@ -471,18 +471,62 @@ impl VisitValuesMut for TailCallIndirectInstr {
 /// A branching table mapping indices to branching targets.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct MatchBranchInstr {
+    selector_type: IntType,
     selector: Value,
     default_edge: Edge,
     target_edges: SmallVec<[Edge; 4]>,
 }
 
+/// Builder to construct `MatchBranchInstr` instructions.
+#[derive(Debug)]
+pub struct MatchBranchInstrBuilder {
+    selector_type: IntType,
+    selector: Value,
+    target_edges: SmallVec<[Edge; 4]>,
+}
+
+impl MatchBranchInstrBuilder {
+    /// Pushes another edge to the `MatchBranchInstr` under construction.
+    pub fn push_edge(&mut self, edge: Edge) {
+        self.target_edges.push(edge);
+    }
+
+    /// Finishes construction of the `MatchBranchInstr`.
+    pub fn finish(self, default_edge: Edge) -> MatchBranchInstr {
+        MatchBranchInstr {
+            selector_type: self.selector_type,
+            selector: self.selector,
+            default_edge,
+            target_edges: self.target_edges,
+        }
+    }
+}
+
 impl MatchBranchInstr {
+    /// Creates a new `MatchBranchInstr` builder.
+    pub fn build(
+        selector_type: IntType,
+        selector: Value,
+    ) -> MatchBranchInstrBuilder {
+        MatchBranchInstrBuilder {
+            selector_type,
+            selector,
+            target_edges: Default::default(),
+        }
+    }
+
     /// Creates a new branching table with the given case, default target and targets.
-    pub fn new<T>(selector: Value, default_edge: Edge, target_edges: T) -> Self
+    pub fn new<T>(
+        selector_type: IntType,
+        selector: Value,
+        default_edge: Edge,
+        target_edges: T,
+    ) -> Self
     where
         T: IntoIterator<Item = Edge>,
     {
         Self {
+            selector_type,
             selector,
             default_edge,
             target_edges: target_edges.into_iter().collect(),
@@ -492,6 +536,11 @@ impl MatchBranchInstr {
     /// Returns the selector value determining where to jump to.
     pub fn selector(&self) -> Value {
         self.selector
+    }
+
+    /// Returns the integer type of the selector value.
+    pub fn selector_type(&self) -> IntType {
+        self.selector_type
     }
 
     /// Returns a slice over all target jumps.
