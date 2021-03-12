@@ -617,9 +617,13 @@ impl DisplayInstruction for MatchBranchInstr {
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
         let target_indentation = indent + Indent::single();
-        writeln!(f, "match {} {{", self.selector())?;
+        writeln!(f, "match<{}> {} {{", self.selector_type(), self.selector())?;
         if let Some((first, rest)) = self.target_edges().split_first() {
-            write!(f, "{}0 => ", target_indentation)?;
+            match self.selector_type() {
+                IntType::I1 => write!(f, "{}false", target_indentation)?,
+                _ => write!(f, "{}0", target_indentation)?,
+            };
+            write!(f, " => ")?;
             displayer.display_edge(f, *first)?;
             for (n, edge) in rest.iter().enumerate() {
                 writeln!(f, ",")?;
@@ -628,7 +632,13 @@ impl DisplayInstruction for MatchBranchInstr {
             }
             writeln!(f, ",")?;
         }
-        writeln!(f, "{}_ => {}", target_indentation, self.default_target())?;
+        match self.selector_type() {
+            IntType::I1 => write!(f, "{}true ", target_indentation)?,
+            _ => write!(f, "{}_", target_indentation)?,
+        };
+        write!(f, " => ")?;
+        displayer.display_edge(f, self.default_target())?;
+        writeln!(f)?;
         write!(f, "{}}}", indent)?;
         Ok(())
     }
