@@ -154,8 +154,8 @@
 <span class="kw">use</span> <span class="ident">ir</span>::{
     <span class="ident">instr</span>::{
         <span class="ident">BranchInstr</span>,
-        <span class="ident">BranchTableInstr</span>,
         <span class="ident">IfThenElseInstr</span>,
+        <span class="ident">MatchBranchInstr</span>,
         <span class="ident">ReturnInstr</span>,
         <span class="ident">TailCallIndirectInstr</span>,
         <span class="ident">TailCallInstr</span>,
@@ -252,7 +252,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">InterpretInstr</span> <span class="kw">for</span> <span class="ident">BranchTableInstr</span> {
+<span class="kw">impl</span> <span class="ident">InterpretInstr</span> <span class="kw">for</span> <span class="ident">MatchBranchInstr</span> {
     <span class="kw">fn</span> <span class="ident">interpret_instr</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],

@@ -213,6 +213,32 @@
 <span id="210">210</span>
 <span id="211">211</span>
 <span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -284,8 +310,9 @@
     },
     <span class="ident">terminal</span>::{
         <span class="ident">BranchInstr</span>,
-        <span class="ident">BranchTableInstr</span>,
         <span class="ident">IfThenElseInstr</span>,
+        <span class="ident">MatchBranchInstr</span>,
+        <span class="ident">MatchBranchInstrBuilder</span>,
         <span class="ident">ReturnInstr</span>,
         <span class="ident">TailCallIndirectInstr</span>,
         <span class="ident">TailCallInstr</span>,
@@ -294,9 +321,12 @@
 };
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">primitive</span>::<span class="ident">Value</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">primitive</span>::<span class="ident">Edge</span>,
     <span class="ident">DisplayEdge</span>,
     <span class="ident">DisplayInstruction</span>,
     <span class="ident">Indent</span>,
+    <span class="ident">VisitEdges</span>,
+    <span class="ident">VisitEdgesMut</span>,
     <span class="ident">VisitValues</span>,
     <span class="ident">VisitValuesMut</span>,
 };
@@ -380,6 +410,28 @@
     }
 }
 
+<span class="kw">impl</span> <span class="ident">VisitEdges</span> <span class="kw">for</span> <span class="ident">Instruction</span> {
+    <span class="kw">fn</span> <span class="ident">visit_edges</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>)
+    <span class="kw">where</span>
+        <span class="ident">V</span>: <span class="ident">FnMut</span>(<span class="ident">Edge</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>,
+    {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Terminal</span>(<span class="ident">instr</span>) <span class="op">=</span> <span class="self">self</span> {
+            <span class="ident">instr</span>.<span class="ident">visit_edges</span>(<span class="ident">visitor</span>);
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">VisitEdgesMut</span> <span class="kw">for</span> <span class="ident">Instruction</span> {
+    <span class="kw">fn</span> <span class="ident">visit_edges_mut</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>)
+    <span class="kw">where</span>
+        <span class="ident">V</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Edge</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>,
+    {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Terminal</span>(<span class="ident">instr</span>) <span class="op">=</span> <span class="self">self</span> {
+            <span class="ident">instr</span>.<span class="ident">visit_edges_mut</span>(<span class="ident">visitor</span>);
+        }
+    }
+}
+
 <span class="kw">impl</span> <span class="ident">DisplayInstruction</span> <span class="kw">for</span> <span class="ident">Instruction</span> {
     <span class="kw">fn</span> <span class="ident">display_instruction</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -420,8 +472,8 @@
         <span class="comment">// Ideally we keep the size of generic instructions as small as possible.</span>
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>(), <span class="number">56</span>);
         <span class="comment">// Also assert the sizes of the biggest known concrete instructions.</span>
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TerminalInstr</span><span class="op">&gt;</span>(), <span class="number">40</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">BranchTableInstr</span><span class="op">&gt;</span>(), <span class="number">32</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TerminalInstr</span><span class="op">&gt;</span>(), <span class="number">48</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">MatchBranchInstr</span><span class="op">&gt;</span>(), <span class="number">40</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">CallIndirectInstr</span><span class="op">&gt;</span>(), <span class="number">32</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">MatchSelectInstr</span><span class="op">&gt;</span>(), <span class="number">48</span>);
     }
