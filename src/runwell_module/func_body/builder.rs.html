@@ -1076,6 +1076,46 @@
 <span id="1073">1073</span>
 <span id="1074">1074</span>
 <span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -1126,6 +1166,7 @@
         <span class="ident">Value</span>,
         <span class="ident">ValueEntity</span>,
     },
+    <span class="ident">VisitEdges</span>,
     <span class="ident">VisitValuesMut</span>,
 };
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
@@ -1855,36 +1896,75 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">vars</span>.<span class="ident">get</span>(<span class="ident">var</span>)<span class="question-mark">?</span>.<span class="ident">ty</span>())
     }
 
-    <span class="doccomment">/// Changes the else block of the given if instruction `instr` to `new_else`.</span>
+    <span class="doccomment">/// Changes the destination of all edges with a destination equal to</span>
+    <span class="doccomment">/// `old_destination` to `new_destination`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// If `instr` does not refer to an if instruction.</span>
-    <span class="doccomment">/// If `new_else` does not refer to a valid basic block.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">change_jump_of_else</span>(
+    <span class="doccomment">/// If `old_destination` or `new_destination` do not refer to a valid block.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Errors</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - If the block parameters of `old_destination` and `new_destination`</span>
+    <span class="doccomment">/// do not match.</span>
+    <span class="doccomment">/// - If either `old_destination` or `new_destination` are already sealed.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">relink_edge_destination</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">instr</span>: <span class="ident">Instr</span>,
+        <span class="ident">old_destination</span>: <span class="ident">Block</span>,
         <span class="ident">new_destination</span>: <span class="ident">Block</span>,
-    ) {
-        <span class="kw">let</span> <span class="ident">if_instruction</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>[<span class="ident">instr</span>] {
-            <span class="ident">Instruction</span>::<span class="ident">Terminal</span>(<span class="ident">TerminalInstr</span>::<span class="ident">Ite</span>(<span class="ident">if_instruction</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">if_instruction</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;tried to change jump of else destination for a non-if instruction&quot;</span>),
-        };
-        <span class="kw">let</span> <span class="ident">else_edge</span> <span class="op">=</span> <span class="ident">if_instruction</span>.<span class="ident">else_edge</span>();
-        <span class="kw">let</span> <span class="ident">old_destination</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">edge_dst</span>[<span class="ident">else_edge</span>];
-        <span class="kw">let</span> <span class="ident">edge_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">old_destination</span>]
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">FunctionBuilderContext</span> {
+            <span class="ident">instrs</span>,
+            <span class="ident">block_params</span>,
+            <span class="ident">block_edges</span>,
+            <span class="ident">block_sealed</span>,
+            <span class="ident">edge_dst</span>,
+            ..
+        } <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>;
+        <span class="kw">if</span> <span class="ident">block_params</span>[<span class="ident">old_destination</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">block_params</span>[<span class="ident">new_destination</span>] {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">UnmatchingBlockParameters</span> {
+                <span class="ident">block_a</span>: <span class="ident">old_destination</span>,
+                <span class="ident">block_b</span>: <span class="ident">new_destination</span>,
+            })
+            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        }
+        <span class="kw">if</span> <span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">old_destination</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadySealed</span> {
+                <span class="ident">block</span>: <span class="ident">old_destination</span>,
+            })
+            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        }
+        <span class="kw">if</span> <span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">new_destination</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadySealed</span> {
+                <span class="ident">block</span>: <span class="ident">new_destination</span>,
+            })
+            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        }
+        <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">instrs</span>[<span class="ident">instr</span>];
+        <span class="ident">instruction</span>.<span class="ident">visit_edges</span>(<span class="op">|</span><span class="ident">edge</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">destination</span> <span class="op">=</span> <span class="ident">edge_dst</span>[<span class="ident">edge</span>];
+            <span class="kw">if</span> <span class="ident">destination</span> <span class="op">!</span><span class="op">=</span> <span class="ident">old_destination</span> {
+                <span class="comment">// Skip and visit next edge in case source does not match.</span>
+                <span class="kw">return</span> <span class="bool-val">true</span>
+            }
+            <span class="ident">edge_dst</span>.<span class="ident">insert</span>(<span class="ident">edge</span>, <span class="ident">new_destination</span>);
+            <span class="kw">let</span> <span class="ident">edge_index</span> <span class="op">=</span> <span class="ident">block_edges</span>[<span class="ident">old_destination</span>]
             .<span class="ident">iter</span>()
             .<span class="ident">copied</span>()
-            .<span class="ident">position</span>(<span class="op">|</span><span class="ident">edge</span><span class="op">|</span> <span class="ident">edge</span> <span class="op">=</span><span class="op">=</span> <span class="ident">else_edge</span>)
+            .<span class="ident">position</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span> <span class="op">=</span><span class="op">=</span> <span class="ident">edge</span>)
             .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic</span><span class="macro">!</span>(
                 <span class="string">&quot;unexpected missing edge in block upon changing else destination. \
                 else_edge = {}, old_destination = {}, new_destination = {}&quot;</span>,
-                <span class="ident">else_edge</span>,
+                <span class="ident">edge</span>,
                 <span class="ident">old_destination</span>,
                 <span class="ident">new_destination</span>,
             ));
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">old_destination</span>].<span class="ident">swap_remove</span>(<span class="ident">edge_index</span>);
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">new_destination</span>].<span class="ident">push</span>(<span class="ident">else_edge</span>);
+            <span class="ident">block_edges</span>[<span class="ident">old_destination</span>].<span class="ident">swap_remove</span>(<span class="ident">edge_index</span>);
+            <span class="ident">block_edges</span>[<span class="ident">new_destination</span>].<span class="ident">push</span>(<span class="ident">edge</span>);
+            <span class="bool-val">true</span>
+        });
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Returns `true` if the block is reachable.</span>
@@ -2120,7 +2200,7 @@
                 <span class="comment">// The old instructions will be dropped so whatever we put in there does not matter.</span>
                 <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">replace</span>(
                     <span class="ident">instruction</span>,
-                    <span class="ident">Instruction</span>::<span class="ident">Terminal</span>(<span class="ident">TerminalInstr</span>::<span class="ident">Trap</span>),
+                    <span class="ident">Instruction</span>::<span class="ident">Terminal</span>(<span class="ident">TerminalInstr</span>::<span class="ident">Unreachable</span>),
                 );
                 <span class="kw">let</span> <span class="ident">new_instr</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">instrs</span>.<span class="ident">alloc</span>(<span class="ident">instruction</span>);
                 <span class="ident">instr_replace</span>.<span class="ident">insert</span>(<span class="ident">old_instr</span>, <span class="ident">new_instr</span>);

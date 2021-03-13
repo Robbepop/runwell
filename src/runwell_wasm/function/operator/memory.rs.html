@@ -227,7 +227,7 @@
                 <span class="comment">// and an immediately following `trap` behind it.</span>
                 <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span>
                     <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">heap_addr</span>(<span class="ident">mem</span>, <span class="ident">pos</span>, <span class="ident">ImmU32</span>::<span class="ident">from</span>(<span class="number">0</span>))<span class="question-mark">?</span>;
-                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">trap</span>()<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">unreachable</span>()<span class="question-mark">?</span>;
                 <span class="ident">ptr</span>
             }
         };

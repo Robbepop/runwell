@@ -2552,9 +2552,9 @@
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
 
-    <span class="doccomment">/// Immediately traps or aborts execution.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">trap</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instr</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">append_instr</span>(<span class="ident">TerminalInstr</span>::<span class="ident">Trap</span>)
+    <span class="doccomment">/// Immediately aborts execution when reached.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unreachable</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instr</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">append_instr</span>(<span class="ident">TerminalInstr</span>::<span class="ident">Unreachable</span>)
     }
 
     <span class="doccomment">/// Conditionally jumps to either `then_target` or `else_target` depending on</span>
