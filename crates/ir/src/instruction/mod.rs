@@ -68,7 +68,6 @@ pub use self::{
     },
     terminal::{
         BranchInstr,
-        IfThenElseInstr,
         MatchBranchInstr,
         MatchBranchInstrBuilder,
         ReturnInstr,

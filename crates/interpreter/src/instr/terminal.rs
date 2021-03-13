@@ -17,7 +17,6 @@ use crate::core::ActivationFrame;
 use ir::{
     instr::{
         BranchInstr,
-        IfThenElseInstr,
         MatchBranchInstr,
         ReturnInstr,
         TailCallIndirectInstr,
@@ -37,7 +36,6 @@ impl InterpretInstr for TerminalInstr {
             Self::Trap => Err(InterpretationError::EvaluationHasTrapped),
             Self::Return(instr) => instr.interpret_instr(outputs, frame),
             Self::Br(instr) => instr.interpret_instr(outputs, frame),
-            Self::Ite(instr) => instr.interpret_instr(outputs, frame),
             Self::TailCall(instr) => instr.interpret_instr(outputs, frame),
             Self::TailCallIndirect(instr) => {
                 instr.interpret_instr(outputs, frame)
@@ -69,23 +67,6 @@ impl InterpretInstr for BranchInstr {
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         frame.continue_along_edge(self.edge());
-        Ok(InterpretationFlow::Continue)
-    }
-}
-
-impl InterpretInstr for IfThenElseInstr {
-    fn interpret_instr(
-        &self,
-        _outputs: &[Option<Value>],
-        mut frame: ActivationFrame,
-    ) -> Result<InterpretationFlow, InterpretationError> {
-        let condition = frame.read_register(self.condition());
-        let edge = if condition != 0 {
-            self.then_edge()
-        } else {
-            self.else_edge()
-        };
-        frame.continue_along_edge(edge);
         Ok(InterpretationFlow::Continue)
     }
 }

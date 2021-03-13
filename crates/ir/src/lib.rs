@@ -71,7 +71,6 @@ pub mod instr {
         FloatInstr,
         FloatToIntInstr,
         HeapAddrInstr,
-        IfThenElseInstr,
         Instruction,
         IntInstr,
         IntToFloatInstr,

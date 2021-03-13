@@ -36,7 +36,6 @@ pub enum TerminalInstr {
     Trap,
     Return(ReturnInstr),
     Br(BranchInstr),
-    Ite(IfThenElseInstr),
     TailCall(TailCallInstr),
     TailCallIndirect(TailCallIndirectInstr),
     BranchTable(MatchBranchInstr),
@@ -51,7 +50,6 @@ impl VisitValues for TerminalInstr {
             Self::Trap => (),
             Self::Return(instr) => instr.visit_values(visitor),
             Self::Br(_instr) => (),
-            Self::Ite(instr) => instr.visit_values(visitor),
             Self::TailCall(instr) => instr.visit_values(visitor),
             Self::TailCallIndirect(instr) => instr.visit_values(visitor),
             Self::BranchTable(instr) => instr.visit_values(visitor),
@@ -68,7 +66,6 @@ impl VisitValuesMut for TerminalInstr {
             Self::Trap => (),
             Self::Return(instr) => instr.visit_values_mut(visitor),
             Self::Br(_instr) => (),
-            Self::Ite(instr) => instr.visit_values_mut(visitor),
             Self::TailCall(instr) => instr.visit_values_mut(visitor),
             Self::TailCallIndirect(instr) => instr.visit_values_mut(visitor),
             Self::BranchTable(instr) => instr.visit_values_mut(visitor),
@@ -83,7 +80,6 @@ impl VisitEdges for TerminalInstr {
     {
         match self {
             Self::Br(instr) => instr.visit_edges(visitor),
-            Self::Ite(instr) => instr.visit_edges(visitor),
             Self::BranchTable(instr) => instr.visit_edges(visitor),
             Self::Trap
             | Self::Return(_)
@@ -100,7 +96,6 @@ impl VisitEdgesMut for TerminalInstr {
     {
         match self {
             Self::Br(instr) => instr.visit_edges_mut(visitor),
-            Self::Ite(instr) => instr.visit_edges_mut(visitor),
             Self::BranchTable(instr) => instr.visit_edges_mut(visitor),
             Self::Trap
             | Self::Return(_)
@@ -121,9 +116,6 @@ impl DisplayInstruction for TerminalInstr {
             TerminalInstr::Trap => write!(f, "trap")?,
             TerminalInstr::Return(instr) => write!(f, "{}", instr)?,
             TerminalInstr::Br(instr) => {
-                instr.display_instruction(f, indent, displayer)?
-            }
-            TerminalInstr::Ite(instr) => {
                 instr.display_instruction(f, indent, displayer)?
             }
             TerminalInstr::TailCall(instr) => write!(f, "{}", instr)?,
@@ -253,97 +245,6 @@ impl VisitEdgesMut for BranchInstr {
         V: FnMut(&mut Edge) -> bool,
     {
         visitor(&mut self.edge);
-    }
-}
-
-/// Conditionally either branches to `then` or `else` branch depending on `condition`.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-pub struct IfThenElseInstr {
-    condition: Value,
-    then_edge: Edge,
-    else_edge: Edge,
-}
-
-impl IfThenElseInstr {
-    /// Creates a new conditional branch instruction.
-    ///
-    /// Branches either to `then_edge` branching edge in case `condition` is
-    /// non-zero (or `true`) or to `else_edge` branching edge otherwise.
-    pub fn new(condition: Value, then_edge: Edge, else_edge: Edge) -> Self {
-        Self {
-            condition,
-            then_edge,
-            else_edge,
-        }
-    }
-
-    /// Returns the condition value of the if-then-else instruction.
-    #[inline]
-    pub fn condition(&self) -> Value {
-        self.condition
-    }
-
-    /// Returns the branching edge taken in case the condition evaluates to `true`.
-    #[inline]
-    pub fn then_edge(&self) -> Edge {
-        self.then_edge
-    }
-
-    /// Returns the branching edge taken in case the condition evaluates to `false`.
-    #[inline]
-    pub fn else_edge(&self) -> Edge {
-        self.else_edge
-    }
-}
-
-impl VisitValues for IfThenElseInstr {
-    fn visit_values<V>(&self, mut visitor: V)
-    where
-        V: FnMut(Value) -> bool,
-    {
-        visitor(self.condition);
-    }
-}
-
-impl VisitValuesMut for IfThenElseInstr {
-    fn visit_values_mut<V>(&mut self, mut visitor: V)
-    where
-        V: FnMut(&mut Value) -> bool,
-    {
-        visitor(&mut self.condition);
-    }
-}
-
-impl DisplayInstruction for IfThenElseInstr {
-    fn display_instruction(
-        &self,
-        f: &mut dyn fmt::Write,
-        _indent: Indent,
-        displayer: &dyn DisplayEdge,
-    ) -> fmt::Result {
-        write!(f, "if {} then ", self.condition())?;
-        displayer.display_edge(f, self.then_edge())?;
-        write!(f, " else ")?;
-        displayer.display_edge(f, self.else_edge())?;
-        Ok(())
-    }
-}
-
-impl VisitEdges for IfThenElseInstr {
-    fn visit_edges<V>(&self, mut visitor: V)
-    where
-        V: FnMut(Edge) -> bool,
-    {
-        let _ = visitor(self.then_edge()) && visitor(self.else_edge());
-    }
-}
-
-impl VisitEdgesMut for IfThenElseInstr {
-    fn visit_edges_mut<V>(&mut self, mut visitor: V)
-    where
-        V: FnMut(&mut Edge) -> bool,
-    {
-        let _ = visitor(&mut self.then_edge) && visitor(&mut self.else_edge);
     }
 }
 
@@ -658,7 +559,6 @@ macro_rules! impl_from_terminal_instr_for_instr {
 impl_from_terminal_instr_for_instr! {
     ReturnInstr,
     BranchInstr,
-    IfThenElseInstr,
     MatchBranchInstr,
     TailCallInstr,
     TailCallIndirectInstr,
