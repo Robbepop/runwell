@@ -17,18 +17,27 @@
 #![allow(unused_variables)]
 
 mod blocks;
+mod control;
 mod error;
 mod operator;
 mod stack;
 
 pub use self::error::TranslateError;
-use self::{
+pub(self) use self::{
     blocks::{Blocks, WasmBlock},
+    control::{ControlFlowStack, ElseData},
     stack::ValueStack,
 };
 use crate::{Error, Type};
+use control::{
+    BlockControlFrame,
+    ControlFlowFrame,
+    IfControlFrame,
+    LoopControlFrame,
+    WasmBlockType,
+};
 use core::{convert::TryFrom as _, fmt};
-use ir::primitive::Func;
+use ir::primitive::{Block, Func};
 use module::{builder::FunctionBuilder, FunctionBody, ModuleResources};
 use wasmparser::{BinaryReader, FuncValidator, Range, ValidatorResources};
 
@@ -68,6 +77,10 @@ struct FunctionBodyTranslator<'a, 'b> {
     value_stack: ValueStack,
     /// The emulated Wasm stack of control blocks.
     blocks: Blocks,
+    /// The stack of control flow frames.
+    control_stack: ControlFlowStack,
+    /// Determines if the current control flow is reachable.
+    reachable: bool,
 }
 
 impl<'a, 'b> fmt::Debug for FunctionBodyTranslator<'a, 'b> {
@@ -103,6 +116,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             builder: FunctionBody::build(func, res),
             value_stack: Default::default(),
             blocks: Default::default(),
+            control_stack: Default::default(),
+            reachable: true,
         }
     }
 
@@ -144,6 +159,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             entry_block_type,
         );
         self.blocks.push_block(entry_block);
+        self.control_stack.push_frame(ControlFlowFrame::Block(
+            BlockControlFrame {
+                original_stack_size: 0,
+                len_inputs: 0,
+                len_outputs: 0,
+                destination: None,
+            },
+        ));
         Ok(())
     }
 
@@ -158,6 +181,72 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         }
         let offset = self.reader.original_position();
         self.validator.finish(offset)?;
+        Ok(())
+    }
+
+    /// Push a Wasm `block` on the control flow stack.
+    fn push_control_block(&mut self, len_inputs: usize, len_outputs: usize) {
+        debug_assert!(len_inputs <= self.value_stack.len());
+        self.control_stack.push_frame(ControlFlowFrame::Block(
+            BlockControlFrame {
+                original_stack_size: self.value_stack.len() - len_inputs,
+                len_inputs,
+                len_outputs,
+                destination: None,
+            },
+        ));
+    }
+
+    /// Push a Wasm `loop` on the control flow stack.
+    fn push_control_loop(
+        &mut self,
+        loop_header: Block,
+        len_inputs: usize,
+        len_outputs: usize,
+    ) {
+        debug_assert!(len_inputs <= self.value_stack.len());
+        self.control_stack.push_frame(ControlFlowFrame::Loop(
+            LoopControlFrame {
+                original_stack_size: self.value_stack.len() - len_inputs,
+                len_inputs,
+                len_outputs,
+                loop_header,
+                loop_exit: None,
+            },
+        ));
+    }
+
+    fn push_control_if(
+        &mut self,
+        if_exit: Block,
+        else_data: ElseData,
+        len_inputs: usize,
+        len_outputs: usize,
+        block_type: WasmBlockType,
+    ) -> Result<(), Error> {
+        debug_assert!(len_inputs <= self.value_stack.len());
+        // Push a second copy of our `if`'s parameters on the stack. This lets
+        // us avoid saving them on the side in the `ControlFrameStack` for our
+        // `else` block (if it exists), which would require a second heap
+        // allocation. See also the comment in `translate_operator` for
+        // `Operator::Else`.
+        // for i in (self.stack.len() - len_inputs)..self.stack.len() {
+        for n in (0..len_inputs).rev() {
+            let entry = self.value_stack.last_n(n)?;
+            self.value_stack.push(entry.value, entry.ty);
+        }
+        self.control_stack
+            .push_frame(ControlFlowFrame::If(IfControlFrame {
+                exit_block: if_exit,
+                else_data,
+                original_stack_size: self.value_stack.len() - len_inputs,
+                len_inputs,
+                len_outputs,
+                exit_is_branched_to: false,
+                head_is_reachable: self.reachable,
+                consequent_ends_reachable: None,
+                block_type,
+            }));
         Ok(())
     }
 }
