@@ -52,7 +52,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         use UnaryIntOp::*;
         match op {
             Op::Unreachable => {
-                self.builder.ins()?.trap()?;
+                self.builder.ins()?.unreachable()?;
             }
             Op::Nop => { /* Deliberately do nothing. */ }
             Op::Block { ty } => self.translate_block(ty)?,

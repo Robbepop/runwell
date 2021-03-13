@@ -33,12 +33,12 @@ use smallvec::SmallVec;
 /// as its last instruction.
 #[derive(Debug, From, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum TerminalInstr {
-    Trap,
+    Unreachable,
+    Branch(BranchInstr),
+    MatchBranch(MatchBranchInstr),
     Return(ReturnInstr),
-    Br(BranchInstr),
     TailCall(TailCallInstr),
     TailCallIndirect(TailCallIndirectInstr),
-    BranchTable(MatchBranchInstr),
 }
 
 impl VisitValues for TerminalInstr {
@@ -47,12 +47,12 @@ impl VisitValues for TerminalInstr {
         V: FnMut(Value) -> bool,
     {
         match self {
-            Self::Trap => (),
+            Self::Unreachable => (),
             Self::Return(instr) => instr.visit_values(visitor),
-            Self::Br(_instr) => (),
+            Self::Branch(_instr) => (),
             Self::TailCall(instr) => instr.visit_values(visitor),
             Self::TailCallIndirect(instr) => instr.visit_values(visitor),
-            Self::BranchTable(instr) => instr.visit_values(visitor),
+            Self::MatchBranch(instr) => instr.visit_values(visitor),
         }
     }
 }
@@ -63,12 +63,12 @@ impl VisitValuesMut for TerminalInstr {
         V: FnMut(&mut Value) -> bool,
     {
         match self {
-            Self::Trap => (),
+            Self::Unreachable => (),
             Self::Return(instr) => instr.visit_values_mut(visitor),
-            Self::Br(_instr) => (),
+            Self::Branch(_instr) => (),
             Self::TailCall(instr) => instr.visit_values_mut(visitor),
             Self::TailCallIndirect(instr) => instr.visit_values_mut(visitor),
-            Self::BranchTable(instr) => instr.visit_values_mut(visitor),
+            Self::MatchBranch(instr) => instr.visit_values_mut(visitor),
         }
     }
 }
@@ -79,9 +79,9 @@ impl VisitEdges for TerminalInstr {
         V: FnMut(Edge) -> bool,
     {
         match self {
-            Self::Br(instr) => instr.visit_edges(visitor),
-            Self::BranchTable(instr) => instr.visit_edges(visitor),
-            Self::Trap
+            Self::Branch(instr) => instr.visit_edges(visitor),
+            Self::MatchBranch(instr) => instr.visit_edges(visitor),
+            Self::Unreachable
             | Self::Return(_)
             | Self::TailCall(_)
             | Self::TailCallIndirect(_) => (),
@@ -95,9 +95,9 @@ impl VisitEdgesMut for TerminalInstr {
         V: FnMut(&mut Edge) -> bool,
     {
         match self {
-            Self::Br(instr) => instr.visit_edges_mut(visitor),
-            Self::BranchTable(instr) => instr.visit_edges_mut(visitor),
-            Self::Trap
+            Self::Branch(instr) => instr.visit_edges_mut(visitor),
+            Self::MatchBranch(instr) => instr.visit_edges_mut(visitor),
+            Self::Unreachable
             | Self::Return(_)
             | Self::TailCall(_)
             | Self::TailCallIndirect(_) => (),
@@ -113,14 +113,14 @@ impl DisplayInstruction for TerminalInstr {
         displayer: &dyn DisplayEdge,
     ) -> fmt::Result {
         match self {
-            TerminalInstr::Trap => write!(f, "trap")?,
+            TerminalInstr::Unreachable => write!(f, "trap")?,
             TerminalInstr::Return(instr) => write!(f, "{}", instr)?,
-            TerminalInstr::Br(instr) => {
+            TerminalInstr::Branch(instr) => {
                 instr.display_instruction(f, indent, displayer)?
             }
             TerminalInstr::TailCall(instr) => write!(f, "{}", instr)?,
             TerminalInstr::TailCallIndirect(instr) => write!(f, "{}", instr)?,
-            TerminalInstr::BranchTable(instr) => {
+            TerminalInstr::MatchBranch(instr) => {
                 instr.display_instruction(f, indent, displayer)?
             }
         }

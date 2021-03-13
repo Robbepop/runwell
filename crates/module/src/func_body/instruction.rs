@@ -1192,9 +1192,9 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         Ok(instr)
     }
 
-    /// Immediately traps or aborts execution.
-    pub fn trap(mut self) -> Result<Instr, Error> {
-        self.append_instr(TerminalInstr::Trap)
+    /// Immediately aborts execution when reached.
+    pub fn unreachable(mut self) -> Result<Instr, Error> {
+        self.append_instr(TerminalInstr::Unreachable)
     }
 
     /// Conditionally jumps to either `then_target` or `else_target` depending on

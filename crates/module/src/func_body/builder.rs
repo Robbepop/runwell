@@ -1081,7 +1081,7 @@ impl<'a> FunctionBuilder<'a> {
                 // The old instructions will be dropped so whatever we put in there does not matter.
                 let instruction = replace(
                     instruction,
-                    Instruction::Terminal(TerminalInstr::Trap),
+                    Instruction::Terminal(TerminalInstr::Unreachable),
                 );
                 let new_instr = body.instrs.alloc(instruction);
                 instr_replace.insert(old_instr, new_instr);

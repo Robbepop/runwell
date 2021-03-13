@@ -33,14 +33,14 @@ impl InterpretInstr for TerminalInstr {
         frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
         match self {
-            Self::Trap => Err(InterpretationError::EvaluationHasTrapped),
+            Self::Unreachable => Err(InterpretationError::EvaluationHasTrapped),
+            Self::Branch(instr) => instr.interpret_instr(outputs, frame),
+            Self::MatchBranch(instr) => instr.interpret_instr(outputs, frame),
             Self::Return(instr) => instr.interpret_instr(outputs, frame),
-            Self::Br(instr) => instr.interpret_instr(outputs, frame),
             Self::TailCall(instr) => instr.interpret_instr(outputs, frame),
             Self::TailCallIndirect(instr) => {
                 instr.interpret_instr(outputs, frame)
             }
-            Self::BranchTable(instr) => instr.interpret_instr(outputs, frame),
         }
     }
 }
