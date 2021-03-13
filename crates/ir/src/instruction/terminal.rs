@@ -524,7 +524,7 @@ impl DisplayInstruction for MatchBranchInstr {
                 IntType::I1 => write!(f, "{}false", target_indentation)?,
                 _ => write!(f, "{}0", target_indentation)?,
             };
-            write!(f, " => ")?;
+            write!(f, " => branch ")?;
             displayer.display_edge(f, *first)?;
             for (n, edge) in rest.iter().enumerate() {
                 writeln!(f, ",")?;
@@ -537,7 +537,7 @@ impl DisplayInstruction for MatchBranchInstr {
             IntType::I1 => write!(f, "{}true ", target_indentation)?,
             _ => write!(f, "{}_", target_indentation)?,
         };
-        write!(f, " => ")?;
+        write!(f, " => branch ")?;
         displayer.display_edge(f, self.default_target())?;
         writeln!(f)?;
         write!(f, "{}}}", indent)?;
