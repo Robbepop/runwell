@@ -174,6 +174,12 @@ pub enum FunctionBuilderError {
         returned_types: Vec<Type>,
         expected_types: Vec<Type>,
     },
+    #[display(
+        fmt = "encountered unmatching block parameters between blocks {} and {}",
+        block_a,
+        block_b
+    )]
+    UnmatchingBlockParameters { block_a: Block, block_b: Block },
     #[display(fmt = "encountered invalid instruction index {}", instr)]
     InvalidInstr { instr: Instr },
     #[display(

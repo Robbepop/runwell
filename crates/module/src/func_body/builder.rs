@@ -47,6 +47,7 @@ use ir::{
         Value,
         ValueEntity,
     },
+    VisitEdges,
     VisitValuesMut,
 };
 use smallvec::SmallVec;
@@ -776,36 +777,75 @@ impl<'a> FunctionBuilder<'a> {
         Ok(self.ctx.vars.get(var)?.ty())
     }
 
-    /// Changes the else block of the given if instruction `instr` to `new_else`.
+    /// Changes the destination of all edges with a destination equal to
+    /// `old_destination` to `new_destination`.
     ///
     /// # Panics
     ///
-    /// If `instr` does not refer to an if instruction.
-    /// If `new_else` does not refer to a valid basic block.
-    pub fn change_jump_of_else(
+    /// If `old_destination` or `new_destination` do not refer to a valid block.
+    ///
+    /// # Errors
+    ///
+    /// - If the block parameters of `old_destination` and `new_destination`
+    /// do not match.
+    /// - If either `old_destination` or `new_destination` are already sealed.
+    pub fn relink_edge_destination(
         &mut self,
         instr: Instr,
+        old_destination: Block,
         new_destination: Block,
-    ) {
-        let if_instruction = match &mut self.ctx.instrs[instr] {
-            Instruction::Terminal(TerminalInstr::Ite(if_instruction)) => if_instruction,
-            _ => panic!("tried to change jump of else destination for a non-if instruction"),
-        };
-        let else_edge = if_instruction.else_edge();
-        let old_destination = self.ctx.edge_dst[else_edge];
-        let edge_index = self.ctx.block_edges[old_destination]
+    ) -> Result<(), Error> {
+        let FunctionBuilderContext {
+            instrs,
+            block_params,
+            block_edges,
+            block_sealed,
+            edge_dst,
+            ..
+        } = &mut self.ctx;
+        if block_params[old_destination] != block_params[new_destination] {
+            return Err(FunctionBuilderError::UnmatchingBlockParameters {
+                block_a: old_destination,
+                block_b: new_destination,
+            })
+            .map_err(Into::into)
+        }
+        if block_sealed.get(old_destination) {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
+                block: old_destination,
+            })
+            .map_err(Into::into)
+        }
+        if block_sealed.get(new_destination) {
+            return Err(FunctionBuilderError::BasicBlockIsAlreadySealed {
+                block: new_destination,
+            })
+            .map_err(Into::into)
+        }
+        let instruction = &mut instrs[instr];
+        instruction.visit_edges(|edge| {
+            let destination = edge_dst[edge];
+            if destination != old_destination {
+                // Skip and visit next edge in case source does not match.
+                return true
+            }
+            edge_dst.insert(edge, new_destination);
+            let edge_index = block_edges[old_destination]
             .iter()
             .copied()
-            .position(|edge| edge == else_edge)
+            .position(|e| e == edge)
             .unwrap_or_else(|| panic!(
                 "unexpected missing edge in block upon changing else destination. \
                 else_edge = {}, old_destination = {}, new_destination = {}",
-                else_edge,
+                edge,
                 old_destination,
                 new_destination,
             ));
-        self.ctx.block_edges[old_destination].swap_remove(edge_index);
-        self.ctx.block_edges[new_destination].push(else_edge);
+            block_edges[old_destination].swap_remove(edge_index);
+            block_edges[new_destination].push(edge);
+            true
+        });
+        Ok(())
     }
 
     /// Returns `true` if the block is reachable.
