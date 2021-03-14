@@ -187,13 +187,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let block_inputs = block_type.inputs(&self.res);
         debug_assert!(block_inputs.len() <= self.value_stack.len());
         self.control_stack.push_frame(ControlFlowFrame::Block(
-            BlockControlFrame {
+            BlockControlFrame::new(
                 block_type,
-                original_stack_size: self.value_stack.len()
-                    - block_inputs.len(),
-                following_block: block,
-                is_branched_to: false,
-            },
+                self.value_stack.len() - block_inputs.len(),
+                block,
+            ),
         ));
     }
 
@@ -207,13 +205,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let block_inputs = block_type.inputs(&self.res);
         debug_assert!(block_inputs.len() <= self.value_stack.len());
         self.control_stack.push_frame(ControlFlowFrame::Loop(
-            LoopControlFrame {
+            LoopControlFrame::new(
                 block_type,
-                original_stack_size: self.value_stack.len()
-                    - block_inputs.len(),
+                self.value_stack.len() - block_inputs.len(),
                 loop_header,
                 loop_exit,
-            },
+            ),
         ));
     }
 
@@ -235,17 +232,15 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             let entry = self.value_stack.last_n(n)?;
             self.value_stack.push(entry.value, entry.ty);
         }
-        self.control_stack
-            .push_frame(ControlFlowFrame::If(IfControlFrame {
-                exit_block: if_exit,
-                else_data,
-                original_stack_size: self.value_stack.len()
-                    - block_inputs.len(),
-                exit_is_branched_to: false,
-                head_is_reachable: self.reachable,
-                consequent_ends_reachable: None,
+        self.control_stack.push_frame(ControlFlowFrame::If(
+            IfControlFrame::new(
                 block_type,
-            }));
+                self.value_stack.len() - block_inputs.len(),
+                if_exit,
+                else_data,
+                self.reachable,
+            ),
+        ));
         Ok(())
     }
 }

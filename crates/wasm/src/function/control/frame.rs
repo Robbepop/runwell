@@ -53,6 +53,22 @@ pub struct BlockControlFrame {
     pub is_branched_to: bool,
 }
 
+impl BlockControlFrame {
+    /// Creates a new `Block` Wasm control frame.
+    pub fn new(
+        block_type: WasmBlockType,
+        original_stack_size: usize,
+        following_block: Block,
+    ) -> Self {
+        Self {
+            block_type,
+            original_stack_size,
+            following_block,
+            is_branched_to: false,
+        }
+    }
+}
+
 /// Control flow frame for a Wasm `Loop` construct.
 #[derive(Debug, Clone)]
 pub struct LoopControlFrame {
@@ -64,6 +80,23 @@ pub struct LoopControlFrame {
     pub loop_exit: Block,
     /// The loop's header block.
     pub loop_header: Block,
+}
+
+impl LoopControlFrame {
+    /// Creates a new `Loop` Wasm control frame.
+    pub fn new(
+        block_type: WasmBlockType,
+        original_stack_size: usize,
+        loop_header: Block,
+        loop_exit: Block,
+    ) -> Self {
+        Self {
+            block_type,
+            original_stack_size,
+            loop_header,
+            loop_exit,
+        }
+    }
 }
 
 /// Control flow frame for a Wasm `If`, `Else`, `End` construct.
@@ -90,6 +123,27 @@ pub struct IfControlFrame {
     pub consequent_ends_reachable: Option<bool>,
     /* Note: no need for `alternative_ends_reachable` because that is just
      * `state.reachable` when we hit the `end` in the `if .. else .. end`. */
+}
+
+impl IfControlFrame {
+    /// Creates a new `If` Wasm control frame.
+    pub fn new(
+        block_type: WasmBlockType,
+        original_stack_size: usize,
+        exit_block: Block,
+        else_data: ElseData,
+        head_is_reachable: bool,
+    ) -> Self {
+        Self {
+            block_type,
+            original_stack_size,
+            exit_block,
+            else_data,
+            head_is_reachable,
+            exit_is_branched_to: false,
+            consequent_ends_reachable: None,
+        }
+    }
 }
 
 /// The optional `else` part of an `if` control flow frame.
