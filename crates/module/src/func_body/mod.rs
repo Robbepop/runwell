@@ -220,3 +220,9 @@ impl DisplayEdge for FunctionBody {
         Ok(())
     }
 }
+
+impl core::fmt::Display for FunctionBody {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.display_with_indent(f, Indent::default())
+    }
+}
