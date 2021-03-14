@@ -76,9 +76,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ///
     /// # Note
     ///
-    /// Implementation ideas copied over from Cranelift:
+    /// Implementation ideas copied over from Cranelift: [*source*][1]
     ///
-    /// <github.com/bytecodealliance/wasmtime/blob/main/cranelift/wasm/src/code_translator.rs>
+    /// [1]: https://github.com/bytecodealliance/wasmtime/blob/main/cranelift/wasm/src/code_translator.rs
     pub(super) fn translate_block(
         &mut self,
         ty: wasmparser::TypeOrFuncType,
@@ -94,9 +94,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ///
     /// # Note
     ///
-    /// Implementation ideas copied over from Cranelift:
+    /// Implementation ideas copied over from Cranelift: [*source*][1]
     ///
-    /// <github.com/bytecodealliance/wasmtime/blob/main/cranelift/wasm/src/code_translator.rs>
+    /// [1]: https://github.com/bytecodealliance/wasmtime/blob/main/cranelift/wasm/src/code_translator.rs
     pub(super) fn translate_loop(
         &mut self,
         ty: wasmparser::TypeOrFuncType,
@@ -166,9 +166,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ///
     /// # Note
     ///
-    /// Implementation ideas copied over from Cranelift:
+    /// Implementation ideas copied over from Cranelift: [*source*][1]
     ///
-    /// <github.com/bytecodealliance/wasmtime/blob/main/cranelift/wasm/src/code_translator.rs>
+    /// [1]: https://github.com/bytecodealliance/wasmtime/blob/main/cranelift/wasm/src/code_translator.rs
     pub(super) fn translate_if(
         &mut self,
         ty: wasmparser::TypeOrFuncType,

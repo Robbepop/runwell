@@ -31,3 +31,5 @@ discriminants
 implementer/S
 formatter
 representable
+Cranelift
+preallocate

@@ -33,7 +33,7 @@ pub enum ControlFlowFrame {
 /// the expected `End` operator at the end of each Wasm
 /// function body.
 ///
-/// This control frame must not occurre elsewhere on the
+/// This control frame must not occur elsewhere on the
 /// control stack but once at the beginning.
 #[derive(Debug, Copy, Clone)]
 pub struct FunctionBodyFrame {
@@ -152,7 +152,7 @@ impl IfControlFrame {
 /// to `WithElse` when encountering the optional `else` branch.
 /// Sometimes it is possible to infer that an `if` control flow frame requires
 /// an `else` block by inspecting the `if` signature. In these cases,
-/// we pre-allocate the `else` block.
+/// we preallocate the `else` block.
 #[derive(Debug, Copy, Clone)]
 pub enum ElseData {
     /// The `if` does not already have an `else` block.
@@ -170,7 +170,7 @@ pub enum ElseData {
     /// Usually we don't know whether we will hit an `if .. end` or an `if
     /// .. else .. end`, but sometimes we can tell based on the block's type
     /// signature that the signature is not valid if there isn't an `else`.
-    /// In these cases, we pre-allocate the `else` block.
+    /// In these cases, we preallocate the `else` block.
     WithElse {
         /// This is the `else` block.
         else_block: Block,
@@ -280,7 +280,7 @@ impl ControlFlowFrame {
     ///
     /// # Note
     ///
-    /// This flag could be used in some cases to prevent creating of superflous blocks.
+    /// This flag could be used in some cases to prevent creating of superfluous blocks.
     #[allow(dead_code)]
     pub fn exit_is_branched_to(&self) -> bool {
         match self {
