@@ -421,10 +421,6 @@
 <span id="418">418</span>
 <span id="419">419</span>
 <span id="420">420</span>
-<span id="421">421</span>
-<span id="422">422</span>
-<span id="423">423</span>
-<span id="424">424</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -555,8 +551,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Constructs an if that compares the top most value with zero.</span>
-    <span class="kw">fn</span> <span class="ident">construct_if_eqz</span>(
+    <span class="doccomment">/// Constructs an if that compares the top most value for unequality with zero.</span>
+    <span class="kw">fn</span> <span class="ident">construct_if_nez</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">condition</span>: <span class="ident">Value</span>,
         <span class="ident">then_block</span>: <span class="ident">Block</span>,
@@ -572,7 +568,7 @@
         );
         <span class="kw">let</span> <span class="ident">eq</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">icmp</span>(
             <span class="ident">IntType</span>::<span class="ident">I32</span>,
-            <span class="ident">CompareIntOp</span>::<span class="ident">Eq</span>,
+            <span class="ident">CompareIntOp</span>::<span class="ident">Ne</span>,
             <span class="ident">condition</span>,
             <span class="ident">zero</span>,
         )<span class="question-mark">?</span>;
@@ -617,7 +613,7 @@
             <span class="comment">// exit block following the whole `if...end`. If we do end</span>
             <span class="comment">// up discovering an `else`, then we will allocate a block for it</span>
             <span class="comment">// and go back and patch the jump.</span>
-            <span class="kw">let</span> <span class="ident">branch_instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">construct_if_eqz</span>(
+            <span class="kw">let</span> <span class="ident">branch_instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">construct_if_nez</span>(
                 <span class="ident">condition</span>.<span class="ident">value</span>,
                 <span class="ident">then_block</span>,
                 <span class="ident">exit_block</span>,
@@ -629,7 +625,7 @@
             <span class="comment">// The `if` type signature is not valid without an `else` block,</span>
             <span class="comment">// so we eagerly allocate the `else` block here.</span>
             <span class="kw">let</span> <span class="ident">else_block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_with_params</span>(<span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>())<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">branch_instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">construct_if_eqz</span>(
+            <span class="kw">let</span> <span class="ident">branch_instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">construct_if_nez</span>(
                 <span class="ident">condition</span>.<span class="ident">value</span>,
                 <span class="ident">then_block</span>,
                 <span class="ident">else_block</span>,
@@ -799,11 +795,7 @@
         }
         <span class="comment">// We signal that all the code that follows until the next `End` is unreachable.</span>
         <span class="ident">frame</span>.<span class="ident">set_branched_to_exit</span>();
-        <span class="kw">let</span> <span class="ident">len_return_values</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">frame</span>.<span class="ident">is_loop</span>() {
-            <span class="ident">frame</span>.<span class="ident">inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>).<span class="ident">len</span>()
-        } <span class="kw">else</span> {
-            <span class="ident">frame</span>.<span class="ident">outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>).<span class="ident">len</span>()
-        };
+        <span class="kw">let</span> <span class="ident">len_return_values</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">len_branch_args</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
         <span class="kw">let</span> <span class="ident">destination_args</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">value_stack</span>
             .<span class="ident">pop_n</span>(<span class="ident">len_return_values</span>)<span class="question-mark">?</span>
