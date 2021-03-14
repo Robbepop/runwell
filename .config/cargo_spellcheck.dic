@@ -33,3 +33,4 @@ formatter
 representable
 Cranelift
 preallocate
+reachability
