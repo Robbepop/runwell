@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::primitive::Instr;
-use ir::primitive::{Block, Value};
+use ir::primitive::{Block, Edge, Value};
 
 /// A user of an SSA value.
 ///
@@ -22,6 +22,7 @@ use ir::primitive::{Block, Value};
 pub enum ValueUser {
     Instr(Instr),
     Param(Value),
+    Edge(Edge),
 }
 
 /// The definition site of the SSA value.
