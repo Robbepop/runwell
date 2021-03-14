@@ -223,6 +223,11 @@ impl ControlFlowFrame {
     }
 
     /// Returns `true` if there have been branches to the exit block of the control frame.
+    ///
+    /// # Note
+    ///
+    /// This flag could be used in some cases to prevent creating of superflous blocks.
+    #[allow(dead_code)]
     pub fn exit_is_branched_to(&self) -> bool {
         match self {
             Self::If(frame) => frame.exit_is_branched_to,
