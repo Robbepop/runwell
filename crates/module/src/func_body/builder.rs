@@ -103,6 +103,8 @@ pub enum FunctionBuilderState {
 pub struct FunctionBuilderContext {
     /// The current basic block that is being operated on.
     pub current: Block,
+    /// The unique entry basic block of the function.
+    pub entry_block: Block,
     /// Arena for all block entities.
     pub blocks: PhantomEntityArena<BlockEntity>,
     /// Arena for all branching edges.
@@ -182,6 +184,7 @@ pub struct FunctionBuilderContext {
 
 impl Default for FunctionBuilderContext {
     fn default() -> Self {
+        let dummy_block = Block::from_raw(RawIdx::from_u32(0));
         Self {
             blocks: Default::default(),
             edges: Default::default(),
@@ -201,7 +204,8 @@ impl Default for FunctionBuilderContext {
             value_type: Default::default(),
             value_definition: Default::default(),
             value_users: Default::default(),
-            current: Block::from_raw(RawIdx::from_u32(0)),
+            current: dummy_block,
+            entry_block: dummy_block,
             vars: Default::default(),
         }
     }
@@ -236,6 +240,7 @@ impl<'a> FunctionBuilder<'a> {
         let entry_block = ctx.blocks.alloc_some(1);
         ctx.block_sealed.set(entry_block, true);
         ctx.current = entry_block;
+        ctx.entry_block = entry_block;
         entry_block
     }
 
@@ -894,13 +899,19 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Returns `true` if the block is reachable.
     ///
-    /// A block is unreachable if it has no predecessors and is sealed.
-    /// A block counts as reachable if it is not (yet) unreachable.
+    /// # Note
+    ///
+    /// - A block is unreachable if it has no predecessors and is sealed.
+    /// - A block counts as reachable if it is not (yet) unreachable.
+    /// - The entry block is always reachable.
     ///
     /// # Panics
     ///
     /// If the given `block` is invalid for the function builder.
     pub fn is_block_reachable(&self, block: Block) -> bool {
+        if block == self.ctx.entry_block {
+            return true
+        }
         let unreachable = self.ctx.block_sealed.get(block)
             && self.ctx.block_edges[block].is_empty();
         !unreachable
