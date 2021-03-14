@@ -127,7 +127,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
-    /// Constructs an if that compares the top most value for unequality with zero.
+    /// Constructs an if that compares the top most value for inequality with zero.
     fn construct_if_nez(
         &mut self,
         condition: Value,
