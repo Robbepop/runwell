@@ -371,11 +371,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         }
         // We signal that all the code that follows until the next `End` is unreachable.
         frame.set_branched_to_exit();
-        let len_return_values = if frame.is_loop() {
-            frame.inputs(&self.res).len()
-        } else {
-            frame.outputs(&self.res).len()
-        };
+        let len_return_values = frame.len_branch_args(&self.res);
         let destination_args = self
             .value_stack
             .pop_n(len_return_values)?

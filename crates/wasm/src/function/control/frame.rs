@@ -267,6 +267,15 @@ impl ControlFlowFrame {
         matches!(self, Self::Loop(_))
     }
 
+    /// Returns the number of arguments required for a branch to the frame.
+    pub fn len_branch_args(&self, res: &ModuleResources) -> usize {
+        if self.is_loop() {
+            self.inputs(res).len()
+        } else {
+            self.outputs(res).len()
+        }
+    }
+
     /// Returns `true` if the control frame is the implicit function body label.
     ///
     /// # Note
