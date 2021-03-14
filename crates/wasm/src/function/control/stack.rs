@@ -34,6 +34,11 @@ pub struct ControlFlowStack {
     frames: Vec<ControlFlowFrame>,
 }
 
+/// Panic message in case an invalid empty control frame stack is encountered.
+const INVALID_EMPTY_CONTROL_STACK: &str =
+    "encountered invalid empty control frame stack but \
+     expected at least the implicit function body label";
+
 impl ControlFlowStack {
     /// Returns `true` if the stack of control flow frames is empty.
     ///
@@ -61,13 +66,18 @@ impl ControlFlowStack {
     }
 
     /// Returns the last control flow frame on the control stack.
-    pub fn last(&self) -> Option<&ControlFlowFrame> {
-        self.frames.last()
+    pub fn first(&self) -> &ControlFlowFrame {
+        self.frames.first().expect(INVALID_EMPTY_CONTROL_STACK)
     }
 
     /// Returns the last control flow frame on the control stack.
-    pub fn last_mut(&mut self) -> Option<&mut ControlFlowFrame> {
-        self.frames.last_mut()
+    pub fn last(&self) -> &ControlFlowFrame {
+        self.frames.last().expect(INVALID_EMPTY_CONTROL_STACK)
+    }
+
+    /// Returns the last control flow frame on the control stack.
+    pub fn last_mut(&mut self) -> &mut ControlFlowFrame {
+        self.frames.last_mut().expect(INVALID_EMPTY_CONTROL_STACK)
     }
 
     /// Returns the nth control flow frame from the back where 0th is the last.
