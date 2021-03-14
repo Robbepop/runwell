@@ -22,6 +22,14 @@ mod error;
 mod operator;
 mod stack;
 
+use self::control::{
+    BlockControlFrame,
+    ControlFlowFrame,
+    FunctionBodyFrame,
+    IfControlFrame,
+    LoopControlFrame,
+    WasmBlockType,
+};
 pub use self::error::TranslateError;
 pub(self) use self::{
     blocks::{Blocks, WasmBlock},
@@ -29,13 +37,6 @@ pub(self) use self::{
     stack::ValueStack,
 };
 use crate::{Error, Type};
-use control::{
-    BlockControlFrame,
-    ControlFlowFrame,
-    IfControlFrame,
-    LoopControlFrame,
-    WasmBlockType,
-};
 use core::{convert::TryFrom as _, fmt};
 use ir::primitive::{Block, Func};
 use module::{builder::FunctionBuilder, FunctionBody, ModuleResources};
@@ -159,12 +160,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             entry_block_type,
         );
         self.blocks.push_block(entry_block);
-        self.control_stack.push_frame(ControlFlowFrame::Block(
-            BlockControlFrame {
-                original_stack_size: 0,
-                len_inputs: 0,
-                len_outputs: 0,
-                destination: None,
+        self.control_stack.push_frame(ControlFlowFrame::Body(
+            FunctionBodyFrame {
+                block_type: WasmBlockType::from(entry_block_type),
             },
         ));
         Ok(())
@@ -185,14 +183,16 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Push a Wasm `block` on the control flow stack.
-    fn push_control_block(&mut self, len_inputs: usize, len_outputs: usize) {
-        debug_assert!(len_inputs <= self.value_stack.len());
+    fn push_control_block(&mut self, block: Block, block_type: WasmBlockType) {
+        let block_inputs = block_type.inputs(&self.res);
+        debug_assert!(block_inputs.len() <= self.value_stack.len());
         self.control_stack.push_frame(ControlFlowFrame::Block(
             BlockControlFrame {
-                original_stack_size: self.value_stack.len() - len_inputs,
-                len_inputs,
-                len_outputs,
-                destination: None,
+                block_type,
+                original_stack_size: self.value_stack.len()
+                    - block_inputs.len(),
+                following_block: block,
+                is_branched_to: false,
             },
         ));
     }
@@ -201,17 +201,18 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn push_control_loop(
         &mut self,
         loop_header: Block,
-        len_inputs: usize,
-        len_outputs: usize,
+        loop_exit: Block,
+        block_type: WasmBlockType,
     ) {
-        debug_assert!(len_inputs <= self.value_stack.len());
+        let block_inputs = block_type.inputs(&self.res);
+        debug_assert!(block_inputs.len() <= self.value_stack.len());
         self.control_stack.push_frame(ControlFlowFrame::Loop(
             LoopControlFrame {
-                original_stack_size: self.value_stack.len() - len_inputs,
-                len_inputs,
-                len_outputs,
+                block_type,
+                original_stack_size: self.value_stack.len()
+                    - block_inputs.len(),
                 loop_header,
-                loop_exit: None,
+                loop_exit,
             },
         ));
     }
@@ -220,18 +221,17 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         if_exit: Block,
         else_data: ElseData,
-        len_inputs: usize,
-        len_outputs: usize,
         block_type: WasmBlockType,
     ) -> Result<(), Error> {
-        debug_assert!(len_inputs <= self.value_stack.len());
+        let block_inputs = block_type.inputs(&self.res);
+        debug_assert!(block_inputs.len() <= self.value_stack.len());
         // Push a second copy of our `if`'s parameters on the stack. This lets
         // us avoid saving them on the side in the `ControlFrameStack` for our
         // `else` block (if it exists), which would require a second heap
         // allocation. See also the comment in `translate_operator` for
         // `Operator::Else`.
         // for i in (self.stack.len() - len_inputs)..self.stack.len() {
-        for n in (0..len_inputs).rev() {
+        for n in (0..block_inputs.len()).rev() {
             let entry = self.value_stack.last_n(n)?;
             self.value_stack.push(entry.value, entry.ty);
         }
@@ -239,9 +239,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             .push_frame(ControlFlowFrame::If(IfControlFrame {
                 exit_block: if_exit,
                 else_data,
-                original_stack_size: self.value_stack.len() - len_inputs,
-                len_inputs,
-                len_outputs,
+                original_stack_size: self.value_stack.len()
+                    - block_inputs.len(),
                 exit_is_branched_to: false,
                 head_is_reachable: self.reachable,
                 consequent_ends_reachable: None,
