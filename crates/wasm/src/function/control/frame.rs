@@ -180,8 +180,6 @@ impl ControlFlowFrame {
     ///
     /// This returns `None` in case of `Block` control flow frames that
     /// have not yet seen branches to them.
-    ///
-    /// TODO: Decide if we need this API.
     pub fn branch_destination(&self) -> Block {
         match self {
             Self::If(frame) => frame.exit_block,
