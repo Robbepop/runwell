@@ -127,8 +127,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
-    /// Constructs an if that compares the top most value with zero.
-    fn construct_if_eqz(
+    /// Constructs an if that compares the top most value for unequality with zero.
+    fn construct_if_nez(
         &mut self,
         condition: Value,
         then_block: Block,
@@ -144,7 +144,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         );
         let eq = self.builder.ins()?.icmp(
             IntType::I32,
-            CompareIntOp::Eq,
+            CompareIntOp::Ne,
             condition,
             zero,
         )?;
@@ -189,7 +189,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             // exit block following the whole `if...end`. If we do end
             // up discovering an `else`, then we will allocate a block for it
             // and go back and patch the jump.
-            let branch_instr = self.construct_if_eqz(
+            let branch_instr = self.construct_if_nez(
                 condition.value,
                 then_block,
                 exit_block,
@@ -201,7 +201,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             // The `if` type signature is not valid without an `else` block,
             // so we eagerly allocate the `else` block here.
             let else_block = self.block_with_params(inputs.iter().copied())?;
-            let branch_instr = self.construct_if_eqz(
+            let branch_instr = self.construct_if_nez(
                 condition.value,
                 then_block,
                 else_block,
