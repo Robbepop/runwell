@@ -244,12 +244,10 @@ impl ControlFlowFrame {
             Self::Block(frame) => frame.is_branched_to = true,
             Self::Loop(frame) => {
                 // A loop exit block is always branched to so we don't store state.
-                ()
             }
             Self::Body(_) => {
                 // Branching to the outermost implicit label (function body)
                 // is similar to a return statement.
-                ()
             }
         }
     }
