@@ -108,7 +108,7 @@ impl ControlFlowStack {
         &mut self,
         n: u32,
     ) -> Result<&mut ControlFlowFrame, TranslateError> {
-        let len = self.frames.len();
+        let len = self.len();
         self.frames
             .iter_mut()
             .rev()
