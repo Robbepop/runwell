@@ -40,16 +40,6 @@ const INVALID_EMPTY_CONTROL_STACK: &str =
      expected at least the implicit function body label";
 
 impl ControlFlowStack {
-    /// Returns `true` if the stack of control flow frames is empty.
-    ///
-    /// # Note
-    ///
-    /// This is usually the case after translating the last `End` Wasm operator
-    /// of a Wasm function.
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
     /// Returns the current depth of the stack of control flow frames.
     pub fn len(&self) -> usize {
         self.frames.len()
@@ -71,32 +61,8 @@ impl ControlFlowStack {
     }
 
     /// Returns the last control flow frame on the control stack.
-    pub fn last(&self) -> &ControlFlowFrame {
-        self.frames.last().expect(INVALID_EMPTY_CONTROL_STACK)
-    }
-
-    /// Returns the last control flow frame on the control stack.
     pub fn last_mut(&mut self) -> &mut ControlFlowFrame {
         self.frames.last_mut().expect(INVALID_EMPTY_CONTROL_STACK)
-    }
-
-    /// Returns the nth control flow frame from the back where 0th is the last.
-    ///
-    /// # Errors
-    ///
-    /// If `n` exceeds the length of the stack of control flow frames.
-    pub fn nth_back(
-        &self,
-        n: u32,
-    ) -> Result<&ControlFlowFrame, TranslateError> {
-        self.frames
-            .iter()
-            .rev()
-            .nth_back(n as usize)
-            .ok_or_else(|| {
-                let len = self.frames.len();
-                TranslateError::RelativeDepthExceedsBlockStack { n, len }
-            })
     }
 
     /// Returns the nth control flow frame from the back where 0th is the last.
@@ -114,16 +80,5 @@ impl ControlFlowStack {
             .rev()
             .nth_back(n as usize)
             .ok_or(TranslateError::RelativeDepthExceedsBlockStack { n, len })
-    }
-
-    /// Returns the top most control flow frame.
-    ///
-    /// This is the control flow frame that was put the latest on the stack of frames.
-    ///
-    /// # Errors
-    ///
-    /// If the stack of blocks is empty.
-    pub fn current(&self) -> Result<&ControlFlowFrame, TranslateError> {
-        self.frames.last().ok_or(TranslateError::MissingWasmBlock)
     }
 }
