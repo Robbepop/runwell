@@ -38,6 +38,7 @@
 <span id="35">35</span>
 <span id="36">36</span>
 <span id="37">37</span>
+<span id="38">38</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -54,7 +55,7 @@
 <span class="comment">// limitations under the License.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">primitive</span>::<span class="ident">Instr</span>;
-<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span>::{<span class="ident">Block</span>, <span class="ident">Value</span>};
+<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span>::{<span class="ident">Block</span>, <span class="ident">Edge</span>, <span class="ident">Value</span>};
 
 <span class="doccomment">/// A user of an SSA value.</span>
 <span class="doccomment">///</span>
@@ -63,6 +64,7 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ValueUser</span> {
     <span class="ident">Instr</span>(<span class="ident">Instr</span>),
     <span class="ident">Param</span>(<span class="ident">Value</span>),
+    <span class="ident">Edge</span>(<span class="ident">Edge</span>),
 }
 
 <span class="doccomment">/// The definition site of the SSA value.</span>

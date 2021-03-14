@@ -295,6 +295,7 @@
 <span id="292">292</span>
 <span id="293">293</span>
 <span id="294">294</span>
+<span id="295">295</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -351,6 +352,7 @@
         <span class="kw">match</span> <span class="ident">op</span> {
             <span class="ident">Op</span>::<span class="ident">Unreachable</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">unreachable</span>()<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">reachable</span> <span class="op">=</span> <span class="bool-val">false</span>;
             }
             <span class="ident">Op</span>::<span class="ident">Nop</span> <span class="op">=</span><span class="op">&gt;</span> { <span class="comment">/* Deliberately do nothing. */</span> }
             <span class="ident">Op</span>::<span class="ident">Block</span> { <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">translate_block</span>(<span class="ident">ty</span>)<span class="question-mark">?</span>,
