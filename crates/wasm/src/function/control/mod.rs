@@ -17,7 +17,7 @@ mod frame;
 mod stack;
 
 pub use self::{
-    block::{WasmBlock, WasmBlockType},
+    block::WasmBlockType,
     frame::{
         BlockControlFrame,
         ControlFlowFrame,

@@ -15,7 +15,7 @@
 use crate::Error;
 use core::convert::TryFrom;
 use entity::RawIdx;
-use ir::primitive::{Block, FuncType, Type};
+use ir::primitive::{FuncType, Type};
 use module::ModuleResources;
 
 /// The type of a Wasm block.
@@ -93,64 +93,5 @@ impl WasmBlockType {
                     .outputs()
             }
         }
-    }
-}
-
-/// A Wasm `Block` or `Loop` for Wasm operators to branch to.
-#[derive(Debug, Copy, Clone)]
-pub struct WasmBlock {
-    /// The unique Runwell basic block index of the Wasm block.
-    pub(super) block: Option<Block>,
-    /// The type of the Wasm block.
-    ty: WasmBlockType,
-}
-
-impl WasmBlock {
-    /// Creates a new Wasm block with the given block type.
-    pub fn new<B>(
-        block: B,
-        block_type: wasmparser::TypeOrFuncType,
-    ) -> Result<Self, Error>
-    where
-        B: Into<Option<Block>>,
-    {
-        Ok(Self {
-            block: block.into(),
-            ty: WasmBlockType::try_from(block_type)?,
-        })
-    }
-
-    /// Creates a new Wasm block with the given function type.
-    pub fn with_func_type<B>(block: B, func_type: FuncType) -> Self
-    where
-        B: Into<Option<Block>>,
-    {
-        Self {
-            block: block.into(),
-            ty: WasmBlockType::FuncType(func_type),
-        }
-    }
-
-    /// Returns the associated Runwell block index.
-    pub fn block(&self) -> Option<Block> {
-        self.block
-    }
-
-    /// Returns a slice over the input types of the Wasm block.
-    pub fn inputs<'a, 'b, 'c>(&'a self, res: &'b ModuleResources) -> &'c [Type]
-    where
-        'a: 'c,
-        'b: 'c,
-    {
-        self.ty.inputs(res)
-    }
-
-    /// Returns a slice over the output types of the Wasm block.
-    pub fn outputs<'a, 'b, 'c>(&'a self, res: &'b ModuleResources) -> &'c [Type]
-    where
-        'a: 'c,
-        'b: 'c,
-    {
-        self.ty.outputs(res)
     }
 }
