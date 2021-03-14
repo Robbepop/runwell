@@ -1068,7 +1068,7 @@ impl<'a> FunctionBuilder<'a> {
         // Cut away dead block parameters.
         for block in self.ctx.blocks.indices() {
             let dead_params = &dead_params[block];
-            for (index, &param) in
+            for (index, &old_param) in
                 self.ctx.block_params[block].iter().enumerate()
             {
                 debug_assert!(index < u16::MAX as usize);
@@ -1076,7 +1076,8 @@ impl<'a> FunctionBuilder<'a> {
                 if dead_params.contains(&index) {
                     continue
                 }
-                body.block_params[block].push(param);
+                let new_param = value_replace.get(old_param);
+                body.block_params[block].push(new_param);
             }
         }
         value_replace
