@@ -441,6 +441,11 @@ impl<'a> FunctionBuilder<'a> {
         Ok(value)
     }
 
+    /// Returns the block parameters of the given block.
+    pub fn block_parameters(&self, block: Block) -> &[Value] {
+        &self.ctx.block_params[block]
+    }
+
     /// Creates a new incomplete block parameter.
     ///
     /// These block parameters are driven by the SSA value construction
@@ -824,6 +829,15 @@ impl<'a> FunctionBuilder<'a> {
     /// - If the variable has not been declared.
     pub fn var_type(&mut self, var: Variable) -> Result<Type, Error> {
         Ok(self.ctx.vars.get(var)?.ty())
+    }
+
+    /// Returns the type of the given value.
+    ///
+    /// # Panics
+    ///
+    /// If the given value is invalid.
+    pub fn value_type(&self, value: Value) -> Type {
+        self.ctx.value_type[value]
     }
 
     /// Changes the destination of all edges with a destination equal to
