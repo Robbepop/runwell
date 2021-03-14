@@ -29,6 +29,12 @@ pub enum WasmBlockType {
     FuncType(FuncType),
 }
 
+impl From<FuncType> for WasmBlockType {
+    fn from(func_type: FuncType) -> Self {
+        Self::FuncType(func_type)
+    }
+}
+
 impl TryFrom<wasmparser::TypeOrFuncType> for WasmBlockType {
     type Error = Error;
 
