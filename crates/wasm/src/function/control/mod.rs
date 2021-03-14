@@ -22,6 +22,7 @@ pub use self::{
         BlockControlFrame,
         ControlFlowFrame,
         ElseData,
+        FunctionBodyFrame,
         IfControlFrame,
         LoopControlFrame,
     },

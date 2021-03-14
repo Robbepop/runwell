@@ -13,46 +13,72 @@
 // limitations under the License.
 
 use super::block::WasmBlockType;
-use ir::primitive::Block;
-use module::primitive::Instr;
+use ir::primitive::{Block, Type};
+use module::{primitive::Instr, ModuleResources};
 
 /// A control flow frame can be a `Block` a `Loop` or an `If` Wasm control instruction.
 #[derive(Debug, Clone)]
 pub enum ControlFlowFrame {
+    Body(FunctionBodyFrame),
     If(IfControlFrame),
     Block(BlockControlFrame),
     Loop(LoopControlFrame),
 }
 
+/// Control flow frame to guard the entire function body.
+///
+/// # Note
+///
+/// This is mainly used to provide a proper stop guard for
+/// the expected `End` operator at the end of each Wasm
+/// function body.
+///
+/// This control frame must not occurre elsewhere on the
+/// control stack but once at the beginning.
+#[derive(Debug, Copy, Clone)]
+pub struct FunctionBodyFrame {
+    pub block_type: WasmBlockType,
+}
+
 /// Control flow frame for a Wasm `Block`.
 #[derive(Debug, Clone)]
 pub struct BlockControlFrame {
-    pub len_inputs: usize,
-    pub len_outputs: usize,
+    /// The non-SSA input and output types of the control frame.
+    pub block_type: WasmBlockType,
+    /// The value stack size upon entering the control frame.
     pub original_stack_size: usize,
-    pub destination: Option<Block>,
+    /// The block that is branched to upon encountering `End` operator.
+    pub following_block: Block,
+    /// Is `true` if there is at least one branch to this control frame.
+    pub is_branched_to: bool,
 }
 
 /// Control flow frame for a Wasm `Loop` construct.
 #[derive(Debug, Clone)]
 pub struct LoopControlFrame {
-    pub len_inputs: usize,
-    pub len_outputs: usize,
+    /// The non-SSA input and output types of the control frame.
+    pub block_type: WasmBlockType,
+    /// The value stack size upon entering the control frame.
     pub original_stack_size: usize,
-    pub loop_exit: Option<Block>,
+    /// The loop's exit block.
+    pub loop_exit: Block,
+    /// The loop's header block.
     pub loop_header: Block,
 }
 
 /// Control flow frame for a Wasm `If`, `Else`, `End` construct.
 #[derive(Debug, Clone)]
 pub struct IfControlFrame {
-    pub len_inputs: usize,
-    pub len_outputs: usize,
-    pub original_stack_size: usize,
-    pub exit_is_branched_to: bool,
-    pub exit_block: Block,
-    pub else_data: ElseData,
+    /// The non-SSA input and output types of the control frame.
     pub block_type: WasmBlockType,
+    /// The value stack size upon entering the control frame.
+    pub original_stack_size: usize,
+    /// Is `true` if there is at least one branch to this control frame.
+    pub exit_is_branched_to: bool,
+    /// The block that contains the code after the if-then-else instructions.
+    pub exit_block: Block,
+    /// Used to establish the else block when `Else` operator is encountered.
+    pub else_data: ElseData,
     /// Was the head of the `if` reachable?
     pub head_is_reachable: bool,
     /// What was the reachability at the end of the consequent?
@@ -99,22 +125,34 @@ pub enum ElseData {
 
 /// Helper methods for the control stack objects.
 impl ControlFlowFrame {
-    /// Returns the number of output values of the control flow frame.
-    pub fn len_outputs(&self) -> usize {
-        match self {
-            Self::If(frame) => frame.len_outputs,
-            Self::Block(frame) => frame.len_outputs,
-            Self::Loop(frame) => frame.len_outputs,
-        }
+    /// Returns the number of input values of the control flow frame.
+    pub fn inputs<'a, 'b, 'c>(&'a self, res: &'b ModuleResources) -> &'c [Type]
+    where
+        'a: 'c,
+        'b: 'c,
+    {
+        let block_type = match self {
+            Self::If(frame) => &frame.block_type,
+            Self::Block(frame) => &frame.block_type,
+            Self::Loop(frame) => &frame.block_type,
+            Self::Body(frame) => &frame.block_type,
+        };
+        block_type.inputs(res)
     }
 
-    /// Returns the number of input values of the control flow frame.
-    pub fn len_inputs(&self) -> usize {
-        match self {
-            Self::If(frame) => frame.len_inputs,
-            Self::Block(frame) => frame.len_inputs,
-            Self::Loop(frame) => frame.len_inputs,
-        }
+    /// Returns the number of output values of the control flow frame.
+    pub fn outputs<'a, 'b, 'c>(&'a self, res: &'b ModuleResources) -> &'c [Type]
+    where
+        'a: 'c,
+        'b: 'c,
+    {
+        let block_type = match self {
+            Self::If(frame) => &frame.block_type,
+            Self::Block(frame) => &frame.block_type,
+            Self::Loop(frame) => &frame.block_type,
+            Self::Body(frame) => &frame.block_type,
+        };
+        block_type.outputs(res)
     }
 
     /// Returns the block that follows the control flow frame if any.
@@ -123,11 +161,16 @@ impl ControlFlowFrame {
     ///
     /// This returns `None` in case of `Block` control flow frames that
     /// have not yet seen branches to them.
-    pub fn following_code(&self) -> Option<Block> {
+    pub fn following_code(&self) -> Block {
         match self {
-            Self::If(frame) => Some(frame.exit_block),
-            Self::Block(frame) => frame.destination,
+            Self::If(frame) => frame.exit_block,
+            Self::Block(frame) => frame.following_block,
             Self::Loop(frame) => frame.loop_exit,
+            Self::Body(_) => {
+                unreachable!(
+                    "a function body control frame cannot have following code"
+                )
+            }
         }
     }
 
@@ -139,11 +182,16 @@ impl ControlFlowFrame {
     /// have not yet seen branches to them.
     ///
     /// TODO: Decide if we need this API.
-    pub fn br_destination(&self) -> Option<Block> {
+    pub fn branch_destination(&self) -> Block {
         match self {
-            Self::If(frame) => Some(frame.exit_block),
-            Self::Block(frame) => frame.destination,
-            Self::Loop(frame) => Some(frame.loop_header),
+            Self::If(frame) => frame.exit_block,
+            Self::Block(frame) => frame.following_block,
+            Self::Loop(frame) => frame.loop_header,
+            Self::Body(_) => {
+                unreachable!(
+                    "a function body control frame cannot have a branch destination"
+                )
+            }
         }
     }
 
@@ -158,6 +206,7 @@ impl ControlFlowFrame {
             Self::If(frame) => frame.original_stack_size,
             Self::Block(frame) => frame.original_stack_size,
             Self::Loop(frame) => frame.original_stack_size,
+            Self::Body(_) => 0,
         }
     }
 
@@ -166,12 +215,44 @@ impl ControlFlowFrame {
         matches!(self, Self::Loop(_))
     }
 
+    /// Returns `true` if the control frame is the implicit function body label.
+    ///
+    /// # Note
+    ///
+    /// Branching to this label has the same effect as returning from the function.
+    pub fn is_func_body(&self) -> bool {
+        matches!(self, Self::Body(_))
+    }
+
     /// Returns `true` if there have been branches to the exit block of the control frame.
     pub fn exit_is_branched_to(&self) -> bool {
         match self {
             Self::If(frame) => frame.exit_is_branched_to,
-            Self::Block(frame) => frame.destination.is_some(),
-            Self::Loop(frame) => false,
+            Self::Block(frame) => frame.is_branched_to,
+            Self::Loop(frame) => {
+                // A branch to a loop control frame will always branch
+                // to the loop header and never to the loop exit.
+                // Therefore this is always `false`.
+                false
+            }
+            Self::Body(_) => false,
+        }
+    }
+
+    /// Tells the frame that it has been branched to if possible.
+    pub fn set_branched_to_exit(&mut self) {
+        match self {
+            Self::If(frame) => frame.exit_is_branched_to = true,
+            Self::Block(frame) => frame.is_branched_to = true,
+            Self::Loop(frame) => {
+                // A loop exit block is always branched to so we don't store state.
+                ()
+            }
+            Self::Body(_) => {
+                // Branching to the outermost implicit label (function body)
+                // is similar to a return statement.
+                ()
+            }
         }
     }
 }
