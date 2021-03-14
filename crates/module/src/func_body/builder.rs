@@ -623,6 +623,9 @@ impl<'a> FunctionBuilder<'a> {
                     // we have to check if the block parameter user is now trivial as well.
                     self.try_remove_trivial_param(p)?;
                 }
+                ValueUser::Edge(e) => {
+                    self.replace_value_for_edge(e, param, equivalent);
+                }
             };
         }
         Ok(equivalent)
@@ -756,6 +759,47 @@ impl<'a> FunctionBuilder<'a> {
         let value_user = ValueUser::Instr(instr);
         if is_user {
             // Register the instruction as user of the
+            // new value if it was a user of the old one.
+            self.ctx.value_users[with_value].insert(value_user);
+            debug_assert!(
+                self.ctx.value_users[with_value].contains(&value_user)
+            );
+        }
+        debug_assert!(
+            !self.ctx.value_users[replace_value].contains(&value_user)
+        );
+        is_user
+    }
+
+    /// Replaces all occurrences of `replace_value` with `with_value` for the edge.
+    ///
+    /// The edge is meant to be a user of `replace_value` if it refers to it
+    /// via its arguments. After this procedure the edge will no longer be a user
+    /// of `replace_value` and instead be a user of `with_value`.
+    ///
+    /// Naturally `replace_user` and `with_value` must be distinct values.
+    ///
+    /// # Note
+    ///
+    /// - This also updates value users on the fly if replacements took place.
+    /// - Returns `true` if an actual replacement took place.
+    fn replace_value_for_edge(
+        &mut self,
+        edge: Edge,
+        replace_value: Value,
+        with_value: Value,
+    ) -> bool {
+        debug_assert_ne!(replace_value, with_value);
+        let mut is_user = false;
+        for arg in &mut self.ctx.edge_args[edge] {
+            if *arg == replace_value {
+                *arg = with_value;
+                is_user = true;
+            }
+        }
+        let value_user = ValueUser::Edge(edge);
+        if is_user {
+            // Register the edge as user of the
             // new value if it was a user of the old one.
             self.ctx.value_users[with_value].insert(value_user);
             debug_assert!(

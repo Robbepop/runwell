@@ -1351,6 +1351,9 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         debug_assert!(self.builder.ctx.edge_args[edge].is_empty());
         self.builder.ctx.edge_args[edge].extend(args);
         self.builder.ctx.block_edges[destination].push(edge);
+        for &arg in &self.builder.ctx.edge_args[edge] {
+            self.builder.ctx.value_users[arg].insert(ValueUser::Edge(edge));
+        }
         Ok(edge)
     }
 }
