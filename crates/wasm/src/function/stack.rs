@@ -36,6 +36,16 @@ impl ValueStack {
         self.stack.push(ValueEntry { value, ty });
     }
 
+    /// Extends the value stack by the given iterator of pairs of values and types.
+    pub fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = (Value, Type)>,
+    {
+        self.stack.extend(
+            iter.into_iter().map(|(value, ty)| ValueEntry { value, ty }),
+        )
+    }
+
     /// Pops a value from the stack or returns an error if not possible.
     fn pop_impl(
         &mut self,
