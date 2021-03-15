@@ -37,7 +37,33 @@ pub enum ControlFlowFrame {
 /// control stack but once at the beginning.
 #[derive(Debug, Copy, Clone)]
 pub struct FunctionBodyFrame {
+    /// This is equal to the function type of the enclosing function.
+    ///
+    /// # Note
+    ///
+    /// The `block_type` does not reflect the signature of the `exit_block`
+    /// as it is the case for the other frames. Instead this information
+    /// is mainly used to communicate the number of return values that the
+    /// final generated `return` instruction is going to yield back.
     pub block_type: WasmBlockType,
+    /// The block that is branched to upon encountering `End` operator.
+    pub exit_block: Block,
+    /// Is `true` if there is at least one branch to this control frame.
+    pub is_branched_to: bool,
+}
+
+impl FunctionBodyFrame {
+    /// Creates a new function body control frame.
+    pub fn new(
+        block_type: WasmBlockType,
+        exit_block: Block,
+    ) -> Self {
+        Self {
+            block_type,
+            exit_block,
+            is_branched_to: false,
+        }
+    }
 }
 
 /// Control flow frame for a Wasm `Block`.
@@ -189,7 +215,7 @@ impl ControlFlowFrame {
             Self::If(frame) => &frame.block_type,
             Self::Block(frame) => &frame.block_type,
             Self::Loop(frame) => &frame.block_type,
-            Self::Body(frame) => &frame.block_type,
+            Self::Body(frame) => &WasmBlockType::Empty,
         };
         block_type.inputs(res)
     }
@@ -220,11 +246,7 @@ impl ControlFlowFrame {
             Self::If(frame) => frame.exit_block,
             Self::Block(frame) => frame.following_block,
             Self::Loop(frame) => frame.loop_exit,
-            Self::Body(_) => {
-                unreachable!(
-                    "a function body control frame cannot have following code"
-                )
-            }
+            Self::Body(frame) => frame.exit_block,
         }
     }
 
@@ -239,11 +261,7 @@ impl ControlFlowFrame {
             Self::If(frame) => frame.exit_block,
             Self::Block(frame) => frame.following_block,
             Self::Loop(frame) => frame.loop_header,
-            Self::Body(_) => {
-                unreachable!(
-                    "a function body control frame cannot have a branch destination"
-                )
-            }
+            Self::Body(frame) => frame.exit_block,
         }
     }
 
@@ -301,7 +319,7 @@ impl ControlFlowFrame {
                 // Therefore this is always `false`.
                 false
             }
-            Self::Body(_) => false,
+            Self::Body(frame) => frame.is_branched_to,
         }
     }
 
@@ -313,10 +331,7 @@ impl ControlFlowFrame {
             Self::Loop(frame) => {
                 // A loop exit block is always branched to so we don't store state.
             }
-            Self::Body(_) => {
-                // Branching to the outermost implicit label (function body)
-                // is similar to a return statement.
-            }
+            Self::Body(frame) => frame.is_branched_to = true,
         }
     }
 }
