@@ -107,7 +107,7 @@ pub struct IfControlFrame {
     /// The value stack size upon entering the control frame.
     pub original_stack_size: usize,
     /// Is `true` if there is at least one branch to this control frame.
-    pub exit_is_branched_to: bool,
+    pub is_branched_to: bool,
     /// The block that contains the code after the if-then-else instructions.
     pub exit_block: Block,
     /// Used to establish the else block when `Else` operator is encountered.
@@ -140,7 +140,7 @@ impl IfControlFrame {
             exit_block,
             else_data,
             head_is_reachable,
-            exit_is_branched_to: false,
+            is_branched_to: false,
             consequent_ends_reachable: None,
         }
     }
@@ -293,7 +293,7 @@ impl ControlFlowFrame {
     #[allow(dead_code)]
     pub fn exit_is_branched_to(&self) -> bool {
         match self {
-            Self::If(frame) => frame.exit_is_branched_to,
+            Self::If(frame) => frame.is_branched_to,
             Self::Block(frame) => frame.is_branched_to,
             Self::Loop(frame) => {
                 // A branch to a loop control frame will always branch
@@ -308,7 +308,7 @@ impl ControlFlowFrame {
     /// Tells the frame that it has been branched to if possible.
     pub fn set_branched_to_exit(&mut self) {
         match self {
-            Self::If(frame) => frame.exit_is_branched_to = true,
+            Self::If(frame) => frame.is_branched_to = true,
             Self::Block(frame) => frame.is_branched_to = true,
             Self::Loop(frame) => {
                 // A loop exit block is always branched to so we don't store state.
