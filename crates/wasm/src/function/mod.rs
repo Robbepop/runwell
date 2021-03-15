@@ -87,7 +87,8 @@ impl<'a, 'b> fmt::Debug for FunctionBodyTranslator<'a, 'b> {
             .field("func", &self.func)
             .field("res", &self.res)
             .field("builder", &self.builder)
-            .field("stack", &self.value_stack)
+            .field("value_stack", &self.value_stack)
+            .field("control_stack", &self.control_stack)
             .finish()
     }
 }
