@@ -141,7 +141,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         Ok(())
     }
 
-    /// Initializes the stack of blocks to contain the Runwell entry block.
+    /// Initializes the control flow frames to contain the function body frame.
     fn initialize_entry_block(&mut self) -> Result<(), Error> {
         let entry_block_type =
             self.res.get_raw_func_type(self.func).unwrap_or_else(|| {
@@ -150,10 +150,17 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     self.func
                 )
             });
+        // The `exit_block` is the block that is to be branched to
+        // when encountering a branch instruction to the function body
+        // control frame. At the end of the Wasm translation if the
+        // block was branched to it is going to contain the function's
+        // final return instruction.
+        let exit_block = self.builder.create_block()?;
         self.control_stack.push_frame(ControlFlowFrame::Body(
-            FunctionBodyFrame {
-                block_type: WasmBlockType::from(entry_block_type),
-            },
+            FunctionBodyFrame::new(
+                WasmBlockType::from(entry_block_type),
+                exit_block,
+            )
         ));
         Ok(())
     }
