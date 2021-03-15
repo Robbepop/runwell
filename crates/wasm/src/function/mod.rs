@@ -16,7 +16,6 @@
 
 #![allow(unused_variables)]
 
-mod blocks;
 mod control;
 mod error;
 mod operator;
@@ -32,7 +31,6 @@ use self::control::{
 };
 pub use self::error::TranslateError;
 pub(self) use self::{
-    blocks::{Blocks, WasmBlock},
     control::{ControlFlowStack, ElseData},
     stack::ValueStack,
 };
@@ -76,8 +74,6 @@ struct FunctionBodyTranslator<'a, 'b> {
     builder: FunctionBuilder<'b>,
     /// The emulated Wasm stack to translate the Wasm stack machine.
     value_stack: ValueStack,
-    /// The emulated Wasm stack of control blocks.
-    blocks: Blocks,
     /// The stack of control flow frames.
     control_stack: ControlFlowStack,
     /// Determines if the current control flow is reachable.
@@ -92,7 +88,6 @@ impl<'a, 'b> fmt::Debug for FunctionBodyTranslator<'a, 'b> {
             .field("res", &self.res)
             .field("builder", &self.builder)
             .field("stack", &self.value_stack)
-            .field("blocks", &self.blocks)
             .finish()
     }
 }
@@ -116,7 +111,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             res,
             builder: FunctionBody::build(func, res),
             value_stack: Default::default(),
-            blocks: Default::default(),
             control_stack: Default::default(),
             reachable: true,
         }
@@ -155,11 +149,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     self.func
                 )
             });
-        let entry_block = WasmBlock::with_func_type(
-            self.builder.current_block()?,
-            entry_block_type,
-        );
-        self.blocks.push_block(entry_block);
         self.control_stack.push_frame(ControlFlowFrame::Body(
             FunctionBodyFrame {
                 block_type: WasmBlockType::from(entry_block_type),
