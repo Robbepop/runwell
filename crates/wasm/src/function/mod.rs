@@ -281,7 +281,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         kind: ControlFrameKind,
         block_type: WasmBlockType,
-    ) -> Result<(), Error> {
+    ) {
         let block_inputs = block_type.inputs(&self.res);
         self.control_stack.push_frame(ControlFlowFrame::Unreachable(
             UnreachableControlFrame::new(
@@ -290,6 +290,5 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 kind,
             ),
         ));
-        Ok(())
     }
 }

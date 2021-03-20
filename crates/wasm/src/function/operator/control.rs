@@ -80,21 +80,21 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 self.push_unreachable_control_frame(
                     ControlFrameKind::If,
                     block_type,
-                )?;
+                );
             }
             Operator::Block { ty } => {
                 let block_type = WasmBlockType::try_from(*ty)?;
                 self.push_unreachable_control_frame(
                     ControlFrameKind::Block,
                     block_type,
-                )?;
+                );
             }
             Operator::Loop { ty } => {
                 let block_type = WasmBlockType::try_from(*ty)?;
                 self.push_unreachable_control_frame(
                     ControlFrameKind::Loop,
                     block_type,
-                )?;
+                );
             }
             Operator::Else => {
                 let any_frame = self.control_stack.last_mut();
