@@ -197,13 +197,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             instruction.into(),
             func_type.outputs(),
         )?;
-        let call_instruction = match &self.builder.ctx.instrs[instr] {
-            Instruction::Call(call_instruction) => call_instruction,
-            _ => panic!("encountered unexpected instruction kind"),
-        };
-        for param in call_instruction.params().iter().copied() {
-            self.builder.ctx.value_users[param].insert(ValueUser::Instr(instr));
-        }
         Ok(instr)
     }
 
@@ -231,15 +224,6 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         // We have to query the type of the function `func` in the store.
         // Currently we simply use `bool` as return type for all functions.
         let instr = self.append_instr(instruction)?;
-        let call_instruction = match &self.builder.ctx.instrs[instr] {
-            Instruction::Terminal(TerminalInstr::TailCall(
-                call_instruction,
-            )) => call_instruction,
-            _ => panic!("encountered unexpected instruction kind"),
-        };
-        for param in call_instruction.params().iter().copied() {
-            self.builder.ctx.value_users[param].insert(ValueUser::Instr(instr));
-        }
         Ok(instr)
     }
 
