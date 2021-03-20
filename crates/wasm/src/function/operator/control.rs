@@ -438,11 +438,19 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         if self.builder.is_block_reachable(current)
         // || !builder.is_pristine()
         {
+            let outputs = frame.outputs(&self.res);
             let len_outputs = frame.outputs(&self.res).len();
             let output_args = self.value_stack.peek_n(len_outputs)?;
-            self.builder
-                .ins()?
-                .br(next_block, output_args.map(|entry| entry.value))?;
+            if frame.is_func_body() {
+                // Ending the function body label is equal to a return.
+                let return_args = output_args.map(|entry| entry.value);
+                self.builder.ins()?.return_values(return_args)?;
+                self.reachable = false;
+            } else {
+                self.builder
+                    .ins()?
+                    .br(next_block, output_args.map(|entry| entry.value))?;
+            }
             // You might expect that if we just finished an `if` block that
             // didn't have a corresponding `else` block, then we would clean
             // up our duplicate set of parameters that we pushed earlier
