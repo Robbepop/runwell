@@ -1014,8 +1014,10 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Ensures that all basic blocks are filled and returns an `Error` if not.
     fn ensure_all_blocks_filled(&self) -> Result<(), Error> {
-        let is_block_unfilled =
-            |block: &Block| -> bool { !self.ctx.block_filled.get(*block) };
+        let is_block_unfilled = |block: &Block| -> bool {
+            self.is_block_reachable(*block)
+                && !self.ctx.block_filled.get(*block)
+        };
         let len_unfilled_blocks =
             self.ctx.blocks.indices().filter(is_block_unfilled).count();
         if len_unfilled_blocks > 0 {
