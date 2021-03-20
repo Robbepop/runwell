@@ -961,6 +961,18 @@ impl<'a> FunctionBuilder<'a> {
         Ok(InstructionBuilder::new(self))
     }
 
+    /// Seals all remaining unsealed blocks.
+    fn seal_all_blocks(&mut self) -> Result<(), Error> {
+        let blocks = self.ctx.blocks.indices().collect::<Vec<_>>();
+        for block in blocks {
+            if !self.ctx.block_sealed.get(block) {
+                // The block has not yet been sealed.
+                self.seal_block(block)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Finalizes construction of the built function.
     ///
     /// Returns the built function.
@@ -970,6 +982,7 @@ impl<'a> FunctionBuilder<'a> {
     /// If not all basic blocks in the function are sealed and filled.
     pub fn finalize(mut self) -> Result<FunctionBody, Error> {
         self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        self.seal_all_blocks()?;
         self.ensure_all_blocks_sealed()?;
         self.ensure_all_blocks_filled()?;
 
