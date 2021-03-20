@@ -31,13 +31,13 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let to_type = to_type.into();
         assert_eq!(from_type.bit_width(), to_type.bit_width());
         let source = self.value_stack.pop1()?;
-        assert_eq!(source.ty, from_type);
-        let result = self.builder.ins()?.reinterpret(
-            from_type,
-            to_type,
-            source.value,
-        )?;
-        self.value_stack.push(result, to_type);
+        let source_type = self.builder.value_type(source);
+        assert_eq!(source_type, from_type);
+        let result = self
+            .builder
+            .ins()?
+            .reinterpret(from_type, to_type, source)?;
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -55,7 +55,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let ty = ty.into();
         assert_eq!(const_value.ty(), ty);
         let result = self.builder.ins()?.constant(const_value)?;
-        self.value_stack.push(result, ty);
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -65,26 +65,28 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         required_ty: Option<runwell::Type>,
     ) -> Result<(), Error> {
         let (if_true, if_false, condition) = self.value_stack.pop3()?;
+        let true_type = self.builder.value_type(if_true);
+        let false_type = self.builder.value_type(if_true);
         assert_eq!(
-            if_true.ty, if_false.ty,
+            true_type, false_type,
             "due to validation both types must be equal"
         );
         if let Some(required_ty) = required_ty {
-            assert_eq!(if_true.ty, required_ty);
+            assert_eq!(true_type, required_ty);
         }
-        let ty = if_true.ty;
+        let ty = true_type;
         let condition_i1 = self.builder.ins()?.itruncate(
             IntType::I32,
             IntType::I1,
-            condition.value,
+            condition,
         )?;
         let result = self.builder.ins()?.bool_select(
             ty,
             condition_i1,
-            if_true.value,
-            if_false.value,
+            if_true,
+            if_false,
         )?;
-        self.value_stack.push(result, ty);
+        self.value_stack.push(result);
         Ok(())
     }
 }

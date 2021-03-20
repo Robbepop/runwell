@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::super::FunctionBodyTranslator;
-use crate::{function::stack::ValueEntry, Error, TranslateError};
+use crate::{Error, TranslateError};
 use entity::RawIdx;
 use ir::{
     primitive::{self as runwell, IntType, Mem, Value},
@@ -29,12 +29,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     fn build_heap_addr(
         &mut self,
         memarg: wasmparser::MemoryImmediate,
-        pos: ValueEntry,
+        pos: Value,
         ty: runwell::Type,
     ) -> Result<Value, Error> {
-        assert_eq!(pos.ty, IntType::I32.into());
+        assert_eq!(self.builder.value_type(pos), IntType::I32.into());
         let mem = Mem::from_raw(RawIdx::from_u32(memarg.memory));
-        let pos = pos.value;
         let alignment_bytes = 2_u32.pow(ty.alignment() as u32);
         let ptr = match memarg.offset.checked_add(alignment_bytes) {
             Some(size) => {
@@ -72,7 +71,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let ptr = self.build_heap_addr(memarg, pos, result_type)?;
         let offset = ImmU32::from(memarg.offset);
         let result = self.builder.ins()?.load(ptr, offset, result_type)?;
-        self.value_stack.push(result, result_type);
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -101,10 +100,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         stored_type: runwell::Type,
     ) -> Result<(), Error> {
         let (pos, stored_value) = self.value_stack.pop2()?;
-        assert_eq!(stored_value.ty, stored_type);
+        assert_eq!(self.builder.value_type(stored_value), stored_type);
         let ptr = self.build_heap_addr(memarg, pos, stored_type)?;
         let offset = ImmU32::from(memarg.offset);
-        let stored_value = stored_value.value;
         self.builder
             .ins()?
             .store(ptr, offset, stored_value, stored_type)?;

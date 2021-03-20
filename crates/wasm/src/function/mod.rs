@@ -208,10 +208,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             });
         let block_type = WasmBlockType::from(entry_block_type);
         let len_outputs = block_type.outputs(&self.res).len();
-        let outputs = self
-            .value_stack
-            .pop_n(len_outputs)?
-            .map(|entry| entry.value);
+        let outputs = self.value_stack.pop_n(len_outputs)?;
         self.builder.ins()?.return_values(outputs)?;
         Ok(())
     }
@@ -264,8 +261,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         // `Operator::Else`.
         // for i in (self.stack.len() - len_inputs)..self.stack.len() {
         for n in (0..block_inputs.len()).rev() {
-            let entry = self.value_stack.last_n(n)?;
-            self.value_stack.push(entry.value, entry.ty);
+            let value = self.value_stack.last_n(n)?;
+            self.value_stack.push(value);
         }
         self.control_stack.push_frame(ControlFlowFrame::If(
             IfControlFrame::new(

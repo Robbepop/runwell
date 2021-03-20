@@ -47,7 +47,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: ShiftIntOp,
     ) -> Result<(), Error> {
         let (source, shift_amount) = self.value_stack.pop2()?;
-        assert_eq!(source.ty, int_type.into());
+        assert_eq!(self.builder.value_type(source), int_type.into());
         // Wasm expects both operands for shift operations to be of the same
         // type while Runwell always expects the shift amount to be of type
         // `i32`. Because of this we need to truncate in case the shift amount
@@ -56,12 +56,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             self.builder.ins()?.itruncate(
                 IntType::I64,
                 IntType::I32,
-                shift_amount.value,
+                shift_amount,
             )?
         } else {
-            shift_amount.value
+            shift_amount
         };
-        let source = source.value;
+        let source = source;
         let ins = self.builder.ins()?;
         let result = match op {
             ShiftIntOp::Shl => ins.ishl(int_type, source, shift_amount)?,
@@ -70,7 +70,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             ShiftIntOp::Rotl => ins.irotl(int_type, source, shift_amount)?,
             ShiftIntOp::Rotr => ins.irotr(int_type, source, shift_amount)?,
         };
-        self.value_stack.push(result, int_type.into());
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -81,16 +81,16 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: UnaryIntOp,
     ) -> Result<(), Error> {
         let source = self.value_stack.pop1()?;
-        let actual_int_ty = Self::extract_int_type(source.ty);
+        let source_type = self.builder.value_type(source);
+        let actual_int_ty = Self::extract_int_type(source_type);
         assert_eq!(actual_int_ty, int_type);
         let ins = self.builder.ins()?;
-        let source = source.value;
         let result = match op {
             UnaryIntOp::LeadingZeros => ins.iclz(int_type, source)?,
             UnaryIntOp::TrailingZeros => ins.ictz(int_type, source)?,
             UnaryIntOp::PopCount => ins.ipopcnt(int_type, source)?,
         };
-        self.value_stack.push(result, int_type.into());
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -101,12 +101,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         op: BinaryIntOp,
     ) -> Result<(), Error> {
         let (lhs, rhs) = self.value_stack.pop2()?;
-        assert_eq!(lhs.ty, rhs.ty);
-        let actual_int_ty = Self::extract_int_type(lhs.ty);
+        let lhs_type = self.builder.value_type(lhs);
+        let rhs_type = self.builder.value_type(rhs);
+        assert_eq!(lhs_type, rhs_type);
+        let actual_int_ty = Self::extract_int_type(lhs_type);
         assert_eq!(actual_int_ty, int_ty);
         let ins = self.builder.ins()?;
-        let lhs = lhs.value;
-        let rhs = rhs.value;
         let result = match op {
             BinaryIntOp::Add => ins.iadd(int_ty, lhs, rhs)?,
             BinaryIntOp::Sub => ins.isub(int_ty, lhs, rhs)?,
@@ -119,7 +119,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             BinaryIntOp::Or => ins.ior(int_ty, lhs, rhs)?,
             BinaryIntOp::Xor => ins.ixor(int_ty, lhs, rhs)?,
         };
-        self.value_stack.push(result, int_ty.into());
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -129,7 +129,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         int_type: IntType,
     ) -> Result<(), Error> {
         let source = self.value_stack.pop1()?;
-        let actual_int_type = Self::extract_int_type(source.ty);
+        let source_type = self.builder.value_type(source);
+        let actual_int_type = Self::extract_int_type(source_type);
         assert_eq!(actual_int_type, int_type);
         let zero_const: runwell::Const = match int_type {
             IntType::I32 => IntConst::I32(0).into(),
@@ -145,7 +146,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let result = self.builder.ins()?.icmp(
             int_type,
             CompareIntOp::Eq,
-            source.value,
+            source,
             zero,
         )?;
         self.translate_bool_to_i32(result)?;
@@ -159,13 +160,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         int_type: IntType,
     ) -> Result<(), Error> {
         let (lhs, rhs) = self.value_stack.pop2()?;
-        assert_eq!(lhs.ty, rhs.ty);
-        let actual_int_type = Self::extract_int_type(lhs.ty);
+        let lhs_type = self.builder.value_type(lhs);
+        let rhs_type = self.builder.value_type(rhs);
+        assert_eq!(lhs_type, rhs_type);
+        let actual_int_type = Self::extract_int_type(lhs_type);
         assert_eq!(actual_int_type, int_type);
-        let result = self
-            .builder
-            .ins()?
-            .icmp(int_type, op, lhs.value, rhs.value)?;
+        let result = self.builder.ins()?.icmp(int_type, op, lhs, rhs)?;
         self.translate_bool_to_i32(result)?;
         Ok(())
     }
@@ -184,13 +184,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let src_type = src_type.into();
         let dst_type = dst_type.into();
         let source = self.value_stack.pop1()?;
-        assert_eq!(source.ty, src_type.into());
-        let source = source.value;
+        let source_type = self.builder.value_type(source);
+        assert_eq!(source_type, src_type.into());
+        let source = source;
         let result = self
             .builder
             .ins()?
             .iextend(src_type, dst_type, source, src_signed)?;
-        self.value_stack.push(result, dst_type.into());
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -207,11 +208,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let src_type = src_type.into();
         let dst_type = dst_type.into();
         let source = self.value_stack.pop1()?;
-        assert_eq!(source.ty, src_type.into());
-        let source = source.value;
+        let source_type = self.builder.value_type(source);
+        assert_eq!(source_type, src_type.into());
+        let source = source;
         let result =
             self.builder.ins()?.itruncate(src_type, dst_type, source)?;
-        self.value_stack.push(result, dst_type.into());
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -229,13 +231,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let src_type = src_type.into();
         let dst_type = dst_type.into();
         let source = self.value_stack.pop1()?;
-        assert_eq!(source.ty, src_type.into());
-        let source = source.value;
+        let source_type = self.builder.value_type(source);
+        assert_eq!(source_type, src_type.into());
+        let source = source;
         let result = self
             .builder
             .ins()?
             .int_to_float(src_signed, src_type, dst_type, source)?;
-        self.value_stack.push(result, dst_type.into());
+        self.value_stack.push(result);
         Ok(())
     }
 }

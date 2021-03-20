@@ -15,37 +15,28 @@
 use super::control::ControlFlowFrame;
 use crate::{Error, TranslateError};
 use core::slice;
-use ir::primitive::{Type, Value};
+use ir::primitive::Value;
 use module::ModuleResources;
 use std::{iter::FusedIterator, vec::Drain};
 
 /// Stack of values used for the Wasm emulation stack.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct ValueStack {
-    stack: Vec<ValueEntry>,
-}
-
-/// A Runwell value on the stack and its associated type.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct ValueEntry {
-    pub value: Value,
-    pub ty: Type,
+    stack: Vec<Value>,
 }
 
 impl ValueStack {
     /// Pushes another value onto the stack.
-    pub fn push(&mut self, value: Value, ty: Type) {
-        self.stack.push(ValueEntry { value, ty });
+    pub fn push(&mut self, value: Value) {
+        self.stack.push(value);
     }
 
     /// Extends the value stack by the given iterator of pairs of values and types.
     pub fn extend<T>(&mut self, iter: T)
     where
-        T: IntoIterator<Item = (Value, Type)>,
+        T: IntoIterator<Item = Value>,
     {
-        self.stack.extend(
-            iter.into_iter().map(|(value, ty)| ValueEntry { value, ty }),
-        )
+        self.stack.extend(iter.into_iter())
     }
 
     /// Pops a value from the stack or returns an error if not possible.
@@ -53,21 +44,21 @@ impl ValueStack {
         &mut self,
         expected: u32,
         found: u32,
-    ) -> Result<ValueEntry, TranslateError> {
+    ) -> Result<Value, TranslateError> {
         self.stack
             .pop()
             .ok_or(TranslateError::MissingStackValue { expected, found })
     }
 
     /// Pops the last inserted value from the stack.
-    pub fn pop1(&mut self) -> Result<ValueEntry, TranslateError> {
+    pub fn pop1(&mut self) -> Result<Value, TranslateError> {
         self.pop_impl(1, 0)
     }
 
     /// Pops the last two inserted value from the stack.
     ///
     /// Returns the values in reversed order in which they have been popped.
-    pub fn pop2(&mut self) -> Result<(ValueEntry, ValueEntry), TranslateError> {
+    pub fn pop2(&mut self) -> Result<(Value, Value), TranslateError> {
         let rhs = self.pop_impl(2, 0)?;
         let lhs = self.pop_impl(2, 1)?;
         Ok((lhs, rhs))
@@ -76,9 +67,7 @@ impl ValueStack {
     /// Pops the last three inserted value from the stack.
     ///
     /// Returns the values in reversed order in which they have been popped.
-    pub fn pop3(
-        &mut self,
-    ) -> Result<(ValueEntry, ValueEntry, ValueEntry), TranslateError> {
+    pub fn pop3(&mut self) -> Result<(Value, Value, Value), TranslateError> {
         let trd = self.pop_impl(3, 0)?;
         let snd = self.pop_impl(3, 1)?;
         let fst = self.pop_impl(3, 2)?;
@@ -88,10 +77,7 @@ impl ValueStack {
     /// Pops the last `n` inserted values from the stack.
     ///
     /// The values are popped in the order in which they have been pushed.
-    pub fn pop_n(
-        &mut self,
-        n: usize,
-    ) -> Result<Drain<ValueEntry>, TranslateError> {
+    pub fn pop_n(&mut self, n: usize) -> Result<Drain<Value>, TranslateError> {
         let len_stack = self.stack.len();
         if n > len_stack {
             return Err(TranslateError::MissingStackValue {
@@ -106,7 +92,7 @@ impl ValueStack {
     ///
     /// The 0th last value is equal to the last value.
     #[allow(dead_code)]
-    pub fn last_n(&self, n: usize) -> Result<ValueEntry, TranslateError> {
+    pub fn last_n(&self, n: usize) -> Result<Value, TranslateError> {
         let len_stack = self.stack.len();
         if n >= len_stack {
             return Err(TranslateError::MissingStackValue {
@@ -132,7 +118,7 @@ impl ValueStack {
     }
 
     /// Peeks the last inserted value on the stack.
-    pub fn peek1(&self) -> Result<ValueEntry, TranslateError> {
+    pub fn peek1(&self) -> Result<Value, TranslateError> {
         self.stack
             .last()
             .copied()
@@ -195,12 +181,12 @@ impl ValueStack {
 /// Iterator yielding some amount of the top most stack values.
 #[derive(Debug, Clone)]
 pub struct PeekIter<'a> {
-    iter: slice::Iter<'a, ValueEntry>,
+    iter: slice::Iter<'a, Value>,
 }
 
 impl<'a> PeekIter<'a> {
     /// Creates a new peek iterator.
-    fn new(slice: &'a [ValueEntry]) -> Self {
+    fn new(slice: &'a [Value]) -> Self {
         Self { iter: slice.iter() }
     }
 
@@ -209,13 +195,13 @@ impl<'a> PeekIter<'a> {
     /// This has the same lifetime as the original slice, and so the iterator
     /// can continue to be used while this exists.
     #[allow(dead_code)]
-    pub fn as_slice(&self) -> &'a [ValueEntry] {
+    pub fn as_slice(&self) -> &'a [Value] {
         self.iter.as_slice()
     }
 }
 
 impl<'a> Iterator for PeekIter<'a> {
-    type Item = ValueEntry;
+    type Item = Value;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()

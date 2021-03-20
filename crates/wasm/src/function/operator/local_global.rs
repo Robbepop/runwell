@@ -25,8 +25,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<(), Error> {
         let var = Variable::from_raw(RawIdx::from_u32(local_index));
         let result = self.builder.read_var(var)?;
-        let result_type = self.builder.var_type(var)?;
-        self.value_stack.push(result, result_type);
+        self.value_stack.push(result);
         Ok(())
     }
 
@@ -37,8 +36,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<(), Error> {
         let var = Variable::from_raw(RawIdx::from_u32(local_index));
         let source = self.value_stack.pop1()?;
-        assert_eq!(self.builder.var_type(var)?, source.ty);
-        self.builder.write_var(var, source.value)?;
+        assert_eq!(
+            self.builder.var_type(var)?,
+            self.builder.value_type(source)
+        );
+        self.builder.write_var(var, source)?;
         Ok(())
     }
 
@@ -49,8 +51,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<(), Error> {
         let var = Variable::from_raw(RawIdx::from_u32(local_index));
         let source = self.value_stack.peek1()?;
-        assert_eq!(self.builder.var_type(var)?, source.ty);
-        self.builder.write_var(var, source.value)?;
+        assert_eq!(
+            self.builder.var_type(var)?,
+            self.builder.value_type(source)
+        );
+        self.builder.write_var(var, source)?;
         Ok(())
     }
 

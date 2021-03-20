@@ -28,22 +28,17 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             panic!("function type for {} must exist due to validation", func)
         });
         let len_inputs = func_type.inputs().len();
-        let params = self
-            .value_stack
-            .pop_n(len_inputs)
-            .unwrap_or_else(|_| {
-                panic!(
-                    "can expect {} arguments on the stack due to validation",
-                    len_inputs
-                )
-            })
-            .map(|entry| entry.value);
+        let params = self.value_stack.pop_n(len_inputs).unwrap_or_else(|_| {
+            panic!(
+                "can expect {} arguments on the stack due to validation",
+                len_inputs
+            )
+        });
         let instr = self.builder.ins()?.call(func, params)?;
         for (n, &output_value) in
             self.builder.instr_values(instr)?.iter().enumerate()
         {
-            let output_type = func_type.outputs()[n];
-            self.value_stack.push(output_value, output_type);
+            self.value_stack.push(output_value);
         }
         Ok(())
     }

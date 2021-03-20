@@ -191,8 +191,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     let block_parameters = builder
                         .block_parameters(following_code)
                         .iter()
-                        .copied()
-                        .map(|value| (value, builder.value_type(value)));
+                        .copied();
                     value_stack.extend(block_parameters);
                     self.reachable = true;
                 }
@@ -239,21 +238,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let loop_head = self.block_with_params(inputs.iter().copied())?;
         let loop_exit = self.block_with_params(outputs.iter().copied())?;
         let args = self.value_stack.peek_n(inputs.len())?;
-        self.builder
-            .ins()?
-            .br(loop_head, args.map(|entry| entry.value))?;
+        self.builder.ins()?.br(loop_head, args)?;
         self.push_control_loop(loop_head, loop_exit, block_type);
 
         // Pop the initial `Block` actuals and replace them with the `Block`'s
         // params since control flow joins at the top of the loop.
         self.value_stack.pop_n(inputs.len())?;
-        self.value_stack.extend(
-            self.builder
-                .block_parameters(loop_head)
-                .iter()
-                .copied()
-                .zip(inputs.iter().copied()),
-        );
+        self.value_stack
+            .extend(self.builder.block_parameters(loop_head).iter().copied());
 
         self.builder.switch_to_block(loop_head)?;
         Ok(())
@@ -284,12 +276,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             eq,
             then_block,
             else_block,
-            self.value_stack
-                .peek_n(len_then_args)?
-                .map(|entry| entry.value),
-            self.value_stack
-                .peek_n(len_else_args)?
-                .map(|entry| entry.value),
+            self.value_stack.peek_n(len_then_args)?,
+            self.value_stack.peek_n(len_else_args)?,
         )?;
         Ok(instr)
     }
@@ -306,7 +294,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         ty: wasmparser::TypeOrFuncType,
     ) -> Result<(), Error> {
         let condition = self.value_stack.pop1()?;
-        debug_assert_eq!(condition.ty, IntType::I32.into());
+        let condition_type = self.builder.value_type(condition);
+        debug_assert_eq!(condition_type, IntType::I32.into());
 
         let block_type = WasmBlockType::try_from(ty)?;
         let inputs = block_type.inputs(&self.res);
@@ -322,7 +311,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             // up discovering an `else`, then we will allocate a block for it
             // and go back and patch the jump.
             let branch_instr = self.construct_if_nez(
-                condition.value,
+                condition,
                 then_block,
                 exit_block,
                 0,
@@ -334,7 +323,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             // so we eagerly allocate the `else` block here.
             let else_block = self.block_with_params(inputs.iter().copied())?;
             let branch_instr = self.construct_if_nez(
-                condition.value,
+                condition,
                 then_block,
                 else_block,
                 0,
@@ -382,12 +371,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             ElseData::WithElse { else_block } => {
                 let outputs = frame.block_type.outputs(&self.res);
                 let exit_block = frame.exit_block;
-                self.builder.ins()?.br(
-                    exit_block,
-                    self.value_stack
-                        .pop_n(outputs.len())?
-                        .map(|entry| entry.value),
-                )?;
+                self.builder
+                    .ins()?
+                    .br(exit_block, self.value_stack.pop_n(outputs.len())?)?;
                 else_block
             }
             ElseData::NoElse { branch_instr } => {
@@ -400,12 +386,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                     inputs.iter().copied(),
                 )?;
                 let exit_block = frame.exit_block;
-                self.builder.ins()?.br(
-                    exit_block,
-                    self.value_stack
-                        .pop_n(inputs.len())?
-                        .map(|entry| entry.value),
-                )?;
+                self.builder
+                    .ins()?
+                    .br(exit_block, self.value_stack.pop_n(inputs.len())?)?;
                 self.builder.relink_edge_destination(
                     branch_instr,
                     exit_block,
@@ -443,13 +426,10 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             let output_args = self.value_stack.peek_n(len_outputs)?;
             if frame.is_func_body() {
                 // Ending the function body label is equal to a return.
-                let return_args = output_args.map(|entry| entry.value);
-                self.builder.ins()?.return_values(return_args)?;
+                self.builder.ins()?.return_values(output_args)?;
                 self.reachable = false;
             } else {
-                self.builder
-                    .ins()?
-                    .br(next_block, output_args.map(|entry| entry.value))?;
+                self.builder.ins()?.br(next_block, output_args)?;
             }
             // You might expect that if we just finished an `if` block that
             // didn't have a corresponding `else` block, then we would clean
@@ -472,10 +452,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             ref builder,
             ..
         } = self;
-        let next_block_params = builder
-            .block_parameters(next_block)
-            .iter()
-            .map(|&value| (value, builder.value_type(value)));
+        let next_block_params =
+            builder.block_parameters(next_block).iter().copied();
         value_stack.extend(next_block_params);
         Ok(())
     }
@@ -493,10 +471,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         // We signal that all the code that follows until the next `End` is unreachable.
         frame.set_branched_to_exit();
         let len_return_values = frame.len_branch_args(&self.res);
-        let destination_args = self
-            .value_stack
-            .pop_n(len_return_values)?
-            .map(|entry| entry.value);
+        let destination_args = self.value_stack.pop_n(len_return_values)?;
         self.builder
             .ins()?
             .br(frame.branch_destination(), destination_args)?;
@@ -510,6 +485,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         relative_depth: u32,
     ) -> Result<(), Error> {
         let condition = self.value_stack.pop1()?;
+        let condition_type = self.builder.value_type(condition);
+        assert_eq!(condition_type, IntType::I32.into());
         let frame = self.control_stack.nth_back_mut(relative_depth)?;
         // The values returned by the branch are still available for the reachable
         // code that comes after it.
@@ -518,7 +495,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let then_block = frame.branch_destination();
         let next_block = self.builder.create_block()?;
         self.construct_if_nez(
-            condition.value,
+            condition,
             then_block,
             next_block,
             len_return_values,
@@ -544,10 +521,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     pub(super) fn translate_return(&mut self) -> Result<(), Error> {
         let frame = &mut self.control_stack.first();
         let outputs = frame.outputs(&self.res);
-        let return_args = self
-            .value_stack
-            .pop_n(outputs.len())?
-            .map(|entry| entry.value);
+        let return_args = self.value_stack.pop_n(outputs.len())?;
         self.builder.ins()?.return_values(return_args)?;
         self.reachable = false;
         Ok(())
