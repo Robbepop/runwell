@@ -246,6 +246,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         ));
     }
 
+    /// Pushes a Wasm `if` on the control flow stack.
     fn push_control_if(
         &mut self,
         if_exit: Block,
