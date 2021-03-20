@@ -21,10 +21,12 @@ pub use self::{
     frame::{
         BlockControlFrame,
         ControlFlowFrame,
+        ControlFrameKind,
         ElseData,
         FunctionBodyFrame,
         IfControlFrame,
         LoopControlFrame,
+        UnreachableControlFrame,
     },
     stack::ControlFlowStack,
 };

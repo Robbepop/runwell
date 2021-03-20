@@ -24,9 +24,11 @@ mod stack;
 use self::control::{
     BlockControlFrame,
     ControlFlowFrame,
+    ControlFrameKind,
     FunctionBodyFrame,
     IfControlFrame,
     LoopControlFrame,
+    UnreachableControlFrame,
     WasmBlockType,
 };
 pub use self::error::TranslateError;
@@ -173,12 +175,14 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Parses, validates and translates the Wasm operands into Runwell
     /// function body instructions and basic blocks.
     fn translate_operators(&mut self) -> Result<(), Error> {
+        println!();
         while !self.reader.eof() {
             let offset = self.reader.original_position();
             let op = self.reader.read_operator()?;
             self.validator.op(offset, &op)?;
             self.translate_operator(offset, op)?;
         }
+        println!();
         let offset = self.reader.original_position();
         self.validator.finish(offset)?;
         self.finalize_exit_block()?;
@@ -272,6 +276,23 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 if_exit,
                 else_data,
                 self.reachable,
+            ),
+        ));
+        Ok(())
+    }
+
+    /// Pushes an unreachable Wasm control flow frame to the control flow stack.
+    fn push_unreachable_control_frame(
+        &mut self,
+        kind: ControlFrameKind,
+        block_type: WasmBlockType,
+    ) -> Result<(), Error> {
+        let block_inputs = block_type.inputs(&self.res);
+        self.control_stack.push_frame(ControlFlowFrame::Unreachable(
+            UnreachableControlFrame::new(
+                block_type,
+                self.value_stack.len() - block_inputs.len(),
+                kind,
             ),
         ));
         Ok(())

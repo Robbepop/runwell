@@ -23,6 +23,46 @@ pub enum ControlFlowFrame {
     If(IfControlFrame),
     Block(BlockControlFrame),
     Loop(LoopControlFrame),
+    Unreachable(UnreachableControlFrame),
+}
+
+/// An unreachable control flow frame.
+#[derive(Debug, Copy, Clone)]
+pub struct UnreachableControlFrame {
+    /// The non-SSA input and output types of the unreachable control frame.
+    pub block_type: WasmBlockType,
+    /// The kind of the unreachable control flow frame.
+    pub kind: ControlFrameKind,
+    /// The value stack size upon entering the unreachable control frame.
+    pub original_stack_size: usize,
+}
+
+/// The kind of the unreachable control flow frame.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ControlFrameKind {
+    /// The control flow frame is a Wasm `Block`.
+    Block,
+    /// The control flow frame is a Wasm `If`.
+    If,
+    /// The control flow frame is a Wasm `Loop`.
+    Loop,
+    /// The unique function body control frame.
+    Body,
+}
+
+impl UnreachableControlFrame {
+    /// Creates a new unreachable control flow frame.
+    pub fn new(
+        block_type: WasmBlockType,
+        original_stack_size: usize,
+        kind: ControlFrameKind,
+    ) -> Self {
+        Self {
+            block_type,
+            kind,
+            original_stack_size,
+        }
+    }
 }
 
 /// Control flow frame to guard the entire function body.
@@ -54,10 +94,7 @@ pub struct FunctionBodyFrame {
 
 impl FunctionBodyFrame {
     /// Creates a new function body control frame.
-    pub fn new(
-        block_type: WasmBlockType,
-        exit_block: Block,
-    ) -> Self {
+    pub fn new(block_type: WasmBlockType, exit_block: Block) -> Self {
         Self {
             block_type,
             exit_block,
@@ -119,13 +156,18 @@ impl LoopControlFrame {
         Self {
             block_type,
             original_stack_size,
-            loop_header,
             loop_exit,
+            loop_header,
         }
     }
 }
 
 /// Control flow frame for a Wasm `If`, `Else`, `End` construct.
+///
+/// # Note
+///
+/// The `Then` part is called the consequent whereas the `Else`
+/// part is called the alternative.
 #[derive(Debug, Clone)]
 pub struct IfControlFrame {
     /// The non-SSA input and output types of the control frame.
@@ -138,17 +180,19 @@ pub struct IfControlFrame {
     pub exit_block: Block,
     /// Used to establish the else block when `Else` operator is encountered.
     pub else_data: ElseData,
-    /// Was the head of the `if` reachable?
-    pub head_is_reachable: bool,
-    /// What was the reachability at the end of the consequent?
+    /// What was the reachability at the end of the consequent (then block)?
     ///
     /// This is `None` until we're finished translating the consequent, and
     /// is set to `Some` either by hitting an `else` when we will begin
     /// translating the alternative, or by hitting an `end` in which case
     /// there is no alternative.
-    pub consequent_ends_reachable: Option<bool>,
-    /* Note: no need for `alternative_ends_reachable` because that is just
-     * `state.reachable` when we hit the `end` in the `if .. else .. end`. */
+    ///
+    /// # Note
+    ///
+    /// There is no need for `else_end_is_reachable` because that is just
+    /// the same as the reachable state when we git the `End` operator in the
+    /// `if ... else ... end` frame.
+    pub then_end_is_reachable: Option<bool>,
 }
 
 impl IfControlFrame {
@@ -165,9 +209,8 @@ impl IfControlFrame {
             original_stack_size,
             exit_block,
             else_data,
-            head_is_reachable,
             is_branched_to: false,
-            consequent_ends_reachable: None,
+            then_end_is_reachable: None,
         }
     }
 }
@@ -205,6 +248,16 @@ pub enum ElseData {
 
 /// Helper methods for the control stack objects.
 impl ControlFlowFrame {
+    pub fn kind(&self) -> ControlFrameKind {
+        match self {
+            Self::If(frame) => ControlFrameKind::If,
+            Self::Block(frame) => ControlFrameKind::Block,
+            Self::Loop(frame) => ControlFrameKind::Loop,
+            Self::Body(frame) => ControlFrameKind::Body,
+            Self::Unreachable(frame) => frame.kind,
+        }
+    }
+
     /// Returns the number of input values of the control flow frame.
     pub fn inputs<'a, 'b, 'c>(&'a self, res: &'b ModuleResources) -> &'c [Type]
     where
@@ -216,6 +269,7 @@ impl ControlFlowFrame {
             Self::Block(frame) => &frame.block_type,
             Self::Loop(frame) => &frame.block_type,
             Self::Body(frame) => &WasmBlockType::Empty,
+            Self::Unreachable(frame) => &frame.block_type,
         };
         block_type.inputs(res)
     }
@@ -231,6 +285,7 @@ impl ControlFlowFrame {
             Self::Block(frame) => &frame.block_type,
             Self::Loop(frame) => &frame.block_type,
             Self::Body(frame) => &frame.block_type,
+            Self::Unreachable(frame) => &frame.block_type,
         };
         block_type.outputs(res)
     }
@@ -247,6 +302,11 @@ impl ControlFlowFrame {
             Self::Block(frame) => frame.following_block,
             Self::Loop(frame) => frame.loop_exit,
             Self::Body(frame) => frame.exit_block,
+            Self::Unreachable(frame) => {
+                panic!(
+                "unreachable control flow frames do not have a following code"
+            )
+            }
         }
     }
 
@@ -262,6 +322,9 @@ impl ControlFlowFrame {
             Self::Block(frame) => frame.following_block,
             Self::Loop(frame) => frame.loop_header,
             Self::Body(frame) => frame.exit_block,
+            Self::Unreachable(frame) => panic!(
+                "unreachable control flow frames do not have a branch destination"
+            ),
         }
     }
 
@@ -277,6 +340,7 @@ impl ControlFlowFrame {
             Self::Block(frame) => frame.original_stack_size,
             Self::Loop(frame) => frame.original_stack_size,
             Self::Body(_) => 0,
+            Self::Unreachable(frame) => frame.original_stack_size,
         }
     }
 
@@ -320,6 +384,11 @@ impl ControlFlowFrame {
                 false
             }
             Self::Body(frame) => frame.is_branched_to,
+            Self::Unreachable(frame) => {
+                // An unreachable control flow frame can never be branched
+                // to. Therefore this is always `false`.
+                false
+            }
         }
     }
 
@@ -328,10 +397,13 @@ impl ControlFlowFrame {
         match self {
             Self::If(frame) => frame.is_branched_to = true,
             Self::Block(frame) => frame.is_branched_to = true,
-            Self::Loop(frame) => {
+            Self::Loop(_frame) => {
                 // A loop exit block is always branched to so we don't store state.
             }
             Self::Body(frame) => frame.is_branched_to = true,
+            Self::Unreachable(_frame) => {
+                // An unreachable block cannot be branched to so we don't store state.
+            }
         }
     }
 }
