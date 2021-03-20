@@ -1344,22 +1344,6 @@
 <span id="1341">1341</span>
 <span id="1342">1342</span>
 <span id="1343">1343</span>
-<span id="1344">1344</span>
-<span id="1345">1345</span>
-<span id="1346">1346</span>
-<span id="1347">1347</span>
-<span id="1348">1348</span>
-<span id="1349">1349</span>
-<span id="1350">1350</span>
-<span id="1351">1351</span>
-<span id="1352">1352</span>
-<span id="1353">1353</span>
-<span id="1354">1354</span>
-<span id="1355">1355</span>
-<span id="1356">1356</span>
-<span id="1357">1357</span>
-<span id="1358">1358</span>
-<span id="1359">1359</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -1560,13 +1544,6 @@
             <span class="ident">instruction</span>.<span class="ident">into</span>(),
             <span class="ident">func_type</span>.<span class="ident">outputs</span>(),
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">call_instruction</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>[<span class="ident">instr</span>] {
-            <span class="ident">Instruction</span>::<span class="ident">Call</span>(<span class="ident">call_instruction</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">call_instruction</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;encountered unexpected instruction kind&quot;</span>),
-        };
-        <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="ident">call_instruction</span>.<span class="ident">params</span>().<span class="ident">iter</span>().<span class="ident">copied</span>() {
-            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">param</span>].<span class="ident">insert</span>(<span class="ident">ValueUser</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>));
-        }
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
 
@@ -1594,15 +1571,6 @@
         <span class="comment">// We have to query the type of the function `func` in the store.</span>
         <span class="comment">// Currently we simply use `bool` as return type for all functions.</span>
         <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_instr</span>(<span class="ident">instruction</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">call_instruction</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>[<span class="ident">instr</span>] {
-            <span class="ident">Instruction</span>::<span class="ident">Terminal</span>(<span class="ident">TerminalInstr</span>::<span class="ident">TailCall</span>(
-                <span class="ident">call_instruction</span>,
-            )) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">call_instruction</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;encountered unexpected instruction kind&quot;</span>),
-        };
-        <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="ident">call_instruction</span>.<span class="ident">params</span>().<span class="ident">iter</span>().<span class="ident">copied</span>() {
-            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">param</span>].<span class="ident">insert</span>(<span class="ident">ValueUser</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>));
-        }
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
 
