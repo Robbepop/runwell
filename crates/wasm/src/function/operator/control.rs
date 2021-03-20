@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::super::{ElseData, FunctionBodyTranslator};
+use super::super::{ControlFrameKind, ElseData, FunctionBodyTranslator};
 use crate::{
     function::control::{ControlFlowFrame, WasmBlockType},
     Error,
@@ -24,6 +24,7 @@ use ir::{
     primitive::{Block, Const, IntConst, IntType, Type, Value},
 };
 use module::{builder::FunctionBuilder, primitive::Instr};
+use wasmparser::Operator;
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Creates a new basic block with the given parameters.
@@ -60,6 +61,149 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
 }
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
+    /// Translates a Wasm operator in an unreachable code section.
+    ///
+    /// This requires special treatment in order to track unreachable
+    /// control flow frames so that we are able to resolve them correctly.
+    /// Some control flow operators such as `Else` and `End` also might
+    /// might end the unreachable code section.
+    ///
+    /// All other Wasm operators are silently dropped.
+    pub(super) fn translate_unreachable_operator(
+        &mut self,
+        op: &Operator,
+    ) -> Result<(), Error> {
+        debug_assert!(!self.reachable);
+        match op {
+            Operator::If { ty } => {
+                let block_type = WasmBlockType::try_from(*ty)?;
+                self.push_unreachable_control_frame(
+                    ControlFrameKind::If,
+                    block_type,
+                )?;
+            }
+            Operator::Block { ty } => {
+                let block_type = WasmBlockType::try_from(*ty)?;
+                self.push_unreachable_control_frame(
+                    ControlFrameKind::Block,
+                    block_type,
+                )?;
+            }
+            Operator::Loop { ty } => {
+                let block_type = WasmBlockType::try_from(*ty)?;
+                self.push_unreachable_control_frame(
+                    ControlFrameKind::Loop,
+                    block_type,
+                )?;
+            }
+            Operator::Else => {
+                let any_frame = self.control_stack.last_mut();
+                assert_eq!(
+                    any_frame.kind(),
+                    ControlFrameKind::If,
+                    "missing parent `If` frame upon encountering `Else`"
+                );
+                let frame = match any_frame {
+                    ControlFlowFrame::If(frame) => frame,
+                    ControlFlowFrame::Unreachable(_) => {
+                        // The parent `If` frame was already unreachable so
+                        // we do nothing here.
+                        return Ok(())
+                    }
+                    _ => unreachable!(),
+                };
+                // At this point we know that `frame` refers to a reachable `If`.
+                //
+                // We just finished the `then_block` (consequent), so record
+                // its final reachability state.
+                debug_assert!(frame.then_end_is_reachable.is_none());
+                frame.then_end_is_reachable = Some(self.reachable);
+                // We have a branch from the head of the `if` to the `else`.
+                self.reachable = true;
+
+                let else_block = match frame.else_data {
+                    ElseData::WithElse { else_block } => {
+                        self.value_stack
+                            .truncate_to_original_size(any_frame, &self.res)?;
+                        else_block
+                    }
+                    ElseData::NoElse { branch_instr } => {
+                        let inputs = frame.block_type.inputs(&self.res);
+                        let outputs = frame.block_type.outputs(&self.res);
+                        debug_assert_eq!(inputs.len(), outputs.len());
+                        let else_block = Self::block_with_params_explicit(
+                            &mut self.builder,
+                            inputs.iter().copied(),
+                        )?;
+                        self.value_stack
+                            .truncate_to_original_size(any_frame, &self.res)?;
+                        self.builder.seal_block(else_block)?;
+                        else_block
+                    }
+                };
+                self.builder.switch_to_block(else_block)?;
+                // Again, no need to push the parameters for the `else`,
+                // since we already did when we saw the original `if`. See
+                // the comment for translating `Operator::Else` in
+                // `translate_operator` for details.
+            }
+            Operator::End => {
+                let frame = self.control_stack.pop_frame()?;
+                self.truncate_value_stack_to_original_size(&frame)?;
+
+                let reachable_anyway = match &frame {
+                    ControlFlowFrame::Loop(frame) => {
+                        // If it is a loop we also have to seal the body loop block.
+                        self.builder.seal_block(frame.loop_header)?;
+                        // And loops can't have branches to the end.
+                        false
+                    }
+                    ControlFlowFrame::If(frame) => {
+                        // There are two cases:
+                        //
+                        // - If `then_end_is_reachable` is `None` it means that we
+                        //   are in the unreachable `Then` part of the `If` and there
+                        //   is no `Else` block. In this case the code after the `End`
+                        //   is always reachable again.
+                        // - If `then_end_is_reachable` is `Some(flag)` it means that
+                        //   we are in the unreachable `Else` part of the `If`. In this
+                        //   case the code after the `End` is always reachable if the
+                        //   end of the consequent (`Then`) was reachable.
+                        frame.then_end_is_reachable.unwrap_or(true)
+                    }
+                    _ => {
+                        // All other control constructs are already handled.
+                        false
+                    }
+                };
+                if frame.exit_is_branched_to() || reachable_anyway {
+                    let following_code = frame.following_code();
+                    self.builder.switch_to_block(following_code)?;
+                    self.builder.seal_block(following_code)?;
+
+                    // And add the return values of the block but only if the next block is reachable
+                    // (which corresponds to testing if the stack depth is 1)
+                    let Self {
+                        value_stack,
+                        builder,
+                        ..
+                    } = self;
+                    let block_parameters = builder
+                        .block_parameters(following_code)
+                        .iter()
+                        .copied()
+                        .map(|value| (value, builder.value_type(value)));
+                    value_stack.extend(block_parameters);
+                    self.reachable = true;
+                }
+            }
+            _ => {
+                // We don't translate because this is unreachable code.
+            }
+        }
+        Ok(())
+    }
+
     /// Translate a Wasm `Block` control operator.
     ///
     /// # Note
@@ -214,21 +358,24 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
 
     /// Translate a Wasm `Else` control operator.
     pub(super) fn translate_else(&mut self) -> Result<(), Error> {
-        let frame = match self.control_stack.last_mut() {
+        let frame = self.control_stack.last_mut();
+        assert_eq!(
+            frame.kind(),
+            ControlFrameKind::If,
+            "missing `If` frame upon encountering reachable `Else`"
+        );
+        let frame = match frame {
             ControlFlowFrame::If(frame) => frame,
-            _ => unreachable!("missing `if` frame upon encountering `else`"),
+            _ => {
+                unreachable!(
+                    "encountered invalid unreachable `If` for reachable `Else`"
+                )
+            }
         };
         // We just finished the `then_block` (consequent), so record
         // its final reachability state.
-        debug_assert!(frame.consequent_ends_reachable.is_none());
-        frame.consequent_ends_reachable = Some(self.reachable);
-        if !frame.head_is_reachable {
-            // If the `if` was not reachable we have nothing to do
-            // in the `else_block` either.
-            return Ok(())
-        }
-        // We have a branch from the head of the `if` to the `else`.
-        self.reachable = true;
+        debug_assert!(frame.then_end_is_reachable.is_none());
+        frame.then_end_is_reachable = Some(self.reachable);
         // Ensure we have a block for the `else` block (it may have
         // already been pre-allocated, see `ElseData` for details).
         let else_block = match frame.else_data {
@@ -280,8 +427,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         // `if` so that we wouldn't have to save the parameters in the
         // `ControlStackFrame` as another vector allocation.
         self.builder.switch_to_block(else_block)?;
-        // We don't bother updating the control frame's `ElseData`
-        // to `WithElse` because nothing else will read it.
         Ok(())
     }
 
