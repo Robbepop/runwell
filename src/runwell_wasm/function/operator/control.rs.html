@@ -613,21 +613,21 @@
                 <span class="self">self</span>.<span class="ident">push_unreachable_control_frame</span>(
                     <span class="ident">ControlFrameKind</span>::<span class="ident">If</span>,
                     <span class="ident">block_type</span>,
-                )<span class="question-mark">?</span>;
+                );
             }
             <span class="ident">Operator</span>::<span class="ident">Block</span> { <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">block_type</span> <span class="op">=</span> <span class="ident">WasmBlockType</span>::<span class="ident">try_from</span>(<span class="kw-2">*</span><span class="ident">ty</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.<span class="ident">push_unreachable_control_frame</span>(
                     <span class="ident">ControlFrameKind</span>::<span class="ident">Block</span>,
                     <span class="ident">block_type</span>,
-                )<span class="question-mark">?</span>;
+                );
             }
             <span class="ident">Operator</span>::<span class="ident">Loop</span> { <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">block_type</span> <span class="op">=</span> <span class="ident">WasmBlockType</span>::<span class="ident">try_from</span>(<span class="kw-2">*</span><span class="ident">ty</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.<span class="ident">push_unreachable_control_frame</span>(
                     <span class="ident">ControlFrameKind</span>::<span class="ident">Loop</span>,
                     <span class="ident">block_type</span>,
-                )<span class="question-mark">?</span>;
+                );
             }
             <span class="ident">Operator</span>::<span class="ident">Else</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">any_frame</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">control_stack</span>.<span class="ident">last_mut</span>();

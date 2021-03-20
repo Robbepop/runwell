@@ -295,7 +295,6 @@
 <span id="292">292</span>
 <span id="293">293</span>
 <span id="294">294</span>
-<span id="295">295</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -580,7 +579,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">kind</span>: <span class="ident">ControlFrameKind</span>,
         <span class="ident">block_type</span>: <span class="ident">WasmBlockType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) {
         <span class="kw">let</span> <span class="ident">block_inputs</span> <span class="op">=</span> <span class="ident">block_type</span>.<span class="ident">inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
         <span class="self">self</span>.<span class="ident">control_stack</span>.<span class="ident">push_frame</span>(<span class="ident">ControlFlowFrame</span>::<span class="ident">Unreachable</span>(
             <span class="ident">UnreachableControlFrame</span>::<span class="ident">new</span>(
@@ -589,7 +588,6 @@
                 <span class="ident">kind</span>,
             ),
         ));
-        <span class="prelude-val">Ok</span>(())
     }
 }
 </pre></div>
