@@ -526,4 +526,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         self.reachable = false;
         Ok(())
     }
+
+    /// Translate a Wasm `Unreachable` control operator.
+    pub(super) fn translate_unreachable(&mut self) -> Result<(), Error> {
+        self.builder.ins()?.unreachable()?;
+        self.reachable = false;
+        Ok(())
+    }
 }

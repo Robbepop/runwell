@@ -48,7 +48,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 // and an immediately following `trap` behind it.
                 let ptr =
                     self.builder.ins()?.heap_addr(mem, pos, ImmU32::from(0))?;
-                self.builder.ins()?.unreachable()?;
+                self.translate_unreachable()?;
                 ptr
             }
         };

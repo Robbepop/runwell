@@ -56,10 +56,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             return Ok(());
         }
         match op {
-            Op::Unreachable => {
-                self.builder.ins()?.unreachable()?;
-                self.reachable = false;
-            }
+            Op::Unreachable => self.translate_unreachable()?,
             Op::Nop => { /* Deliberately do nothing. */ }
             Op::Block { ty } => self.translate_block(ty)?,
             Op::Loop { ty } => self.translate_loop(ty)?,
