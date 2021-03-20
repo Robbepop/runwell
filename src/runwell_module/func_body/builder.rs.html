@@ -1186,6 +1186,21 @@
 <span id="1183">1183</span>
 <span id="1184">1184</span>
 <span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
+<span id="1191">1191</span>
+<span id="1192">1192</span>
+<span id="1193">1193</span>
+<span id="1194">1194</span>
+<span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -2150,6 +2165,18 @@
         <span class="prelude-val">Ok</span>(<span class="ident">InstructionBuilder</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
+    <span class="doccomment">/// Seals all remaining unsealed blocks.</span>
+    <span class="kw">fn</span> <span class="ident">seal_all_blocks</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">indices</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
+            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">block</span>) {
+                <span class="comment">// The block has not yet been sealed.</span>
+                <span class="self">self</span>.<span class="ident">seal_block</span>(<span class="ident">block</span>)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Finalizes construction of the built function.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the built function.</span>
@@ -2159,6 +2186,7 @@
     <span class="doccomment">/// If not all basic blocks in the function are sealed and filled.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionBody</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">seal_all_blocks</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ensure_all_blocks_sealed</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ensure_all_blocks_filled</span>()<span class="question-mark">?</span>;
 
@@ -2203,8 +2231,10 @@
 
     <span class="doccomment">/// Ensures that all basic blocks are filled and returns an `Error` if not.</span>
     <span class="kw">fn</span> <span class="ident">ensure_all_blocks_filled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">is_block_unfilled</span> <span class="op">=</span>
-            <span class="op">|</span><span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> { <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">block</span>) };
+        <span class="kw">let</span> <span class="ident">is_block_unfilled</span> <span class="op">=</span> <span class="op">|</span><span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">Block</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+            <span class="self">self</span>.<span class="ident">is_block_reachable</span>(<span class="kw-2">*</span><span class="ident">block</span>)
+                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">block</span>)
+        };
         <span class="kw">let</span> <span class="ident">len_unfilled_blocks</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">indices</span>().<span class="ident">filter</span>(<span class="ident">is_block_unfilled</span>).<span class="ident">count</span>();
         <span class="kw">if</span> <span class="ident">len_unfilled_blocks</span> <span class="op">&gt;</span> <span class="number">0</span> {

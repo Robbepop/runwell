@@ -31,6 +31,8 @@
 <span id="28">28</span>
 <span id="29">29</span>
 <span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -55,10 +57,12 @@
     <span class="ident">frame</span>::{
         <span class="ident">BlockControlFrame</span>,
         <span class="ident">ControlFlowFrame</span>,
+        <span class="ident">ControlFrameKind</span>,
         <span class="ident">ElseData</span>,
         <span class="ident">FunctionBodyFrame</span>,
         <span class="ident">IfControlFrame</span>,
         <span class="ident">LoopControlFrame</span>,
+        <span class="ident">UnreachableControlFrame</span>,
     },
     <span class="ident">stack</span>::<span class="ident">ControlFlowStack</span>,
 };
