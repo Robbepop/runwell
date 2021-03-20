@@ -156,6 +156,11 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         // block was branched to it is going to contain the function's
         // final return instruction.
         let exit_block = self.builder.create_block()?;
+        let block_type = WasmBlockType::from(entry_block_type);
+        for &return_value in block_type.outputs(&self.res) {
+            self.builder
+                .create_block_parameter(exit_block, return_value)?;
+        }
         self.control_stack.push_frame(ControlFlowFrame::Body(
             FunctionBodyFrame::new(
                 WasmBlockType::from(entry_block_type),
