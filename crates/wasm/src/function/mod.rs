@@ -165,7 +165,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             FunctionBodyFrame::new(
                 WasmBlockType::from(entry_block_type),
                 exit_block,
-            )
+            ),
         ));
         Ok(())
     }
