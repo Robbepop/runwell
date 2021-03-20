@@ -288,26 +288,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Translate a Wasm `End` control operator.
     pub(super) fn translate_end(&mut self) -> Result<(), Error> {
         let frame = self.control_stack.pop_frame()?;
-        if let ControlFlowFrame::Body(body_frame) = frame {
-            let current = self.builder.current_block()?;
-            if !self.reachable || !self.builder.is_block_reachable(current) {
-                // We won't generate a return instruction if the code at
-                // this point is unreachable since the value stack could
-                // be different from our expectations.
-                return Ok(())
-            }
-            // We just encountered the final `End` operator.
-            // So we put a return instruction at the end of the function body.
-            let len_stack = self.value_stack.len();
-            // debug_assert_eq!(
-            //     len_stack,
-            //     body_frame.block_type.outputs(&self.res).len()
-            // );
-            let return_values =
-                self.value_stack.pop_n(len_stack)?.map(|entry| entry.value);
-            self.builder.ins()?.return_values(return_values)?;
-            return Ok(())
-        }
         let next_block = frame.following_code();
         let current = self.builder.current_block()?;
         if self.builder.is_block_reachable(current)
