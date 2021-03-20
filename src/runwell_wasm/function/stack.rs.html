@@ -223,20 +223,6 @@
 <span id="220">220</span>
 <span id="221">221</span>
 <span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -255,37 +241,28 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">control</span>::<span class="ident">ControlFlowFrame</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Error</span>, <span class="ident">TranslateError</span>};
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">slice</span>;
-<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span>::{<span class="ident">Type</span>, <span class="ident">Value</span>};
+<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span>::<span class="ident">Value</span>;
 <span class="kw">use</span> <span class="ident">module</span>::<span class="ident">ModuleResources</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">iter</span>::<span class="ident">FusedIterator</span>, <span class="ident">vec</span>::<span class="ident">Drain</span>};
 
 <span class="doccomment">/// Stack of values used for the Wasm emulation stack.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValueStack</span> {
-    <span class="ident">stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ValueEntry</span><span class="op">&gt;</span>,
-}
-
-<span class="doccomment">/// A Runwell value on the stack and its associated type.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValueEntry</span> {
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">Value</span>,
-    <span class="kw">pub</span> <span class="ident">ty</span>: <span class="ident">Type</span>,
+    <span class="ident">stack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">ValueStack</span> {
     <span class="doccomment">/// Pushes another value onto the stack.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">ty</span>: <span class="ident">Type</span>) {
-        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">push</span>(<span class="ident">ValueEntry</span> { <span class="ident">value</span>, <span class="ident">ty</span> });
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) {
+        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">push</span>(<span class="ident">value</span>);
     }
 
     <span class="doccomment">/// Extends the value stack by the given iterator of pairs of values and types.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extend</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">iter</span>: <span class="ident">T</span>)
     <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">Value</span>, <span class="ident">Type</span>)<span class="op">&gt;</span>,
+        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
     {
-        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">extend</span>(
-            <span class="ident">iter</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">value</span>, <span class="ident">ty</span>)<span class="op">|</span> <span class="ident">ValueEntry</span> { <span class="ident">value</span>, <span class="ident">ty</span> }),
-        )
+        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">extend</span>(<span class="ident">iter</span>.<span class="ident">into_iter</span>())
     }
 
     <span class="doccomment">/// Pops a value from the stack or returns an error if not possible.</span>
@@ -293,21 +270,21 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">expected</span>: <span class="ident">u32</span>,
         <span class="ident">found</span>: <span class="ident">u32</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueEntry</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">stack</span>
             .<span class="ident">pop</span>()
             .<span class="ident">ok_or</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> { <span class="ident">expected</span>, <span class="ident">found</span> })
     }
 
     <span class="doccomment">/// Pops the last inserted value from the stack.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop1</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueEntry</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop1</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">pop_impl</span>(<span class="number">1</span>, <span class="number">0</span>)
     }
 
     <span class="doccomment">/// Pops the last two inserted value from the stack.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the values in reversed order in which they have been popped.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop2</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ValueEntry</span>, <span class="ident">ValueEntry</span>), <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop2</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Value</span>, <span class="ident">Value</span>), <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pop_impl</span>(<span class="number">2</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pop_impl</span>(<span class="number">2</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((<span class="ident">lhs</span>, <span class="ident">rhs</span>))
@@ -316,9 +293,7 @@
     <span class="doccomment">/// Pops the last three inserted value from the stack.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the values in reversed order in which they have been popped.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop3</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ValueEntry</span>, <span class="ident">ValueEntry</span>, <span class="ident">ValueEntry</span>), <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop3</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Value</span>, <span class="ident">Value</span>, <span class="ident">Value</span>), <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">trd</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pop_impl</span>(<span class="number">3</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">snd</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pop_impl</span>(<span class="number">3</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">fst</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pop_impl</span>(<span class="number">3</span>, <span class="number">2</span>)<span class="question-mark">?</span>;
@@ -328,10 +303,7 @@
     <span class="doccomment">/// Pops the last `n` inserted values from the stack.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The values are popped in the order in which they have been pushed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_n</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">n</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">ValueEntry</span><span class="op">&gt;</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_n</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
         <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">len_stack</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
@@ -346,7 +318,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The 0th last value is equal to the last value.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_n</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueEntry</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_n</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
         <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">len_stack</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
@@ -372,7 +344,7 @@
     }
 
     <span class="doccomment">/// Peeks the last inserted value on the stack.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">peek1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ValueEntry</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">peek1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">stack</span>
             .<span class="ident">last</span>()
             .<span class="ident">copied</span>()
@@ -435,12 +407,12 @@
 <span class="doccomment">/// Iterator yielding some amount of the top most stack values.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PeekIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">iter</span>: <span class="ident">slice</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">ValueEntry</span><span class="op">&gt;</span>,
+    <span class="ident">iter</span>: <span class="ident">slice</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Value</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PeekIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Creates a new peek iterator.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">ValueEntry</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">slice</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Value</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">iter</span>: <span class="ident">slice</span>.<span class="ident">iter</span>() }
     }
 
@@ -449,13 +421,13 @@
     <span class="doccomment">/// This has the same lifetime as the original slice, and so the iterator</span>
     <span class="doccomment">/// can continue to be used while this exists.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">ValueEntry</span>] {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Value</span>] {
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">as_slice</span>()
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">PeekIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">ValueEntry</span>;
+    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span>;
 
     <span class="kw">fn</span> <span class="ident">size_hint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">size_hint</span>()

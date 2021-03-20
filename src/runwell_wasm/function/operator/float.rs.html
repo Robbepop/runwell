@@ -242,10 +242,6 @@
 <span id="239">239</span>
 <span id="240">240</span>
 <span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -298,13 +294,14 @@
         <span class="ident">saturating</span>: <span class="ident">bool</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">source</span>.<span class="ident">ty</span>, <span class="ident">src_type</span>.<span class="ident">into</span>());
-        <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">value</span>;
+        <span class="kw">let</span> <span class="ident">source_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">source</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">source_type</span>, <span class="ident">src_type</span>.<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">source</span>;
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">builder</span>
             .<span class="ident">ins</span>()<span class="question-mark">?</span>
             .<span class="ident">float_to_int</span>(<span class="ident">src_type</span>, <span class="ident">dst_type</span>, <span class="ident">dst_signed</span>, <span class="ident">source</span>, <span class="ident">saturating</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>, <span class="ident">dst_type</span>.<span class="ident">into</span>());
+        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -393,12 +390,10 @@
         <span class="kw">let</span> <span class="ident">from_type</span> <span class="op">=</span> <span class="ident">from_type</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">to_type</span> <span class="op">=</span> <span class="ident">to_type</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">source</span>.<span class="ident">ty</span>, <span class="ident">from_type</span>.<span class="ident">into</span>());
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">builder</span>
-                .<span class="ident">ins</span>()<span class="question-mark">?</span>
-                .<span class="ident">demote</span>(<span class="ident">from_type</span>, <span class="ident">to_type</span>, <span class="ident">source</span>.<span class="ident">value</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>, <span class="ident">to_type</span>.<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">source_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">source</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">source_type</span>, <span class="ident">from_type</span>.<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">demote</span>(<span class="ident">from_type</span>, <span class="ident">to_type</span>, <span class="ident">source</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -415,12 +410,10 @@
         <span class="kw">let</span> <span class="ident">from_type</span> <span class="op">=</span> <span class="ident">from_type</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">to_type</span> <span class="op">=</span> <span class="ident">to_type</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">source</span>.<span class="ident">ty</span>, <span class="ident">from_type</span>.<span class="ident">into</span>());
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">builder</span>
-                .<span class="ident">ins</span>()<span class="question-mark">?</span>
-                .<span class="ident">promote</span>(<span class="ident">from_type</span>, <span class="ident">to_type</span>, <span class="ident">source</span>.<span class="ident">value</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>, <span class="ident">to_type</span>.<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">source_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">source</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">source_type</span>, <span class="ident">from_type</span>.<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">promote</span>(<span class="ident">from_type</span>, <span class="ident">to_type</span>, <span class="ident">source</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -431,13 +424,12 @@
         <span class="ident">float_type</span>: <span class="ident">FloatType</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">lhs</span>, <span class="ident">rhs</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop2</span>()<span class="question-mark">?</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
-        <span class="kw">let</span> <span class="ident">actual_float_type</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">extract_float_type</span>(<span class="ident">lhs</span>.<span class="ident">ty</span>);
+        <span class="kw">let</span> <span class="ident">lhs_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">lhs</span>);
+        <span class="kw">let</span> <span class="ident">rhs_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">rhs</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">lhs_type</span>, <span class="ident">rhs_type</span>);
+        <span class="kw">let</span> <span class="ident">actual_float_type</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">extract_float_type</span>(<span class="ident">lhs_type</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">actual_float_type</span>, <span class="ident">float_type</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">builder</span>
-            .<span class="ident">ins</span>()<span class="question-mark">?</span>
-            .<span class="ident">fcmp</span>(<span class="ident">float_type</span>, <span class="ident">op</span>, <span class="ident">lhs</span>.<span class="ident">value</span>, <span class="ident">rhs</span>.<span class="ident">value</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">fcmp</span>(<span class="ident">float_type</span>, <span class="ident">op</span>, <span class="ident">lhs</span>, <span class="ident">rhs</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">translate_bool_to_i32</span>(<span class="ident">result</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -449,9 +441,9 @@
         <span class="ident">op</span>: <span class="ident">UnaryFloatOp</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">actual_float_type</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">extract_float_type</span>(<span class="ident">source</span>.<span class="ident">ty</span>);
+        <span class="kw">let</span> <span class="ident">source_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">source</span>);
+        <span class="kw">let</span> <span class="ident">actual_float_type</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">extract_float_type</span>(<span class="ident">source_type</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">actual_float_type</span>, <span class="ident">float_type</span>);
-        <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">value</span>;
         <span class="kw">let</span> <span class="ident">ins</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">op</span> {
             <span class="ident">UnaryFloatOp</span>::<span class="ident">Abs</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ins</span>.<span class="ident">fabs</span>(<span class="ident">float_type</span>, <span class="ident">source</span>)<span class="question-mark">?</span>,
@@ -462,7 +454,7 @@
             <span class="ident">UnaryFloatOp</span>::<span class="ident">Truncate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ins</span>.<span class="ident">ftruncate</span>(<span class="ident">float_type</span>, <span class="ident">source</span>)<span class="question-mark">?</span>,
             <span class="ident">UnaryFloatOp</span>::<span class="ident">Nearest</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ins</span>.<span class="ident">fnearest</span>(<span class="ident">float_type</span>, <span class="ident">source</span>)<span class="question-mark">?</span>,
         };
-        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>, <span class="ident">float_type</span>.<span class="ident">into</span>());
+        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -473,12 +465,12 @@
         <span class="ident">op</span>: <span class="ident">BinaryFloatOp</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">lhs</span>, <span class="ident">rhs</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop2</span>()<span class="question-mark">?</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">lhs</span>.<span class="ident">ty</span>, <span class="ident">rhs</span>.<span class="ident">ty</span>);
-        <span class="kw">let</span> <span class="ident">actual_float_type</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">extract_float_type</span>(<span class="ident">lhs</span>.<span class="ident">ty</span>);
+        <span class="kw">let</span> <span class="ident">lhs_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">lhs</span>);
+        <span class="kw">let</span> <span class="ident">rhs_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">rhs</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">lhs_type</span>, <span class="ident">rhs_type</span>);
+        <span class="kw">let</span> <span class="ident">actual_float_type</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">extract_float_type</span>(<span class="ident">lhs_type</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">actual_float_type</span>, <span class="ident">float_type</span>);
         <span class="kw">let</span> <span class="ident">ins</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">lhs</span>.<span class="ident">value</span>;
-        <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">value</span>;
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">op</span> {
             <span class="ident">BinaryFloatOp</span>::<span class="ident">Add</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ins</span>.<span class="ident">fadd</span>(<span class="ident">float_type</span>, <span class="ident">lhs</span>, <span class="ident">rhs</span>)<span class="question-mark">?</span>,
             <span class="ident">BinaryFloatOp</span>::<span class="ident">Sub</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ins</span>.<span class="ident">fsub</span>(<span class="ident">float_type</span>, <span class="ident">lhs</span>, <span class="ident">rhs</span>)<span class="question-mark">?</span>,
@@ -488,7 +480,7 @@
             <span class="ident">BinaryFloatOp</span>::<span class="ident">Max</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ins</span>.<span class="ident">fmax</span>(<span class="ident">float_type</span>, <span class="ident">lhs</span>, <span class="ident">rhs</span>)<span class="question-mark">?</span>,
             <span class="ident">BinaryFloatOp</span>::<span class="ident">CopySign</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ins</span>.<span class="ident">fcopysign</span>(<span class="ident">float_type</span>, <span class="ident">lhs</span>, <span class="ident">rhs</span>)<span class="question-mark">?</span>,
         };
-        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>, <span class="ident">float_type</span>.<span class="ident">into</span>());
+        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">push</span>(<span class="ident">result</span>);
         <span class="prelude-val">Ok</span>(())
     }
 }

@@ -530,32 +530,6 @@
 <span id="527">527</span>
 <span id="528">528</span>
 <span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
-<span id="535">535</span>
-<span id="536">536</span>
-<span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
-<span id="549">549</span>
-<span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -750,8 +724,7 @@
                     <span class="kw">let</span> <span class="ident">block_parameters</span> <span class="op">=</span> <span class="ident">builder</span>
                         .<span class="ident">block_parameters</span>(<span class="ident">following_code</span>)
                         .<span class="ident">iter</span>()
-                        .<span class="ident">copied</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> (<span class="ident">value</span>, <span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">value</span>)));
+                        .<span class="ident">copied</span>();
                     <span class="ident">value_stack</span>.<span class="ident">extend</span>(<span class="ident">block_parameters</span>);
                     <span class="self">self</span>.<span class="ident">reachable</span> <span class="op">=</span> <span class="bool-val">true</span>;
                 }
@@ -798,21 +771,14 @@
         <span class="kw">let</span> <span class="ident">loop_head</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_with_params</span>(<span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>())<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">loop_exit</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_with_params</span>(<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>())<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">peek_n</span>(<span class="ident">inputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">builder</span>
-            .<span class="ident">ins</span>()<span class="question-mark">?</span>
-            .<span class="ident">br</span>(<span class="ident">loop_head</span>, <span class="ident">args</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">br</span>(<span class="ident">loop_head</span>, <span class="ident">args</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">push_control_loop</span>(<span class="ident">loop_head</span>, <span class="ident">loop_exit</span>, <span class="ident">block_type</span>);
 
         <span class="comment">// Pop the initial `Block` actuals and replace them with the `Block`&#39;s</span>
         <span class="comment">// params since control flow joins at the top of the loop.</span>
         <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">inputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">extend</span>(
-            <span class="self">self</span>.<span class="ident">builder</span>
-                .<span class="ident">block_parameters</span>(<span class="ident">loop_head</span>)
-                .<span class="ident">iter</span>()
-                .<span class="ident">copied</span>()
-                .<span class="ident">zip</span>(<span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>()),
-        );
+        <span class="self">self</span>.<span class="ident">value_stack</span>
+            .<span class="ident">extend</span>(<span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">block_parameters</span>(<span class="ident">loop_head</span>).<span class="ident">iter</span>().<span class="ident">copied</span>());
 
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">switch_to_block</span>(<span class="ident">loop_head</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
@@ -843,12 +809,8 @@
             <span class="ident">eq</span>,
             <span class="ident">then_block</span>,
             <span class="ident">else_block</span>,
-            <span class="self">self</span>.<span class="ident">value_stack</span>
-                .<span class="ident">peek_n</span>(<span class="ident">len_then_args</span>)<span class="question-mark">?</span>
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>),
-            <span class="self">self</span>.<span class="ident">value_stack</span>
-                .<span class="ident">peek_n</span>(<span class="ident">len_else_args</span>)<span class="question-mark">?</span>
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>),
+            <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">peek_n</span>(<span class="ident">len_then_args</span>)<span class="question-mark">?</span>,
+            <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">peek_n</span>(<span class="ident">len_else_args</span>)<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
@@ -865,7 +827,8 @@
         <span class="ident">ty</span>: <span class="ident">wasmparser</span>::<span class="ident">TypeOrFuncType</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">condition</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
-        <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">condition</span>.<span class="ident">ty</span>, <span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">condition_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">condition</span>);
+        <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">condition_type</span>, <span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>());
 
         <span class="kw">let</span> <span class="ident">block_type</span> <span class="op">=</span> <span class="ident">WasmBlockType</span>::<span class="ident">try_from</span>(<span class="ident">ty</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">block_type</span>.<span class="ident">inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
@@ -881,7 +844,7 @@
             <span class="comment">// up discovering an `else`, then we will allocate a block for it</span>
             <span class="comment">// and go back and patch the jump.</span>
             <span class="kw">let</span> <span class="ident">branch_instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">construct_if_nez</span>(
-                <span class="ident">condition</span>.<span class="ident">value</span>,
+                <span class="ident">condition</span>,
                 <span class="ident">then_block</span>,
                 <span class="ident">exit_block</span>,
                 <span class="number">0</span>,
@@ -893,7 +856,7 @@
             <span class="comment">// so we eagerly allocate the `else` block here.</span>
             <span class="kw">let</span> <span class="ident">else_block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_with_params</span>(<span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>())<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">branch_instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">construct_if_nez</span>(
-                <span class="ident">condition</span>.<span class="ident">value</span>,
+                <span class="ident">condition</span>,
                 <span class="ident">then_block</span>,
                 <span class="ident">else_block</span>,
                 <span class="number">0</span>,
@@ -941,12 +904,9 @@
             <span class="ident">ElseData</span>::<span class="ident">WithElse</span> { <span class="ident">else_block</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">block_type</span>.<span class="ident">outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
                 <span class="kw">let</span> <span class="ident">exit_block</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">exit_block</span>;
-                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">br</span>(
-                    <span class="ident">exit_block</span>,
-                    <span class="self">self</span>.<span class="ident">value_stack</span>
-                        .<span class="ident">pop_n</span>(<span class="ident">outputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>),
-                )<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">builder</span>
+                    .<span class="ident">ins</span>()<span class="question-mark">?</span>
+                    .<span class="ident">br</span>(<span class="ident">exit_block</span>, <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">outputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 <span class="ident">else_block</span>
             }
             <span class="ident">ElseData</span>::<span class="ident">NoElse</span> { <span class="ident">branch_instr</span> } <span class="op">=</span><span class="op">&gt;</span> {
@@ -959,12 +919,9 @@
                     <span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>(),
                 )<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">exit_block</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">exit_block</span>;
-                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">br</span>(
-                    <span class="ident">exit_block</span>,
-                    <span class="self">self</span>.<span class="ident">value_stack</span>
-                        .<span class="ident">pop_n</span>(<span class="ident">inputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>),
-                )<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">builder</span>
+                    .<span class="ident">ins</span>()<span class="question-mark">?</span>
+                    .<span class="ident">br</span>(<span class="ident">exit_block</span>, <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">inputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">relink_edge_destination</span>(
                     <span class="ident">branch_instr</span>,
                     <span class="ident">exit_block</span>,
@@ -1002,13 +959,10 @@
             <span class="kw">let</span> <span class="ident">output_args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">peek_n</span>(<span class="ident">len_outputs</span>)<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="ident">frame</span>.<span class="ident">is_func_body</span>() {
                 <span class="comment">// Ending the function body label is equal to a return.</span>
-                <span class="kw">let</span> <span class="ident">return_args</span> <span class="op">=</span> <span class="ident">output_args</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>);
-                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">return_values</span>(<span class="ident">return_args</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">return_values</span>(<span class="ident">output_args</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.<span class="ident">reachable</span> <span class="op">=</span> <span class="bool-val">false</span>;
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">builder</span>
-                    .<span class="ident">ins</span>()<span class="question-mark">?</span>
-                    .<span class="ident">br</span>(<span class="ident">next_block</span>, <span class="ident">output_args</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>))<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">br</span>(<span class="ident">next_block</span>, <span class="ident">output_args</span>)<span class="question-mark">?</span>;
             }
             <span class="comment">// You might expect that if we just finished an `if` block that</span>
             <span class="comment">// didn&#39;t have a corresponding `else` block, then we would clean</span>
@@ -1031,10 +985,8 @@
             <span class="kw-2">ref</span> <span class="ident">builder</span>,
             ..
         } <span class="op">=</span> <span class="self">self</span>;
-        <span class="kw">let</span> <span class="ident">next_block_params</span> <span class="op">=</span> <span class="ident">builder</span>
-            .<span class="ident">block_parameters</span>(<span class="ident">next_block</span>)
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">value</span><span class="op">|</span> (<span class="ident">value</span>, <span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">value</span>)));
+        <span class="kw">let</span> <span class="ident">next_block_params</span> <span class="op">=</span>
+            <span class="ident">builder</span>.<span class="ident">block_parameters</span>(<span class="ident">next_block</span>).<span class="ident">iter</span>().<span class="ident">copied</span>();
         <span class="ident">value_stack</span>.<span class="ident">extend</span>(<span class="ident">next_block_params</span>);
         <span class="prelude-val">Ok</span>(())
     }
@@ -1052,10 +1004,7 @@
         <span class="comment">// We signal that all the code that follows until the next `End` is unreachable.</span>
         <span class="ident">frame</span>.<span class="ident">set_branched_to_exit</span>();
         <span class="kw">let</span> <span class="ident">len_return_values</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">len_branch_args</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
-        <span class="kw">let</span> <span class="ident">destination_args</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">value_stack</span>
-            .<span class="ident">pop_n</span>(<span class="ident">len_return_values</span>)<span class="question-mark">?</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>);
+        <span class="kw">let</span> <span class="ident">destination_args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">len_return_values</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">builder</span>
             .<span class="ident">ins</span>()<span class="question-mark">?</span>
             .<span class="ident">br</span>(<span class="ident">frame</span>.<span class="ident">branch_destination</span>(), <span class="ident">destination_args</span>)<span class="question-mark">?</span>;
@@ -1069,6 +1018,8 @@
         <span class="ident">relative_depth</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">condition</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">condition_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">condition</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">condition_type</span>, <span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>());
         <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">control_stack</span>.<span class="ident">nth_back_mut</span>(<span class="ident">relative_depth</span>)<span class="question-mark">?</span>;
         <span class="comment">// The values returned by the branch are still available for the reachable</span>
         <span class="comment">// code that comes after it.</span>
@@ -1077,7 +1028,7 @@
         <span class="kw">let</span> <span class="ident">then_block</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">branch_destination</span>();
         <span class="kw">let</span> <span class="ident">next_block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">create_block</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">construct_if_nez</span>(
-            <span class="ident">condition</span>.<span class="ident">value</span>,
+            <span class="ident">condition</span>,
             <span class="ident">then_block</span>,
             <span class="ident">next_block</span>,
             <span class="ident">len_return_values</span>,
@@ -1103,10 +1054,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">translate_return</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">control_stack</span>.<span class="ident">first</span>();
         <span class="kw">let</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
-        <span class="kw">let</span> <span class="ident">return_args</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">value_stack</span>
-            .<span class="ident">pop_n</span>(<span class="ident">outputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">value</span>);
+        <span class="kw">let</span> <span class="ident">return_args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">outputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">return_values</span>(<span class="ident">return_args</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">reachable</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="prelude-val">Ok</span>(())
