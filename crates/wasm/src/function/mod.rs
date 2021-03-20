@@ -181,6 +181,36 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         }
         let offset = self.reader.original_position();
         self.validator.finish(offset)?;
+        self.finalize_exit_block()?;
+        Ok(())
+    }
+
+    /// Finalizes the `exit_block` of the function body control frame.
+    ///
+    /// This adds the final `return` instruction to the `exit_block`.
+    ///
+    /// After translating all Wasm operators and encountering the final
+    /// `End` operator we should be left in a state where the current
+    /// basic block refers to the `exit_block`.
+    fn finalize_exit_block(&mut self) -> Result<(), Error> {
+        let current = self.builder.current_block()?;
+        if !self.reachable || !self.builder.is_block_reachable(current) {
+            return Ok(())
+        }
+        let entry_block_type =
+            self.res.get_raw_func_type(self.func).unwrap_or_else(|| {
+                panic!(
+                    "expected function type for {} due to validation",
+                    self.func
+                )
+            });
+        let block_type = WasmBlockType::from(entry_block_type);
+        let len_outputs = block_type.outputs(&self.res).len();
+        let outputs = self
+            .value_stack
+            .pop_n(len_outputs)?
+            .map(|entry| entry.value);
+        self.builder.ins()?.return_values(outputs)?;
         Ok(())
     }
 
