@@ -501,10 +501,24 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         relative_depth: u32,
     ) -> Result<(), Error> {
-        Err(TranslateError::unimplemented_operator(
-            wasmparser::Operator::BrIf { relative_depth },
-        ))
-        .map_err(Into::into)
+        let condition = self.value_stack.pop1()?;
+        let frame = self.control_stack.nth_back_mut(relative_depth)?;
+        // The values returned by the branch are still available for the reachable
+        // code that comes after it.
+        frame.set_branched_to_exit();
+        let len_return_values = frame.len_branch_args(&self.res);
+        let then_block = frame.branch_destination();
+        let next_block = self.builder.create_block()?;
+        self.construct_if_nez(
+            condition.value,
+            then_block,
+            next_block,
+            len_return_values,
+            0,
+        )?;
+        self.builder.seal_block(next_block)?;
+        self.builder.switch_to_block(next_block)?;
+        Ok(())
     }
 
     /// Translate a Wasm `BrTable` control operator.
