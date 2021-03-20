@@ -175,14 +175,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Parses, validates and translates the Wasm operands into Runwell
     /// function body instructions and basic blocks.
     fn translate_operators(&mut self) -> Result<(), Error> {
-        println!();
         while !self.reader.eof() {
             let offset = self.reader.original_position();
             let op = self.reader.read_operator()?;
             self.validator.op(offset, &op)?;
             self.translate_operator(offset, op)?;
         }
-        println!();
         let offset = self.reader.original_position();
         self.validator.finish(offset)?;
         self.finalize_exit_block()?;
