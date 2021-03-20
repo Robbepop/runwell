@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::TranslateError;
+use super::control::ControlFlowFrame;
+use crate::{Error, TranslateError};
 use core::slice;
 use ir::primitive::{Type, Value};
+use module::ModuleResources;
 use std::{iter::FusedIterator, vec::Drain};
 
 /// Stack of values used for the Wasm emulation stack.
@@ -165,6 +167,27 @@ impl ValueStack {
             })
         }
         self.stack.truncate(len);
+        Ok(())
+    }
+
+    /// Pop values from the value stack so that it is left at the state it was
+    /// before this control-flow frame.
+    pub fn truncate_to_original_size(
+        &mut self,
+        frame: &ControlFlowFrame,
+        res: &ModuleResources,
+    ) -> Result<(), Error> {
+        // The "If" frame pushes its parameters twice, so they're available to the else block
+        // (see also `FuncTranslationState::push_if`).
+        // Yet, the original_stack_size member accounts for them only once, so that the else
+        // block can see the same number of parameters as the consequent block. As a matter of
+        // fact, we need to substract an extra number of parameter values for if blocks.
+        let len_dupe_args = if let ControlFlowFrame::If(if_frame) = frame {
+            if_frame.block_type.inputs(res).len()
+        } else {
+            0
+        };
+        self.truncate(frame.original_stack_size() - len_dupe_args)?;
         Ok(())
     }
 }
