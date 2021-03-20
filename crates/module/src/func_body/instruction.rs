@@ -176,7 +176,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         P: IntoIterator<Item = Value>,
     {
         let instruction = CallInstr::new(func, params);
-        let func_type =
+        let function_type =
             self.builder.res.get_func_type(func).unwrap_or_else(|| {
                 panic!(
                 "encountered missing function type while building function {}",
@@ -190,12 +190,12 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             .map(|val| self.builder.ctx.value_type[val]);
         assert!(
             // We might want to turn this into an error instead of panicking.
-            param_types.eq(func_type.inputs().iter().copied()),
+            param_types.eq(function_type.inputs().iter().copied()),
             "encountered mismatch between function parameter types and declaration types",
         );
         let instr = self.append_multi_value_instr(
             instruction.into(),
-            func_type.outputs(),
+            function_type.outputs(),
         )?;
         Ok(instr)
     }
