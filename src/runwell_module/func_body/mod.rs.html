@@ -229,6 +229,11 @@
 <span id="226">226</span>
 <span id="227">227</span>
 <span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -256,7 +261,12 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
     <span class="ident">builder</span>::<span class="ident">FunctionBuilder</span>,
     <span class="ident">error</span>::{<span class="ident">FunctionBuilderError</span>, <span class="ident">VariableAccess</span>},
-    <span class="ident">instruction</span>::{<span class="ident">Instr</span>, <span class="ident">InstructionBuilder</span>, <span class="ident">MatchSelectInstructionBuilder</span>, <span class="ident">MatchBranchBuilder</span>},
+    <span class="ident">instruction</span>::{
+        <span class="ident">Instr</span>,
+        <span class="ident">InstructionBuilder</span>,
+        <span class="ident">MatchBranchBuilder</span>,
+        <span class="ident">MatchSelectInstructionBuilder</span>,
+    },
     <span class="ident">variable</span>::<span class="ident">Variable</span>,
 };
 <span class="kw">use</span> <span class="self">self</span>::{
