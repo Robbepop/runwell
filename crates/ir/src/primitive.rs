@@ -157,6 +157,22 @@ impl Type {
             Self::Float(float_type) => float_type.alignment(),
         }
     }
+
+    /// Returns `Some` if the type is an integer type, otherwise returns `None`.
+    pub fn filter_map_int(self) -> Option<IntType> {
+        if let Self::Int(int_type) = self {
+            return Some(int_type)
+        }
+        None
+    }
+
+    /// Returns `Some` if the type is a float type, otherwise returns `None`.
+    pub fn filter_map_float(self) -> Option<FloatType> {
+        if let Self::Float(float_type) = self {
+            return Some(float_type)
+        }
+        None
+    }
 }
 
 /// Any fixed-size integer type.
