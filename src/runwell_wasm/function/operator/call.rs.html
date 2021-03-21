@@ -97,7 +97,6 @@
 <span id="94">94</span>
 <span id="95">95</span>
 <span id="96">96</span>
-<span id="97">97</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -128,7 +127,6 @@
         <span class="kw">let</span> <span class="ident">func_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">res</span>.<span class="ident">get_func_type</span>(<span class="ident">func</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;function type for {} must exist due to validation&quot;</span>, <span class="ident">func</span>)
         });
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;translate_call::function_type = {}&quot;</span>, <span class="ident">func_type</span>);
         <span class="kw">let</span> <span class="ident">len_inputs</span> <span class="op">=</span> <span class="ident">func_type</span>.<span class="ident">inputs</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">len_inputs</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="macro">panic</span><span class="macro">!</span>(
