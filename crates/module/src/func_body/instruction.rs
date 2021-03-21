@@ -36,6 +36,7 @@ use ir::{
         BinaryFloatInstr,
         BinaryIntInstr,
         BranchInstr,
+        CallIndirectInstr,
         CallInstr,
         CompareFloatInstr,
         CompareIntInstr,
@@ -66,8 +67,10 @@ use ir::{
         Edge,
         FloatType,
         Func,
+        FuncType,
         IntType,
         Mem,
+        Table,
         Type,
         Value,
     },
@@ -168,6 +171,42 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             self.builder.ctx.block_filled.set(block, true);
         }
         self.register_uses(instr);
+        Ok(instr)
+    }
+
+    pub fn call_indirect<A>(
+        mut self,
+        func_type: FuncType,
+        table: Table,
+        callee: Value,
+        args: A,
+    ) -> Result<Instr, Error>
+    where
+        A: IntoIterator<Item = Value>,
+    {
+        let instruction =
+            CallIndirectInstr::new(table, func_type, callee, args);
+        let function_type =
+            self.builder.res.get_type(func_type).unwrap_or_else(|| {
+                panic!(
+                "encountered missing function type while building function {}",
+                func_type
+            )
+            });
+        let arg_types = instruction
+            .params()
+            .iter()
+            .copied()
+            .map(|val| self.builder.ctx.value_type[val]);
+        assert!(
+            // We might want to turn this into an error instead of panicking.
+            arg_types.eq(function_type.inputs().iter().copied()),
+            "encountered mismatch between function parameter types and declaration types",
+        );
+        let instr = self.append_multi_value_instr(
+            instruction.into(),
+            function_type.outputs(),
+        )?;
         Ok(instr)
     }
 
