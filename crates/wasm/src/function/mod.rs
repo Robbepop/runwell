@@ -254,6 +254,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<(), Error> {
         let block_inputs = block_type.inputs(&self.res);
         debug_assert!(block_inputs.len() <= self.value_stack.len());
+        let original_stack_size = self.value_stack.len();
         // Push a second copy of our `if`'s parameters on the stack. This lets
         // us avoid saving them on the side in the `ControlFrameStack` for our
         // `else` block (if it exists), which would require a second heap
@@ -267,7 +268,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         self.control_stack.push_frame(ControlFlowFrame::If(
             IfControlFrame::new(
                 block_type,
-                self.value_stack.len() - block_inputs.len(),
+                original_stack_size,
                 if_exit,
                 else_data,
                 self.reachable,
