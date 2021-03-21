@@ -1146,6 +1146,27 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         Ok(instr)
     }
 
+    /// Grows the memory by `new_pages` new pages and returns the current amount of pages.
+    pub fn memory_grow(
+        mut self,
+        mem: Mem,
+        new_pages: Value,
+    ) -> Result<Value, Error> {
+        self.expect_type(new_pages, IntType::I32.into())?;
+        let instruction = ir::instr::MemoryGrowInstr::new(mem, new_pages);
+        let (result, _instr) =
+            self.append_value_instr(instruction.into(), IntType::I32.into())?;
+        Ok(result)
+    }
+
+    /// Grows the memory by `new_pages` new pages and returns the current amount of pages.
+    pub fn memory_size(mut self, mem: Mem) -> Result<Value, Error> {
+        let instruction = ir::instr::MemorySizeInstr::new(mem);
+        let (result, _instr) =
+            self.append_value_instr(instruction.into(), IntType::I32.into())?;
+        Ok(result)
+    }
+
     /// Appends the instruction onto the current basic block.
     ///
     /// Fills the block in case the instruction is a terminal instruction.

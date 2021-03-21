@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::super::FunctionBodyTranslator;
-use crate::{Error, TranslateError};
+use crate::Error;
 use entity::RawIdx;
 use ir::{
     primitive::{self as runwell, IntType, Mem, Value},
@@ -150,12 +150,13 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     pub(super) fn translate_memory_grow(
         &mut self,
         mem: u32,
-        mem_byte: u8,
+        _mem_byte: u8,
     ) -> Result<(), Error> {
-        Err(TranslateError::unimplemented_operator(
-            wasmparser::Operator::MemoryGrow { mem, mem_byte },
-        ))
-        .map_err(Into::into)
+        let mem = Mem::from_raw(RawIdx::from_u32(mem));
+        let new_pages = self.value_stack.pop1()?;
+        let result = self.builder.ins()?.memory_grow(mem, new_pages)?;
+        self.value_stack.push(result);
+        Ok(())
     }
 
     /// Translates the Wasm memory size operator.
@@ -164,9 +165,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         mem: u32,
         mem_byte: u8,
     ) -> Result<(), Error> {
-        Err(TranslateError::unimplemented_operator(
-            wasmparser::Operator::MemorySize { mem, mem_byte },
-        ))
-        .map_err(Into::into)
+        let mem = Mem::from_raw(RawIdx::from_u32(mem));
+        let result = self.builder.ins()?.memory_size(mem)?;
+        self.value_stack.push(result);
+        Ok(())
     }
 }
