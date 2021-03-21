@@ -345,7 +345,7 @@ impl ControlFlowFrame {
     }
 
     /// Returns `true` if the control frame is a Wasm `Loop`.
-    pub fn is_loop(&self) -> bool {
+    fn is_loop(&self) -> bool {
         matches!(self, Self::Loop(_))
     }
 
