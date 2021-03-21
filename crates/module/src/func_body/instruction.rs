@@ -1159,7 +1159,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         Ok(result)
     }
 
-    /// Grows the memory by `new_pages` new pages and returns the current amount of pages.
+    /// Return the current amount of memory pages of the linear memory.
     pub fn memory_size(mut self, mem: Mem) -> Result<Value, Error> {
         let instruction = ir::instr::MemorySizeInstr::new(mem);
         let (result, _instr) =
