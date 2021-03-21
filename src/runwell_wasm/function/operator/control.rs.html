@@ -537,6 +537,36 @@
 <span id="534">534</span>
 <span id="535">535</span>
 <span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -556,7 +586,6 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">function</span>::<span class="ident">control</span>::{<span class="ident">ControlFlowFrame</span>, <span class="ident">WasmBlockType</span>},
     <span class="ident">Error</span>,
-    <span class="ident">TranslateError</span>,
 };
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
 <span class="kw">use</span> <span class="ident">ir</span>::{
@@ -1051,10 +1080,41 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">table</span>: <span class="ident">wasmparser</span>::<span class="ident">BrTable</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">unimplemented_operator</span>(
-            <span class="ident">wasmparser</span>::<span class="ident">Operator</span>::<span class="ident">BrTable</span> { <span class="ident">table</span> },
-        ))
-        .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        <span class="kw">let</span> <span class="ident">selector</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">selector_type</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">builder</span>
+            .<span class="ident">value_type</span>(<span class="ident">selector</span>)
+            .<span class="ident">filter_map_int</span>()
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic</span><span class="macro">!</span>(
+                <span class="string">&quot;expected an integer type for the `br_table` selector but found {}: {}&quot;</span>,
+                <span class="ident">selector</span>,
+                <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">value_type</span>(<span class="ident">selector</span>),
+            ));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instr</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ins</span>()<span class="question-mark">?</span>.<span class="ident">match_branch</span>(<span class="ident">selector_type</span>, <span class="ident">selector</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">default_destination</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len_default_args</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">for</span> <span class="ident">target</span> <span class="kw">in</span> <span class="ident">table</span>.<span class="ident">targets</span>() {
+            <span class="kw">let</span> (<span class="ident">relative_depth</span>, <span class="ident">is_default</span>) <span class="op">=</span> <span class="ident">target</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">control_stack</span>.<span class="ident">nth_back_mut</span>(<span class="ident">relative_depth</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">branch_destination</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">branch_destination</span>();
+            <span class="kw">let</span> <span class="ident">len_branch_args</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">len_branch_args</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
+            <span class="kw">let</span> <span class="ident">branch_args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">peek_n</span>(<span class="ident">len_branch_args</span>)<span class="question-mark">?</span>;
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">is_default</span> {
+                <span class="ident">instr</span>.<span class="ident">push_edge</span>(<span class="ident">branch_destination</span>, <span class="ident">branch_args</span>)<span class="question-mark">?</span>;
+            } <span class="kw">else</span> {
+                <span class="ident">default_destination</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">branch_destination</span>);
+                <span class="ident">len_default_args</span> <span class="op">=</span> <span class="ident">len_branch_args</span>;
+            }
+            <span class="ident">frame</span>.<span class="ident">set_branched_to_exit</span>();
+        }
+        <span class="kw">let</span> <span class="ident">default_destination</span> <span class="op">=</span> <span class="ident">default_destination</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;missing default label for Wasm `br_table`&quot;</span>)
+        });
+        <span class="kw">let</span> <span class="ident">default_args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">len_default_args</span>)<span class="question-mark">?</span>;
+        <span class="ident">instr</span>.<span class="ident">finish</span>(<span class="ident">default_destination</span>, <span class="ident">default_args</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">reachable</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Translate a Wasm `Return` control operator.</span>

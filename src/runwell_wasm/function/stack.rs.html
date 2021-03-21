@@ -222,7 +222,6 @@
 <span id="219">219</span>
 <span id="220">220</span>
 <span id="221">221</span>
-<span id="222">222</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -317,7 +316,6 @@
     <span class="doccomment">/// Returns the nth last value from the stack.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The 0th last value is equal to the last value.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_n</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
         <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">len_stack</span> {
