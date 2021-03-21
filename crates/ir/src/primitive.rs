@@ -263,6 +263,15 @@ pub enum Const {
 }
 
 impl Const {
+    /// Returns a zero-constant for the given type.
+    pub fn zero(ty: Type) -> Const {
+        match ty {
+            Type::Ptr => Const::Ptr(0),
+            Type::Int(int_type) => IntConst::zero(int_type).into(),
+            Type::Float(float_type) => FloatConst::zero(float_type).into(),
+        }
+    }
+
     /// Returns the type of the constant value.
     pub fn ty(&self) -> Type {
         match self {
@@ -293,6 +302,17 @@ pub enum IntConst {
 }
 
 impl IntConst {
+    /// Returns a zero-constant integer for the given type.
+    pub fn zero(int_ty: IntType) -> IntConst {
+        match int_ty {
+            IntType::I1 => Self::I1(false),
+            IntType::I8 => Self::I8(0),
+            IntType::I16 => Self::I16(0),
+            IntType::I32 => Self::I32(0),
+            IntType::I64 => Self::I64(0),
+        }
+    }
+
     /// Returns the type of the constant fixed-size integer.
     pub fn ty(&self) -> Type {
         self.int_ty().into()
@@ -329,6 +349,14 @@ pub enum FloatConst {
 }
 
 impl FloatConst {
+    /// Returns a zero-constant integer for the given type.
+    pub fn zero(float_ty: FloatType) -> FloatConst {
+        match float_ty {
+            FloatType::F32 => Self::F32(F32::from(0.0)),
+            FloatType::F64 => Self::F64(F64::from(0.0)),
+        }
+    }
+
     /// Returns the type of the constant floating point number.
     pub fn ty(&self) -> Type {
         match self {
