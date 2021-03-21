@@ -1383,6 +1383,27 @@
 <span id="1380">1380</span>
 <span id="1381">1381</span>
 <span id="1382">1382</span>
+<span id="1383">1383</span>
+<span id="1384">1384</span>
+<span id="1385">1385</span>
+<span id="1386">1386</span>
+<span id="1387">1387</span>
+<span id="1388">1388</span>
+<span id="1389">1389</span>
+<span id="1390">1390</span>
+<span id="1391">1391</span>
+<span id="1392">1392</span>
+<span id="1393">1393</span>
+<span id="1394">1394</span>
+<span id="1395">1395</span>
+<span id="1396">1396</span>
+<span id="1397">1397</span>
+<span id="1398">1398</span>
+<span id="1399">1399</span>
+<span id="1400">1400</span>
+<span id="1401">1401</span>
+<span id="1402">1402</span>
+<span id="1403">1403</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -2530,6 +2551,27 @@
         <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">StoreInstr</span>::<span class="ident">new</span>(<span class="ident">ptr</span>, <span class="ident">offset</span>, <span class="ident">stored_value</span>, <span class="ident">ty</span>);
         <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_instr</span>(<span class="ident">instruction</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
+    }
+
+    <span class="doccomment">/// Grows the memory by `new_pages` new pages and returns the current amount of pages.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">memory_grow</span>(
+        <span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">mem</span>: <span class="ident">Mem</span>,
+        <span class="ident">new_pages</span>: <span class="ident">Value</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">expect_type</span>(<span class="ident">new_pages</span>, <span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">ir</span>::<span class="ident">instr</span>::<span class="ident">MemoryGrowInstr</span>::<span class="ident">new</span>(<span class="ident">mem</span>, <span class="ident">new_pages</span>);
+        <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">_instr</span>) <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">append_value_instr</span>(<span class="ident">instruction</span>.<span class="ident">into</span>(), <span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+    }
+
+    <span class="doccomment">/// Grows the memory by `new_pages` new pages and returns the current amount of pages.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">memory_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mem</span>: <span class="ident">Mem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">ir</span>::<span class="ident">instr</span>::<span class="ident">MemorySizeInstr</span>::<span class="ident">new</span>(<span class="ident">mem</span>);
+        <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">_instr</span>) <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">append_value_instr</span>(<span class="ident">instruction</span>.<span class="ident">into</span>(), <span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
     }
 
     <span class="doccomment">/// Appends the instruction onto the current basic block.</span>

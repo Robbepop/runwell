@@ -293,9 +293,6 @@
 <span id="290">290</span>
 <span id="291">291</span>
 <span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -421,7 +418,7 @@
     <span class="doccomment">/// Translates the Wasm function body into an equivalent Runwell function body.</span>
     <span class="kw">fn</span> <span class="ident">translate</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionBody</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">translate_local_variables</span>()<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">initialize_entry_block</span>()<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">initialize_exit_block</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">translate_operators</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">finalize</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">body</span>)
@@ -443,7 +440,7 @@
     }
 
     <span class="doccomment">/// Initializes the control flow frames to contain the function body frame.</span>
-    <span class="kw">fn</span> <span class="ident">initialize_entry_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">initialize_exit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">entry_block_type</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">res</span>.<span class="ident">get_raw_func_type</span>(<span class="self">self</span>.<span class="ident">func</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="macro">panic</span><span class="macro">!</span>(
@@ -463,10 +460,7 @@
                 .<span class="ident">create_block_parameter</span>(<span class="ident">exit_block</span>, <span class="ident">return_value</span>)<span class="question-mark">?</span>;
         }
         <span class="self">self</span>.<span class="ident">control_stack</span>.<span class="ident">push_frame</span>(<span class="ident">ControlFlowFrame</span>::<span class="ident">Body</span>(
-            <span class="ident">FunctionBodyFrame</span>::<span class="ident">new</span>(
-                <span class="ident">WasmBlockType</span>::<span class="ident">from</span>(<span class="ident">entry_block_type</span>),
-                <span class="ident">exit_block</span>,
-            ),
+            <span class="ident">FunctionBodyFrame</span>::<span class="ident">new</span>(<span class="ident">block_type</span>, <span class="ident">exit_block</span>),
         ));
         <span class="prelude-val">Ok</span>(())
     }
