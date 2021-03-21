@@ -143,6 +143,11 @@ impl ModuleResources {
         Ok(())
     }
 
+    /// Returns the number of important function declarations.
+    pub fn len_imported_fns(&self) -> u32 {
+        self.function_import.len() as u32
+    }
+
     /// Returns the function type at the given index if any.
     pub fn get_type(&self, func_type: FuncType) -> Option<&FunctionType> {
         if !self.type_entities.contains_key(func_type) {
