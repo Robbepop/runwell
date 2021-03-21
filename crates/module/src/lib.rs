@@ -39,6 +39,7 @@ pub mod builder {
             FunctionBuilder,
             InstructionBuilder,
             MatchSelectInstructionBuilder,
+            MatchBranchBuilder,
         },
         func_type::FunctionTypeBuilder,
         module::{

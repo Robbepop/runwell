@@ -24,7 +24,7 @@ mod variable;
 pub use self::{
     builder::FunctionBuilder,
     error::{FunctionBuilderError, VariableAccess},
-    instruction::{Instr, InstructionBuilder, MatchSelectInstructionBuilder},
+    instruction::{Instr, InstructionBuilder, MatchSelectInstructionBuilder, MatchBranchBuilder},
     variable::Variable,
 };
 use self::{
