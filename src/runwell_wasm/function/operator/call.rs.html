@@ -78,6 +78,26 @@
 <span id="75">75</span>
 <span id="76">76</span>
 <span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -96,7 +116,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">FunctionBodyTranslator</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Error</span>, <span class="ident">TranslateError</span>};
 <span class="kw">use</span> <span class="ident">entity</span>::<span class="ident">RawIdx</span>;
-<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span>::<span class="ident">Func</span>;
+<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span>::{<span class="ident">Func</span>, <span class="ident">FuncType</span>, <span class="ident">Table</span>};
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span> <span class="ident">FunctionBodyTranslator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Translates a Wasm function call.</span>
@@ -108,6 +128,7 @@
         <span class="kw">let</span> <span class="ident">func_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">res</span>.<span class="ident">get_func_type</span>(<span class="ident">func</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;function type for {} must exist due to validation&quot;</span>, <span class="ident">func</span>)
         });
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;translate_call::function_type = {}&quot;</span>, <span class="ident">func_type</span>);
         <span class="kw">let</span> <span class="ident">len_inputs</span> <span class="op">=</span> <span class="ident">func_type</span>.<span class="ident">inputs</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">len_inputs</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="macro">panic</span><span class="macro">!</span>(
@@ -138,10 +159,29 @@
         <span class="ident">index</span>: <span class="ident">u32</span>,
         <span class="ident">table_index</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">unimplemented_operator</span>(
-            <span class="ident">wasmparser</span>::<span class="ident">Operator</span>::<span class="ident">CallIndirect</span> { <span class="ident">index</span>, <span class="ident">table_index</span> },
-        ))
-        .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        <span class="comment">// Note about the confusingly named parameters from `wasmparser`:</span>
+        <span class="comment">//</span>
+        <span class="comment">// - `index` is the index of the function&#39;s signature.</span>
+        <span class="comment">// - `table_index` is the index of the table to search the function in.</span>
+        <span class="kw">let</span> <span class="ident">func_type</span> <span class="op">=</span> <span class="ident">FuncType</span>::<span class="ident">from_raw</span>(<span class="ident">RawIdx</span>::<span class="ident">from_u32</span>(<span class="ident">index</span>));
+        <span class="kw">let</span> <span class="ident">function_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">res</span>.<span class="ident">get_type</span>(<span class="ident">func_type</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="macro">panic</span><span class="macro">!</span>(
+                <span class="string">&quot;missing function type for {} in module resources&quot;</span>,
+                <span class="ident">func_type</span>
+            )
+        });
+        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">function_type</span>.<span class="ident">inputs</span>();
+        <span class="kw">let</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">function_type</span>.<span class="ident">outputs</span>();
+        <span class="kw">let</span> <span class="ident">table</span> <span class="op">=</span> <span class="ident">Table</span>::<span class="ident">from_raw</span>(<span class="ident">RawIdx</span>::<span class="ident">from_u32</span>(<span class="ident">table_index</span>));
+        <span class="kw">let</span> <span class="ident">callee</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop1</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">pop_n</span>(<span class="ident">inputs</span>.<span class="ident">len</span>())<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">builder</span>
+            .<span class="ident">ins</span>()<span class="question-mark">?</span>
+            .<span class="ident">call_indirect</span>(<span class="ident">func_type</span>, <span class="ident">table</span>, <span class="ident">callee</span>, <span class="ident">args</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">value_stack</span>
+            .<span class="ident">extend</span>(<span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">instr_values</span>(<span class="ident">instr</span>)<span class="question-mark">?</span>.<span class="ident">iter</span>().<span class="ident">copied</span>());
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Translates a Wasm indirect function call.</span>

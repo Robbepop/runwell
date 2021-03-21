@@ -1344,6 +1344,45 @@
 <span id="1341">1341</span>
 <span id="1342">1342</span>
 <span id="1343">1343</span>
+<span id="1344">1344</span>
+<span id="1345">1345</span>
+<span id="1346">1346</span>
+<span id="1347">1347</span>
+<span id="1348">1348</span>
+<span id="1349">1349</span>
+<span id="1350">1350</span>
+<span id="1351">1351</span>
+<span id="1352">1352</span>
+<span id="1353">1353</span>
+<span id="1354">1354</span>
+<span id="1355">1355</span>
+<span id="1356">1356</span>
+<span id="1357">1357</span>
+<span id="1358">1358</span>
+<span id="1359">1359</span>
+<span id="1360">1360</span>
+<span id="1361">1361</span>
+<span id="1362">1362</span>
+<span id="1363">1363</span>
+<span id="1364">1364</span>
+<span id="1365">1365</span>
+<span id="1366">1366</span>
+<span id="1367">1367</span>
+<span id="1368">1368</span>
+<span id="1369">1369</span>
+<span id="1370">1370</span>
+<span id="1371">1371</span>
+<span id="1372">1372</span>
+<span id="1373">1373</span>
+<span id="1374">1374</span>
+<span id="1375">1375</span>
+<span id="1376">1376</span>
+<span id="1377">1377</span>
+<span id="1378">1378</span>
+<span id="1379">1379</span>
+<span id="1380">1380</span>
+<span id="1381">1381</span>
+<span id="1382">1382</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -1383,6 +1422,7 @@
         <span class="ident">BinaryFloatInstr</span>,
         <span class="ident">BinaryIntInstr</span>,
         <span class="ident">BranchInstr</span>,
+        <span class="ident">CallIndirectInstr</span>,
         <span class="ident">CallInstr</span>,
         <span class="ident">CompareFloatInstr</span>,
         <span class="ident">CompareIntInstr</span>,
@@ -1413,8 +1453,10 @@
         <span class="ident">Edge</span>,
         <span class="ident">FloatType</span>,
         <span class="ident">Func</span>,
+        <span class="ident">FuncType</span>,
         <span class="ident">IntType</span>,
         <span class="ident">Mem</span>,
+        <span class="ident">Table</span>,
         <span class="ident">Type</span>,
         <span class="ident">Value</span>,
     },
@@ -1515,6 +1557,42 @@
             <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">set</span>(<span class="ident">block</span>, <span class="bool-val">true</span>);
         }
         <span class="self">self</span>.<span class="ident">register_uses</span>(<span class="ident">instr</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">call_indirect</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(
+        <span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">func_type</span>: <span class="ident">FuncType</span>,
+        <span class="ident">table</span>: <span class="ident">Table</span>,
+        <span class="ident">callee</span>: <span class="ident">Value</span>,
+        <span class="ident">args</span>: <span class="ident">A</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instr</span>, <span class="ident">Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">A</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
+    {
+        <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span>
+            <span class="ident">CallIndirectInstr</span>::<span class="ident">new</span>(<span class="ident">table</span>, <span class="ident">func_type</span>, <span class="ident">callee</span>, <span class="ident">args</span>);
+        <span class="kw">let</span> <span class="ident">function_type</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">res</span>.<span class="ident">get_type</span>(<span class="ident">func_type</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                <span class="macro">panic</span><span class="macro">!</span>(
+                <span class="string">&quot;encountered missing function type while building function {}&quot;</span>,
+                <span class="ident">func_type</span>
+            )
+            });
+        <span class="kw">let</span> <span class="ident">arg_types</span> <span class="op">=</span> <span class="ident">instruction</span>
+            .<span class="ident">params</span>()
+            .<span class="ident">iter</span>()
+            .<span class="ident">copied</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">val</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_type</span>[<span class="ident">val</span>]);
+        <span class="macro">assert</span><span class="macro">!</span>(
+            <span class="comment">// We might want to turn this into an error instead of panicking.</span>
+            <span class="ident">arg_types</span>.<span class="ident">eq</span>(<span class="ident">function_type</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">copied</span>()),
+            <span class="string">&quot;encountered mismatch between function parameter types and declaration types&quot;</span>,
+        );
+        <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_multi_value_instr</span>(
+            <span class="ident">instruction</span>.<span class="ident">into</span>(),
+            <span class="ident">function_type</span>.<span class="ident">outputs</span>(),
+        )<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
 
