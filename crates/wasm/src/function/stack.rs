@@ -74,17 +74,30 @@ impl ValueStack {
         Ok((fst, snd, trd))
     }
 
+    /// Ensures that the length of the value stack is at least equal to `n`.
+    ///
+    /// # Errors
+    ///
+    /// If the length of the value stack is less than `n`.
+    fn ensure_length_is_at_least(
+        &self,
+        n: usize,
+    ) -> Result<usize, TranslateError> {
+        let len = self.len();
+        if n > len {
+            return Err(TranslateError::MissingStackValue {
+                expected: n as u32,
+                found: len as u32,
+            })
+        }
+        Ok(len)
+    }
+
     /// Pops the last `n` inserted values from the stack.
     ///
     /// The values are popped in the order in which they have been pushed.
     pub fn pop_n(&mut self, n: usize) -> Result<Drain<Value>, TranslateError> {
-        let len_stack = self.stack.len();
-        if n > len_stack {
-            return Err(TranslateError::MissingStackValue {
-                expected: n as u32,
-                found: len_stack as u32,
-            })
-        }
+        let len_stack = self.ensure_length_is_at_least(n)?;
         Ok(self.stack.drain((len_stack - n)..))
     }
 
@@ -92,13 +105,7 @@ impl ValueStack {
     ///
     /// The 0th last value is equal to the last value.
     pub fn last_n(&self, n: usize) -> Result<Value, TranslateError> {
-        let len_stack = self.stack.len();
-        if n >= len_stack {
-            return Err(TranslateError::MissingStackValue {
-                expected: n as u32,
-                found: len_stack as u32,
-            })
-        }
+        let len_stack = self.ensure_length_is_at_least(n + 1)?;
         Ok(self.stack[len_stack - n - 1])
     }
 
@@ -106,13 +113,7 @@ impl ValueStack {
     ///
     /// The values are peeked in the order in which they have been pushed.
     pub fn peek_n(&self, n: usize) -> Result<PeekIter, TranslateError> {
-        let len_stack = self.stack.len();
-        if n > len_stack {
-            return Err(TranslateError::MissingStackValue {
-                expected: n as u32,
-                found: len_stack as u32,
-            })
-        }
+        let len_stack = self.ensure_length_is_at_least(n)?;
         Ok(PeekIter::new(&self.stack[(len_stack - n)..]))
     }
 
@@ -143,7 +144,6 @@ impl ValueStack {
     /// # Errors
     ///
     /// If the given length is greater than the current length of the value stack.
-    #[allow(dead_code)]
     pub fn truncate(&mut self, len: usize) -> Result<(), TranslateError> {
         if self.len() < len {
             return Err(TranslateError::InvalidValueStackLength {
