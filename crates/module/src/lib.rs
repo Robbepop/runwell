@@ -38,8 +38,8 @@ pub mod builder {
         func_body::{
             FunctionBuilder,
             InstructionBuilder,
-            MatchSelectInstructionBuilder,
             MatchBranchBuilder,
+            MatchSelectInstructionBuilder,
         },
         func_type::FunctionTypeBuilder,
         module::{
