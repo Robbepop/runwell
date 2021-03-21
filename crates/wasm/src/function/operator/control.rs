@@ -214,8 +214,8 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         ty: wasmparser::TypeOrFuncType,
     ) -> Result<(), Error> {
         let block_type = WasmBlockType::try_from(ty)?;
-        let inputs = block_type.inputs(&self.res);
-        let block = self.block_with_params(inputs.iter().copied())?;
+        let outputs = block_type.outputs(&self.res);
+        let block = self.block_with_params(outputs.iter().copied())?;
         self.push_control_block(block, block_type);
         Ok(())
     }
