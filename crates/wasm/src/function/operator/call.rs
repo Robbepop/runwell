@@ -27,7 +27,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let func_type = self.res.get_func_type(func).unwrap_or_else(|| {
             panic!("function type for {} must exist due to validation", func)
         });
-        println!("translate_call::function_type = {}", func_type);
         let len_inputs = func_type.inputs().len();
         let params = self.value_stack.pop_n(len_inputs).unwrap_or_else(|_| {
             panic!(
