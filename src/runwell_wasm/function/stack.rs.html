@@ -299,17 +299,30 @@
         <span class="prelude-val">Ok</span>((<span class="ident">fst</span>, <span class="ident">snd</span>, <span class="ident">trd</span>))
     }
 
+    <span class="doccomment">/// Ensures that the length of the value stack is at least equal to `n`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Errors</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the length of the value stack is less than `n`.</span>
+    <span class="kw">fn</span> <span class="ident">ensure_length_is_at_least</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">n</span>: <span class="ident">usize</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">len</span>();
+        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">len</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
+                <span class="ident">expected</span>: <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                <span class="ident">found</span>: <span class="ident">len</span> <span class="kw">as</span> <span class="ident">u32</span>,
+            })
+        }
+        <span class="prelude-val">Ok</span>(<span class="ident">len</span>)
+    }
+
     <span class="doccomment">/// Pops the last `n` inserted values from the stack.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The values are popped in the order in which they have been pushed.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_n</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
-        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">len_stack</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
-                <span class="ident">expected</span>: <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">found</span>: <span class="ident">len_stack</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            })
-        }
+        <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ensure_length_is_at_least</span>(<span class="ident">n</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">drain</span>((<span class="ident">len_stack</span> <span class="op">-</span> <span class="ident">n</span>)..))
     }
 
@@ -317,13 +330,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The 0th last value is equal to the last value.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_n</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
-        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">len_stack</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
-                <span class="ident">expected</span>: <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">found</span>: <span class="ident">len_stack</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            })
-        }
+        <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ensure_length_is_at_least</span>(<span class="ident">n</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">stack</span>[<span class="ident">len_stack</span> <span class="op">-</span> <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>])
     }
 
@@ -331,13 +338,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The values are peeked in the order in which they have been pushed.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">peek_n</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PeekIter</span>, <span class="ident">TranslateError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">len</span>();
-        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">len_stack</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">MissingStackValue</span> {
-                <span class="ident">expected</span>: <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                <span class="ident">found</span>: <span class="ident">len_stack</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            })
-        }
+        <span class="kw">let</span> <span class="ident">len_stack</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ensure_length_is_at_least</span>(<span class="ident">n</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">PeekIter</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stack</span>[(<span class="ident">len_stack</span> <span class="op">-</span> <span class="ident">n</span>)..]))
     }
 
@@ -368,7 +369,6 @@
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the given length is greater than the current length of the value stack.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">truncate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TranslateError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">len</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranslateError</span>::<span class="ident">InvalidValueStackLength</span> {

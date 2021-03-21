@@ -778,8 +778,8 @@
         <span class="ident">ty</span>: <span class="ident">wasmparser</span>::<span class="ident">TypeOrFuncType</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">block_type</span> <span class="op">=</span> <span class="ident">WasmBlockType</span>::<span class="ident">try_from</span>(<span class="ident">ty</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">block_type</span>.<span class="ident">inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
-        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_with_params</span>(<span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>())<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">block_type</span>.<span class="ident">outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
+        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block_with_params</span>(<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>())<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">push_control_block</span>(<span class="ident">block</span>, <span class="ident">block_type</span>);
         <span class="prelude-val">Ok</span>(())
     }

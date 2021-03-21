@@ -295,6 +295,7 @@
 <span id="292">292</span>
 <span id="293">293</span>
 <span id="294">294</span>
+<span id="295">295</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -552,6 +553,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">block_inputs</span> <span class="op">=</span> <span class="ident">block_type</span>.<span class="ident">inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">res</span>);
         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block_inputs</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">len</span>());
+        <span class="kw">let</span> <span class="ident">original_stack_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">len</span>();
         <span class="comment">// Push a second copy of our `if`&#39;s parameters on the stack. This lets</span>
         <span class="comment">// us avoid saving them on the side in the `ControlFrameStack` for our</span>
         <span class="comment">// `else` block (if it exists), which would require a second heap</span>
@@ -565,7 +567,7 @@
         <span class="self">self</span>.<span class="ident">control_stack</span>.<span class="ident">push_frame</span>(<span class="ident">ControlFlowFrame</span>::<span class="ident">If</span>(
             <span class="ident">IfControlFrame</span>::<span class="ident">new</span>(
                 <span class="ident">block_type</span>,
-                <span class="self">self</span>.<span class="ident">value_stack</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">block_inputs</span>.<span class="ident">len</span>(),
+                <span class="ident">original_stack_size</span>,
                 <span class="ident">if_exit</span>,
                 <span class="ident">else_data</span>,
                 <span class="self">self</span>.<span class="ident">reachable</span>,
