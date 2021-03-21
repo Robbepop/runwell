@@ -56,6 +56,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             .builder
             .ins()?
             .float_to_int(src_type, dst_type, dst_signed, source, saturating)?;
+        assert_eq!(self.builder.value_type(result), dst_type.into(),);
         self.value_stack.push(result);
         Ok(())
     }
