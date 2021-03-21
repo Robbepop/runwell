@@ -2566,7 +2566,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
     }
 
-    <span class="doccomment">/// Grows the memory by `new_pages` new pages and returns the current amount of pages.</span>
+    <span class="doccomment">/// Return the current amount of memory pages of the linear memory.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">memory_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mem</span>: <span class="ident">Mem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">ir</span>::<span class="ident">instr</span>::<span class="ident">MemorySizeInstr</span>::<span class="ident">new</span>(<span class="ident">mem</span>);
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">_instr</span>) <span class="op">=</span>
