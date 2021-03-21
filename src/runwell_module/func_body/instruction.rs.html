@@ -1523,7 +1523,7 @@
         <span class="ident">P</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Value</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">CallInstr</span>::<span class="ident">new</span>(<span class="ident">func</span>, <span class="ident">params</span>);
-        <span class="kw">let</span> <span class="ident">func_type</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">function_type</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">res</span>.<span class="ident">get_func_type</span>(<span class="ident">func</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="macro">panic</span><span class="macro">!</span>(
                 <span class="string">&quot;encountered missing function type while building function {}&quot;</span>,
@@ -1537,12 +1537,12 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">val</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">ctx</span>.<span class="ident">value_type</span>[<span class="ident">val</span>]);
         <span class="macro">assert</span><span class="macro">!</span>(
             <span class="comment">// We might want to turn this into an error instead of panicking.</span>
-            <span class="ident">param_types</span>.<span class="ident">eq</span>(<span class="ident">func_type</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">copied</span>()),
+            <span class="ident">param_types</span>.<span class="ident">eq</span>(<span class="ident">function_type</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">copied</span>()),
             <span class="string">&quot;encountered mismatch between function parameter types and declaration types&quot;</span>,
         );
         <span class="kw">let</span> <span class="ident">instr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">append_multi_value_instr</span>(
             <span class="ident">instruction</span>.<span class="ident">into</span>(),
-            <span class="ident">func_type</span>.<span class="ident">outputs</span>(),
+            <span class="ident">function_type</span>.<span class="ident">outputs</span>(),
         )<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">instr</span>)
     }
