@@ -445,14 +445,9 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         }
 
         self.truncate_value_stack_to_original_size(&frame)?;
-        let Self {
-            value_stack,
-            ref builder,
-            ..
-        } = self;
         let next_block_params =
-            builder.block_parameters(next_block).iter().copied();
-        value_stack.extend(next_block_params);
+            self.builder.block_parameters(next_block).iter().copied();
+        self.value_stack.extend(next_block_params);
         Ok(())
     }
 
