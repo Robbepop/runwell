@@ -426,7 +426,6 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             if frame.is_func_body() {
                 // Ending the function body label is equal to a return.
                 self.builder.ins()?.return_values(output_args)?;
-                self.reachable = false;
             } else {
                 self.builder.ins()?.br(next_block, output_args)?;
             }
