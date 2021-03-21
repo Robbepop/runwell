@@ -91,7 +91,6 @@ impl ValueStack {
     /// Returns the nth last value from the stack.
     ///
     /// The 0th last value is equal to the last value.
-    #[allow(dead_code)]
     pub fn last_n(&self, n: usize) -> Result<Value, TranslateError> {
         let len_stack = self.stack.len();
         if n >= len_stack {
