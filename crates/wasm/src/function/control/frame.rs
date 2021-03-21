@@ -372,7 +372,6 @@ impl ControlFlowFrame {
     /// # Note
     ///
     /// This flag could be used in some cases to prevent creating of superfluous blocks.
-    #[allow(dead_code)]
     pub fn exit_is_branched_to(&self) -> bool {
         match self {
             Self::If(frame) => frame.is_branched_to,
