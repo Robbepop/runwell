@@ -122,7 +122,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     /// Translates the Wasm function body into an equivalent Runwell function body.
     fn translate(mut self) -> Result<FunctionBody, Error> {
         self.translate_local_variables()?;
-        self.initialize_entry_block()?;
+        self.initialize_exit_block()?;
         self.translate_operators()?;
         let body = self.builder.finalize()?;
         Ok(body)
@@ -144,7 +144,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     }
 
     /// Initializes the control flow frames to contain the function body frame.
-    fn initialize_entry_block(&mut self) -> Result<(), Error> {
+    fn initialize_exit_block(&mut self) -> Result<(), Error> {
         let entry_block_type =
             self.res.get_raw_func_type(self.func).unwrap_or_else(|| {
                 panic!(
@@ -164,10 +164,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 .create_block_parameter(exit_block, return_value)?;
         }
         self.control_stack.push_frame(ControlFlowFrame::Body(
-            FunctionBodyFrame::new(
-                WasmBlockType::from(entry_block_type),
-                exit_block,
-            ),
+            FunctionBodyFrame::new(block_type, exit_block),
         ));
         Ok(())
     }
