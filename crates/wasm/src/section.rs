@@ -609,6 +609,7 @@ impl ParseContext {
         let mut buffer = <Vec<u8>>::new();
         let mut eof = false;
         let mut count_bodies = 0;
+        let len_imported_fn = module_view.len_imported_fns();
         loop {
             // Parse, validate and feed function body to module builder.
             if count_bodies == total_count_bodies {
@@ -626,7 +627,9 @@ impl ParseContext {
                 } => {
                     let range = function_body.get_binary_reader().range();
                     let fn_validator = self.validator.code_section_entry()?;
-                    let func = Func::from_raw(RawIdx::from_u32(count_bodies));
+                    let func = Func::from_raw(RawIdx::from_u32(
+                        len_imported_fn + count_bodies,
+                    ));
                     let new_buffer = buffer.drain(consumed..).collect();
                     let fn_buffer = core::mem::replace(&mut buffer, new_buffer);
                     let func_body = translate_function_body(
