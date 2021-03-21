@@ -16,7 +16,6 @@ use super::super::{ControlFrameKind, ElseData, FunctionBodyTranslator};
 use crate::{
     function::control::{ControlFlowFrame, WasmBlockType},
     Error,
-    TranslateError,
 };
 use core::convert::TryFrom;
 use ir::{
@@ -511,10 +510,41 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         &mut self,
         table: wasmparser::BrTable,
     ) -> Result<(), Error> {
-        Err(TranslateError::unimplemented_operator(
-            wasmparser::Operator::BrTable { table },
-        ))
-        .map_err(Into::into)
+        let selector = self.value_stack.pop1()?;
+        let selector_type = self
+            .builder
+            .value_type(selector)
+            .filter_map_int()
+            .unwrap_or_else(|| panic!(
+                "expected an integer type for the `br_table` selector but found {}: {}",
+                selector,
+                self.builder.value_type(selector),
+            ));
+        let mut instr =
+            self.builder.ins()?.match_branch(selector_type, selector)?;
+        let mut default_destination = None;
+        let mut len_default_args = 0;
+        for target in table.targets() {
+            let (relative_depth, is_default) = target?;
+            let frame = self.control_stack.nth_back_mut(relative_depth)?;
+            let branch_destination = frame.branch_destination();
+            let len_branch_args = frame.len_branch_args(&self.res);
+            let branch_args = self.value_stack.peek_n(len_branch_args)?;
+            if !is_default {
+                instr.push_edge(branch_destination, branch_args)?;
+            } else {
+                default_destination = Some(branch_destination);
+                len_default_args = len_branch_args;
+            }
+            frame.set_branched_to_exit();
+        }
+        let default_destination = default_destination.unwrap_or_else(|| {
+            panic!("missing default label for Wasm `br_table`")
+        });
+        let default_args = self.value_stack.pop_n(len_default_args)?;
+        instr.finish(default_destination, default_args)?;
+        self.reachable = false;
+        Ok(())
     }
 
     /// Translate a Wasm `Return` control operator.
