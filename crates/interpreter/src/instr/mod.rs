@@ -130,10 +130,11 @@ impl InterpretInstr for MatchSelectInstr {
             .target_results(selected as usize)
             .unwrap_or_else(|| self.default_results());
         for (&target_result, output) in target_results.iter().zip(outputs) {
-            let output =
-                output.expect("encountered missing single output SSA value");
-            let result = frame.read_register(target_result);
-            frame.write_register(output, result);
+            if let Some(output) = output {
+                // Only write a result value if the result value is going to be read.
+                let result = frame.read_register(target_result);
+                frame.write_register(*output, result);
+            }
         }
         Ok(InterpretationFlow::Continue)
     }
