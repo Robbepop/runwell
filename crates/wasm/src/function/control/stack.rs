@@ -77,7 +77,6 @@ impl ControlFlowStack {
         let len = self.len();
         self.frames
             .iter_mut()
-            .rev()
             .nth_back(n as usize)
             .ok_or(TranslateError::RelativeDepthExceedsBlockStack { n, len })
     }
