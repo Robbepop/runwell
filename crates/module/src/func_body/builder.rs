@@ -40,6 +40,7 @@ use ir::{
     primitive::{
         Block,
         BlockEntity,
+        Const,
         Edge,
         EdgeEntity,
         Func,
@@ -180,6 +181,9 @@ pub struct FunctionBuilderContext {
     /// This translates local variables from the source language that
     /// are not in SSA form into SSA form values.
     pub vars: VariableTranslator,
+    /// Zero-constant initializers to emulate default initialization of
+    /// Wasm local variables. Every type has its own zero initializer.
+    pub zero_init: HashMap<Type, Value>,
 }
 
 impl Default for FunctionBuilderContext {
@@ -207,6 +211,7 @@ impl Default for FunctionBuilderContext {
             current: dummy_block,
             entry_block: dummy_block,
             vars: Default::default(),
+            zero_init: Default::default(),
         }
     }
 }
@@ -308,6 +313,28 @@ impl<'a> FunctionBuilder<'a> {
             FunctionBuilderState::LocalVariables,
         )?;
         self.ctx.vars.declare_vars(amount, ty)?;
+        self.implicit_zero_init(ty)?;
+        Ok(())
+    }
+
+    /// Creates the zero-initializer for the `ty` and stores it for later reuse.
+    ///
+    /// # Note
+    ///
+    /// We eagerly create these zero-initializers, one per Runwell type.
+    /// However, they only end up in the final constructed function if they
+    /// are actually used since otherwise they will be eliminated in the
+    /// dead code elimination phase.
+    fn implicit_zero_init(&mut self, ty: Type) -> Result<(), Error> {
+        self.ensure_construction_in_order(
+            FunctionBuilderState::LocalVariables,
+        )?;
+        debug_assert_eq!(self.ctx.current, self.ctx.entry_block);
+        if let Some(_cached) = self.ctx.zero_init.get(&ty) {
+            return Ok(())
+        }
+        let value = self.ins_impl()?.constant(Const::zero(ty))?;
+        self.ctx.zero_init.insert(ty, value);
         Ok(())
     }
 
@@ -674,10 +701,17 @@ impl<'a> FunctionBuilder<'a> {
         match same {
             None => {
                 // The block parameter is unreachable or in the entry block.
-                // The paper we implement replaces it with an undefined instruction
-                // but we simply bail out with an error.
-                Err(FunctionBuilderError::UnreachablePhi { value: param })
-                    .map_err(Into::into)
+                // The paper we implement replaces it with an undefined instruction.
+                // However, we try to mimic WebAssembly semantics instead.
+                //
+                // # Note
+                //
+                // This can happen if a local variable is accesses before it has
+                // ever been assigned to some value. We zero-initialize the values
+                // in this cases since variables in WebAssembly are zero-initialized.
+                let ty = self.ctx.value_type[param];
+                let zero_init = self.ctx.zero_init[&ty];
+                Ok(Some(zero_init))
             }
             Some(same) => {
                 // The block parameter was determined to be trivial and should
