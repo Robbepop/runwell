@@ -944,11 +944,12 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Returns an instruction builder to appends instructions to the current basic block.
     ///
-    /// # Errors
+    /// # Note
     ///
-    /// If the current block is already filled.
-    pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
-        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+    /// This is an internal implementation that can be called out-of-order.
+    /// This is required for it to be called in the local variable declaration
+    /// phase to set-up zero-initializers.
+    fn ins_impl<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
         let block = self.current_block()?;
         let already_filled = self.ctx.block_filled.get(block);
         if already_filled {
@@ -958,6 +959,16 @@ impl<'a> FunctionBuilder<'a> {
             .map_err(Into::into)
         }
         Ok(InstructionBuilder::new(self))
+    }
+
+    /// Returns an instruction builder to appends instructions to the current basic block.
+    ///
+    /// # Errors
+    ///
+    /// If the current block is already filled.
+    pub fn ins<'b>(&'b mut self) -> Result<InstructionBuilder<'b, 'a>, Error> {
+        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
+        self.ins_impl()
     }
 
     /// Seals all remaining unsealed blocks.
