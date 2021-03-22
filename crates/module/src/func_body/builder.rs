@@ -330,7 +330,6 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// If no basic blocks exist.
     pub fn current_block(&mut self) -> Result<Block, Error> {
-        self.ensure_construction_in_order(FunctionBuilderState::Body)?;
         Ok(self.ctx.current)
     }
 
