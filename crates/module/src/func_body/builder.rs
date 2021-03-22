@@ -1141,14 +1141,55 @@ impl<'a> FunctionBuilder<'a> {
     ///
     /// - This information can later be used to remove dead instructions from the function body.
     /// - An instruction is said to be alive if it is used at least once in any of the basic blocks.
-    fn get_alive_instrs(&self) -> DefaultComponentBitVec<Instr> {
+    fn get_alive_instrs(
+        &self,
+        value_replace: &Replacer<Value>,
+    ) -> DefaultComponentBitVec<Instr> {
         let mut is_alive = <DefaultComponentBitVec<Instr>>::default();
         for block in self.ctx.blocks.indices() {
             for instr in self.ctx.block_instrs[block].iter().copied() {
-                is_alive.set(instr, true);
+                let actual_outputs = self.ctx.instr_values[instr]
+                    .iter()
+                    .filter(|&&value| value_replace.try_get(value).is_some())
+                    .count();
+                let expected_outputs = self.instr_expected_returns(instr);
+                is_alive
+                    .set(instr, expected_outputs == 0 || actual_outputs > 0);
             }
         }
         is_alive
+    }
+
+    /// Returns the number of expected return values for the given instruction.
+    fn instr_expected_returns(&self, instr: Instr) -> usize {
+        let instruction = &self.ctx.instrs[instr];
+        match instruction {
+            Instruction::Call(instr) => {
+                self.res
+                    .get_func_type(instr.func())
+                    .expect("missing function type for call")
+                    .outputs()
+                    .len()
+            }
+            Instruction::CallIndirect(instr) => {
+                self.res
+                    .get_type(instr.func_type())
+                    .expect("missing function type for call_indirect")
+                    .outputs()
+                    .len()
+            }
+            Instruction::Const(_) => 1,
+            Instruction::MemoryGrow(_) => 1,
+            Instruction::MemorySize(_) => 1,
+            Instruction::HeapAddr(_) => 1,
+            Instruction::Load(_) => 1,
+            Instruction::Store(_) => 0,
+            Instruction::Select(instr) => instr.result_types().len(),
+            Instruction::Reinterpret(_) => 1,
+            Instruction::Terminal(_) => 0,
+            Instruction::Int(_) => 1,
+            Instruction::Float(_) => 1,
+        }
     }
 
     /// Initializes all instructions of the finalized constructed function body.
@@ -1161,7 +1202,7 @@ impl<'a> FunctionBuilder<'a> {
         value_replace: &Replacer<Value>,
         body: &mut FunctionBody,
     ) {
-        let is_instr_alive = self.get_alive_instrs();
+        let is_instr_alive = self.get_alive_instrs(value_replace);
         let mut instr_replace = <Replacer<Instr>>::default();
         // Fetch all alive instructions.
         for (old_instr, instruction) in &mut self.ctx.instrs {
