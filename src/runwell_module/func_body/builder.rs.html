@@ -1286,6 +1286,7 @@
 <span id="1283">1283</span>
 <span id="1284">1284</span>
 <span id="1285">1285</span>
+<span id="1286">1286</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -2557,8 +2558,9 @@
         <span class="comment">// Replace instruction references of block instructions.</span>
         <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">indices</span>() {
             <span class="kw">for</span> <span class="ident">old_instr</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_instrs</span>[<span class="ident">block</span>].<span class="ident">iter</span>().<span class="ident">copied</span>() {
-                <span class="kw">let</span> <span class="ident">new_instr</span> <span class="op">=</span> <span class="ident">instr_replace</span>.<span class="ident">get</span>(<span class="ident">old_instr</span>);
-                <span class="ident">body</span>.<span class="ident">block_instrs</span>[<span class="ident">block</span>].<span class="ident">push</span>(<span class="ident">new_instr</span>);
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">new_instr</span>) <span class="op">=</span> <span class="ident">instr_replace</span>.<span class="ident">try_get</span>(<span class="ident">old_instr</span>) {
+                    <span class="ident">body</span>.<span class="ident">block_instrs</span>[<span class="ident">block</span>].<span class="ident">push</span>(<span class="ident">new_instr</span>);
+                }
             }
         }
         <span class="comment">// Replace value association of all alive values.</span>
