@@ -1268,8 +1268,9 @@ impl<'a> FunctionBuilder<'a> {
         // Replace instruction references of block instructions.
         for block in self.ctx.blocks.indices() {
             for old_instr in self.ctx.block_instrs[block].iter().copied() {
-                let new_instr = instr_replace.get(old_instr);
-                body.block_instrs[block].push(new_instr);
+                if let Some(new_instr) = instr_replace.try_get(old_instr) {
+                    body.block_instrs[block].push(new_instr);
+                }
             }
         }
         // Replace value association of all alive values.
