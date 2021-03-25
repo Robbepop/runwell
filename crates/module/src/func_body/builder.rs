@@ -1007,8 +1007,10 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Seals all remaining unsealed blocks.
     fn seal_all_blocks(&mut self) -> Result<(), Error> {
-        let blocks = self.ctx.blocks.indices().collect::<Vec<_>>();
-        for block in blocks {
+        // Cloning `self.ctx.blocks` is very cheap since the type
+        // is nothing but a glorified counter.
+        let blocks = self.ctx.blocks.clone();
+        for block in blocks.indices() {
             if !self.ctx.block_sealed.get(block) {
                 // The block has not yet been sealed.
                 self.seal_block(block)?;
