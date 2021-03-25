@@ -327,7 +327,6 @@
 <span id="324">324</span>
 <span id="325">325</span>
 <span id="326">326</span>
-<span id="327">327</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -344,7 +343,6 @@
 <span class="comment">// limitations under the License.</span>
 
 <span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">extract_single_output</span>,
     <span class="ident">InterpretInstr</span>,
     <span class="ident">InterpretationError</span>,
     <span class="ident">InterpretationFlow</span>,
@@ -411,7 +409,7 @@
         <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
         <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
+        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="macro">extract_single_output_or_skip</span><span class="macro">!</span>(<span class="ident">outputs</span>);
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">src</span>());
         <span class="macro">assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">dst_type</span>().<span class="ident">bit_width</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">src_type</span>().<span class="ident">bit_width</span>());
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">src_type</span>(), <span class="self">self</span>.<span class="ident">dst_type</span>()) {
@@ -429,7 +427,7 @@
         <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
         <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
+        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="macro">extract_single_output_or_skip</span><span class="macro">!</span>(<span class="ident">outputs</span>);
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">src</span>());
         <span class="macro">assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">src_type</span>().<span class="ident">bit_width</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">dst_type</span>().<span class="ident">bit_width</span>());
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">src_type</span>(), <span class="self">self</span>.<span class="ident">dst_type</span>()) {
@@ -447,7 +445,7 @@
         <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
         <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
+        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="macro">extract_single_output_or_skip</span><span class="macro">!</span>(<span class="ident">outputs</span>);
         <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">lhs</span>());
         <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">rhs</span>());
         <span class="kw">use</span> <span class="ident">CompareFloatOp</span> <span class="kw">as</span> <span class="ident">Op</span>;
@@ -493,7 +491,7 @@
         <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
         <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
+        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="macro">extract_single_output_or_skip</span><span class="macro">!</span>(<span class="ident">outputs</span>);
         <span class="kw">let</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">lhs</span>());
         <span class="kw">let</span> <span class="ident">rhs</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">rhs</span>());
         <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">ops</span>::{<span class="ident">Add</span>, <span class="ident">Div</span>, <span class="ident">Mul</span>, <span class="ident">Sub</span>};
@@ -556,7 +554,7 @@
         <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
         <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
+        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="macro">extract_single_output_or_skip</span><span class="macro">!</span>(<span class="ident">outputs</span>);
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">src</span>());
         <span class="kw">use</span> <span class="ident">FloatType</span>::{<span class="ident">F32</span>, <span class="ident">F64</span>};
         <span class="kw">use</span> <span class="ident">UnaryFloatOp</span> <span class="kw">as</span> <span class="ident">Op</span>;
@@ -613,7 +611,7 @@
         <span class="ident">outputs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>],
         <span class="kw-2">mut</span> <span class="ident">frame</span>: <span class="ident">ActivationFrame</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InterpretationFlow</span>, <span class="ident">InterpretationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="ident">extract_single_output</span>(<span class="ident">outputs</span>);
+        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="macro">extract_single_output_or_skip</span><span class="macro">!</span>(<span class="ident">outputs</span>);
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">read_register</span>(<span class="self">self</span>.<span class="ident">src</span>());
         <span class="kw">use</span> <span class="ident">FloatType</span>::{<span class="ident">F32</span>, <span class="ident">F64</span>};
         <span class="kw">use</span> <span class="ident">IntType</span>::{<span class="ident">I1</span>, <span class="ident">I16</span>, <span class="ident">I32</span>, <span class="ident">I64</span>, <span class="ident">I8</span>};
