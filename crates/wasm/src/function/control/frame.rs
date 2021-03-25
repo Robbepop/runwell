@@ -248,6 +248,7 @@ pub enum ElseData {
 
 /// Helper methods for the control stack objects.
 impl ControlFlowFrame {
+    /// Returns the kind of the control flow frame.
     pub fn kind(&self) -> ControlFrameKind {
         match self {
             Self::If(frame) => ControlFrameKind::If,
@@ -392,6 +393,11 @@ impl ControlFlowFrame {
     }
 
     /// Tells the frame that it has been branched to if possible.
+    ///
+    /// # Note
+    ///
+    /// This information can in some occassions be used to avoid some unused
+    /// basic blocks and branches to those in the translated Runwell IR.
     pub fn set_branched_to_exit(&mut self) {
         match self {
             Self::If(frame) => frame.is_branched_to = true,
