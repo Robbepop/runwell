@@ -1289,6 +1289,18 @@
 <span id="1286">1286</span>
 <span id="1287">1287</span>
 <span id="1288">1288</span>
+<span id="1289">1289</span>
+<span id="1290">1290</span>
+<span id="1291">1291</span>
+<span id="1292">1292</span>
+<span id="1293">1293</span>
+<span id="1294">1294</span>
+<span id="1295">1295</span>
+<span id="1296">1296</span>
+<span id="1297">1297</span>
+<span id="1298">1298</span>
+<span id="1299">1299</span>
+<span id="1300">1300</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -1827,8 +1839,20 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">param_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">param_var</span>[<span class="ident">param</span>];
         <span class="kw">let</span> (<span class="ident">param_block</span>, <span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">expect_block_param</span>(<span class="ident">param</span>);
-        <span class="kw">let</span> <span class="ident">incoming_edges</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">param_block</span>].<span class="ident">clone</span>();
-        <span class="kw">for</span> <span class="ident">edge</span> <span class="kw">in</span> <span class="ident">incoming_edges</span> {
+        <span class="kw">let</span> <span class="ident">len_incoming_edges</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">param_block</span>].<span class="ident">len</span>();
+        <span class="kw">for</span> <span class="ident">edge_idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">len_incoming_edges</span> {
+            <span class="macro">debug_assert_eq</span><span class="macro">!</span>(
+                <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">param_block</span>].<span class="ident">len</span>(),
+                <span class="ident">len_incoming_edges</span>,
+                <span class="string">&quot;the number of incoming edges has changed while adding \
+                another incomplete block parameter {} to {} at index {} \
+                representing {}.&quot;</span>,
+                <span class="ident">param</span>,
+                <span class="ident">param_block</span>,
+                <span class="ident">index</span>,
+                <span class="ident">param_var</span>,
+            );
+            <span class="kw">let</span> <span class="ident">edge</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">param_block</span>][<span class="ident">edge_idx</span>];
             <span class="kw">let</span> <span class="ident">edge_src</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">edge_src</span>[<span class="ident">edge</span>];
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_var_in_block</span>(<span class="ident">param_var</span>, <span class="ident">edge_src</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">edge_args</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">edge_args</span>[<span class="ident">edge</span>];
