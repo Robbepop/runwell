@@ -12,6 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// Extracts the single output value from the outputs slice or skips execution.
+macro_rules! extract_single_output_or_skip {
+    ($outputs:expr) => {{
+        debug_assert!(
+            $outputs.len() == 1,
+            "expected 1 static output value but found {}",
+            $outputs.len(),
+        );
+        match $outputs[0] {
+            Some(output) => output,
+            None => return Ok(InterpretationFlow::Continue),
+        }
+    }};
+}
+
 mod float;
 mod int;
 mod primitive;
@@ -62,11 +77,6 @@ pub enum InterpretationFlow {
     Call(Func),
 }
 
-fn extract_single_output(outputs: &[Option<Value>]) -> Value {
-    debug_assert_eq!(outputs.len(), 1);
-    outputs[0].expect("encountered missing single output SSA value")
-}
-
 impl InterpretInstr for FunctionBody {
     fn interpret_instr(
         &self,
@@ -113,7 +123,7 @@ impl InterpretInstr for ConstInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         frame.write_register(return_value, self.const_value().into_bits64());
         Ok(InterpretationFlow::Continue)
     }
@@ -161,7 +171,7 @@ impl InterpretInstr for ReinterpretInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         debug_assert_eq!(
             self.src_type().bit_width(),

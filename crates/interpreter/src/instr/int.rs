@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use super::{
-    extract_single_output,
     InterpretInstr,
     InterpretationError,
     InterpretationFlow,
@@ -61,7 +60,7 @@ impl InterpretInstr for UnaryIntInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         let result = match self.op() {
             UnaryIntOp::LeadingZeros => source.leading_zeros(),
@@ -79,7 +78,7 @@ impl InterpretInstr for TruncateIntInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         debug_assert!(
             self.dst_type().bit_width() <= self.src_type().bit_width()
@@ -102,7 +101,7 @@ impl InterpretInstr for ExtendIntInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         debug_assert!(
             self.src_type().bit_width() <= self.dst_type().bit_width()
@@ -151,7 +150,7 @@ impl InterpretInstr for IntToFloatInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use IntType::{I1, I16, I32, I64, I8};
@@ -198,7 +197,7 @@ impl InterpretInstr for CompareIntInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use CompareIntOp as Op;
@@ -266,7 +265,7 @@ impl InterpretInstr for ShiftIntInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let src = frame.read_register(self.source());
         let shamt = frame.read_register(self.shift_amount());
         fn eval_shift<T, F>(lhs: u64, rhs: u64, f: F) -> u64
@@ -314,7 +313,7 @@ impl InterpretInstr for BinaryIntInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use core::ops::{BitAnd, BitOr, BitXor};

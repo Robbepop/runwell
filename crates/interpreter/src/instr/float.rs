@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use super::{
-    extract_single_output,
     InterpretInstr,
     InterpretationError,
     InterpretationFlow,
@@ -80,7 +79,7 @@ impl InterpretInstr for DemoteFloatInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         assert!(self.dst_type().bit_width() <= self.src_type().bit_width());
         let result = match (self.src_type(), self.dst_type()) {
@@ -98,7 +97,7 @@ impl InterpretInstr for PromoteFloatInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         assert!(self.src_type().bit_width() <= self.dst_type().bit_width());
         let result = match (self.src_type(), self.dst_type()) {
@@ -116,7 +115,7 @@ impl InterpretInstr for CompareFloatInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use CompareFloatOp as Op;
@@ -162,7 +161,7 @@ impl InterpretInstr for BinaryFloatInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let lhs = frame.read_register(self.lhs());
         let rhs = frame.read_register(self.rhs());
         use core::ops::{Add, Div, Mul, Sub};
@@ -225,7 +224,7 @@ impl InterpretInstr for UnaryFloatInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use UnaryFloatOp as Op;
@@ -282,7 +281,7 @@ impl InterpretInstr for FloatToIntInstr {
         outputs: &[Option<Value>],
         mut frame: ActivationFrame,
     ) -> Result<InterpretationFlow, InterpretationError> {
-        let return_value = extract_single_output(outputs);
+        let return_value = extract_single_output_or_skip!(outputs);
         let source = frame.read_register(self.src());
         use FloatType::{F32, F64};
         use IntType::{I1, I16, I32, I64, I8};
