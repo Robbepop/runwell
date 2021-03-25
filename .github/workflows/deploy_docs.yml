@@ -21,6 +21,8 @@ jobs:
           components: rust-docs, rust-src
       - name: Build Documentation
         uses: actions-rs/cargo@v1
+        env:
+          RUSTDOCFLAGS: '-D warnings --default-theme dark'
         with:
           command: doc
           args: --workspace --no-deps
