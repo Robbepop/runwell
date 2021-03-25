@@ -535,8 +535,20 @@ impl<'a> FunctionBuilder<'a> {
     ) -> Result<Value, Error> {
         let param_var = self.ctx.param_var[param];
         let (param_block, index) = self.expect_block_param(param);
-        let incoming_edges = self.ctx.block_edges[param_block].clone();
-        for edge in incoming_edges {
+        let len_incoming_edges = self.ctx.block_edges[param_block].len();
+        for edge_idx in 0..len_incoming_edges {
+            debug_assert_eq!(
+                self.ctx.block_edges[param_block].len(),
+                len_incoming_edges,
+                "the number of incoming edges has changed while adding \
+                another incomplete block parameter {} to {} at index {} \
+                representing {}.",
+                param,
+                param_block,
+                index,
+                param_var,
+            );
+            let edge = self.ctx.block_edges[param_block][edge_idx];
             let edge_src = self.ctx.edge_src[edge];
             let value = self.read_var_in_block(param_var, edge_src)?;
             let edge_args = &mut self.ctx.edge_args[edge];
