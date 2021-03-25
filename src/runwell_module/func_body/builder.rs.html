@@ -1287,6 +1287,8 @@
 <span id="1284">1284</span>
 <span id="1285">1285</span>
 <span id="1286">1286</span>
+<span id="1287">1287</span>
+<span id="1288">1288</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -2297,8 +2299,10 @@
 
     <span class="doccomment">/// Seals all remaining unsealed blocks.</span>
     <span class="kw">fn</span> <span class="ident">seal_all_blocks</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">indices</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span> {
+        <span class="comment">// Cloning `self.ctx.blocks` is very cheap since the type</span>
+        <span class="comment">// is nothing but a glorified counter.</span>
+        <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">clone</span>();
+        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">indices</span>() {
             <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">block</span>) {
                 <span class="comment">// The block has not yet been sealed.</span>
                 <span class="self">self</span>.<span class="ident">seal_block</span>(<span class="ident">block</span>)<span class="question-mark">?</span>;
