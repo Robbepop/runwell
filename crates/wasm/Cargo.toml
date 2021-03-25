@@ -9,7 +9,7 @@ entity = { package = "runwell_entity", path = "../entity" }
 ir = { package = "runwell_ir", path = "../ir" }
 module = { package = "runwell_module", path = "../module" }
 
-wasmparser = { version = "0.76", features = ["deterministic"] }
+wasmparser = { version = "0.77", features = ["deterministic"] }
 derive_more = "0.99.2"
 cfg-if = "1"
 

@@ -328,6 +328,7 @@ impl ParseContext {
                 name: _,
                 data_offset: _,
                 data: _,
+                range: _,
             } => { /* custom sections are ignored */ }
             Payload::UnknownSection {
                 id: _,
