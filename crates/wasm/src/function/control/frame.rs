@@ -396,7 +396,7 @@ impl ControlFlowFrame {
     ///
     /// # Note
     ///
-    /// This information can in some occassions be used to avoid some unused
+    /// This information can in some occasions be used to avoid some unused
     /// basic blocks and branches to those in the translated Runwell IR.
     pub fn set_branched_to_exit(&mut self) {
         match self {
