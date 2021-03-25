@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["runwell_module"] = [{"text":"impl DisplayEdge for FunctionBody","synthetic":false,"types":[]}];
+implementors["runwell_module"] = [{"text":"impl <a class=\"trait\" href=\"runwell_ir/display/trait.DisplayEdge.html\" title=\"trait runwell_ir::display::DisplayEdge\">DisplayEdge</a> for <a class=\"struct\" href=\"runwell_module/struct.FunctionBody.html\" title=\"struct runwell_module::FunctionBody\">FunctionBody</a>","synthetic":false,"types":["runwell_module::func_body::FunctionBody"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
