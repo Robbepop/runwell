@@ -130,6 +130,21 @@ impl FunctionTypeBuilder {
     }
 }
 
+impl<const I: usize, const O: usize> From<([Type; I], [Type; O])>
+    for FunctionType
+{
+    fn from((inputs, outputs): ([Type; I], [Type; O])) -> Self {
+        let mut builder = Self::build();
+        for input in IntoIter::new(inputs) {
+            builder.push_input(input);
+        }
+        for output in IntoIter::new(outputs) {
+            builder.push_output(output);
+        }
+        builder.finalize()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
