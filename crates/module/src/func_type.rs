@@ -57,21 +57,43 @@ impl fmt::Debug for FunctionType {
 
 impl fmt::Display for FunctionType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "[")?;
-        if let Some((first, rest)) = self.inputs().split_first() {
-            write!(f, "{}", first)?;
-            for input in rest {
-                write!(f, ", {}", input)?;
+        // Write inputs to formatter.
+        match self.inputs().split_first() {
+            Some((first, rest)) => {
+                if !rest.is_empty() {
+                    write!(f, "(")?;
+                }
+                write!(f, "{}", first)?;
+                for input in rest {
+                    write!(f, ", {}", input)?;
+                }
+                if !rest.is_empty() {
+                    write!(f, ")")?;
+                }
+            }
+            None => {
+                write!(f, "()")?;
             }
         }
-        write!(f, "] => [")?;
-        if let Some((first, rest)) = self.outputs().split_first() {
-            write!(f, "{}", first)?;
-            for output in rest {
-                write!(f, ", {}", output)?;
+        write!(f, " -> ")?;
+        // Write outputs to formatter.
+        match self.outputs().split_first() {
+            Some((first, rest)) => {
+                if !rest.is_empty() {
+                    write!(f, "(")?;
+                }
+                write!(f, "{}", first)?;
+                for output in rest {
+                    write!(f, ", {}", output)?;
+                }
+                if !rest.is_empty() {
+                    write!(f, ")")?;
+                }
+            }
+            None => {
+                write!(f, "()")?;
             }
         }
-        write!(f, "]")?;
         Ok(())
     }
 }
@@ -188,13 +210,32 @@ mod tests {
 
     #[test]
     fn debug_and_display_works() {
+        use ir::primitive::{FloatType, IntType};
+
         // Empty Function Type
         let empty_func_type = FunctionType::build().finalize();
         assert_eq!(
             format!("{:?}", empty_func_type),
             "FunctionType { inputs: [], outputs: [] }".to_string()
         );
-        assert_eq!(format!("{}", empty_func_type), "[] => []".to_string());
+        assert_eq!(format!("{}", empty_func_type), "() -> ()".to_string());
+
+        // Single input and single output
+        let single_input_output = {
+            let mut builder = FunctionType::build();
+            builder.push_input(IntType::I32);
+            builder.push_output(FloatType::F32);
+            builder.finalize()
+        };
+        assert_eq!(
+            format!("{:?}", single_input_output),
+            "FunctionType { inputs: [Int(I32)], outputs: [Float(F32)] }"
+                .to_string()
+        );
+        assert_eq!(
+            format!("{}", single_input_output),
+            "i32 -> f32".to_string()
+        );
 
         // Dummy Function Type
         let dummy_func_type = dummy_func_type();
@@ -205,7 +246,7 @@ mod tests {
         );
         assert_eq!(
             format!("{}", dummy_func_type),
-            "[i32, i1, f64] => [i64, f32]".to_string()
+            "(i32, i1, f64) -> (i64, f32)".to_string()
         );
     }
 }
