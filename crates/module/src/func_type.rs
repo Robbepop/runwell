@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::fmt;
+use core::{array::IntoIter, fmt};
 use ir::primitive::Type;
 
 /// A function type.
