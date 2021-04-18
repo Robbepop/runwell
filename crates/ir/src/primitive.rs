@@ -393,6 +393,12 @@ impl F32 {
     }
 }
 
+impl Default for F32 {
+    fn default() -> Self {
+        f32::default().into()
+    }
+}
+
 impl From<f32> for F32 {
     fn from(value: f32) -> Self {
         Self {
@@ -423,6 +429,12 @@ impl F64 {
     /// Returns the underlying bits of the 64-bit float.
     pub fn bits(self) -> u64 {
         self.bits
+    }
+}
+
+impl Default for F64 {
+    fn default() -> Self {
+        f64::default().into()
     }
 }
 
