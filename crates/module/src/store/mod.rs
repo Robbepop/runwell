@@ -37,6 +37,7 @@ use ir::primitive::{LinearMemoryEntity, Mem};
 #[derive(Debug, Display, From, PartialEq, Eq)]
 pub enum StoreError {
     Memory(MemoryError),
+    Global(GlobalError),
 }
 
 /// The WebAssembly store.
