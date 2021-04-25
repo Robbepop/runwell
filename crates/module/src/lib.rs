@@ -24,6 +24,7 @@ mod init_expr;
 mod linear_memory;
 mod module;
 mod table;
+pub mod primitive;
 
 pub use self::{
     error::{Error, ErrorKind},
@@ -55,18 +56,5 @@ pub mod builder {
             ModuleTablesBuilder,
             ModuleTypesBuilder,
         },
-    };
-}
-
-/// Primitive Wasm types that implement conversion to Runwell types.
-pub mod primitive {
-    pub use super::{
-        func_body::{Instr, Variable},
-        func_type::FunctionType,
-        global_var::{Global, GlobalVariable, GlobalVariableEntity},
-        import_name::ImportName,
-        init_expr::InitExpr,
-        linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
-        table::{ElementSegmentIter, TableDecl, TableInit},
     };
 }
