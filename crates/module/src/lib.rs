@@ -29,6 +29,7 @@ pub mod primitive;
 pub use self::{
     error::{Error, ErrorKind},
     func_body::{FunctionBody, FunctionBuilderError},
+    func_type::PrimitiveList,
     function::Function,
     module::{Module, ModuleResources},
 };

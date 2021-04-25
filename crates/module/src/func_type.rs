@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::primitive::RunwellPrimitive;
 use core::{array::IntoIter, fmt};
 use ir::primitive::Type;
 
@@ -167,13 +168,100 @@ impl<const I: usize, const O: usize> From<([Type; I], [Type; O])>
     }
 }
 
+/// Tuple-types of Runwell primitives implement this trait.
+///
+/// Those tuple types can be used to statically construct function signatures.
+pub trait PrimitiveList: private::Sealed {
+    /// Push primitive types to the inputs of a function signature.
+    fn push_inputs(builder: &mut FunctionTypeBuilder);
+    /// Push primitive types to the output of a function signature.
+    fn push_outputs(builder: &mut FunctionTypeBuilder);
+}
+
+mod private {
+    /// Seals implementers of `PrimitiveList` trait.
+    pub trait Sealed {}
+}
+
+macro_rules! impl_primitive_list_for {
+    ( $( $ty:ident ),* $(,)? ) => {
+        #[allow(unused_parens)]
+        impl< $($ty),* > self::private::Sealed for ( $($ty),* )
+        where
+            $(
+                $ty: RunwellPrimitive,
+            )*
+        {}
+
+        #[allow(unused_parens)]
+        impl< $($ty),* > PrimitiveList for ( $($ty),* )
+        where
+            $(
+                $ty: RunwellPrimitive,
+            )*
+        {
+            fn push_inputs(__builder: &mut FunctionTypeBuilder) {
+                $(
+                    __builder.push_input(<$ty as RunwellPrimitive>::TYPE);
+                )*
+            }
+
+            fn push_outputs(__builder: &mut FunctionTypeBuilder) {
+                $(
+                    __builder.push_output(<$ty as RunwellPrimitive>::TYPE);
+                )*
+            }
+        }
+    };
+}
+impl_primitive_list_for!();
+impl_primitive_list_for!(T0);
+impl_primitive_list_for!(T0, T1);
+impl_primitive_list_for!(T0, T1, T2);
+impl_primitive_list_for!(T0, T1, T2, T3);
+impl_primitive_list_for!(T0, T1, T2, T3, T4);
+impl_primitive_list_for!(T0, T1, T2, T3, T4, T5);
+impl_primitive_list_for!(T0, T1, T2, T3, T4, T5, T6);
+impl_primitive_list_for!(T0, T1, T2, T3, T4, T5, T6, T7);
+impl_primitive_list_for!(T0, T1, T2, T3, T4, T5, T6, T7, T8);
+impl_primitive_list_for!(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9);
+
+impl FunctionType {
+    /// Constructs a function type from the given inputs `I` and output `O` types.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ::ir::primitive::{Type, IntType};
+    /// # use ::runwell_module::primitive::FunctionType;
+    /// let sig = FunctionType::from_types::<(i32, i32), i64>();
+    /// assert_eq!(sig.inputs(), &[Type::Int(IntType::I32), Type::Int(IntType::I32)]);
+    /// assert_eq!(sig.outputs(), &[Type::Int(IntType::I64)]);
+    /// ```
+    pub fn from_types<I, O>() -> Self
+    where
+        I: PrimitiveList,
+        O: PrimitiveList,
+    {
+        let mut builder = Self::build();
+        <I as PrimitiveList>::push_inputs(&mut builder);
+        <O as PrimitiveList>::push_outputs(&mut builder);
+        builder.finalize()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ir::primitive::{FloatType, IntType};
+
+    /// Returns the empty function type that takes no inputs and returns no outputs.
+    fn empty_func_type() -> FunctionType {
+        FunctionType::build().finalize()
+    }
 
     /// Creates a dummy function type for testing.
     fn dummy_func_type() -> FunctionType {
-        use ir::primitive::{FloatType, IntType};
         let mut b = FunctionType::build();
         b.push_input(IntType::I32);
         b.push_input(IntType::I1);
@@ -181,6 +269,29 @@ mod tests {
         b.push_output(IntType::I64);
         b.push_output(FloatType::F32);
         b.finalize()
+    }
+
+    #[test]
+    fn constructors_works() {
+        // Compare with empty function signature. No inputs. No outputs.
+        assert_eq!(empty_func_type(), FunctionType::from(([], [])));
+        assert_eq!(empty_func_type(), FunctionType::from_types::<(), ()>());
+        // Compare with preset dummy function signature.
+        assert_eq!(
+            dummy_func_type(),
+            FunctionType::from((
+                [
+                    IntType::I32.into(),
+                    IntType::I1.into(),
+                    FloatType::F64.into()
+                ],
+                [IntType::I64.into(), FloatType::F32.into()]
+            )),
+        );
+        assert_eq!(
+            dummy_func_type(),
+            FunctionType::from_types::<(i32, bool, f64), (i64, f32)>(),
+        );
     }
 
     #[test]
