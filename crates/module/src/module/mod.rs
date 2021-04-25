@@ -13,7 +13,6 @@
 // limitations under the License.
 
 mod builder;
-mod instance;
 mod res;
 
 pub use self::{
@@ -32,21 +31,6 @@ pub use self::{
         ModuleTableElementsBuilder,
         ModuleTablesBuilder,
         ModuleTypesBuilder,
-    },
-    instance::{
-        Bytes,
-        GlobalError,
-        GlobalRef,
-        MemoryError,
-        MemoryRef,
-        MemoryView,
-        Mutability,
-        Pages,
-        RuntimeValue,
-        Store,
-        StoreError,
-        Trap,
-        TrapCode,
     },
     res::ModuleResources,
 };
