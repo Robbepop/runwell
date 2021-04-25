@@ -26,7 +26,7 @@ use self::{
 pub use crate::error::InterpretationError;
 use crate::instr::{InterpretInstr, InterpretationFlow};
 use ir::primitive::Func;
-use module::{Function, Module};
+use module::{utils::Function, Module};
 
 /// The evaluation context for the entire virtual machine.
 ///

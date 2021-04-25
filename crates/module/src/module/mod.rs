@@ -50,7 +50,7 @@ pub use self::{
     },
     res::ModuleResources,
 };
-use crate::{Function, FunctionBody};
+use crate::{utils::Function, FunctionBody};
 use core::fmt;
 use entity::ComponentVec;
 use ir::{primitive::Func, Indent};

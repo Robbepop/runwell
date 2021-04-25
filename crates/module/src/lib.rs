@@ -14,7 +14,7 @@
 
 #![forbid(unsafe_code)]
 
-mod error;
+pub mod error;
 mod func_body;
 mod func_type;
 mod function;
@@ -24,30 +24,15 @@ mod init_expr;
 mod linear_memory;
 mod module;
 pub mod primitive;
+mod store;
 mod table;
 
+#[doc(inline)]
 pub use self::{
-    error::{Error, ErrorKind},
-    func_body::{FunctionBody, FunctionBuilderError},
-    func_type::PrimitiveList,
-    function::Function,
-    module::{
-        Bytes,
-        GlobalError,
-        GlobalRef,
-        MemoryError,
-        MemoryRef,
-        MemoryView,
-        Module,
-        ModuleResources,
-        Mutability,
-        Pages,
-        RuntimeValue,
-        Store,
-        StoreError,
-        Trap,
-        TrapCode,
-    },
+    error::Error,
+    func_body::FunctionBody,
+    module::{Module, ModuleResources},
+    store::{GlobalRef, MemoryRef, Mutability, RuntimeValue, Store},
 };
 
 /// Module section builder types.
@@ -73,5 +58,14 @@ pub mod builder {
             ModuleTablesBuilder,
             ModuleTypesBuilder,
         },
+    };
+}
+
+/// Utility and auxiliary types and definitions.
+pub mod utils {
+    pub use super::{
+        func_type::PrimitiveList,
+        function::Function,
+        store::{Bytes, MemoryView, Pages},
     };
 }

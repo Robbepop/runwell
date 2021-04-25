@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::FunctionBuilderError;
 use core::fmt;
 use derive_more::{Display, Error, From};
+
+pub use super::{
+    func_body::FunctionBuilderError,
+    store::{GlobalError, MemoryError, StoreError, Trap, TrapCode},
+};
 
 /// An error that occurred while translating from Wasm to Runwell IR.
 #[derive(Debug, Error, From, PartialEq, Eq)]
