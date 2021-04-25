@@ -31,7 +31,23 @@ pub use self::{
     func_body::{FunctionBody, FunctionBuilderError},
     func_type::PrimitiveList,
     function::Function,
-    module::{Module, ModuleResources},
+    module::{
+        Bytes,
+        GlobalError,
+        GlobalRef,
+        MemoryError,
+        MemoryRef,
+        MemoryView,
+        Module,
+        ModuleResources,
+        Mutability,
+        Pages,
+        RuntimeValue,
+        Store,
+        StoreError,
+        Trap,
+        TrapCode,
+    },
 };
 
 /// Module section builder types.
