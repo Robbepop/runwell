@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ir::primitive::{FloatType, IntType, Type};
 pub use super::{
     func_body::{Instr, Variable},
     func_type::FunctionType,
@@ -22,6 +21,7 @@ pub use super::{
     linear_memory::{DataSegmentIter, LinearMemoryDecl, LinearMemoryInit},
     table::{ElementSegmentIter, TableDecl, TableInit},
 };
+use ir::primitive::{FloatType, IntType, Type};
 
 /// Implemented by all WebAssembly primitives.
 ///

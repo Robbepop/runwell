@@ -23,8 +23,8 @@ mod import_name;
 mod init_expr;
 mod linear_memory;
 mod module;
-mod table;
 pub mod primitive;
+mod table;
 
 pub use self::{
     error::{Error, ErrorKind},
