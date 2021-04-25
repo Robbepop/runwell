@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Bytes","Represents an amount of bytes."],["Function","A Runwell function."],["MemoryView","Represents a partial view into the contents of a linear memory."],["Pages","The amount of pages for a linear memory."]],"trait":[["PrimitiveList","Tuple-types of Runwell primitives implement this trait."]]});
