@@ -17,12 +17,14 @@ mod global;
 mod memory;
 // mod table;
 mod trap;
+mod value;
 
 use self::{global::GlobalInstance, memory::MemoryInstance};
 pub use self::{
-    global::{GlobalError, GlobalRef, Mutability, RuntimeValue},
+    global::{GlobalError, GlobalRef, Mutability},
     memory::{Bytes, MemoryError, MemoryRef, MemoryView, Pages},
     trap::{Trap, TrapCode},
+    value::RuntimeValue,
 };
 use crate::{
     global_var::{Global, GlobalVariableEntity},
