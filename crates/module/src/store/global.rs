@@ -233,6 +233,10 @@ impl GlobalInstance {
 }
 
 /// A shared reference to a global value.
+///
+/// # Note
+///
+/// Cloning a `GlobalRef` only performs an efficient shallow copy.
 #[derive(Debug, Clone)]
 pub struct GlobalRef {
     inner: Rc<GlobalInstance>,

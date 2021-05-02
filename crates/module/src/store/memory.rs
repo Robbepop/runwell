@@ -282,6 +282,10 @@ impl MemoryInstance {
 }
 
 /// A shared reference to a linear memory instance.
+///
+/// # Note
+///
+/// Cloning a `MemoryRef` only performs an efficient shallow copy.
 #[derive(Debug, Clone)]
 pub struct MemoryRef {
     inner: Rc<RefCell<MemoryInstance>>,
