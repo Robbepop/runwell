@@ -1,4 +1,4 @@
-40
+50
 
 WebAssembly
 Wasm
@@ -34,3 +34,8 @@ representable
 Cranelift
 preallocate
 reachability
+runtime
+NaN/S
+inlining
+globals
+deserialization

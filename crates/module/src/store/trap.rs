@@ -113,7 +113,7 @@ pub enum TrapCode {
     ///
     /// - This typically can happen when `call_indirect` is executed
     ///   with an out of bounds index.
-    /// - Since indexes are interpreted as unsinged integers, out of bounds access
+    /// - Since indexes are interpreted as unsigned integers, out of bounds access
     ///   can't happen with negative indexes (i.e. they will always wrap).
     #[display(fmt = "undefined element: out of bounds table access")]
     TableOutOfBounds,

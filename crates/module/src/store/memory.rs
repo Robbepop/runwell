@@ -23,7 +23,7 @@ use std::rc::Rc;
 /// A result encountered when operating on linear memory instances.
 type Result<T> = core::result::Result<T, MemoryError>;
 
-/// An error that can occure while operating on linear memory instances.
+/// An error that can occur while operating on linear memory instances.
 #[derive(Debug, Display, PartialEq, Eq)]
 pub enum MemoryError {
     #[display(
@@ -121,7 +121,7 @@ impl MemoryLayout {
         let maximum_pages = maximum_pages.unwrap_or(Pages::MAX);
         assert!(
             minimum_pages < maximum_pages,
-            "tried to create a linear memory with only {} maxmimum and {} minimum pages",
+            "tried to create a linear memory with only {} maximum and {} minimum pages",
             maximum_pages.into_u16(),
             minimum_pages.into_u16(),
         );
@@ -207,7 +207,7 @@ impl MemoryInstance {
     ///
     /// # Panics
     ///
-    /// When trying to create a linear memory with fewer maxmimum pages than minimum pages.
+    /// When trying to create a linear memory with fewer maximum pages than minimum pages.
     pub fn new(minimum_pages: Pages, maximum_pages: Option<Pages>) -> Self {
         Self {
             layout: MemoryLayout::new(minimum_pages, maximum_pages),
@@ -378,7 +378,7 @@ impl MemoryRef {
     ///
     /// # Panics
     ///
-    /// When trying to create a linear memory with fewer maxmimum pages than minimum pages.
+    /// When trying to create a linear memory with fewer maximum pages than minimum pages.
     pub fn new(
         store: &Store,
         minimum_pages: Pages,
@@ -538,7 +538,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "tried to create a linear memory with only 1 maxmimum and 2 minimum pages"]
+    #[should_panic = "tried to create a linear memory with only 1 maximum and 2 minimum pages"]
     fn invalid_new_panics() {
         let store = store();
         MemoryRef::new(&store, Pages::new(2), Some(Pages::new(1)));
