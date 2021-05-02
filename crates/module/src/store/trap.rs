@@ -157,8 +157,9 @@ pub enum TrapCode {
     ///
     /// This can happen when:
     ///
-    /// - trying to do signed division (or get the remainder) -2<sup>N-1</sup> over -1. This is
-    ///   because the result +2<sup>N-1</sup> isn't representable as a N-bit signed integer.
+    /// - trying to do signed division (or get the remainder) of the minimum value over -1.
+    ///   This is because the result isn't representable as an N-bit signed integer in
+    ///   twos-complement machine representation.
     /// - trying to truncate NaNs, infinity, or value for which the result is out of range into an integer.
     #[display(fmt = "invalid float to integer conversion")]
     InvalidFloatToIntegerConversion,
