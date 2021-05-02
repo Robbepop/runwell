@@ -149,6 +149,21 @@ impl Type {
         }
     }
 
+    /// Returns the amount of bytes values of the type require.
+    pub fn size_bytes(&self) -> u32 {
+        (self.bit_width() - 1) / 8 + 1
+    }
+
+    /// Returns a bit-mask to check against valid 64-bit patterns.
+    pub fn valid_mask(&self) -> u64 {
+        match self {
+            Self::Int(int_type) => int_type.max_unsigned_value(),
+            Self::Float(FloatType::F32) => u32::MAX as u64,
+            Self::Float(FloatType::F64) => u64::MAX,
+            Self::Ptr => u32::MAX as u64,
+        }
+    }
+
     /// Returns the alignment exponent, `N` in `2^N`.
     pub fn alignment(&self) -> u8 {
         match self {
