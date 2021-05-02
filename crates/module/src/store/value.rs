@@ -40,10 +40,7 @@ impl RuntimeValue {
     /// # Errors
     ///
     /// If the bits form an invalid bit pattern for the given type.
-    pub fn from_bits(
-        ty: Type,
-        bits: u64,
-    ) -> Result<Self, InvalidBitPattern> {
+    pub fn from_bits(ty: Type, bits: u64) -> Result<Self, InvalidBitPattern> {
         if bits > ty.valid_mask() {
             return Err(InvalidBitPattern { ty, bits })
         }

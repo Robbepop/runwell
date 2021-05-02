@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::RuntimeValue;
 use crate::Store;
 use core::cell::Cell;
 use derive_more::Display;
 use ir::primitive::Type;
-use super::RuntimeValue;
 use std::rc::Rc;
 
 /// Errors that can occur while operating on global values.
