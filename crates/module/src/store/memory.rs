@@ -567,12 +567,11 @@ mod tests {
     }
 
     #[test]
-    fn grow_works_without_max() -> Result<()> {
+    fn grow_works_without_max() {
         let store = store();
         let memory = MemoryRef::new(&store, Pages::new(1), None);
         assert_eq!(memory.grow(Pages::new(1)), Ok(()));
         assert_eq!(memory.grow(Pages::new(Pages::MAX.into_u16() - 2)), Ok(()));
-        Ok(())
     }
 
     #[test]
