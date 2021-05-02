@@ -15,7 +15,7 @@
 use derive_more::Display;
 
 /// A program execution failure trap.
-#[derive(Debug)]
+#[derive(Debug, Display, PartialEq, Eq)]
 pub struct Trap {
     reason: TrapReason,
 }
@@ -70,7 +70,7 @@ impl Trap {
 }
 
 /// Reason why a trap occurred.
-#[derive(Debug, Display)]
+#[derive(Debug, Display, PartialEq, Eq)]
 pub enum TrapReason {
     /// An error message describing a trap.
     #[display(fmt = "message: {}", _0)]
