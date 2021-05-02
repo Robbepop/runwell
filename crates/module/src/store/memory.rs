@@ -411,9 +411,9 @@ impl MemoryRef {
             })
         });
         Ok(MemoryView {
-            view,
             layout,
             offset,
+            view,
         })
     }
 
