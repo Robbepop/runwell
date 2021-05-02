@@ -610,7 +610,7 @@ mod tests {
             })
         );
         assert_eq!(
-            memory.write_bytes(bytes_per_page, &mut bytes),
+            memory.write_bytes(bytes_per_page, &bytes),
             Err(MemoryError::RangeOutOfBounds {
                 offset: bytes_per_page,
                 len: 1,
@@ -676,6 +676,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::float_cmp)]
     fn read_write_primitive_works() -> Result<()> {
         let store = store();
         let pages = Pages::new(1);
@@ -685,7 +686,7 @@ mod tests {
         // Read without any write should result in zero initialized bytes.
         let bytes_per_page = Pages::BYTES_PER_PAGE.into_u32() as usize;
         assert_eq!(memory.read_primitive::<i32>(0)?, 0);
-        assert_eq!(memory.read_primitive::<f64>(0 + size_i32)?, 0.0);
+        assert_eq!(memory.read_primitive::<f64>(size_i32)?, 0.0);
         assert_eq!(memory.read_primitive::<i32>(bytes_per_page - size_i32)?, 0);
         assert_eq!(
             memory
@@ -695,6 +696,7 @@ mod tests {
         // Write to the same offsets and see if the values successfully changed.
         macro_rules! validate_access {
             ( $base_offset:expr ) => {{
+                #![allow(clippy::float_cmp)]
                 let bytes_per_page = Pages::BYTES_PER_PAGE.into_u32() as usize;
                 memory.write_primitive::<i32>($base_offset, 1)?;
                 memory.write_primitive::<f64>($base_offset + size_i32, 2.0)?;
