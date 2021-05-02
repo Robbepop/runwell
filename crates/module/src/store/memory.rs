@@ -40,13 +40,13 @@ pub enum MemoryError {
         pages: Pages,
     },
     #[display(
-        fmt = "tried to grow from {} pages to {} pages with only {} maximum pages",
+        fmt = "tried to grow memory from {} pages by an additional {} pages with only {} maximum pages",
         "current_pages.into_u16()",
-        "target_pages.into_u16()",
+        "additional_pages.into_u16()",
         "maximum_pages.into_u16()"
     )]
     InvalidGrow {
-        target_pages: Pages,
+        additional_pages: Pages,
         current_pages: Pages,
         maximum_pages: Pages,
     },
@@ -144,16 +144,17 @@ impl MemoryLayout {
     /// If `new_pages` is greater than the specified maximum amount of pages for
     /// the linear memory instance.
     pub fn grow(&mut self, additional: Pages) -> Result<()> {
-        let new_pages =
-            Pages::new(self.current_pages.into_u16() + additional.into_u16());
-        if new_pages > self.maximum_pages {
-            return Err(MemoryError::InvalidGrow {
-                target_pages: new_pages,
+        let new_pages = self
+            .current_pages
+            .into_u16()
+            .checked_add(additional.into_u16())
+            .filter(|&additional| additional <= self.maximum_pages.into_u16())
+            .ok_or(MemoryError::InvalidGrow {
+                additional_pages: additional,
                 current_pages: self.current_pages,
                 maximum_pages: self.maximum_pages,
-            })
-        }
-        self.current_pages = new_pages;
+            })?;
+        self.current_pages = Pages::new(new_pages);
         Ok(())
     }
 
@@ -556,7 +557,7 @@ mod tests {
         assert_eq!(
             memory.grow(one_page),
             Err(MemoryError::InvalidGrow {
-                target_pages: Pages::new(3),
+                additional_pages: one_page,
                 current_pages: max_pages,
                 maximum_pages: max_pages,
             }),
@@ -569,9 +570,27 @@ mod tests {
     fn grow_works_without_max() -> Result<()> {
         let store = store();
         let memory = MemoryRef::new(&store, Pages::new(1), None);
-        assert!(memory.grow(Pages::new(2)).is_ok());
-        assert!(memory.grow(Pages::MAX).is_ok());
+        assert_eq!(memory.grow(Pages::new(1)), Ok(()));
+        assert_eq!(memory.grow(Pages::new(Pages::MAX.into_u16() - 2)), Ok(()));
         Ok(())
+    }
+
+    #[test]
+    fn grow_out_of_bounds_without_max() {
+        let store = store();
+        let memory = MemoryRef::new(&store, Pages::new(1), None);
+        assert_eq!(memory.grow(Pages::new(1)), Ok(()));
+        // The next operation should fail since it grows the pages beyond what is
+        // representable by a `u16` value.
+        let additional = Pages::new(Pages::MAX.into_u16() - 1);
+        assert_eq!(
+            memory.grow(additional),
+            Err(MemoryError::InvalidGrow {
+                additional_pages: additional,
+                current_pages: Pages::new(2),
+                maximum_pages: Pages::MAX,
+            }),
+        );
     }
 
     #[test]
