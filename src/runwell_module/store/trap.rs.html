@@ -192,7 +192,7 @@
 <span class="kw">use</span> <span class="ident">derive_more</span>::<span class="ident">Display</span>;
 
 <span class="doccomment">/// A program execution failure trap.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Trap</span> {
     <span class="ident">reason</span>: <span class="ident">TrapReason</span>,
 }
@@ -247,7 +247,7 @@
 }
 
 <span class="doccomment">/// Reason why a trap occurred.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TrapReason</span> {
     <span class="doccomment">/// An error message describing a trap.</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;message: {}&quot;</span>, <span class="ident">_0</span>)]</span>

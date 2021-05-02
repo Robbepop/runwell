@@ -101,6 +101,8 @@
 <span id="98"> 98</span>
 <span id="99"> 99</span>
 <span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -121,12 +123,14 @@
 <span class="kw">mod</span> <span class="ident">memory</span>;
 <span class="comment">// mod table;</span>
 <span class="kw">mod</span> <span class="ident">trap</span>;
+<span class="kw">mod</span> <span class="ident">value</span>;
 
 <span class="kw">use</span> <span class="self">self</span>::{<span class="ident">global</span>::<span class="ident">GlobalInstance</span>, <span class="ident">memory</span>::<span class="ident">MemoryInstance</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
-    <span class="ident">global</span>::{<span class="ident">GlobalError</span>, <span class="ident">GlobalRef</span>, <span class="ident">Mutability</span>, <span class="ident">RuntimeValue</span>},
+    <span class="ident">global</span>::{<span class="ident">GlobalError</span>, <span class="ident">GlobalRef</span>, <span class="ident">Mutability</span>},
     <span class="ident">memory</span>::{<span class="ident">Bytes</span>, <span class="ident">MemoryError</span>, <span class="ident">MemoryRef</span>, <span class="ident">MemoryView</span>, <span class="ident">Pages</span>},
     <span class="ident">trap</span>::{<span class="ident">Trap</span>, <span class="ident">TrapCode</span>},
+    <span class="ident">value</span>::<span class="ident">RuntimeValue</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">global_var</span>::{<span class="ident">Global</span>, <span class="ident">GlobalVariableEntity</span>},
