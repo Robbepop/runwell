@@ -16,7 +16,7 @@ cfg-if = "1"
 [dev-dependencies]
 wabt = "0.10"
 anyhow = "1.0"
-wast = "35.0"
+wast = "38.0"
 wat = "1.0"
 
 [features]
