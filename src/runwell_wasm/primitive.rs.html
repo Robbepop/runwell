@@ -1,7 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/wasm/src/primitive.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>primitive.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" data-theme="dark" data-use_system_theme="false"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/wasm/src/primitive.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>primitive.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" data-theme="dark" data-use_system_theme="false"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../runwell_wasm/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../runwell_wasm/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -107,7 +106,7 @@
 <span id="104">104</span>
 <span id="105">105</span>
 <span id="106">106</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
 <span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
@@ -122,49 +121,49 @@
 <span class="comment">// See the License for the specific language governing permissions and</span>
 <span class="comment">// limitations under the License.</span>
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Error</span>;
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::Error</span>;
+<span class="kw">use</span> <span class="ident">core::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>};
-<span class="kw">use</span> <span class="ident">ir</span>::<span class="ident">primitive</span> <span class="kw">as</span> <span class="ident">runwell</span>;
+<span class="kw">use</span> <span class="ident">ir::primitive</span> <span class="kw">as</span> <span class="ident">runwell</span>;
 
 <span class="doccomment">/// An error that occurred while operating on Wasm primitives.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PrimitiveError</span> {
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;encountered unsupported Wasm type: {:?}&quot;</span>, <span class="ident">unsupported</span>)]</span>
-    <span class="ident">UnsupportedWasmType</span> { <span class="ident">unsupported</span>: <span class="ident">wasmparser</span>::<span class="ident">Type</span> },
+    <span class="ident">UnsupportedWasmType</span> { <span class="ident">unsupported</span>: <span class="ident">wasmparser::Type</span> },
 }
 
 <span class="doccomment">/// A Wasm translated Runwell type.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Type</span> {
-    <span class="ident">inner</span>: <span class="ident">runwell</span>::<span class="ident">Type</span>,
+    <span class="ident">inner</span>: <span class="ident">runwell::Type</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Type</span> {
     <span class="doccomment">/// Returns the Runwell type.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">runwell</span>::<span class="ident">Type</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">runwell::Type</span> {
         <span class="self">self</span>.<span class="ident">inner</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">wasmparser</span>::<span class="ident">Type</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Type</span> {
+<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">wasmparser::Type</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Type</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">ty</span>: <span class="ident">wasmparser</span>::<span class="ident">Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">ty</span>: <span class="ident">wasmparser::Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell</span>::<span class="ident">IntType</span>::<span class="ident">I32</span>.<span class="ident">into</span>(),
-            <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell</span>::<span class="ident">IntType</span>::<span class="ident">I64</span>.<span class="ident">into</span>(),
-            <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell</span>::<span class="ident">FloatType</span>::<span class="ident">F32</span>.<span class="ident">into</span>(),
-            <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell</span>::<span class="ident">FloatType</span>::<span class="ident">F64</span>.<span class="ident">into</span>(),
-            <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">V128</span>
-            <span class="op">|</span> <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">FuncRef</span>
-            <span class="op">|</span> <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">ExternRef</span>
-            <span class="op">|</span> <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">ExnRef</span>
-            <span class="op">|</span> <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">Func</span>
-            <span class="op">|</span> <span class="ident">wasmparser</span>::<span class="ident">Type</span>::<span class="ident">EmptyBlockType</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitiveError</span>::<span class="ident">UnsupportedWasmType</span> {
+            <span class="ident">wasmparser::Type::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell::IntType::I32</span>.<span class="ident">into</span>(),
+            <span class="ident">wasmparser::Type::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell::IntType::I64</span>.<span class="ident">into</span>(),
+            <span class="ident">wasmparser::Type::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell::FloatType::F32</span>.<span class="ident">into</span>(),
+            <span class="ident">wasmparser::Type::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">runwell::FloatType::F64</span>.<span class="ident">into</span>(),
+            <span class="ident">wasmparser::Type::V128</span>
+            <span class="op">|</span> <span class="ident">wasmparser::Type::FuncRef</span>
+            <span class="op">|</span> <span class="ident">wasmparser::Type::ExternRef</span>
+            <span class="op">|</span> <span class="ident">wasmparser::Type::ExnRef</span>
+            <span class="op">|</span> <span class="ident">wasmparser::Type::Func</span>
+            <span class="op">|</span> <span class="ident">wasmparser::Type::EmptyBlockType</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitiveError::UnsupportedWasmType</span> {
                     <span class="ident">unsupported</span>: <span class="ident">ty</span>,
                 })
-                .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+                .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
             }
         };
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">inner</span>: <span class="ident">ty</span> })
@@ -173,12 +172,12 @@
 
 <span class="doccomment">/// A Wasm translated Runwell constant value.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Const</span> {
-    <span class="ident">inner</span>: <span class="ident">runwell</span>::<span class="ident">Const</span>,
+    <span class="ident">inner</span>: <span class="ident">runwell::Const</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Const</span> {
     <span class="doccomment">/// Returns the Runwell constant value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">runwell</span>::<span class="ident">Const</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">runwell::Const</span> {
         <span class="self">self</span>.<span class="ident">inner</span>
     }
 }
@@ -186,7 +185,7 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Const</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">runwell</span>::<span class="ident">IntConst</span>::<span class="ident">I32</span>(<span class="ident">value</span>).<span class="ident">into</span>(),
+            <span class="ident">inner</span>: <span class="ident">runwell::IntConst::I32</span>(<span class="ident">value</span>).<span class="ident">into</span>(),
         }
     }
 }
@@ -194,26 +193,25 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Const</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">runwell</span>::<span class="ident">IntConst</span>::<span class="ident">I64</span>(<span class="ident">value</span>).<span class="ident">into</span>(),
+            <span class="ident">inner</span>: <span class="ident">runwell::IntConst::I64</span>(<span class="ident">value</span>).<span class="ident">into</span>(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wasmparser</span>::<span class="ident">Ieee32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Const</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">wasmparser</span>::<span class="ident">Ieee32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wasmparser::Ieee32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Const</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">wasmparser::Ieee32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">runwell</span>::<span class="ident">F32</span>::<span class="ident">from_bits</span>(<span class="ident">value</span>.<span class="ident">bits</span>()).<span class="ident">into</span>(),
+            <span class="ident">inner</span>: <span class="ident">runwell::F32::from_bits</span>(<span class="ident">value</span>.<span class="ident">bits</span>()).<span class="ident">into</span>(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wasmparser</span>::<span class="ident">Ieee64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Const</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">wasmparser</span>::<span class="ident">Ieee64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wasmparser::Ieee64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Const</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">wasmparser::Ieee64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">runwell</span>::<span class="ident">F64</span>::<span class="ident">from_bits</span>(<span class="ident">value</span>.<span class="ident">bits</span>()).<span class="ident">into</span>(),
+            <span class="ident">inner</span>: <span class="ident">runwell::F64::from_bits</span>(<span class="ident">value</span>.<span class="ident">bits</span>()).<span class="ident">into</span>(),
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="runwell_wasm"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="runwell_wasm" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

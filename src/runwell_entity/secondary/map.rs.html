@@ -1,7 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/entity/src/secondary/map.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>map.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" data-theme="dark" data-use_system_theme="false"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/entity/src/secondary/map.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>map.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" data-theme="dark" data-use_system_theme="false"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../runwell_entity/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../runwell_entity/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -464,7 +463,7 @@
 <span id="461">461</span>
 <span id="462">462</span>
 <span id="463">463</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
 <span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
@@ -483,11 +482,11 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Idx</span>, <span class="ident">RawIdx</span>};
 <span class="kw">use</span> <span class="ident">core</span>::{
-    <span class="ident">iter</span>::<span class="ident">FusedIterator</span>,
-    <span class="ident">marker</span>::<span class="ident">PhantomData</span>,
+    <span class="ident">iter::FusedIterator</span>,
+    <span class="ident">marker::PhantomData</span>,
     <span class="ident">ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>},
 };
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{
+<span class="kw">use</span> <span class="ident">std::collections</span>::{
     <span class="ident">hash_map</span>::{
         <span class="self">self</span>,
         <span class="ident">Iter</span> <span class="kw">as</span> <span class="ident">HashMapIter</span>,
@@ -513,7 +512,7 @@
 <span class="doccomment">/// - By design all secondary component containers are meant to be easily interchangeable.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComponentMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">components</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">RawIdx</span>, <span class="ident">V</span>, <span class="ident">ahash</span>::<span class="ident">RandomState</span><span class="op">&gt;</span>,
+    <span class="ident">components</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">RawIdx</span>, <span class="ident">V</span>, <span class="ident">ahash::RandomState</span><span class="op">&gt;</span>,
     <span class="ident">key</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">K</span><span class="op">&gt;</span>,
 }
 
@@ -524,7 +523,7 @@
     <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">components</span>: <span class="self">self</span>.<span class="ident">components</span>.<span class="ident">clone</span>(),
-            <span class="ident">key</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">key</span>: <span class="ident">Default::default</span>(),
         }
     }
 }
@@ -532,8 +531,8 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ComponentMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">components</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">key</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">components</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">key</span>: <span class="ident">Default::default</span>(),
         }
     }
 }
@@ -555,9 +554,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Does nothing if capacity is already sufficient.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reserve_exact</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">additional</span>: <span class="ident">u32</span>) {
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">additional</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">components</span>.<span class="ident">capacity</span>()
-                <span class="op">&lt;</span><span class="op">=</span> <span class="ident">RawIdx</span>::<span class="ident">MAX_U32</span> <span class="kw">as</span> <span class="ident">usize</span>
+                <span class="op">&lt;</span><span class="op">=</span> <span class="ident">RawIdx::MAX_U32</span> <span class="kw">as</span> <span class="ident">usize</span>
         );
         <span class="self">self</span>.<span class="ident">components</span>.<span class="ident">reserve</span>(<span class="ident">additional</span> <span class="kw">as</span> <span class="ident">usize</span>);
     }
@@ -624,7 +623,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
         <span class="ident">Iter</span> {
             <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">components</span>.<span class="ident">iter</span>(),
-            <span class="ident">key</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">key</span>: <span class="ident">Default::default</span>(),
         }
     }
 
@@ -632,7 +631,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
         <span class="ident">IterMut</span> {
             <span class="ident">iter</span>: <span class="self">self</span>.<span class="ident">components</span>.<span class="ident">iter_mut</span>(),
-            <span class="ident">key</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">key</span>: <span class="ident">Default::default</span>(),
         }
     }
 
@@ -646,16 +645,16 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entry</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Entry</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key_index</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into_raw</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">components</span>.<span class="ident">entry</span>(<span class="ident">key_index</span>) {
-            <span class="ident">hash_map</span>::<span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">OccupiedEntry</span> {
+            <span class="ident">hash_map::Entry::Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Entry::Occupied</span>(<span class="ident">OccupiedEntry</span> {
                     <span class="ident">occupied</span>,
-                    <span class="ident">key</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+                    <span class="ident">key</span>: <span class="ident">Default::default</span>(),
                 })
             }
-            <span class="ident">hash_map</span>::<span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">VacantEntry</span> {
+            <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Entry::Vacant</span>(<span class="ident">VacantEntry</span> {
                     <span class="ident">vacant</span>,
-                    <span class="ident">key</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+                    <span class="ident">key</span>: <span class="ident">Default::default</span>(),
                 })
             }
         }
@@ -675,7 +674,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">V</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Output</span> {
+    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Output</span> {
         <span class="self">self</span>.<span class="ident">get</span>(<span class="ident">index</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;invalid key for sparsely stored component&quot;</span>)
     }
@@ -683,7 +682,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ComponentMap</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>, <span class="ident">V</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>::<span class="ident">Output</span> {
+    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="ident">::Output</span> {
         <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="ident">index</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;invalid key for sparsely stored component&quot;</span>)
     }
@@ -693,7 +692,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> (<span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">V</span>);
     <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">IntoIter</span> {
+    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::IntoIter</span> {
         <span class="self">self</span>.<span class="ident">iter</span>()
     }
 }
@@ -702,7 +701,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> (<span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span>);
     <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">IntoIter</span> {
+    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::IntoIter</span> {
         <span class="self">self</span>.<span class="ident">iter_mut</span>()
     }
 }
@@ -727,16 +726,16 @@
     <span class="doccomment">/// function if empty, and returns a mutable reference to the value in the entry.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_insert_with</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">default</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">occupied</span>.<span class="ident">into_mut</span>(),
-            <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vacant</span>.<span class="ident">insert</span>(<span class="ident">default</span>()),
+            <span class="ident">Entry::Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">occupied</span>.<span class="ident">into_mut</span>(),
+            <span class="ident">Entry::Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vacant</span>.<span class="ident">insert</span>(<span class="ident">default</span>()),
         }
     }
 
     <span class="doccomment">/// Returns a reference to this entry&#39;s key.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">occupied</span>.<span class="ident">key</span>(),
-            <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vacant</span>.<span class="ident">key</span>(),
+            <span class="ident">Entry::Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">occupied</span>.<span class="ident">key</span>(),
+            <span class="ident">Entry::Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vacant</span>.<span class="ident">key</span>(),
         }
     }
 
@@ -746,11 +745,11 @@
         <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">V</span>),
     {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="kw-2">mut</span> <span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">f</span>(<span class="ident">occupied</span>.<span class="ident">get_mut</span>());
-                <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">occupied</span>)
+                <span class="ident">Entry::Occupied</span>(<span class="ident">occupied</span>)
             }
-            <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">vacant</span>),
+            <span class="ident">Entry::Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Entry::Vacant</span>(<span class="ident">vacant</span>),
         }
     }
 }
@@ -763,8 +762,8 @@
     <span class="doccomment">/// and returns a mutable reference to the value in the entry.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">or_default</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">V</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">occupied</span>.<span class="ident">into_mut</span>(),
-            <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vacant</span>.<span class="ident">insert</span>(<span class="ident">Default</span>::<span class="ident">default</span>()),
+            <span class="ident">Entry::Occupied</span>(<span class="ident">occupied</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">occupied</span>.<span class="ident">into_mut</span>(),
+            <span class="ident">Entry::Vacant</span>(<span class="ident">vacant</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vacant</span>.<span class="ident">insert</span>(<span class="ident">Default::default</span>()),
         }
     }
 }
@@ -772,20 +771,20 @@
 <span class="doccomment">/// A view into an occupied entry in a `ComponentMap`. It is part of the `Entry` `enum`.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">occupied</span>: <span class="ident">hash_map</span>::<span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">RawIdx</span>, <span class="ident">V</span><span class="op">&gt;</span>,
+    <span class="ident">occupied</span>: <span class="ident">hash_map::OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">RawIdx</span>, <span class="ident">V</span><span class="op">&gt;</span>,
     <span class="ident">key</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">K</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">OccupiedEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Returns the key from the entry.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span> {
-        <span class="ident">Idx</span>::<span class="ident">from_raw</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">key</span>())
+        <span class="ident">Idx::from_raw</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">key</span>())
     }
 
     <span class="doccomment">/// Take the ownership of the key and value from the map.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_entry</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>, <span class="ident">V</span>) {
         <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">component</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">occupied</span>.<span class="ident">remove_entry</span>();
-        (<span class="ident">Idx</span>::<span class="ident">from_raw</span>(<span class="ident">key</span>), <span class="ident">component</span>)
+        (<span class="ident">Idx::from_raw</span>(<span class="ident">key</span>), <span class="ident">component</span>)
     }
 
     <span class="doccomment">/// Gets a reference to the value in the entry.</span>
@@ -823,14 +822,14 @@
 <span class="doccomment">/// A view into a vacant entry in a `ComponentMap`. It is part of the `Entry` `enum`.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="ident">vacant</span>: <span class="ident">hash_map</span>::<span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">RawIdx</span>, <span class="ident">V</span><span class="op">&gt;</span>,
+    <span class="ident">vacant</span>: <span class="ident">hash_map::VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">RawIdx</span>, <span class="ident">V</span><span class="op">&gt;</span>,
     <span class="ident">key</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">K</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">VacantEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Returns the key that would be used when inserting a value through the `VacantEntry`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Idx</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span> {
-        <span class="ident">Idx</span>::<span class="ident">from_raw</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">vacant</span>.<span class="ident">key</span>())
+        <span class="ident">Idx::from_raw</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">vacant</span>.<span class="ident">key</span>())
     }
 
     <span class="doccomment">/// Sets the value of the entry with the vacant entry&#39;s key, and returns a mutable reference to it.</span>
@@ -852,7 +851,7 @@
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">size_hint</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Item</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()
     }
 }
@@ -873,7 +872,7 @@
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">size_hint</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Item</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()
     }
 }
@@ -895,10 +894,10 @@
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">size_hint</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Item</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">iter</span>
             .<span class="ident">next</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">component</span>)<span class="op">|</span> (<span class="ident">Idx</span>::<span class="ident">from_raw</span>(<span class="kw-2">*</span><span class="ident">key</span>), <span class="ident">component</span>))
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">component</span>)<span class="op">|</span> (<span class="ident">Idx::from_raw</span>(<span class="kw-2">*</span><span class="ident">key</span>), <span class="ident">component</span>))
     }
 }
 
@@ -919,15 +918,14 @@
         <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">size_hint</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Item</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">iter</span>
             .<span class="ident">next</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">component</span>)<span class="op">|</span> (<span class="ident">Idx</span>::<span class="ident">from_raw</span>(<span class="kw-2">*</span><span class="ident">key</span>), <span class="ident">component</span>))
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">component</span>)<span class="op">|</span> (<span class="ident">Idx::from_raw</span>(<span class="kw-2">*</span><span class="ident">key</span>), <span class="ident">component</span>))
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">ExactSizeIterator</span> <span class="kw">for</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">FusedIterator</span> <span class="kw">for</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> {}
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="runwell_entity"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="runwell_entity" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

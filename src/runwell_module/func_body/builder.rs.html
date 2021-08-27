@@ -1,7 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/module/src/func_body/builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" data-theme="dark" data-use_system_theme="false"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/module/src/func_body/builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" data-theme="dark" data-use_system_theme="false"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../runwell_module/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../runwell_module/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1301,7 +1300,7 @@
 <span id="1298">1298</span>
 <span id="1299">1299</span>
 <span id="1300">1300</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
 <span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
@@ -1326,9 +1325,9 @@
     <span class="ident">Variable</span>,
     <span class="ident">VariableTranslator</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">primitive</span>::<span class="ident">Instr</span>, <span class="ident">Error</span>, <span class="ident">ModuleResources</span>};
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::{<span class="ident">replace</span>, <span class="ident">take</span>};
-<span class="kw">use</span> <span class="ident">derive_more</span>::<span class="ident">Display</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">primitive::Instr</span>, <span class="ident">Error</span>, <span class="ident">ModuleResources</span>};
+<span class="kw">use</span> <span class="ident">core::mem</span>::{<span class="ident">replace</span>, <span class="ident">take</span>};
+<span class="kw">use</span> <span class="ident">derive_more::Display</span>;
 <span class="kw">use</span> <span class="ident">entity</span>::{
     <span class="ident">ComponentMap</span>,
     <span class="ident">ComponentVec</span>,
@@ -1355,13 +1354,13 @@
     <span class="ident">VisitEdges</span>,
     <span class="ident">VisitValuesMut</span>,
 };
-<span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
+<span class="kw">use</span> <span class="ident">smallvec::SmallVec</span>;
 
 <span class="doccomment">/// Type alias to Rust&#39;s `HashSet` but using `ahash` as hasher which is more efficient.</span>
-<span class="kw">type</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ahash</span>::<span class="ident">RandomState</span><span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::collections::HashSet</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ahash::RandomState</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Type alias to Rust&#39;s `HashMap` but using `ahash` as hasher which is more efficient.</span>
-<span class="kw">type</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">ahash</span>::<span class="ident">RandomState</span><span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::collections::HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">ahash::RandomState</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Incrementally guides the construction process to build a Runwell IR function.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -1375,19 +1374,19 @@
 <span class="kw">impl</span> <span class="ident">FunctionBody</span> {
     <span class="doccomment">/// Creates a function builder to incrementally construct the function.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="ident">func</span>: <span class="ident">Func</span>, <span class="ident">res</span>: <span class="kw-2">&amp;</span><span class="ident">ModuleResources</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FunctionBuilder</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="ident">func_type</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">get_func_type</span>(<span class="ident">func</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="macro">panic</span><span class="macro">!</span>(
+            <span class="macro">panic!</span>(
                 <span class="string">&quot;tried to build function {} that is missing from module resources&quot;</span>,
                 <span class="ident">func</span>
             )
         });
-        <span class="ident">FunctionBuilder</span>::<span class="ident">initialize_inputs</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>, <span class="ident">func_type</span>.<span class="ident">inputs</span>());
+        <span class="ident">FunctionBuilder::initialize_inputs</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>, <span class="ident">func_type</span>.<span class="ident">inputs</span>());
         <span class="ident">FunctionBuilder</span> {
             <span class="ident">ctx</span>,
             <span class="ident">func</span>,
             <span class="ident">res</span>,
-            <span class="ident">state</span>: <span class="ident">FunctionBuilderState</span>::<span class="ident">LocalVariables</span>,
+            <span class="ident">state</span>: <span class="ident">FunctionBuilderState::LocalVariables</span>,
         }
     }
 }
@@ -1492,30 +1491,30 @@
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">FunctionBuilderContext</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">dummy_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">from_raw</span>(<span class="ident">RawIdx</span>::<span class="ident">from_u32</span>(<span class="number">0</span>));
+        <span class="kw">let</span> <span class="ident">dummy_block</span> <span class="op">=</span> <span class="ident">Block::from_raw</span>(<span class="ident">RawIdx::from_u32</span>(<span class="number">0</span>));
         <span class="self">Self</span> {
-            <span class="ident">blocks</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">edges</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">values</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">instrs</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_params</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_edges</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_sealed</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_filled</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_instrs</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_incomplete_params</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">param_var</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">edge_args</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">edge_src</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">edge_dst</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">instr_values</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">value_type</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">value_definition</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">value_users</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">blocks</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">edges</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">values</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">instrs</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_params</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_edges</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_sealed</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_filled</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_instrs</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_incomplete_params</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">param_var</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">edge_args</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">edge_src</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">edge_dst</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">instr_values</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">value_type</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">value_definition</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">value_users</span>: <span class="ident">Default::default</span>(),
             <span class="ident">current</span>: <span class="ident">dummy_block</span>,
             <span class="ident">entry_block</span>: <span class="ident">dummy_block</span>,
-            <span class="ident">vars</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">zero_init</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">vars</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">zero_init</span>: <span class="ident">Default::default</span>(),
         }
     }
 }
@@ -1530,7 +1529,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">FunctionBuilderError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">current</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>;
         <span class="kw">if</span> <span class="ident">current</span> <span class="op">&gt;</span> <span class="ident">next</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">IncorrectOrder</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::IncorrectOrder</span> {
                 <span class="ident">last_state</span>: <span class="ident">current</span>,
                 <span class="ident">fail_state</span>: <span class="ident">next</span>,
             })
@@ -1541,7 +1540,7 @@
 
     <span class="doccomment">/// Creates the entry block of the constructed function.</span>
     <span class="kw">fn</span> <span class="ident">create_entry_block</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FunctionBuilderContext</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">is_empty</span>(),
             <span class="string">&quot;function body unexpectedly already has basic blocks: {:?}&quot;</span>,
             <span class="ident">ctx</span>.<span class="ident">blocks</span>,
@@ -1558,24 +1557,24 @@
         <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FunctionBuilderContext</span>,
         <span class="ident">inputs</span>: <span class="kw-2">&amp;</span>[<span class="ident">Type</span>],
     ) {
-        <span class="kw">let</span> <span class="ident">entry_block</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">create_entry_block</span>(<span class="ident">ctx</span>);
+        <span class="kw">let</span> <span class="ident">entry_block</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::create_entry_block</span>(<span class="ident">ctx</span>);
         <span class="kw">for</span> (<span class="ident">n</span>, <span class="ident">input_type</span>) <span class="kw">in</span> <span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>().<span class="ident">enumerate</span>() {
-            <span class="macro">debug_assert</span><span class="macro">!</span>(
-                <span class="ident">n</span> <span class="op">&lt;</span> <span class="ident">u16</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            <span class="macro">debug_assert!</span>(
+                <span class="ident">n</span> <span class="op">&lt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">usize</span>,
                 <span class="string">&quot;encountered too many function input parameters. \
                 found {} but cannot handle more than {}.&quot;</span>,
                 <span class="ident">n</span>,
-                <span class="ident">u16</span>::<span class="ident">MAX</span>,
+                <span class="ident">u16::MAX</span>,
             );
             <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>;
             <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">values</span>.<span class="ident">alloc_some</span>(<span class="number">1</span>);
             <span class="ident">ctx</span>.<span class="ident">value_type</span>.<span class="ident">insert</span>(<span class="ident">val</span>, <span class="ident">input_type</span>);
             <span class="ident">ctx</span>.<span class="ident">value_definition</span>
-                .<span class="ident">insert</span>(<span class="ident">val</span>, <span class="ident">ValueDefinition</span>::<span class="ident">Param</span>(<span class="ident">entry_block</span>, <span class="ident">n</span>));
+                .<span class="ident">insert</span>(<span class="ident">val</span>, <span class="ident">ValueDefinition::Param</span>(<span class="ident">entry_block</span>, <span class="ident">n</span>));
             <span class="ident">ctx</span>.<span class="ident">block_params</span>[<span class="ident">entry_block</span>].<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="ident">ctx</span>.<span class="ident">vars</span>.<span class="ident">declare_vars</span>(<span class="number">1</span>, <span class="ident">input_type</span>)
                 .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(
+                    <span class="macro">panic!</span>(
                         <span class="string">&quot;unexpected failure to declare the function input variable \
                         at position {} of type {}: {:?}&quot;</span>,
                         <span class="ident">n</span>,
@@ -1583,11 +1582,11 @@
                         <span class="ident">err</span>,
                     )
                 });
-            <span class="kw">let</span> <span class="ident">input_var</span> <span class="op">=</span> <span class="ident">Variable</span>::<span class="ident">from_raw</span>(<span class="ident">RawIdx</span>::<span class="ident">from_u32</span>(<span class="ident">n</span>));
+            <span class="kw">let</span> <span class="ident">input_var</span> <span class="op">=</span> <span class="ident">Variable::from_raw</span>(<span class="ident">RawIdx::from_u32</span>(<span class="ident">n</span>));
             <span class="ident">ctx</span>.<span class="ident">vars</span>
                 .<span class="ident">write_var</span>(<span class="ident">input_var</span>, <span class="ident">val</span>, <span class="ident">entry_block</span>, <span class="ident">input_type</span>)
                 .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(
+                    <span class="macro">panic!</span>(
                         <span class="string">&quot;unexpected failure to assign variable {} of type {} to {}. \
                         The variable has just been declared as function input {} in \
                         entry block {}: {:?}&quot;</span>,
@@ -1614,7 +1613,7 @@
         <span class="ident">ty</span>: <span class="ident">Type</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(
-            <span class="ident">FunctionBuilderState</span>::<span class="ident">LocalVariables</span>,
+            <span class="ident">FunctionBuilderState::LocalVariables</span>,
         )<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">vars</span>.<span class="ident">declare_vars</span>(<span class="ident">amount</span>, <span class="ident">ty</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">implicit_zero_init</span>(<span class="ident">ty</span>)<span class="question-mark">?</span>;
@@ -1631,26 +1630,26 @@
     <span class="doccomment">/// dead code elimination phase.</span>
     <span class="kw">fn</span> <span class="ident">implicit_zero_init</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Type</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(
-            <span class="ident">FunctionBuilderState</span>::<span class="ident">LocalVariables</span>,
+            <span class="ident">FunctionBuilderState::LocalVariables</span>,
         )<span class="question-mark">?</span>;
-        <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">current</span>, <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">entry_block</span>);
+        <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">current</span>, <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">entry_block</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">_cached</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">zero_init</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">ty</span>) {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(())
         }
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ins_impl</span>()<span class="question-mark">?</span>.<span class="ident">constant</span>(<span class="ident">Const</span>::<span class="ident">zero</span>(<span class="ident">ty</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ins_impl</span>()<span class="question-mark">?</span>.<span class="ident">constant</span>(<span class="ident">Const::zero</span>(<span class="ident">ty</span>))<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">zero_init</span>.<span class="ident">insert</span>(<span class="ident">ty</span>, <span class="ident">value</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Start defining the body of the function with its basic blocks and instructions.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">body</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Creates a new basic block for the function and returns a reference to it.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Block</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">new_block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">alloc_some</span>(<span class="number">1</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">new_block</span>)
     }
@@ -1670,10 +1669,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the basic block does not exist in this function.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">switch_to_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">contains_key</span>(<span class="ident">block</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">InvalidBasicBlock</span> { <span class="ident">block</span> })
-                .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::InvalidBasicBlock</span> { <span class="ident">block</span> })
+                .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">current</span> <span class="op">=</span> <span class="ident">block</span>;
         <span class="prelude-val">Ok</span>(())
@@ -1687,20 +1686,20 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the current basic block has already been sealed.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">seal_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">already_sealed</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_sealed</span>.<span class="ident">replace</span>(<span class="ident">block</span>, <span class="bool-val">true</span>);
         <span class="kw">if</span> <span class="ident">already_sealed</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadySealed</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::BasicBlockIsAlreadySealed</span> {
                 <span class="ident">block</span>,
             })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
         <span class="comment">// The list of block parameters start with user provided block parameters</span>
         <span class="comment">// followed by the block parameters generated through SSA construction.</span>
         <span class="comment">// Only block parameters generated by the SSA construction may be incomplete.</span>
         <span class="kw">let</span> <span class="ident">len_params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_incomplete_params</span>[<span class="ident">block</span>].<span class="ident">len</span>();
         <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">len_params</span> {
-            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">u16</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">usize</span>);
+            <span class="macro">debug_assert!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_incomplete_params</span>[<span class="ident">block</span>]
                 .<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>))
             {
@@ -1724,7 +1723,7 @@
         <span class="ident">var</span>: <span class="ident">Variable</span>,
         <span class="ident">value</span>: <span class="ident">Value</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">FunctionBuilderContext</span> {
             <span class="ident">vars</span>, <span class="ident">value_type</span>, ..
@@ -1748,24 +1747,24 @@
         <span class="ident">param_type</span>: <span class="ident">Type</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_instrs</span>[<span class="ident">block</span>].<span class="ident">is_empty</span>() {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;cannot add a user provided block parameter to a basic block that has instructions already&quot;</span>);
+            <span class="macro">panic!</span>(<span class="string">&quot;cannot add a user provided block parameter to a basic block that has instructions already&quot;</span>);
         }
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_incomplete_params</span>[<span class="ident">block</span>].<span class="ident">is_empty</span>() {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;cannot add a user provided block parameter to a basic block that already has SSA parameters&quot;</span>);
+            <span class="macro">panic!</span>(<span class="string">&quot;cannot add a user provided block parameter to a basic block that already has SSA parameters&quot;</span>);
         }
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">values</span>.<span class="ident">alloc_some</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_params</span>[<span class="ident">block</span>].<span class="ident">len</span>();
-        <span class="macro">assert</span><span class="macro">!</span>(
-            <span class="ident">pos</span> <span class="op">&lt;</span> <span class="ident">u16</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">usize</span>,
+        <span class="macro">assert!</span>(
+            <span class="ident">pos</span> <span class="op">&lt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">usize</span>,
             <span class="string">&quot;there are {} block parameters for block {} \
             while the maximum amount of block parameters is {}&quot;</span>,
             <span class="ident">pos</span>,
             <span class="ident">block</span>,
-            <span class="ident">u16</span>::<span class="ident">MAX</span>,
+            <span class="ident">u16::MAX</span>,
         );
         <span class="self">self</span>.<span class="ident">ctx</span>
             .<span class="ident">value_definition</span>
-            .<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">ValueDefinition</span>::<span class="ident">Param</span>(<span class="ident">block</span>, <span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>));
+            .<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">ValueDefinition::Param</span>(<span class="ident">block</span>, <span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>));
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_type</span>.<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">param_type</span>);
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_params</span>[<span class="ident">block</span>].<span class="ident">push</span>(<span class="ident">value</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
@@ -1789,17 +1788,17 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">values</span>.<span class="ident">alloc_some</span>(<span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_params</span>[<span class="ident">block</span>].<span class="ident">len</span>();
-        <span class="macro">assert</span><span class="macro">!</span>(
-            <span class="ident">pos</span> <span class="op">&lt;</span> <span class="ident">u16</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">usize</span>,
+        <span class="macro">assert!</span>(
+            <span class="ident">pos</span> <span class="op">&lt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">usize</span>,
             <span class="string">&quot;there are {} block parameters for block {} \
             while the maximum amount of block parameters is {}&quot;</span>,
             <span class="ident">pos</span>,
             <span class="ident">block</span>,
-            <span class="ident">u16</span>::<span class="ident">MAX</span>,
+            <span class="ident">u16::MAX</span>,
         );
         <span class="self">self</span>.<span class="ident">ctx</span>
             .<span class="ident">value_definition</span>
-            .<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">ValueDefinition</span>::<span class="ident">Param</span>(<span class="ident">block</span>, <span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>));
+            .<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">ValueDefinition::Param</span>(<span class="ident">block</span>, <span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>));
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_type</span>.<span class="ident">insert</span>(<span class="ident">value</span>, <span class="ident">var_type</span>);
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_params</span>[<span class="ident">block</span>].<span class="ident">push</span>(<span class="ident">value</span>);
         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_incomplete_params</span>[<span class="ident">block</span>].<span class="ident">insert</span>(<span class="ident">pos</span> <span class="kw">as</span> <span class="ident">u32</span>);
@@ -1815,9 +1814,9 @@
     <span class="doccomment">/// If the given value is not defined as a block parameter.</span>
     <span class="kw">fn</span> <span class="ident">expect_block_param</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">param</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Block</span>, <span class="ident">u32</span>) {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_definition</span>[<span class="ident">param</span>] {
-            <span class="ident">ValueDefinition</span>::<span class="ident">Param</span>(<span class="ident">block</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">block</span>, <span class="ident">index</span>),
-            <span class="ident">ValueDefinition</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">panic</span><span class="macro">!</span>(
+            <span class="ident">ValueDefinition::Param</span>(<span class="ident">block</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">block</span>, <span class="ident">index</span>),
+            <span class="ident">ValueDefinition::Instr</span>(<span class="ident">instr</span>, <span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">panic!</span>(
                 <span class="string">&quot;encountered a block parameter that is falsely defined as the \
                 return value at index {} of instruction {}&quot;</span>,
                 <span class="ident">index</span>,
@@ -1841,7 +1840,7 @@
         <span class="kw">let</span> (<span class="ident">param_block</span>, <span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">expect_block_param</span>(<span class="ident">param</span>);
         <span class="kw">let</span> <span class="ident">len_incoming_edges</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">param_block</span>].<span class="ident">len</span>();
         <span class="kw">for</span> <span class="ident">edge_idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">len_incoming_edges</span> {
-            <span class="macro">debug_assert_eq</span><span class="macro">!</span>(
+            <span class="macro">debug_assert_eq!</span>(
                 <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">param_block</span>].<span class="ident">len</span>(),
                 <span class="ident">len_incoming_edges</span>,
                 <span class="string">&quot;the number of incoming edges has changed while adding \
@@ -1856,9 +1855,9 @@
             <span class="kw">let</span> <span class="ident">edge_src</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">edge_src</span>[<span class="ident">edge</span>];
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_var_in_block</span>(<span class="ident">param_var</span>, <span class="ident">edge_src</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">edge_args</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">edge_args</span>[<span class="ident">edge</span>];
-            <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">edge_args</span>.<span class="ident">len</span>(), <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>);
+            <span class="macro">debug_assert_eq!</span>(<span class="ident">edge_args</span>.<span class="ident">len</span>(), <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="ident">edge_args</span>.<span class="ident">push</span>(<span class="ident">value</span>);
-            <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">value</span>].<span class="ident">insert</span>(<span class="ident">ValueUser</span>::<span class="ident">Param</span>(<span class="ident">param</span>));
+            <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">value</span>].<span class="ident">insert</span>(<span class="ident">ValueUser::Param</span>(<span class="ident">param</span>));
         }
         <span class="self">self</span>.<span class="ident">try_remove_trivial_param</span>(<span class="ident">param</span>)
     }
@@ -1886,7 +1885,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// - If the variable has not been declared.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">var</span>: <span class="ident">Variable</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">current</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">read_var_in_block</span>(<span class="ident">var</span>, <span class="ident">current</span>)
     }
@@ -1963,19 +1962,19 @@
             .<span class="ident">replace_var</span>(<span class="ident">param_var</span>, <span class="ident">block</span>, <span class="ident">param</span>, <span class="ident">equivalent</span>, <span class="ident">param_type</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">param_users</span> <span class="op">=</span> <span class="ident">take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">param</span>]);
         <span class="comment">// Remove the trivial block parameter from its own set of users before iteration.</span>
-        <span class="ident">param_users</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">ValueUser</span>::<span class="ident">Param</span>(<span class="ident">param</span>));
+        <span class="ident">param_users</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">ValueUser::Param</span>(<span class="ident">param</span>));
         <span class="kw">for</span> <span class="ident">user</span> <span class="kw">in</span> <span class="ident">param_users</span> {
             <span class="kw">match</span> <span class="ident">user</span> {
-                <span class="ident">ValueUser</span>::<span class="ident">Instr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ValueUser::Instr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">replace_value_for_instr</span>(<span class="ident">i</span>, <span class="ident">param</span>, <span class="ident">equivalent</span>);
                 }
-                <span class="ident">ValueUser</span>::<span class="ident">Param</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ValueUser::Param</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">replace_value_for_param</span>(<span class="ident">p</span>, <span class="ident">param</span>, <span class="ident">equivalent</span>);
                     <span class="comment">// If the user is another block parameter and there was an actual replacement</span>
                     <span class="comment">// we have to check if the block parameter user is now trivial as well.</span>
                     <span class="self">self</span>.<span class="ident">try_remove_trivial_param</span>(<span class="ident">p</span>)<span class="question-mark">?</span>;
                 }
-                <span class="ident">ValueUser</span>::<span class="ident">Edge</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ValueUser::Edge</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">replace_value_for_edge</span>(<span class="ident">e</span>, <span class="ident">param</span>, <span class="ident">equivalent</span>);
                 }
             };
@@ -2060,7 +2059,7 @@
         <span class="ident">replace_value</span>: <span class="ident">Value</span>,
         <span class="ident">with_value</span>: <span class="ident">Value</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="macro">debug_assert_ne</span><span class="macro">!</span>(<span class="ident">replace_value</span>, <span class="ident">with_value</span>);
+        <span class="macro">debug_assert_ne!</span>(<span class="ident">replace_value</span>, <span class="ident">with_value</span>);
         <span class="kw">let</span> (<span class="ident">block</span>, <span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">expect_block_param</span>(<span class="ident">param</span>);
         <span class="kw">let</span> <span class="ident">incoming_edges</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_edges</span>[<span class="ident">block</span>];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_user</span> <span class="op">=</span> <span class="bool-val">false</span>;
@@ -2072,16 +2071,16 @@
                 <span class="ident">is_user</span> <span class="op">=</span> <span class="bool-val">true</span>;
             }
         }
-        <span class="kw">let</span> <span class="ident">value_user</span> <span class="op">=</span> <span class="ident">ValueUser</span>::<span class="ident">Param</span>(<span class="ident">param</span>);
+        <span class="kw">let</span> <span class="ident">value_user</span> <span class="op">=</span> <span class="ident">ValueUser::Param</span>(<span class="ident">param</span>);
         <span class="kw">if</span> <span class="ident">is_user</span> {
             <span class="comment">// Register the block parameter as user of the</span>
             <span class="comment">// new value if it was a user of the old one.</span>
             <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">with_value</span>].<span class="ident">insert</span>(<span class="ident">value_user</span>);
-            <span class="macro">debug_assert</span><span class="macro">!</span>(
+            <span class="macro">debug_assert!</span>(
                 <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">with_value</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">value_user</span>)
             );
         }
-        <span class="macro">debug_assert</span><span class="macro">!</span>(
+        <span class="macro">debug_assert!</span>(
             <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">replace_value</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">value_user</span>)
         );
         <span class="ident">is_user</span>
@@ -2105,7 +2104,7 @@
         <span class="ident">replace_value</span>: <span class="ident">Value</span>,
         <span class="ident">with_value</span>: <span class="ident">Value</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="macro">debug_assert_ne</span><span class="macro">!</span>(<span class="ident">replace_value</span>, <span class="ident">with_value</span>);
+        <span class="macro">debug_assert_ne!</span>(<span class="ident">replace_value</span>, <span class="ident">with_value</span>);
         <span class="kw">let</span> <span class="ident">user_instr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>[<span class="ident">instr</span>];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_user</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="ident">user_instr</span>.<span class="ident">visit_values_mut</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> {
@@ -2115,16 +2114,16 @@
             }
             <span class="bool-val">true</span>
         });
-        <span class="kw">let</span> <span class="ident">value_user</span> <span class="op">=</span> <span class="ident">ValueUser</span>::<span class="ident">Instr</span>(<span class="ident">instr</span>);
+        <span class="kw">let</span> <span class="ident">value_user</span> <span class="op">=</span> <span class="ident">ValueUser::Instr</span>(<span class="ident">instr</span>);
         <span class="kw">if</span> <span class="ident">is_user</span> {
             <span class="comment">// Register the instruction as user of the</span>
             <span class="comment">// new value if it was a user of the old one.</span>
             <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">with_value</span>].<span class="ident">insert</span>(<span class="ident">value_user</span>);
-            <span class="macro">debug_assert</span><span class="macro">!</span>(
+            <span class="macro">debug_assert!</span>(
                 <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">with_value</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">value_user</span>)
             );
         }
-        <span class="macro">debug_assert</span><span class="macro">!</span>(
+        <span class="macro">debug_assert!</span>(
             <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">replace_value</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">value_user</span>)
         );
         <span class="ident">is_user</span>
@@ -2148,7 +2147,7 @@
         <span class="ident">replace_value</span>: <span class="ident">Value</span>,
         <span class="ident">with_value</span>: <span class="ident">Value</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="macro">debug_assert_ne</span><span class="macro">!</span>(<span class="ident">replace_value</span>, <span class="ident">with_value</span>);
+        <span class="macro">debug_assert_ne!</span>(<span class="ident">replace_value</span>, <span class="ident">with_value</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_user</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">edge_args</span>[<span class="ident">edge</span>] {
             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">arg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">replace_value</span> {
@@ -2156,16 +2155,16 @@
                 <span class="ident">is_user</span> <span class="op">=</span> <span class="bool-val">true</span>;
             }
         }
-        <span class="kw">let</span> <span class="ident">value_user</span> <span class="op">=</span> <span class="ident">ValueUser</span>::<span class="ident">Edge</span>(<span class="ident">edge</span>);
+        <span class="kw">let</span> <span class="ident">value_user</span> <span class="op">=</span> <span class="ident">ValueUser::Edge</span>(<span class="ident">edge</span>);
         <span class="kw">if</span> <span class="ident">is_user</span> {
             <span class="comment">// Register the edge as user of the</span>
             <span class="comment">// new value if it was a user of the old one.</span>
             <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">with_value</span>].<span class="ident">insert</span>(<span class="ident">value_user</span>);
-            <span class="macro">debug_assert</span><span class="macro">!</span>(
+            <span class="macro">debug_assert!</span>(
                 <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">with_value</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">value_user</span>)
             );
         }
-        <span class="macro">debug_assert</span><span class="macro">!</span>(
+        <span class="macro">debug_assert!</span>(
             <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">replace_value</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">value_user</span>)
         );
         <span class="ident">is_user</span>
@@ -2216,23 +2215,23 @@
             ..
         } <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>;
         <span class="kw">if</span> <span class="ident">block_params</span>[<span class="ident">old_destination</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">block_params</span>[<span class="ident">new_destination</span>] {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">UnmatchingBlockParameters</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::UnmatchingBlockParameters</span> {
                 <span class="ident">block_a</span>: <span class="ident">old_destination</span>,
                 <span class="ident">block_b</span>: <span class="ident">new_destination</span>,
             })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
         <span class="kw">if</span> <span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">old_destination</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadySealed</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::BasicBlockIsAlreadySealed</span> {
                 <span class="ident">block</span>: <span class="ident">old_destination</span>,
             })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
         <span class="kw">if</span> <span class="ident">block_sealed</span>.<span class="ident">get</span>(<span class="ident">new_destination</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadySealed</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::BasicBlockIsAlreadySealed</span> {
                 <span class="ident">block</span>: <span class="ident">new_destination</span>,
             })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
         <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">instrs</span>[<span class="ident">instr</span>];
         <span class="ident">instruction</span>.<span class="ident">visit_edges</span>(<span class="op">|</span><span class="ident">edge</span><span class="op">|</span> {
@@ -2246,7 +2245,7 @@
             .<span class="ident">iter</span>()
             .<span class="ident">copied</span>()
             .<span class="ident">position</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span> <span class="op">=</span><span class="op">=</span> <span class="ident">edge</span>)
-            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic</span><span class="macro">!</span>(
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic!</span>(
                 <span class="string">&quot;unexpected missing edge in block upon changing else destination. \
                 else_edge = {}, old_destination = {}, new_destination = {}&quot;</span>,
                 <span class="ident">edge</span>,
@@ -2283,7 +2282,7 @@
     <span class="doccomment">/// Returns the SSA output values of the instruction if any.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">instr_values</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instr</span>: <span class="ident">Instr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">Value</span>], <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>.<span class="ident">contains_key</span>(<span class="ident">instr</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">from</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">InvalidInstr</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::from</span>(<span class="ident">FunctionBuilderError::InvalidInstr</span> {
                 <span class="ident">instr</span>,
             })
             .<span class="ident">with_context</span>(<span class="string">&quot;tried to query instruction values&quot;</span>))
@@ -2303,12 +2302,12 @@
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_block</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">already_filled</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_filled</span>.<span class="ident">get</span>(<span class="ident">block</span>);
         <span class="kw">if</span> <span class="ident">already_filled</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">BasicBlockIsAlreadyFilled</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::BasicBlockIsAlreadyFilled</span> {
                 <span class="ident">block</span>,
             })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">InstructionBuilder</span>::<span class="ident">new</span>(<span class="self">self</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">InstructionBuilder::new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Returns an instruction builder to appends instructions to the current basic block.</span>
@@ -2317,7 +2316,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the current block is already filled.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ins</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InstructionBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ins_impl</span>()
     }
 
@@ -2343,23 +2342,23 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If not all basic blocks in the function are sealed and filled.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionBody</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState</span>::<span class="ident">Body</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">ensure_construction_in_order</span>(<span class="ident">FunctionBuilderState::Body</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">seal_all_blocks</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ensure_all_blocks_sealed</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ensure_all_blocks_filled</span>()<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">FunctionBody</span> {
-            <span class="ident">blocks</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_instrs</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">block_params</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">values</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">value_type</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">value_definition</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">instrs</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">instr_values</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">edges</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">edge_args</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">edge_destination</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">blocks</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_instrs</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">block_params</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">values</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">value_type</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">value_definition</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">instrs</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">instr_values</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">edges</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">edge_args</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">edge_destination</span>: <span class="ident">Default::default</span>(),
         };
         <span class="kw">let</span> <span class="ident">replace_values</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">initialize_values</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">body</span>);
         <span class="self">self</span>.<span class="ident">initialize_instrs</span>(<span class="kw-2">&amp;</span><span class="ident">replace_values</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">body</span>);
@@ -2373,7 +2372,7 @@
         <span class="kw">let</span> <span class="ident">len_unsealed_blocks</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">indices</span>().<span class="ident">filter</span>(<span class="ident">is_block_unsealed</span>).<span class="ident">count</span>();
         <span class="kw">if</span> <span class="ident">len_unsealed_blocks</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">UnsealedBlocksUponFinalize</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::UnsealedBlocksUponFinalize</span> {
                 <span class="ident">unsealed</span>: {
                     <span class="self">self</span>.<span class="ident">ctx</span>
                         .<span class="ident">blocks</span>
@@ -2382,7 +2381,7 @@
                         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
                 },
             })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -2396,7 +2395,7 @@
         <span class="kw">let</span> <span class="ident">len_unfilled_blocks</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">indices</span>().<span class="ident">filter</span>(<span class="ident">is_block_unfilled</span>).<span class="ident">count</span>();
         <span class="kw">if</span> <span class="ident">len_unfilled_blocks</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError</span>::<span class="ident">UnfilledBlocksUponFinalize</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionBuilderError::UnfilledBlocksUponFinalize</span> {
                 <span class="ident">unfilled</span>: {
                     <span class="self">self</span>.<span class="ident">ctx</span>
                         .<span class="ident">blocks</span>
@@ -2405,7 +2404,7 @@
                         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
                 },
             })
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -2421,9 +2420,9 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FunctionBody</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Replacer</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value_replace</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Replacer</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value_replace</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Replacer</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dead_params</span> <span class="op">=</span>
-            <span class="op">&lt;</span><span class="ident">DefaultComponentMap</span><span class="op">&lt;</span><span class="ident">Block</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">default</span>();
+            <span class="op">&lt;</span><span class="ident">DefaultComponentMap</span><span class="op">&lt;</span><span class="ident">Block</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="comment">// Replace all values and update references for all their associated data.</span>
         <span class="kw">for</span> <span class="ident">old_value</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">values</span>.<span class="ident">indices</span>() {
             <span class="kw">let</span> <span class="ident">is_alive</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_users</span>[<span class="ident">old_value</span>].<span class="ident">is_empty</span>();
@@ -2439,7 +2438,7 @@
                     <span class="ident">value_replace</span>.<span class="ident">insert</span>(<span class="ident">old_value</span>, <span class="ident">new_value</span>);
                 }
                 <span class="bool-val">false</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ValueDefinition</span>::<span class="ident">Param</span>(<span class="ident">block</span>, <span class="ident">n</span>) <span class="op">=</span>
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ValueDefinition::Param</span>(<span class="ident">block</span>, <span class="ident">n</span>) <span class="op">=</span>
                         <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">value_definition</span>[<span class="ident">old_value</span>]
                     {
                         <span class="comment">// The dead value is a block parameter.</span>
@@ -2458,7 +2457,7 @@
             <span class="ident">body</span>.<span class="ident">edge_destination</span>.<span class="ident">insert</span>(<span class="ident">edge</span>, <span class="ident">edge_destination</span>);
             <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">old_arg</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">edge_args</span>[<span class="ident">edge</span>].<span class="ident">iter</span>().<span class="ident">enumerate</span>()
             {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">u16</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">usize</span>);
+                <span class="macro">debug_assert!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">usize</span>);
                 <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>;
                 <span class="kw">if</span> <span class="ident">dead_params</span>[<span class="ident">edge_destination</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>) {
                     <span class="kw">continue</span>
@@ -2473,7 +2472,7 @@
             <span class="kw">for</span> (<span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="ident">old_param</span>) <span class="kw">in</span>
                 <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_params</span>[<span class="ident">block</span>].<span class="ident">iter</span>().<span class="ident">enumerate</span>()
             {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">u16</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="ident">usize</span>);
+                <span class="macro">debug_assert!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">usize</span>);
                 <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>;
                 <span class="kw">if</span> <span class="ident">dead_params</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>) {
                     <span class="kw">continue</span>
@@ -2497,7 +2496,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">value_replace</span>: <span class="kw-2">&amp;</span><span class="ident">Replacer</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DefaultComponentBitVec</span><span class="op">&lt;</span><span class="ident">Instr</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_alive</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">DefaultComponentBitVec</span><span class="op">&lt;</span><span class="ident">Instr</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_alive</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">DefaultComponentBitVec</span><span class="op">&lt;</span><span class="ident">Instr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">blocks</span>.<span class="ident">indices</span>() {
             <span class="kw">for</span> <span class="ident">instr</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">block_instrs</span>[<span class="ident">block</span>].<span class="ident">iter</span>().<span class="ident">copied</span>() {
                 <span class="kw">let</span> <span class="ident">actual_outputs</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">instr_values</span>[<span class="ident">instr</span>]
@@ -2516,31 +2515,31 @@
     <span class="kw">fn</span> <span class="ident">instr_expected_returns</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">instr</span>: <span class="ident">Instr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span>[<span class="ident">instr</span>];
         <span class="kw">match</span> <span class="ident">instruction</span> {
-            <span class="ident">Instruction</span>::<span class="ident">Call</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Instruction::Call</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">res</span>
                     .<span class="ident">get_func_type</span>(<span class="ident">instr</span>.<span class="ident">func</span>())
                     .<span class="ident">expect</span>(<span class="string">&quot;missing function type for call&quot;</span>)
                     .<span class="ident">outputs</span>()
                     .<span class="ident">len</span>()
             }
-            <span class="ident">Instruction</span>::<span class="ident">CallIndirect</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Instruction::CallIndirect</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">res</span>
                     .<span class="ident">get_type</span>(<span class="ident">instr</span>.<span class="ident">func_type</span>())
                     .<span class="ident">expect</span>(<span class="string">&quot;missing function type for call_indirect&quot;</span>)
                     .<span class="ident">outputs</span>()
                     .<span class="ident">len</span>()
             }
-            <span class="ident">Instruction</span>::<span class="ident">Const</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Instruction</span>::<span class="ident">MemoryGrow</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Instruction</span>::<span class="ident">MemorySize</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Instruction</span>::<span class="ident">HeapAddr</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Instruction</span>::<span class="ident">Load</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Instruction</span>::<span class="ident">Store</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-            <span class="ident">Instruction</span>::<span class="ident">Select</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">result_types</span>().<span class="ident">len</span>(),
-            <span class="ident">Instruction</span>::<span class="ident">Reinterpret</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Instruction</span>::<span class="ident">Terminal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-            <span class="ident">Instruction</span>::<span class="ident">Int</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Instruction</span>::<span class="ident">Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::Const</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::MemoryGrow</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::MemorySize</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::HeapAddr</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::Load</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::Store</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+            <span class="ident">Instruction::Select</span>(<span class="ident">instr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">instr</span>.<span class="ident">result_types</span>().<span class="ident">len</span>(),
+            <span class="ident">Instruction::Reinterpret</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::Terminal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+            <span class="ident">Instruction::Int</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">Instruction::Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
         }
     }
 
@@ -2555,7 +2554,7 @@
         <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FunctionBody</span>,
     ) {
         <span class="kw">let</span> <span class="ident">is_instr_alive</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_alive_instrs</span>(<span class="ident">value_replace</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instr_replace</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Replacer</span><span class="op">&lt;</span><span class="ident">Instr</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instr_replace</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Replacer</span><span class="op">&lt;</span><span class="ident">Instr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="comment">// Fetch all alive instructions.</span>
         <span class="kw">for</span> (<span class="ident">old_instr</span>, <span class="ident">instruction</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">instrs</span> {
             <span class="kw">if</span> <span class="ident">is_instr_alive</span>.<span class="ident">get</span>(<span class="ident">old_instr</span>) {
@@ -2569,7 +2568,7 @@
                 <span class="comment">// The old instructions will be dropped so whatever we put in there does not matter.</span>
                 <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">replace</span>(
                     <span class="ident">instruction</span>,
-                    <span class="ident">Instruction</span>::<span class="ident">Terminal</span>(<span class="ident">TerminalInstr</span>::<span class="ident">Unreachable</span>),
+                    <span class="ident">Instruction::Terminal</span>(<span class="ident">TerminalInstr::Unreachable</span>),
                 );
                 <span class="kw">let</span> <span class="ident">new_instr</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">instrs</span>.<span class="ident">alloc</span>(<span class="ident">instruction</span>);
                 <span class="ident">instr_replace</span>.<span class="ident">insert</span>(<span class="ident">old_instr</span>, <span class="ident">new_instr</span>);
@@ -2593,7 +2592,7 @@
         }
         <span class="comment">// Replace value association of all alive values.</span>
         <span class="kw">for</span> <span class="ident">value</span> <span class="kw">in</span> <span class="ident">body</span>.<span class="ident">values</span>.<span class="ident">indices</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ValueDefinition</span>::<span class="ident">Instr</span>(<span class="ident">old_instr</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ValueDefinition::Instr</span>(<span class="ident">old_instr</span>, <span class="kw">_</span>) <span class="op">=</span>
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">body</span>.<span class="ident">value_definition</span>[<span class="ident">value</span>]
             {
                 <span class="kw">let</span> <span class="ident">new_instr</span> <span class="op">=</span> <span class="ident">instr_replace</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">old_instr</span>);
@@ -2603,5 +2602,4 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="runwell_module"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="runwell_module" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

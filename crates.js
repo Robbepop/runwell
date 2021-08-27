@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["ci","runwell_entity","runwell_interpreter","runwell_ir","runwell_module","runwell_wasm"];
