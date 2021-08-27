@@ -74,7 +74,7 @@ use ir::{
         Type,
         Value,
     },
-    ImmU32,
+    ImmU64,
     VisitValues,
 };
 use smallvec::SmallVec;
@@ -1109,7 +1109,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
         mut self,
         mem: Mem,
         pos: Value,
-        size: ImmU32,
+        size: ImmU64,
     ) -> Result<Value, Error> {
         self.expect_type(pos, IntType::I32.into())?;
         let instruction = HeapAddrInstr::new(mem, pos, size);
@@ -1122,7 +1122,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     pub fn load(
         mut self,
         ptr: Value,
-        offset: ImmU32,
+        offset: ImmU64,
         ty: Type,
     ) -> Result<Value, Error> {
         self.expect_type(ptr, Type::Ptr)?;
@@ -1136,7 +1136,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
     pub fn store(
         mut self,
         ptr: Value,
-        offset: ImmU32,
+        offset: ImmU64,
         stored_value: Value,
         ty: Type,
     ) -> Result<Instr, Error> {

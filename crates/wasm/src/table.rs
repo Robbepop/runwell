@@ -59,8 +59,8 @@ impl TryFrom<wasmparser::TableType> for TableDecl {
                     .map_err(Into::into)
             }
         }
-        let initial_size = table_type.limits.initial;
-        let maximum_size = table_type.limits.maximum;
+        let initial_size = table_type.initial;
+        let maximum_size = table_type.maximum;
         Ok(Self {
             inner: module::primitive::TableDecl::new(
                 initial_size,

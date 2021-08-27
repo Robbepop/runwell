@@ -109,7 +109,7 @@ impl From<Payload<'_>> for PayloadKind {
             Payload::FunctionSection(_) => Self::FunctionSection,
             Payload::TableSection(_) => Self::TableSection,
             Payload::MemorySection(_) => Self::MemorySection,
-            Payload::EventSection(_) => Self::EventSection,
+            Payload::TagSection(_) => Self::EventSection,
             Payload::GlobalSection(_) => Self::GlobalSection,
             Payload::ExportSection(_) => Self::ExportSection,
             Payload::StartSection { .. } => Self::StartSection,
@@ -317,7 +317,7 @@ impl ParseContext {
                 ))
                 .map_err(Into::into)
             }
-            Payload::EventSection(_) => {
+            Payload::TagSection(_) => {
                 return Err(SectionError::Unsupported(
                     UnsupportedWasmSection::Event,
                 ))
@@ -437,7 +437,7 @@ impl ParseContext {
                     return Err(ImportError::UnsupportedModuleImport)
                         .map_err(Into::into)
                 }
-                ImportSectionEntryType::Event(_) => {
+                ImportSectionEntryType::Tag(_) => {
                     return Err(ImportError::UnsupportedEventImport)
                         .map_err(Into::into)
                 }

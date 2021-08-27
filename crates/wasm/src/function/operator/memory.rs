@@ -17,7 +17,7 @@ use crate::Error;
 use entity::RawIdx;
 use ir::{
     primitive::{self as runwell, IntType, Mem, Value},
-    ImmU32,
+    ImmU64,
 };
 
 impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
@@ -34,12 +34,12 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<Value, Error> {
         assert_eq!(self.builder.value_type(pos), IntType::I32.into());
         let mem = Mem::from_raw(RawIdx::from_u32(memarg.memory));
-        let alignment_bytes = 2_u32.pow(ty.alignment() as u32);
+        let alignment_bytes = 2_u64.pow(ty.alignment() as u32);
         let ptr = match memarg.offset.checked_add(alignment_bytes) {
             Some(size) => {
                 self.builder
                     .ins()?
-                    .heap_addr(mem, pos, ImmU32::from(size))?
+                    .heap_addr(mem, pos, ImmU64::from(size))?
             }
             None => {
                 // The offset + alignment is out of bounds for the 32-bit addressable heap.
@@ -47,7 +47,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 // Therefore we create a dummy `heap_addr` instruction to return an SSA value
                 // and an immediately following `trap` behind it.
                 let ptr =
-                    self.builder.ins()?.heap_addr(mem, pos, ImmU32::from(0))?;
+                    self.builder.ins()?.heap_addr(mem, pos, ImmU64::from(0))?;
                 self.translate_unreachable()?;
                 ptr
             }
@@ -69,7 +69,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
     ) -> Result<(), Error> {
         let pos = self.value_stack.pop1()?;
         let ptr = self.build_heap_addr(memarg, pos, result_type)?;
-        let offset = ImmU32::from(memarg.offset);
+        let offset = ImmU64::from(memarg.offset);
         let result = self.builder.ins()?.load(ptr, offset, result_type)?;
         self.value_stack.push(result);
         Ok(())
@@ -102,7 +102,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         let (pos, stored_value) = self.value_stack.pop2()?;
         assert_eq!(self.builder.value_type(stored_value), stored_type);
         let ptr = self.build_heap_addr(memarg, pos, stored_type)?;
-        let offset = ImmU32::from(memarg.offset);
+        let offset = ImmU64::from(memarg.offset);
         self.builder
             .ins()?
             .store(ptr, offset, stored_value, stored_type)?;

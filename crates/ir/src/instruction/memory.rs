@@ -23,9 +23,16 @@ use derive_more::{Display, From};
 #[derive(
     Debug, Copy, Clone, Display, PartialEq, Eq, PartialOrd, Ord, Hash, From,
 )]
-pub struct ImmU32 {
-    /// The underlying `u32` value.
-    value: u32,
+pub struct ImmU64 {
+    /// The underlying `u64` value.
+    value: u64,
+}
+
+impl ImmU64 {
+    /// Returns the inner raw `u64` value.
+    pub fn into_inner(self) -> u64 {
+        self.value
+    }
 }
 
 /// Returns a pointer from the heap at the given location.
@@ -40,12 +47,12 @@ pub struct ImmU32 {
 pub struct HeapAddrInstr {
     heap: Mem,
     ptr: Value,
-    size: ImmU32,
+    size: ImmU64,
 }
 
 impl HeapAddrInstr {
     /// Creates a new heap addressing instruction.
-    pub fn new(heap: Mem, ptr: Value, size: ImmU32) -> Self {
+    pub fn new(heap: Mem, ptr: Value, size: ImmU64) -> Self {
         Self { heap, ptr, size }
     }
 
@@ -60,7 +67,7 @@ impl HeapAddrInstr {
     }
 
     /// Returns the size of the area to allow indexing into the linear memory.
-    pub fn size(&self) -> ImmU32 {
+    pub fn size(&self) -> ImmU64 {
         self.size
     }
 }
@@ -89,12 +96,12 @@ impl VisitValuesMut for HeapAddrInstr {
 pub struct LoadInstr {
     ty: Type,
     address: Value,
-    offset: ImmU32,
+    offset: ImmU64,
 }
 
 impl LoadInstr {
     /// Creates a new load instruction.
-    pub fn new(ty: Type, address: Value, offset: ImmU32) -> Self {
+    pub fn new(ty: Type, address: Value, offset: ImmU64) -> Self {
         Self {
             ty,
             address,
@@ -108,7 +115,7 @@ impl LoadInstr {
     }
 
     /// Returns the address offset of the store instruction.
-    pub fn offset(&self) -> ImmU32 {
+    pub fn offset(&self) -> ImmU64 {
         self.offset
     }
 
@@ -141,14 +148,14 @@ impl VisitValuesMut for LoadInstr {
 #[display(fmt = "store {} {} from {}+{}", ty, value, address, offset)]
 pub struct StoreInstr {
     address: Value,
-    offset: ImmU32,
+    offset: ImmU64,
     value: Value,
     ty: Type,
 }
 
 impl StoreInstr {
     /// Creates a new store instruction.
-    pub fn new(address: Value, offset: ImmU32, value: Value, ty: Type) -> Self {
+    pub fn new(address: Value, offset: ImmU64, value: Value, ty: Type) -> Self {
         Self {
             address,
             offset,
@@ -163,7 +170,7 @@ impl StoreInstr {
     }
 
     /// Returns the address offset of the store instruction.
-    pub fn offset(&self) -> ImmU32 {
+    pub fn offset(&self) -> ImmU64 {
         self.offset
     }
 

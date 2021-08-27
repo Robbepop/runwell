@@ -21,16 +21,16 @@ use core::iter::FusedIterator;
 #[derive(Debug)]
 pub struct LinearMemoryDecl {
     /// The amount of pages with which the linear memory is initialized.
-    initial_pages: u32,
+    initial_pages: u64,
     /// The maximum amount of pages that the linear memory will allocate.
-    maximum_pages: Option<u32>,
+    maximum_pages: Option<u64>,
 }
 
 impl LinearMemoryDecl {
     /// Creates a new linear memory declaration.
-    pub fn new<T>(initial_pages: u32, maximum_pages: T) -> Self
+    pub fn new<T>(initial_pages: u64, maximum_pages: T) -> Self
     where
-        T: Into<Option<u32>>,
+        T: Into<Option<u64>>,
     {
         Self {
             initial_pages,
@@ -39,12 +39,12 @@ impl LinearMemoryDecl {
     }
 
     /// Returns the number of initial pages.
-    pub fn initial_pages(&self) -> u32 {
+    pub fn initial_pages(&self) -> u64 {
         self.initial_pages
     }
 
     /// Returns the number of maximum pages if any.
-    pub fn maximum_pages(&self) -> Option<u32> {
+    pub fn maximum_pages(&self) -> Option<u64> {
         self.maximum_pages
     }
 }

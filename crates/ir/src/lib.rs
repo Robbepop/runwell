@@ -25,7 +25,7 @@ mod value_visitor;
 pub use self::{
     display::{DisplayEdge, DisplayInstruction, Indent},
     edge_visitor::{VisitEdges, VisitEdgesMut},
-    instruction::ImmU32,
+    instruction::ImmU64,
     value_visitor::{VisitValues, VisitValuesMut},
 };
 

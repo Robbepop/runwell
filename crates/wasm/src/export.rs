@@ -54,7 +54,7 @@ impl TryFrom<wasmparser::ExternalKind> for ExportKind {
             wasmparser::ExternalKind::Table => Ok(ExportKind::Table),
             wasmparser::ExternalKind::Memory => Ok(ExportKind::Memory),
             wasmparser::ExternalKind::Global => Ok(ExportKind::Global),
-            wasmparser::ExternalKind::Event => {
+            wasmparser::ExternalKind::Tag => {
                 Err(ExportError::UnsupportedExportKind {
                     kind: UnsupportedExportKind::Event,
                 })

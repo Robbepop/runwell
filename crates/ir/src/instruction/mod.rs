@@ -55,7 +55,7 @@ pub use self::{
     },
     memory::{
         HeapAddrInstr,
-        ImmU32,
+        ImmU64,
         LoadInstr,
         MemoryGrowInstr,
         MemorySizeInstr,
