@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["VirtualMemory","A virtually allocated memory."]]});
