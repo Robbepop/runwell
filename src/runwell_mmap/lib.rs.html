@@ -166,10 +166,11 @@
 <span class="doccomment">//! other than 64kB.</span>
 
 <span class="kw">use</span> <span class="ident">core</span>::{
-    <span class="ident">fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Formatter</span>, <span class="prelude-ty">Result</span>},
+    <span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Formatter</span>},
     <span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>, <span class="ident">Index</span>, <span class="ident">IndexMut</span>},
     <span class="ident">slice::SliceIndex</span>,
 };
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">region</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>};
 
 <span class="doccomment">/// A virtually allocated memory.</span>
 <span class="doccomment">///</span>
@@ -185,7 +186,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">VirtualMemory</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;VirtualMemory&quot;</span>)
             .<span class="ident">field</span>(<span class="string">&quot;ptr&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">allocation</span>.<span class="ident">as_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>())
             .<span class="ident">field</span>(<span class="string">&quot;len&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">allocation</span>.<span class="ident">len</span>())
@@ -195,7 +196,6 @@
 
 <span class="kw">impl</span> <span class="ident">VirtualMemory</span> {
     <span class="doccomment">/// Creates a new virtual memory with a capacity for the given amount of bytes.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">region::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">allocation</span> <span class="op">=</span> <span class="ident">region::alloc</span>(<span class="ident">size</span>, <span class="ident">region::Protection::READ_WRITE</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">allocation</span> })

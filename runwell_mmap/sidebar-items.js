@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["VirtualMemory","A virtually allocated memory."]]});
+initSidebarItems({"enum":[["Error","A collection of possible errors."]],"struct":[["VirtualMemory","A virtually allocated memory."]],"type":[["Result","The result type used by this library."]]});
