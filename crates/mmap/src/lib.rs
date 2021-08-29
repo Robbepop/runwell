@@ -20,10 +20,11 @@
 //! other than 64kB.
 
 use core::{
-    fmt::{Debug, Formatter, Result},
+    fmt::{self, Debug, Formatter},
     ops::{Deref, DerefMut, Index, IndexMut},
     slice::SliceIndex,
 };
+pub use region::{Error, Result};
 
 /// A virtually allocated memory.
 ///
@@ -39,7 +40,7 @@ pub struct VirtualMemory {
 }
 
 impl Debug for VirtualMemory {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("VirtualMemory")
             .field("ptr", &self.allocation.as_ptr::<u8>())
             .field("len", &self.allocation.len())
@@ -49,7 +50,6 @@ impl Debug for VirtualMemory {
 
 impl VirtualMemory {
     /// Creates a new virtual memory with a capacity for the given amount of bytes.
-    #[inline]
     pub fn new(size: usize) -> region::Result<Self> {
         let allocation = region::alloc(size, region::Protection::READ_WRITE)?;
         Ok(Self { allocation })
