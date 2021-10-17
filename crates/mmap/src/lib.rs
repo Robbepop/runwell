@@ -106,7 +106,11 @@ impl VirtualMemory {
         Ok(())
     }
 
-    /// Copies `len` bytes starting from index `src` to index `dst`.
+    /// Copies `len` bytes from `src_offset` to `dst_offset`.
+    ///
+    /// # Note
+    ///
+    /// The source and destination memory regions may overlap.
     ///
     /// # Errors
     ///
