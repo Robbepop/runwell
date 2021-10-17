@@ -23,8 +23,10 @@ use ir::primitive::{Func, Table};
 pub enum TableError {
     #[display(fmt = "encountered invalid table element type: {:?}", _0)]
     InvalidTableElementType(wasmparser::Type),
-    #[display(fmt = "encountered unsupported null element item")]
-    UnsupportedNullElementItem,
+    #[display(
+        fmt = "encountered unsupported initializer expression element item"
+    )]
+    UnsupportedExprElementItem,
     #[display(fmt = "encountered unsupported passive table element")]
     UnsupportedPassiveElement,
     #[display(fmt = "encountered unsupported declared table element")]
@@ -185,8 +187,8 @@ impl<'a> Iterator for ElementItemsIter<'a> {
                         self.remaining -= 1;
                         Some(Ok(func))
                     }
-                    wasmparser::ElementItem::Null(_) => {
-                        Err(TableError::UnsupportedNullElementItem)
+                    wasmparser::ElementItem::Expr(_) => {
+                        Err(TableError::UnsupportedExprElementItem)
                             .map_err(Into::into)
                             .into()
                     }

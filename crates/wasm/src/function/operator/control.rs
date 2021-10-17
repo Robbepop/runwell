@@ -516,26 +516,25 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
             ));
         let mut instr =
             self.builder.ins()?.match_branch(selector_type, selector)?;
-        let mut default_destination = None;
-        let mut len_default_args = 0;
-        for target in table.targets() {
-            let (relative_depth, is_default) = target?;
+
+        // Translate `br_table` targets:
+        for relative_depth in table.targets() {
+            let relative_depth = relative_depth?;
             let frame = self.control_stack.nth_back_mut(relative_depth)?;
             let branch_destination = frame.branch_destination();
             let len_branch_args = frame.len_branch_args(&self.res);
             let branch_args = self.value_stack.peek_n(len_branch_args)?;
-            if !is_default {
-                instr.push_edge(branch_destination, branch_args)?;
-            } else {
-                default_destination = Some(branch_destination);
-                len_default_args = len_branch_args;
-            }
+            instr.push_edge(branch_destination, branch_args)?;
             frame.set_branched_to_exit();
         }
-        let default_destination = default_destination.unwrap_or_else(|| {
-            panic!("missing default label for Wasm `br_table`")
-        });
+
+        // Translate `br_table` default target:
+        let default_depth = table.default();
+        let frame = self.control_stack.nth_back_mut(default_depth)?;
+        let default_destination = frame.branch_destination();
+        let len_default_args = frame.len_branch_args(&self.res);
         let default_args = self.value_stack.pop_n(len_default_args)?;
+        frame.set_branched_to_exit();
         instr.finish(default_destination, default_args)?;
         self.reachable = false;
         Ok(())
