@@ -106,7 +106,7 @@ impl VirtualMemory {
         Ok(())
     }
 
-    /// Copies `len` bytes from `src_offset` to `dst_offset`.
+    /// Copies `len` bytes from `memory[src_offset..]` to `memory[dst_offset..]`.
     ///
     /// # Note
     ///
@@ -114,7 +114,7 @@ impl VirtualMemory {
     ///
     /// # Errors
     ///
-    /// If either `src_offset + len` or `dst_offset + len` is out of bounds.
+    /// If `src_offset + len` or `dst_offset + len` is out of bounds.
     #[inline]
     pub fn copy(
         &mut self,
