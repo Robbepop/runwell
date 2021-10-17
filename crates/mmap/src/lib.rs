@@ -20,11 +20,39 @@
 //! other than 64kB.
 
 use core::{
-    fmt::{self, Debug, Formatter},
+    fmt,
+    fmt::{Debug, Display, Formatter},
     ops::{Deref, DerefMut, Index, IndexMut},
     slice::SliceIndex,
 };
-pub use region::{Error, Result};
+
+/// An error that may occur upon operating with virtual memory.
+#[derive(Debug)]
+pub enum Error {
+    Region(region::Error),
+    OutOfBounds { len: usize, index: usize },
+}
+
+impl From<region::Error> for Error {
+    fn from(error: region::Error) -> Self {
+        Self::Region(error)
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Region(region) => Display::fmt(region, f),
+            Self::OutOfBounds { len, index } => {
+                write!(
+                    f,
+                    "out of bounds access at index {} with region of len {}",
+                    index, len
+                )
+            }
+        }
+    }
+}
 
 /// A virtually allocated memory.
 ///
@@ -51,7 +79,7 @@ impl Debug for VirtualMemory {
 #[allow(clippy::len_without_is_empty)]
 impl VirtualMemory {
     /// Creates a new virtual memory with a capacity for the given amount of bytes.
-    pub fn new(size: usize) -> region::Result<Self> {
+    pub fn new(size: usize) -> Result<Self, Error> {
         let allocation = region::alloc(size, region::Protection::READ_WRITE)?;
         Ok(Self { allocation })
     }
@@ -63,7 +91,7 @@ impl VirtualMemory {
     }
 
     /// Grows the virtually allocated buffer by the additional size.
-    pub fn grow(&mut self, additional_size: usize) -> region::Result<()> {
+    pub fn grow(&mut self, additional_size: usize) -> Result<(), Error> {
         if additional_size == 0 {
             return Ok(())
         }
