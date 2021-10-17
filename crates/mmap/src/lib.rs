@@ -23,7 +23,8 @@ use core::{
     fmt,
     fmt::{Debug, Display, Formatter},
     ops::{Deref, DerefMut, Index, IndexMut},
-    slice::SliceIndex,
+    ptr,
+    slice::{self, SliceIndex},
 };
 
 /// An error that may occur upon operating with virtual memory.
@@ -111,7 +112,7 @@ impl VirtualMemory {
         //         is via the constructor which guarantees that the
         //         below byte slice creation is valid.
         unsafe {
-            core::slice::from_raw_parts(
+            slice::from_raw_parts(
                 self.allocation.as_ptr::<u8>(),
                 self.allocation.len(),
             )
@@ -125,7 +126,7 @@ impl VirtualMemory {
         //         is via the constructor which guarantees that the
         //         below byte slice creation is valid.
         unsafe {
-            core::slice::from_raw_parts_mut(
+            slice::from_raw_parts_mut(
                 self.allocation.as_mut_ptr::<u8>(),
                 self.allocation.len(),
             )
