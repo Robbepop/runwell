@@ -48,6 +48,7 @@ impl Debug for VirtualMemory {
     }
 }
 
+#[allow(clippy::len_without_is_empty)]
 impl VirtualMemory {
     /// Creates a new virtual memory with a capacity for the given amount of bytes.
     pub fn new(size: usize) -> region::Result<Self> {
