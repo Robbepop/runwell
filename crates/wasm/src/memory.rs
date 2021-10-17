@@ -67,7 +67,11 @@ impl TryFrom<wasmparser::MemoryType> for LinearMemoryDecl {
                     ),
                 })
             }
-            wasmparser::MemoryType { memory64: false, shared: true, .. } => {
+            wasmparser::MemoryType {
+                memory64: false,
+                shared: true,
+                ..
+            } => {
                 Err(MemoryError::UnsupportedSharedMemory(memory_type))
                     .map_err(Into::into)
             }
