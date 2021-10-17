@@ -55,7 +55,7 @@ impl<'a> Function<'a> {
     /// Returns the function's signature.
     #[inline]
     pub fn ty(&self) -> &'a FunctionType {
-        &self.func_type
+        self.func_type
     }
 
     /// Returns the function's input types.
@@ -73,7 +73,7 @@ impl<'a> Function<'a> {
     /// Returns the function body.
     #[inline]
     pub fn body(&self) -> &'a FunctionBody {
-        &self.func_body
+        self.func_body
     }
 
     /// Displays the function using the given indentation.

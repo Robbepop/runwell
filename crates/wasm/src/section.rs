@@ -196,7 +196,7 @@ where
     let mut context = ParseContext::default();
     buffer.clear();
     loop {
-        match parser.parse(&buffer, eof)? {
+        match parser.parse(buffer, eof)? {
             Chunk::NeedMoreData(hint) => {
                 assert!(!eof); // Otherwise an error would be returned by `parse`.
                 eof = pull_more_data(hint, buffer, &mut reader)?;

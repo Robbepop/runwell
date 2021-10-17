@@ -79,7 +79,7 @@ where
 }
 
 fn evaluate_func(module: &Module, func: Func, inputs: &[Const]) -> Vec<u64> {
-    let mut ctx = EvaluationContext::new(&module);
+    let mut ctx = EvaluationContext::new(module);
     let mut results = Vec::new();
     ctx.evaluate_function(
         func,

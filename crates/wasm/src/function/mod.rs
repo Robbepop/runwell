@@ -159,7 +159,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         // final return instruction.
         let exit_block = self.builder.create_block()?;
         let block_type = WasmBlockType::from(entry_block_type);
-        for &return_value in block_type.outputs(&self.res) {
+        for &return_value in block_type.outputs(self.res) {
             self.builder
                 .create_block_parameter(exit_block, return_value)?;
         }
@@ -204,7 +204,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
                 )
             });
         let block_type = WasmBlockType::from(entry_block_type);
-        let len_outputs = block_type.outputs(&self.res).len();
+        let len_outputs = block_type.outputs(self.res).len();
         let outputs = self.value_stack.pop_n(len_outputs)?;
         self.builder.ins()?.return_values(outputs)?;
         Ok(())
@@ -212,7 +212,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
 
     /// Push a Wasm `block` on the control flow stack.
     fn push_control_block(&mut self, block: Block, block_type: WasmBlockType) {
-        let block_inputs = block_type.inputs(&self.res);
+        let block_inputs = block_type.inputs(self.res);
         debug_assert!(block_inputs.len() <= self.value_stack.len());
         self.control_stack.push_frame(ControlFlowFrame::Block(
             BlockControlFrame::new(
@@ -230,7 +230,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         loop_exit: Block,
         block_type: WasmBlockType,
     ) {
-        let block_inputs = block_type.inputs(&self.res);
+        let block_inputs = block_type.inputs(self.res);
         debug_assert!(block_inputs.len() <= self.value_stack.len());
         self.control_stack.push_frame(ControlFlowFrame::Loop(
             LoopControlFrame::new(
@@ -249,7 +249,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         else_data: ElseData,
         block_type: WasmBlockType,
     ) -> Result<(), Error> {
-        let block_inputs = block_type.inputs(&self.res);
+        let block_inputs = block_type.inputs(self.res);
         debug_assert!(block_inputs.len() <= self.value_stack.len());
         let original_stack_size = self.value_stack.len();
         // Push a second copy of our `if`'s parameters on the stack. This lets
@@ -280,7 +280,7 @@ impl<'a, 'b> FunctionBodyTranslator<'a, 'b> {
         kind: ControlFrameKind,
         block_type: WasmBlockType,
     ) {
-        let block_inputs = block_type.inputs(&self.res);
+        let block_inputs = block_type.inputs(self.res);
         self.control_stack.push_frame(ControlFlowFrame::Unreachable(
             UnreachableControlFrame::new(
                 block_type,

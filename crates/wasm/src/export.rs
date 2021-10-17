@@ -101,7 +101,7 @@ pub struct Export<'a> {
 impl<'a> Export<'a> {
     /// Returns the export item's field name.
     pub fn field(&self) -> &'a str {
-        &self.field
+        self.field
     }
 
     /// Returns the export item's kind and unique ID.

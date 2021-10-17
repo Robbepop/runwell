@@ -41,12 +41,12 @@ impl<'a> ImportName<'a> {
 
     /// Returns the module name of the import.
     pub fn module_name(&self) -> &str {
-        &self.module_name
+        self.module_name
     }
 
     /// Returns the field name of the import.
     pub fn field_name(&self) -> &str {
-        &self.field_name
+        self.field_name
     }
 }
 

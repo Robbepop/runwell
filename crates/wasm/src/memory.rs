@@ -104,7 +104,7 @@ impl<'a> MemoryDataInit<'a> {
 
     /// Returns the bytes to initialize the linear memory segment.
     pub fn bytes(&self) -> &'a [u8] {
-        &self.bytes
+        self.bytes
     }
 }
 

@@ -443,12 +443,14 @@ impl<'a> FunctionBuilder<'a> {
         block: Block,
         param_type: Type,
     ) -> Result<Value, Error> {
-        if !self.ctx.block_instrs[block].is_empty() {
-            panic!("cannot add a user provided block parameter to a basic block that has instructions already");
-        }
-        if !self.ctx.block_incomplete_params[block].is_empty() {
-            panic!("cannot add a user provided block parameter to a basic block that already has SSA parameters");
-        }
+        assert!(
+            self.ctx.block_instrs[block].is_empty(),
+            "cannot add a user provided block parameter to a basic block that has instructions already",
+        );
+        assert!(
+            self.ctx.block_incomplete_params[block].is_empty(),
+            "cannot add a user provided block parameter to a basic block that already has SSA parameters",
+        );
         let value = self.ctx.values.alloc_some(1);
         let pos = self.ctx.block_params[block].len();
         assert!(
