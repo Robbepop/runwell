@@ -20,6 +20,7 @@
 //! other than 64kB.
 
 use core::{
+    cmp::max,
     fmt,
     fmt::{Debug, Display, Formatter},
     ops::{Deref, DerefMut, Index, IndexMut},
@@ -102,6 +103,64 @@ impl VirtualMemory {
             new_size,
             region::Protection::READ_WRITE,
         )?;
+        Ok(())
+    }
+
+    /// Copies `len` bytes starting from index `src` to index `dst`.
+    ///
+    /// # Errors
+    ///
+    /// If either `src_offset + len` or `dst_offset + len` is out of bounds.
+    #[inline]
+    pub fn copy(
+        &mut self,
+        src_offset: usize,
+        dst_offset: usize,
+        len: usize,
+    ) -> Result<(), Error> {
+        let max_index = max(src_offset + len, dst_offset + len);
+        let memory_len = self.len();
+        if max_index >= memory_len {
+            // Bail out early since the copy operation would access out of bounds indices.
+            return Err(Error::OutOfBounds {
+                index: max_index,
+                len: memory_len,
+            })
+        }
+        // SAFETY: Out of bounds check has already been performed above.
+        unsafe {
+            let src_ptr = self.allocation.as_ptr::<u8>().add(src_offset);
+            let dst_ptr = self.allocation.as_mut_ptr::<u8>().add(dst_offset);
+            ptr::copy(src_ptr, dst_ptr, len);
+        }
+        Ok(())
+    }
+
+    /// Fills the memory starting from offset `dst_offset` with length `len` with the given byte.
+    ///
+    /// # Errors
+    ///
+    /// If `dst_offset + len` is an out of bounds index.
+    pub fn fill(
+        &mut self,
+        dst_offset: usize,
+        len: usize,
+        value: u8,
+    ) -> Result<(), Error> {
+        let max_index = dst_offset + len;
+        let memory_len = self.len();
+        if max_index >= memory_len {
+            // Bail out early since the fill operation would access out of bounds indices.
+            return Err(Error::OutOfBounds {
+                index: max_index,
+                len: memory_len,
+            })
+        }
+        // SAFETY: Out of bounds check has already been performed above.
+        unsafe {
+            let dst_ptr = self.allocation.as_mut_ptr::<u8>().add(dst_offset);
+            ptr::write_bytes(dst_ptr, value, len);
+        }
         Ok(())
     }
 
