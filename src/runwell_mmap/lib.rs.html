@@ -232,6 +232,10 @@
 <span id="230">230</span>
 <span id="231">231</span>
 <span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
@@ -341,7 +345,11 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Copies `len` bytes starting from index `src` to index `dst`.</span>
+    <span class="doccomment">/// Copies `len` bytes from `src_offset` to `dst_offset`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Note</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The source and destination memory regions may overlap.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
