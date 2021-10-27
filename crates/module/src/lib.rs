@@ -13,6 +13,30 @@
 // limitations under the License.
 
 #![forbid(unsafe_code)]
+#![warn(
+    // Pendantic Lints:
+    clippy::map_unwrap_or,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::cast_lossless,
+    // clippy::missing_errors_doc,
+    // clippy::missing_panics_doc,
+    clippy::unused_self,
+    clippy::checked_conversions,
+
+    // Nursery Lints:
+    clippy::use_self,
+    clippy::useless_let_if_seq,
+    clippy::useless_transmute,
+    clippy::suspicious_operation_groupings,
+    clippy::suboptimal_flops,
+    clippy::imprecise_flops,
+    clippy::redundant_pub_crate,
+    clippy::option_if_let_else,
+    clippy::nonstandard_macro_braces,
+    clippy::equatable_if_let,
+    clippy::empty_line_after_outer_attr,
+    clippy::debug_assert_with_mut_call,
+)]
 
 pub mod error;
 mod func_body;

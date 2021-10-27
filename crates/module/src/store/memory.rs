@@ -60,7 +60,7 @@ pub struct Bytes {
 
 impl Bytes {
     /// Creates an amount of bytes from the given `u32` amount.
-    pub(super) const fn new(amount: u32) -> Bytes {
+    pub(super) const fn new(amount: u32) -> Self {
         Self { amount }
     }
 
@@ -81,7 +81,7 @@ pub struct Pages {
 
 impl Pages {
     /// The maximum amount of pages for a single linear memory.
-    const MAX: Self = Pages { amount: u16::MAX };
+    const MAX: Self = Self { amount: u16::MAX };
 
     /// The amount of bytes in a single memory page.
     const BYTES_PER_PAGE: Bytes = Bytes::new(u16::MAX as u32);
@@ -103,7 +103,7 @@ impl Pages {
 
     /// Returns the amount of bytes that can be stored with the amount of pages.
     pub fn into_bytes(self) -> Bytes {
-        Bytes::new(self.amount as u32 * Self::BYTES_PER_PAGE.into_u32())
+        Bytes::new(u32::from(self.amount) * Self::BYTES_PER_PAGE.into_u32())
     }
 }
 
@@ -159,7 +159,7 @@ impl MemoryLayout {
     }
 
     /// Returns the number of currently allocated pages.
-    pub fn size(&self) -> Pages {
+    pub fn size(self) -> Pages {
         self.current_pages
     }
 
@@ -171,18 +171,19 @@ impl MemoryLayout {
     ///
     /// If the index is out of bounds for the current amount of memory pages.
     fn ensure_range_within_bounds(
-        &self,
+        self,
         offset: usize,
         len: usize,
     ) -> Result<usize> {
-        let index = offset
-            .checked_add(len)
-            .map(|r| r.saturating_sub(1))
-            .unwrap_or_else(|| {
+        let index = offset.checked_add(len).map_or_else(
+            || {
                 panic!(
-                    "offset + len index is out of valid bounds as `usize` value"
+                    "index is out of bounds as `usize` value with offset of {} and len of {}",
+                    offset, len,
                 )
-            });
+            },
+            |r| r.saturating_sub(1),
+        );
         let max = self.current_pages.into_bytes().into_u32() as usize;
         if index >= max {
             return Err(MemoryError::RangeOutOfBounds {

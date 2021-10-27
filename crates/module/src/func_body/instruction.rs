@@ -20,6 +20,7 @@ use super::{
     ValueUser,
 };
 use crate::Error;
+use core::convert::TryFrom;
 use entity::Idx;
 use ir::{
     instr::{
@@ -161,7 +162,7 @@ impl<'a, 'b: 'a> InstructionBuilder<'a, 'b> {
             let value = self.builder.ctx.values.alloc_some(1);
             self.builder.ctx.instr_values[instr].push(value);
             self.builder.ctx.value_type.insert(value, output_type);
-            assert!(n <= u32::MAX as usize);
+            assert!(u32::try_from(n).is_ok());
             self.builder
                 .ctx
                 .value_definition

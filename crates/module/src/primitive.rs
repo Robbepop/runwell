@@ -76,7 +76,7 @@ impl_wasm_primitive! {
 }
 
 impl RunwellPrimitive for bool {
-    type ByteRepr = [u8; core::mem::size_of::<bool>()];
+    type ByteRepr = [u8; core::mem::size_of::<Self>()];
     const TYPE: Type = Type::Int(IntType::I1);
 
     #[inline]

@@ -45,16 +45,16 @@ impl RuntimeValue {
             return Err(InvalidBitPattern { ty, bits })
         }
         let value = match ty {
-            Type::Int(IntType::I1) => RuntimeValue::I1(bits != 0),
-            Type::Int(IntType::I8) => RuntimeValue::I8(bits as _),
-            Type::Int(IntType::I16) => RuntimeValue::I16(bits as _),
-            Type::Int(IntType::I32) => RuntimeValue::I32(bits as _),
-            Type::Int(IntType::I64) => RuntimeValue::I64(bits as _),
+            Type::Int(IntType::I1) => Self::I1(bits != 0),
+            Type::Int(IntType::I8) => Self::I8(bits as _),
+            Type::Int(IntType::I16) => Self::I16(bits as _),
+            Type::Int(IntType::I32) => Self::I32(bits as _),
+            Type::Int(IntType::I64) => Self::I64(bits as _),
             Type::Float(FloatType::F32) => {
-                RuntimeValue::F32(F32::from_bits(bits as _))
+                Self::F32(F32::from_bits(bits as _))
             }
             Type::Float(FloatType::F64) => {
-                RuntimeValue::F64(F64::from_bits(bits))
+                Self::F64(F64::from_bits(bits))
             }
             _ => unimplemented!("pointer types are not yet supported"),
         };
@@ -64,13 +64,13 @@ impl RuntimeValue {
     /// Converts the runtime value into a 64-bits representation.
     pub fn into_bits(self) -> u64 {
         match self {
-            RuntimeValue::I1(value) => value as _,
-            RuntimeValue::I8(value) => value as u8 as _,
-            RuntimeValue::I16(value) => value as u16 as _,
-            RuntimeValue::I32(value) => value as u32 as _,
-            RuntimeValue::I64(value) => value as u64,
-            RuntimeValue::F32(value) => value.bits() as _,
-            RuntimeValue::F64(value) => value.bits(),
+            Self::I1(value) => value as _,
+            Self::I8(value) => u64::from(value as u8),
+            Self::I16(value) => u64::from(value as u16),
+            Self::I32(value) => u64::from(value as u32),
+            Self::I64(value) => value as u64,
+            Self::F32(value) => u64::from(value.bits()),
+            Self::F64(value) => value.bits(),
         }
     }
 }
@@ -161,17 +161,17 @@ impl RuntimeValue {
     /// Creates a default value for the given value type.
     pub fn default(value_type: Type) -> Self {
         match value_type {
-            Type::Ptr => RuntimeValue::I32(Default::default()),
-            Type::Int(IntType::I1) => RuntimeValue::I1(false),
-            Type::Int(IntType::I8) => RuntimeValue::I8(Default::default()),
-            Type::Int(IntType::I16) => RuntimeValue::I16(Default::default()),
-            Type::Int(IntType::I32) => RuntimeValue::I32(Default::default()),
-            Type::Int(IntType::I64) => RuntimeValue::I64(Default::default()),
+            Type::Ptr => Self::I32(Default::default()),
+            Type::Int(IntType::I1) => Self::I1(false),
+            Type::Int(IntType::I8) => Self::I8(Default::default()),
+            Type::Int(IntType::I16) => Self::I16(Default::default()),
+            Type::Int(IntType::I32) => Self::I32(Default::default()),
+            Type::Int(IntType::I64) => Self::I64(Default::default()),
             Type::Float(FloatType::F32) => {
-                RuntimeValue::F32(Default::default())
+                Self::F32(Default::default())
             }
             Type::Float(FloatType::F64) => {
-                RuntimeValue::F64(Default::default())
+                Self::F64(Default::default())
             }
         }
     }
@@ -179,13 +179,13 @@ impl RuntimeValue {
     /// Returns the value type of the runtime value.
     pub fn value_type(self) -> Type {
         match self {
-            RuntimeValue::I1(_) => Type::Int(IntType::I1),
-            RuntimeValue::I8(_) => Type::Int(IntType::I8),
-            RuntimeValue::I16(_) => Type::Int(IntType::I16),
-            RuntimeValue::I32(_) => Type::Int(IntType::I32),
-            RuntimeValue::I64(_) => Type::Int(IntType::I64),
-            RuntimeValue::F32(_) => Type::Float(FloatType::F32),
-            RuntimeValue::F64(_) => Type::Float(FloatType::F64),
+            Self::I1(_) => Type::Int(IntType::I1),
+            Self::I8(_) => Type::Int(IntType::I8),
+            Self::I16(_) => Type::Int(IntType::I16),
+            Self::I32(_) => Type::Int(IntType::I32),
+            Self::I64(_) => Type::Int(IntType::I64),
+            Self::F32(_) => Type::Float(FloatType::F32),
+            Self::F64(_) => Type::Float(FloatType::F64),
         }
     }
 }

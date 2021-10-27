@@ -105,6 +105,11 @@ pub struct FunctionBody {
 impl FunctionBody {
     /// Returns the entry block of the function.
     pub fn entry_block(&self) -> Block {
+        // This let binding just silences a dead code warning.
+        //
+        // We want to keep the `self` since at this point we are unsure whether
+        // we are going to need it in the future.
+        let _ = self;
         Block::from_raw(RawIdx::from_u32(0))
     }
 
