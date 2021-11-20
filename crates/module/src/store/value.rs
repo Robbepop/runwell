@@ -50,12 +50,8 @@ impl RuntimeValue {
             Type::Int(IntType::I16) => Self::I16(bits as _),
             Type::Int(IntType::I32) => Self::I32(bits as _),
             Type::Int(IntType::I64) => Self::I64(bits as _),
-            Type::Float(FloatType::F32) => {
-                Self::F32(F32::from_bits(bits as _))
-            }
-            Type::Float(FloatType::F64) => {
-                Self::F64(F64::from_bits(bits))
-            }
+            Type::Float(FloatType::F32) => Self::F32(F32::from_bits(bits as _)),
+            Type::Float(FloatType::F64) => Self::F64(F64::from_bits(bits)),
             _ => unimplemented!("pointer types are not yet supported"),
         };
         Ok(value)
@@ -167,12 +163,8 @@ impl RuntimeValue {
             Type::Int(IntType::I16) => Self::I16(Default::default()),
             Type::Int(IntType::I32) => Self::I32(Default::default()),
             Type::Int(IntType::I64) => Self::I64(Default::default()),
-            Type::Float(FloatType::F32) => {
-                Self::F32(Default::default())
-            }
-            Type::Float(FloatType::F64) => {
-                Self::F64(Default::default())
-            }
+            Type::Float(FloatType::F32) => Self::F32(Default::default()),
+            Type::Float(FloatType::F64) => Self::F64(Default::default()),
         }
     }
 
