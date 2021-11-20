@@ -5,6 +5,6 @@ members = [
     "crates/interpreter",
     "crates/module",
     "crates/wasm",
-    "crates/mmap",
+    "crates/vmem",
     "tools",
 ]

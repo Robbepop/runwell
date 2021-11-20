@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Thin wrapper around cross platform implementations of virtual memory allocation.
+//! This crate provides an interface for virtual memory that is used by virtual machines.
 //!
 //! This provides a low-level basis for virtual memory usage in the Runwell VM.
 //! The main API is provided via the `VirtualMemory` type.

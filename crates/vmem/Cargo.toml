@@ -1,5 +1,5 @@
 [package]
-name = "runwell_mmap"
+name = "runwell_vmem"
 version = "0.1.0"
 authors = ["Robin Freyler <robin.freyler@gmail.com>"]
 edition = "2021"
