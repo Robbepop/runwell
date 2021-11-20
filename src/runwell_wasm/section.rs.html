@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;wasm&#x2F;src&#x2F;section.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>section.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" 
         data-theme="dark"
-        data-use_system_theme="false"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../runwell_wasm/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input"name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+        data-use_system_theme="false"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../runwell_wasm/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -689,8 +689,7 @@
 <span id="687">687</span>
 <span id="688">688</span>
 <span id="689">689</span>
-</pre><pre class="rust">
-<span class="comment">// Copyright 2021 Robin Freyler</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
 <span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="comment">// you may not use this file except in compliance with the License.</span>
@@ -793,28 +792,28 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Payload</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PayloadKind</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">payload</span>: <span class="ident">Payload</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">payload</span> {
-            <span class="ident">Payload::Version</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Version</span>,
-            <span class="ident">Payload::TypeSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::TypeSection</span>,
-            <span class="ident">Payload::ImportSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::ImportSection</span>,
-            <span class="ident">Payload::AliasSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::AliasSection</span>,
-            <span class="ident">Payload::InstanceSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::InstanceSection</span>,
-            <span class="ident">Payload::FunctionSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::FunctionSection</span>,
-            <span class="ident">Payload::TableSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::TableSection</span>,
-            <span class="ident">Payload::MemorySection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::MemorySection</span>,
-            <span class="ident">Payload::TagSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::EventSection</span>,
-            <span class="ident">Payload::GlobalSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::GlobalSection</span>,
-            <span class="ident">Payload::ExportSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::ExportSection</span>,
-            <span class="ident">Payload::StartSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::StartSection</span>,
-            <span class="ident">Payload::ElementSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::ElementSection</span>,
-            <span class="ident">Payload::DataCountSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::DataCountSection</span>,
-            <span class="ident">Payload::DataSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::DataSection</span>,
-            <span class="ident">Payload::CustomSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CustomSection</span>,
-            <span class="ident">Payload::CodeSectionStart</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CodeSectionStart</span>,
-            <span class="ident">Payload::CodeSectionEntry</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CodeSectionEntry</span>,
-            <span class="ident">Payload::ModuleSectionStart</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::ModuleSectionStart</span>,
-            <span class="ident">Payload::ModuleSectionEntry</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::ModuleSectionEntry</span>,
-            <span class="ident">Payload::UnknownSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::UnknownSection</span>,
-            <span class="ident">Payload::End</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::End</span>,
+            <span class="ident">Payload::Version</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Version</span>,
+            <span class="ident">Payload::TypeSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::TypeSection</span>,
+            <span class="ident">Payload::ImportSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ImportSection</span>,
+            <span class="ident">Payload::AliasSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::AliasSection</span>,
+            <span class="ident">Payload::InstanceSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::InstanceSection</span>,
+            <span class="ident">Payload::FunctionSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::FunctionSection</span>,
+            <span class="ident">Payload::TableSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::TableSection</span>,
+            <span class="ident">Payload::MemorySection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::MemorySection</span>,
+            <span class="ident">Payload::TagSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::EventSection</span>,
+            <span class="ident">Payload::GlobalSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::GlobalSection</span>,
+            <span class="ident">Payload::ExportSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ExportSection</span>,
+            <span class="ident">Payload::StartSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::StartSection</span>,
+            <span class="ident">Payload::ElementSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ElementSection</span>,
+            <span class="ident">Payload::DataCountSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::DataCountSection</span>,
+            <span class="ident">Payload::DataSection</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::DataSection</span>,
+            <span class="ident">Payload::CustomSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::CustomSection</span>,
+            <span class="ident">Payload::CodeSectionStart</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::CodeSectionStart</span>,
+            <span class="ident">Payload::CodeSectionEntry</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::CodeSectionEntry</span>,
+            <span class="ident">Payload::ModuleSectionStart</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ModuleSectionStart</span>,
+            <span class="ident">Payload::ModuleSectionEntry</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ModuleSectionEntry</span>,
+            <span class="ident">Payload::UnknownSection</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::UnknownSection</span>,
+            <span class="ident">Payload::End</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::End</span>,
         }
     }
 }
@@ -1218,16 +1217,16 @@
             <span class="kw">let</span> <span class="ident">export</span> <span class="op">=</span> <span class="ident">Export::try_from</span>(<span class="ident">export</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">export</span>.<span class="ident">field</span>();
             <span class="kw">match</span> <span class="ident">export</span>.<span class="ident">item</span>() {
-                <span class="kw">crate</span><span class="ident">::ExportItem::Function</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident"><span class="kw">crate</span>::ExportItem::Function</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">builder</span>.<span class="ident">export_function</span>(<span class="ident">idx</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
                 }
-                <span class="kw">crate</span><span class="ident">::ExportItem::Table</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident"><span class="kw">crate</span>::ExportItem::Table</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">builder</span>.<span class="ident">export_table</span>(<span class="ident">idx</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
                 }
-                <span class="kw">crate</span><span class="ident">::ExportItem::Memory</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident"><span class="kw">crate</span>::ExportItem::Memory</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">builder</span>.<span class="ident">export_memory</span>(<span class="ident">idx</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
                 }
-                <span class="kw">crate</span><span class="ident">::ExportItem::Global</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident"><span class="kw">crate</span>::ExportItem::Global</span>(<span class="ident">idx</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">builder</span>.<span class="ident">export_global</span>(<span class="ident">idx</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
                 }
             }
@@ -1379,7 +1378,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 }
-</pre></div>
+</code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="runwell_wasm" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>

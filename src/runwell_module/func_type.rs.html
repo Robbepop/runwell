@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;module&#x2F;src&#x2F;func_type.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>func_type.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" 
         data-theme="dark"
-        data-use_system_theme="false"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../runwell_module/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input"name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+        data-use_system_theme="false"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../runwell_module/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -363,8 +363,7 @@
 <span id="361">361</span>
 <span id="362">362</span>
 <span id="363">363</span>
-</pre><pre class="rust">
-<span class="comment">// Copyright 2021 Robin Freyler</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
 <span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="comment">// you may not use this file except in compliance with the License.</span>
@@ -378,7 +377,7 @@
 <span class="comment">// See the License for the specific language governing permissions and</span>
 <span class="comment">// limitations under the License.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::primitive::RunwellPrimitive</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::primitive::RunwellPrimitive</span>;
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">array::IntoIter</span>, <span class="ident">fmt</span>};
 <span class="kw">use</span> <span class="ident">ir::primitive::Type</span>;
 
@@ -523,7 +522,7 @@
     <span class="kw">for</span> <span class="ident">FunctionType</span>
 {
     <span class="kw">fn</span> <span class="ident">from</span>((<span class="ident">inputs</span>, <span class="ident">outputs</span>): ([<span class="ident">Type</span>; <span class="ident">I</span>], [<span class="ident">Type</span>; <span class="ident">O</span>])) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::build</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::build</span>();
         <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">IntoIter::new</span>(<span class="ident">inputs</span>) {
             <span class="ident">builder</span>.<span class="ident">push_input</span>(<span class="ident">input</span>);
         }
@@ -552,7 +551,7 @@
 <span class="macro">macro_rules!</span> <span class="ident">impl_primitive_list_for</span> {
     ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ident</span> ),<span class="op">*</span> $(,)<span class="question-mark">?</span> ) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_parens</span>)]</span>
-        <span class="kw">impl</span><span class="op">&lt;</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>),<span class="op">*</span> <span class="op">&gt;</span> <span class="self">self</span><span class="ident">::private::Sealed</span> <span class="kw">for</span> ( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>),<span class="op">*</span> )
+        <span class="kw">impl</span><span class="op">&lt;</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>),<span class="op">*</span> <span class="op">&gt;</span> <span class="ident"><span class="self">self</span>::private::Sealed</span> <span class="kw">for</span> ( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>),<span class="op">*</span> )
         <span class="kw">where</span>
             $(
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>: <span class="ident">RunwellPrimitive</span>,
@@ -609,7 +608,7 @@
         <span class="ident">I</span>: <span class="ident">PrimitiveList</span>,
         <span class="ident">O</span>: <span class="ident">PrimitiveList</span>,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::build</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::build</span>();
         <span class="op">&lt;</span><span class="ident">I</span> <span class="kw">as</span> <span class="ident">PrimitiveList</span><span class="op">&gt;</span><span class="ident">::push_inputs</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>);
         <span class="op">&lt;</span><span class="ident">O</span> <span class="kw">as</span> <span class="ident">PrimitiveList</span><span class="op">&gt;</span><span class="ident">::push_outputs</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">builder</span>);
         <span class="ident">builder</span>.<span class="ident">finalize</span>()
@@ -727,7 +726,7 @@
         );
     }
 }
-</pre></div>
+</code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="runwell_module" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>

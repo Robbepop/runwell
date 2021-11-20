@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates&#x2F;ir&#x2F;src&#x2F;primitive.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>primitive.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" 
         data-theme="dark"
-        data-use_system_theme="false"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../runwell_ir/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input"name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+        data-use_system_theme="false"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../runwell_ir/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -468,8 +468,7 @@
 <span id="466">466</span>
 <span id="467">467</span>
 <span id="468">468</span>
-</pre><pre class="rust">
-<span class="comment">// Copyright 2021 Robin Freyler</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
 <span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="comment">// you may not use this file except in compliance with the License.</span>
@@ -490,7 +489,7 @@
 <span class="doccomment">//! that first load an 8-bit integer from the given address and then zero-extends it</span>
 <span class="doccomment">//! to a 32-bit integer value.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::instr::Instruction</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::instr::Instruction</span>;
 <span class="kw">use</span> <span class="ident">core::fmt</span>;
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
 <span class="kw">use</span> <span class="ident">entity</span>::{<span class="ident">DisplayHook</span>, <span class="ident">Idx</span>};
@@ -614,9 +613,9 @@
     <span class="doccomment">/// Returns the bit width of the type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bit_width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-            <span class="self">Self</span><span class="ident">::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">bit_width</span>(),
-            <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">float_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_type</span>.<span class="ident">bit_width</span>(),
+            <span class="ident"><span class="self">Self</span>::Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
+            <span class="ident"><span class="self">Self</span>::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">bit_width</span>(),
+            <span class="ident"><span class="self">Self</span>::Float</span>(<span class="ident">float_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_type</span>.<span class="ident">bit_width</span>(),
         }
     }
 
@@ -628,25 +627,25 @@
     <span class="doccomment">/// Returns a bit-mask to check against valid 64-bit patterns.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">valid_mask</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">max_unsigned_value</span>(),
-            <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">FloatType::F32</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">FloatType::F64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64::MAX</span>,
-            <span class="self">Self</span><span class="ident">::Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">max_unsigned_value</span>(),
+            <span class="ident"><span class="self">Self</span>::Float</span>(<span class="ident">FloatType::F32</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::Float</span>(<span class="ident">FloatType::F64</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64::MAX</span>,
+            <span class="ident"><span class="self">Self</span>::Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
         }
     }
 
     <span class="doccomment">/// Returns the alignment exponent, `N` in `2^N`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alignment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span><span class="ident">::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">alignment</span>(),
-            <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">float_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_type</span>.<span class="ident">alignment</span>(),
+            <span class="ident"><span class="self">Self</span>::Ptr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="ident"><span class="self">Self</span>::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_type</span>.<span class="ident">alignment</span>(),
+            <span class="ident"><span class="self">Self</span>::Float</span>(<span class="ident">float_type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_type</span>.<span class="ident">alignment</span>(),
         }
     }
 
     <span class="doccomment">/// Returns `Some` if the type is an integer type, otherwise returns `None`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">filter_map_int</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IntType</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span><span class="ident">::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span> <span class="self">self</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident"><span class="self">Self</span>::Int</span>(<span class="ident">int_type</span>) <span class="op">=</span> <span class="self">self</span> {
             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">int_type</span>)
         }
         <span class="prelude-val">None</span>
@@ -654,7 +653,7 @@
 
     <span class="doccomment">/// Returns `Some` if the type is a float type, otherwise returns `None`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">filter_map_float</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FloatType</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">float_type</span>) <span class="op">=</span> <span class="self">self</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident"><span class="self">Self</span>::Float</span>(<span class="ident">float_type</span>) <span class="op">=</span> <span class="self">self</span> {
             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">float_type</span>)
         }
         <span class="prelude-val">None</span>
@@ -680,33 +679,33 @@
     <span class="doccomment">/// Returns the bit width of the fixed-size integer type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bit_width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span><span class="ident">::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">8</span>,
-            <span class="self">Self</span><span class="ident">::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">16</span>,
-            <span class="self">Self</span><span class="ident">::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-            <span class="self">Self</span><span class="ident">::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">64</span>,
+            <span class="ident"><span class="self">Self</span>::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident"><span class="self">Self</span>::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">8</span>,
+            <span class="ident"><span class="self">Self</span>::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">16</span>,
+            <span class="ident"><span class="self">Self</span>::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
+            <span class="ident"><span class="self">Self</span>::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">64</span>,
         }
     }
 
     <span class="doccomment">/// Returns the alignment exponent, `N` in `2^N`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alignment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-            <span class="self">Self</span><span class="ident">::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-            <span class="self">Self</span><span class="ident">::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span><span class="ident">::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span><span class="ident">::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+            <span class="ident"><span class="self">Self</span>::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+            <span class="ident"><span class="self">Self</span>::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+            <span class="ident"><span class="self">Self</span>::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident"><span class="self">Self</span>::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="ident"><span class="self">Self</span>::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
         }
     }
 
     <span class="doccomment">/// Returns the maximum unsigned value representable by the integer type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_unsigned_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span><span class="ident">::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u8::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident"><span class="self">Self</span>::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u8::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u16::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
         }
     }
 }
@@ -724,16 +723,16 @@
     <span class="doccomment">/// Returns the bit width of the floating point number type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bit_width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-            <span class="self">Self</span><span class="ident">::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">64</span>,
+            <span class="ident"><span class="self">Self</span>::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
+            <span class="ident"><span class="self">Self</span>::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">64</span>,
         }
     }
 
     <span class="doccomment">/// Returns the alignment exponent, `N` in `2^N`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alignment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span><span class="ident">::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+            <span class="ident"><span class="self">Self</span>::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="ident"><span class="self">Self</span>::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
         }
     }
 }
@@ -761,18 +760,18 @@
     <span class="doccomment">/// Returns the type of the constant value.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Ptr</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::Ptr</span>,
-            <span class="self">Self</span><span class="ident">::Int</span>(<span class="ident">int_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_const</span>.<span class="ident">ty</span>(),
-            <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">float_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_const</span>.<span class="ident">ty</span>(),
+            <span class="ident"><span class="self">Self</span>::Ptr</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type::Ptr</span>,
+            <span class="ident"><span class="self">Self</span>::Int</span>(<span class="ident">int_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_const</span>.<span class="ident">ty</span>(),
+            <span class="ident"><span class="self">Self</span>::Float</span>(<span class="ident">float_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_const</span>.<span class="ident">ty</span>(),
         }
     }
 
     <span class="doccomment">/// Returns the underlying 64-bits of the constant.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_bits64</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Ptr</span>(<span class="ident">ptr_value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ptr_value</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::Int</span>(<span class="ident">int_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_const</span>.<span class="ident">into_bits64</span>(),
-            <span class="self">Self</span><span class="ident">::Float</span>(<span class="ident">float_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_const</span>.<span class="ident">into_bits64</span>(),
+            <span class="ident"><span class="self">Self</span>::Ptr</span>(<span class="ident">ptr_value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ptr_value</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::Int</span>(<span class="ident">int_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">int_const</span>.<span class="ident">into_bits64</span>(),
+            <span class="ident"><span class="self">Self</span>::Float</span>(<span class="ident">float_const</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">float_const</span>.<span class="ident">into_bits64</span>(),
         }
     }
 }
@@ -791,11 +790,11 @@
     <span class="doccomment">/// Returns a zero-constant integer for the given type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>(<span class="ident">int_ty</span>: <span class="ident">IntType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IntConst</span> {
         <span class="kw">match</span> <span class="ident">int_ty</span> {
-            <span class="ident">IntType::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::I1</span>(<span class="bool-val">false</span>),
-            <span class="ident">IntType::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::I8</span>(<span class="number">0</span>),
-            <span class="ident">IntType::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::I16</span>(<span class="number">0</span>),
-            <span class="ident">IntType::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::I32</span>(<span class="number">0</span>),
-            <span class="ident">IntType::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::I64</span>(<span class="number">0</span>),
+            <span class="ident">IntType::I1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::I1</span>(<span class="bool-val">false</span>),
+            <span class="ident">IntType::I8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::I8</span>(<span class="number">0</span>),
+            <span class="ident">IntType::I16</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::I16</span>(<span class="number">0</span>),
+            <span class="ident">IntType::I32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::I32</span>(<span class="number">0</span>),
+            <span class="ident">IntType::I64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::I64</span>(<span class="number">0</span>),
         }
     }
 
@@ -807,22 +806,22 @@
     <span class="doccomment">/// Returns the type of the constant fixed-size integer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">int_ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IntType</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::I1</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I1</span>,
-            <span class="self">Self</span><span class="ident">::I8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I8</span>,
-            <span class="self">Self</span><span class="ident">::I16</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I16</span>,
-            <span class="self">Self</span><span class="ident">::I32</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I32</span>,
-            <span class="self">Self</span><span class="ident">::I64</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I64</span>,
+            <span class="ident"><span class="self">Self</span>::I1</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I1</span>,
+            <span class="ident"><span class="self">Self</span>::I8</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I8</span>,
+            <span class="ident"><span class="self">Self</span>::I16</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I16</span>,
+            <span class="ident"><span class="self">Self</span>::I32</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I32</span>,
+            <span class="ident"><span class="self">Self</span>::I64</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntType::I64</span>,
         }
     }
 
     <span class="doccomment">/// Returns the underlying 64-bits of the constant.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_bits64</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::I1</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::I8</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::I16</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::I32</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::I64</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I1</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I8</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I16</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u16</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I32</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::I64</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>,
         }
     }
 }
@@ -838,24 +837,24 @@
     <span class="doccomment">/// Returns a zero-constant integer for the given type.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>(<span class="ident">float_ty</span>: <span class="ident">FloatType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FloatConst</span> {
         <span class="kw">match</span> <span class="ident">float_ty</span> {
-            <span class="ident">FloatType::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::F32</span>(<span class="ident">F32::from</span>(<span class="number">0.0</span>)),
-            <span class="ident">FloatType::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::F64</span>(<span class="ident">F64::from</span>(<span class="number">0.0</span>)),
+            <span class="ident">FloatType::F32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::F32</span>(<span class="ident">F32::from</span>(<span class="number">0.0</span>)),
+            <span class="ident">FloatType::F64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::F64</span>(<span class="ident">F64::from</span>(<span class="number">0.0</span>)),
         }
     }
 
     <span class="doccomment">/// Returns the type of the constant floating point number.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::F32</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FloatType::F32</span>.<span class="ident">into</span>(),
-            <span class="self">Self</span><span class="ident">::F64</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FloatType::F64</span>.<span class="ident">into</span>(),
+            <span class="ident"><span class="self">Self</span>::F32</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FloatType::F32</span>.<span class="ident">into</span>(),
+            <span class="ident"><span class="self">Self</span>::F64</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FloatType::F64</span>.<span class="ident">into</span>(),
         }
     }
 
     <span class="doccomment">/// Returns the underlying 64-bits of the constant.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_bits64</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::F32</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="self">Self</span><span class="ident">::F64</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">bits</span>(),
+            <span class="ident"><span class="self">Self</span>::F32</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="ident"><span class="self">Self</span>::F64</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">bits</span>(),
         }
     }
 }
@@ -937,7 +936,7 @@
         <span class="ident">Const::Float</span>(<span class="ident">FloatConst::F64</span>(<span class="ident">value</span>))
     }
 }
-</pre></div>
+</code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="runwell_ir" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>
