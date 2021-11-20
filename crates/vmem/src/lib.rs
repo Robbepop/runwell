@@ -17,7 +17,7 @@
 //! This provides a low-level basis for virtual memory usage in the Runwell VM.
 //! The main API is provided via the `VirtualMemory` type.
 //! The API itself is agnostic over Wasm constraints, e.g. allows for pages sizes
-//! other than 64kB.
+//! other than 64 kB.
 
 use core::{
     cmp::max,
@@ -58,7 +58,7 @@ impl Display for Error {
 
 /// A virtually allocated memory.
 ///
-/// # Dev. Note
+/// # Developer Note
 ///
 /// - Since instances of this type are always created with a read and write protection it is safe
 ///   to dereference instances into slices of bytes.

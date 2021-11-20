@@ -39,3 +39,6 @@ NaN/S
 inlining
 globals
 deserialization
+VM
+dereference
+destructor
