@@ -108,6 +108,7 @@ impl Display for Error {
 /// - Cannot implement `Clone`, `Copy` because of non-trivial destructor of `region::Allocation`.
 /// - Cannot implement other standard traits such as `PartialEq`, `PartialOrd` or `Hash` efficiently.
 ///   If a user needs this they shall convert the virtual allocation into a slice.
+/// - The Virtual memory allocation or anonymously mapped memory is initialized to zero.
 pub struct VirtualMemory {
     len: usize,
     allocation: region::Allocation,
