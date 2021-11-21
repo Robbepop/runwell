@@ -20,11 +20,9 @@
 //! other than 64 kB.
 
 use core::{
-    cmp::max,
     fmt,
     fmt::{Debug, Display, Formatter},
     ops::{Deref, DerefMut, Index, IndexMut},
-    ptr,
     slice::{self, SliceIndex},
 };
 
@@ -32,7 +30,6 @@ use core::{
 #[derive(Debug)]
 pub enum Error {
     Region(region::Error),
-    OutOfBounds { len: usize, index: usize },
 }
 
 impl From<region::Error> for Error {
@@ -45,13 +42,6 @@ impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Region(region) => Display::fmt(region, f),
-            Self::OutOfBounds { len, index } => {
-                write!(
-                    f,
-                    "out of bounds access at index {} with region of len {}",
-                    index, len
-                )
-            }
         }
     }
 }
@@ -121,40 +111,6 @@ impl VirtualMemory {
             )?;
         }
         self.len = new_len;
-        Ok(())
-    }
-
-    /// Copies `len` bytes from `memory[src_offset..]` to `memory[dst_offset..]`.
-    ///
-    /// # Note
-    ///
-    /// The source and destination memory regions may overlap.
-    ///
-    /// # Errors
-    ///
-    /// If `src_offset + len` or `dst_offset + len` is out of bounds.
-    #[inline]
-    pub fn copy(
-        &mut self,
-        src_offset: usize,
-        dst_offset: usize,
-        len: usize,
-    ) -> Result<(), Error> {
-        let max_index = max(src_offset + len, dst_offset + len);
-        let memory_len = self.len();
-        if max_index >= memory_len {
-            // Bail out early since the copy operation would access out of bounds indices.
-            return Err(Error::OutOfBounds {
-                index: max_index,
-                len: memory_len,
-            })
-        }
-        // SAFETY: Out of bounds check has already been performed above.
-        unsafe {
-            let src_ptr = self.allocation.as_ptr::<u8>().add(src_offset);
-            let dst_ptr = self.allocation.as_mut_ptr::<u8>().add(dst_offset);
-            ptr::copy(src_ptr, dst_ptr, len);
-        }
         Ok(())
     }
 
