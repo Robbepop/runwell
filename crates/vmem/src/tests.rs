@@ -14,6 +14,9 @@
 
 use super::*;
 
+/// Common virtual memory buffer lengths to use in tests.
+const TEST_LENS: &[usize] = &[1, 8, 64, 1024, 4096, 16384, 100_000];
+
 #[test]
 fn new_works() {
     fn new_works_for_len(len: usize) {
@@ -21,8 +24,7 @@ fn new_works() {
         assert_eq!(vmem.len(), len);
         assert!(vmem.len() <= vmem.capacity());
     }
-    let lens = [1, 64, 4096, 10_000];
-    for len in lens {
+    for &len in TEST_LENS {
         new_works_for_len(len);
     }
 }
@@ -65,25 +67,29 @@ fn zero_initialization_works() {
         // These equalities work since virtually allocated memory
         // is guaranteed to be initialized with zero.
         assert_eq!(vmem1, vmem2);
-        let zero_initialized = vec![0x00_u8; len];
-        assert_eq!(vmem1.as_slice(), zero_initialized);
-        assert_eq!(vmem2.as_slice(), zero_initialized);
+        assert!(vmem1.iter().all(|byte| *byte == 0x00_u8));
+        assert!(vmem2.iter().all(|byte| *byte == 0x00_u8));
     }
-    let lens = [1, 64, 4096, 10_000];
-    for len in lens {
+    for &len in TEST_LENS {
         zero_initialization_works_for_len(len)
     }
 }
 
 #[test]
 fn read_write_works() {
-    let mut vmem = VirtualMemory::new(1024).unwrap();
-    let len = vmem.len();
-    let bytes = (1..).map(|value| value as u8).take(len).collect::<Vec<_>>();
-    for i in 0..len {
-        vmem[i] = bytes[i];
+    fn read_write_works_for_len(len: usize) {
+        let mut vmem = VirtualMemory::new(len).unwrap();
+        assert_eq!(vmem.len(), len);
+        for i in 0..len {
+            vmem[i] = i as u8;
+        }
+        for i in 0..len {
+            assert_eq!(vmem[i], i as u8);
+        }
     }
-    assert_eq!(vmem.as_slice(), &bytes[..]);
+    for &len in TEST_LENS {
+        read_write_works_for_len(len)
+    }
 }
 
 #[test]
@@ -93,8 +99,7 @@ fn get_byte_out_of_bounds() {
         assert_eq!(vmem.get(len - 1), Some(&0));
         assert_eq!(vmem.get(len), None);
     }
-    let lens = [1, 64, 4096, 10_000];
-    for len in lens {
+    for &len in TEST_LENS {
         get_byte_out_of_bounds_for_len(len)
     }
 }
