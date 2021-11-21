@@ -66,6 +66,7 @@ impl Display for Error {
 /// - Cannot implement other standard traits such as `PartialEq`, `PartialOrd` or `Hash` efficiently.
 ///   If a user needs this they shall convert the virtual allocation into a slice.
 pub struct VirtualMemory {
+    len: usize,
     allocation: region::Allocation,
 }
 
@@ -73,7 +74,8 @@ impl Debug for VirtualMemory {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("VirtualMemory")
             .field("ptr", &self.allocation.as_ptr::<u8>())
-            .field("len", &self.allocation.len())
+            .field("len", &self.len())
+            .field("capacity", &self.capacity())
             .finish()
     }
 }
@@ -81,28 +83,44 @@ impl Debug for VirtualMemory {
 #[allow(clippy::len_without_is_empty)]
 impl VirtualMemory {
     /// Creates a new virtual memory with a capacity for the given amount of bytes.
-    pub fn new(size: usize) -> Result<Self, Error> {
-        let allocation = region::alloc(size, region::Protection::READ_WRITE)?;
-        Ok(Self { allocation })
+    ///
+    /// # Note
+    ///
+    /// The resulting capacity of the virtual memory might be greater than `size`.
+    pub fn new(len: usize) -> Result<Self, Error> {
+        let allocation = region::alloc(len, region::Protection::READ_WRITE)?;
+        Ok(Self { len, allocation })
+    }
+
+    /// Returns the capacity of the virtually allocated buffer.
+    #[inline]
+    pub fn capacity(&self) -> usize {
+        self.allocation.len()
     }
 
     /// Returns the length of the virtually allocated buffer.
     #[inline]
     pub fn len(&self) -> usize {
-        self.allocation.len()
+        self.len
     }
 
-    /// Grows the virtually allocated buffer by the additional size.
-    pub fn grow(&mut self, additional_size: usize) -> Result<(), Error> {
-        if additional_size == 0 {
+    /// Grows the virtually allocated buffer by the additional length.
+    pub fn grow(&mut self, additional_len: usize) -> Result<(), Error> {
+        if additional_len == 0 {
+            // Nothing to do in case the additiona length is zero.
             return Ok(())
         }
-        let new_size = self.len() + additional_size;
-        self.allocation = region::alloc_at::<u8>(
-            self.allocation.as_ptr::<u8>(),
-            new_size,
-            region::Protection::READ_WRITE,
-        )?;
+        let new_len = self.len() + additional_len;
+        if self.capacity() < new_len {
+            // Update the virtually allocated memory only in case its
+            // current capacity is not big enough for the requested length.
+            self.allocation = region::alloc_at::<u8>(
+                self.allocation.as_ptr::<u8>(),
+                new_len,
+                region::Protection::READ_WRITE,
+            )?;
+        }
+        self.len = new_len;
         Ok(())
     }
 
@@ -147,10 +165,7 @@ impl VirtualMemory {
         //         is via the constructor which guarantees that the
         //         below byte slice creation is valid.
         unsafe {
-            slice::from_raw_parts(
-                self.allocation.as_ptr::<u8>(),
-                self.allocation.len(),
-            )
+            slice::from_raw_parts(self.allocation.as_ptr::<u8>(), self.len())
         }
     }
 
@@ -163,7 +178,7 @@ impl VirtualMemory {
         unsafe {
             slice::from_raw_parts_mut(
                 self.allocation.as_mut_ptr::<u8>(),
-                self.allocation.len(),
+                self.len(),
             )
         }
     }
