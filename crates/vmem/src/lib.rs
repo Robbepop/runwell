@@ -19,6 +19,9 @@
 //! The API itself is agnostic over Wasm constraints, e.g. allows for pages sizes
 //! other than 64 kB.
 
+#[cfg(test)]
+mod tests;
+
 use core::{
     fmt,
     fmt::{Debug, Display, Formatter},
