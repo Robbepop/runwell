@@ -124,6 +124,20 @@ impl Debug for VirtualMemory {
     }
 }
 
+#[cfg(
+    // Comparing virtual memories is a very costly operation
+    // that should not be supported or used outside of test code.
+    test
+)]
+impl PartialEq for VirtualMemory {
+    fn eq(&self, other: &Self) -> bool {
+        // Comparing the slices works since virtual memories are zero initialized.
+        // Two virtual memories with the same lengths and memory contents but different
+        // capacities are treated as equal to each other.
+        self.as_slice() == other.as_slice()
+    }
+}
+
 #[allow(clippy::len_without_is_empty)]
 impl VirtualMemory {
     /// Creates a new virtual memory with a capacity for the given amount of bytes.
