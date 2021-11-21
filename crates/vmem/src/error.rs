@@ -67,6 +67,7 @@ impl PartialEq for RegionError {
 /// An error that may occur upon operating with virtual memory.
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
+#[non_exhaustive]
 pub enum Error {
     Region(RegionError),
 }
