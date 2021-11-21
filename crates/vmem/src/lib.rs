@@ -50,6 +50,7 @@ pub struct VirtualMemory {
 impl Debug for VirtualMemory {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("VirtualMemory")
+            .field("len", &self.len())
             .field("capacity", &self.capacity())
             .field("bytes", &self.as_slice())
             .finish()
