@@ -43,14 +43,12 @@ use core::{
 ///   If a user needs this they shall convert the virtual allocation into a slice.
 /// - The Virtual memory allocation or anonymously mapped memory is initialized to zero.
 pub struct VirtualMemory {
-    len: usize,
     allocation: region::Allocation,
 }
 
 impl Debug for VirtualMemory {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("VirtualMemory")
-            .field("len", &self.len())
             .field("capacity", &self.capacity())
             .field("bytes", &self.as_slice())
             .finish()
@@ -59,60 +57,37 @@ impl Debug for VirtualMemory {
 
 #[cfg(
     // Comparing virtual memories is a very costly operation
-    // that should not be supported or used outside of test code.
+    // due to the fact that most often virtual memory is allocated
+    // with a huge capacity where most bytes are unused.
+    // Therefore the equality operation should not be supported directly.
     test
 )]
 impl PartialEq for VirtualMemory {
     fn eq(&self, other: &Self) -> bool {
         // Comparing the slices works since virtual memories are zero initialized.
-        // Two virtual memories with the same lengths and memory contents but different
-        // capacities are treated as equal to each other.
+        // Two virtual memories with the same capcaity and memory contents are
+        // treated as equal to each other.
         self.as_slice() == other.as_slice()
     }
 }
 
 #[allow(clippy::len_without_is_empty)]
 impl VirtualMemory {
-    /// Creates a new virtual memory with a capacity for the given amount of bytes.
+    /// Creates a new virtual memory with a capacity for at least the given amount of bytes.
     ///
     /// # Note
     ///
-    /// The resulting capacity of the virtual memory might be greater than `size`.
-    pub fn new(len: usize) -> Result<Self, Error> {
-        let allocation = region::alloc(len, region::Protection::READ_WRITE)?;
-        Ok(Self { len, allocation })
+    /// The resulting capacity of the virtual memory might be greater than requested.
+    pub fn new(capacity: usize) -> Result<Self, Error> {
+        let allocation =
+            region::alloc(capacity, region::Protection::READ_WRITE)?;
+        Ok(Self { allocation })
     }
 
     /// Returns the capacity of the virtually allocated buffer.
     #[inline]
     pub fn capacity(&self) -> usize {
         self.allocation.len()
-    }
-
-    /// Returns the length of the virtually allocated buffer.
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.len
-    }
-
-    /// Grows the virtually allocated buffer by the additional length.
-    pub fn grow(&mut self, additional_len: usize) -> Result<(), Error> {
-        if additional_len == 0 {
-            // Nothing to do in case the additiona length is zero.
-            return Ok(())
-        }
-        let new_len = self.len() + additional_len;
-        if self.capacity() < new_len {
-            // Update the virtually allocated memory only in case its
-            // current capacity is not big enough for the requested length.
-            self.allocation = region::alloc_at::<u8>(
-                self.allocation.as_ptr::<u8>(),
-                new_len,
-                region::Protection::READ_WRITE,
-            )?;
-        }
-        self.len = new_len;
-        Ok(())
     }
 
     /// Returns a shared slice to the virtually allocated buffer.
@@ -122,7 +97,10 @@ impl VirtualMemory {
         //         is via the constructor which guarantees that the
         //         below byte slice creation is valid.
         unsafe {
-            slice::from_raw_parts(self.allocation.as_ptr::<u8>(), self.len())
+            slice::from_raw_parts(
+                self.allocation.as_ptr::<u8>(),
+                self.capacity(),
+            )
         }
     }
 
@@ -135,7 +113,7 @@ impl VirtualMemory {
         unsafe {
             slice::from_raw_parts_mut(
                 self.allocation.as_mut_ptr::<u8>(),
-                self.len(),
+                self.capacity(),
             )
         }
     }
