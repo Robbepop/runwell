@@ -158,28 +158,6 @@
 <span id="156">156</span>
 <span id="157">157</span>
 <span id="158">158</span>
-<span id="159">159</span>
-<span id="160">160</span>
-<span id="161">161</span>
-<span id="162">162</span>
-<span id="163">163</span>
-<span id="164">164</span>
-<span id="165">165</span>
-<span id="166">166</span>
-<span id="167">167</span>
-<span id="168">168</span>
-<span id="169">169</span>
-<span id="170">170</span>
-<span id="171">171</span>
-<span id="172">172</span>
-<span id="173">173</span>
-<span id="174">174</span>
-<span id="175">175</span>
-<span id="176">176</span>
-<span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2021 Robin Freyler</span>
 <span class="comment">//</span>
 <span class="comment">// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
@@ -225,14 +203,12 @@
 <span class="doccomment">///   If a user needs this they shall convert the virtual allocation into a slice.</span>
 <span class="doccomment">/// - The Virtual memory allocation or anonymously mapped memory is initialized to zero.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VirtualMemory</span> {
-    <span class="ident">len</span>: <span class="ident">usize</span>,
     <span class="ident">allocation</span>: <span class="ident">region::Allocation</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">VirtualMemory</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;VirtualMemory&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;len&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">len</span>())
             .<span class="ident">field</span>(<span class="string">&quot;capacity&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">capacity</span>())
             .<span class="ident">field</span>(<span class="string">&quot;bytes&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">as_slice</span>())
             .<span class="ident">finish</span>()
@@ -241,60 +217,37 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(
     <span class="comment">// Comparing virtual memories is a very costly operation</span>
-    <span class="comment">// that should not be supported or used outside of test code.</span>
+    <span class="comment">// due to the fact that most often virtual memory is allocated</span>
+    <span class="comment">// with a huge capacity where most bytes are unused.</span>
+    <span class="comment">// Therefore the equality operation should not be supported directly.</span>
     <span class="ident">test</span>
 )]</span>
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">VirtualMemory</span> {
     <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="comment">// Comparing the slices works since virtual memories are zero initialized.</span>
-        <span class="comment">// Two virtual memories with the same lengths and memory contents but different</span>
-        <span class="comment">// capacities are treated as equal to each other.</span>
+        <span class="comment">// Two virtual memories with the same capcaity and memory contents are</span>
+        <span class="comment">// treated as equal to each other.</span>
         <span class="self">self</span>.<span class="ident">as_slice</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">as_slice</span>()
     }
 }
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::len_without_is_empty</span>)]</span>
 <span class="kw">impl</span> <span class="ident">VirtualMemory</span> {
-    <span class="doccomment">/// Creates a new virtual memory with a capacity for the given amount of bytes.</span>
+    <span class="doccomment">/// Creates a new virtual memory with a capacity for at least the given amount of bytes.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Note</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The resulting capacity of the virtual memory might be greater than `size`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">allocation</span> <span class="op">=</span> <span class="ident">region::alloc</span>(<span class="ident">len</span>, <span class="ident">region::Protection::READ_WRITE</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">len</span>, <span class="ident">allocation</span> })
+    <span class="doccomment">/// The resulting capacity of the virtual memory might be greater than requested.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">capacity</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">allocation</span> <span class="op">=</span>
+            <span class="ident">region::alloc</span>(<span class="ident">capacity</span>, <span class="ident">region::Protection::READ_WRITE</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">allocation</span> })
     }
 
     <span class="doccomment">/// Returns the capacity of the virtually allocated buffer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">capacity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">allocation</span>.<span class="ident">len</span>()
-    }
-
-    <span class="doccomment">/// Returns the length of the virtually allocated buffer.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">len</span>
-    }
-
-    <span class="doccomment">/// Grows the virtually allocated buffer by the additional length.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">grow</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">additional_len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">additional_len</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="comment">// Nothing to do in case the additiona length is zero.</span>
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(())
-        }
-        <span class="kw">let</span> <span class="ident">new_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">additional_len</span>;
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">capacity</span>() <span class="op">&lt;</span> <span class="ident">new_len</span> {
-            <span class="comment">// Update the virtually allocated memory only in case its</span>
-            <span class="comment">// current capacity is not big enough for the requested length.</span>
-            <span class="self">self</span>.<span class="ident">allocation</span> <span class="op">=</span> <span class="ident">region::alloc_at</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(
-                <span class="self">self</span>.<span class="ident">allocation</span>.<span class="ident">as_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(),
-                <span class="ident">new_len</span>,
-                <span class="ident">region::Protection::READ_WRITE</span>,
-            )<span class="question-mark">?</span>;
-        }
-        <span class="self">self</span>.<span class="ident">len</span> <span class="op">=</span> <span class="ident">new_len</span>;
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Returns a shared slice to the virtually allocated buffer.</span>
@@ -304,7 +257,10 @@
         <span class="comment">//         is via the constructor which guarantees that the</span>
         <span class="comment">//         below byte slice creation is valid.</span>
         <span class="kw">unsafe</span> {
-            <span class="ident">slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">allocation</span>.<span class="ident">as_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(), <span class="self">self</span>.<span class="ident">len</span>())
+            <span class="ident">slice::from_raw_parts</span>(
+                <span class="self">self</span>.<span class="ident">allocation</span>.<span class="ident">as_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(),
+                <span class="self">self</span>.<span class="ident">capacity</span>(),
+            )
         }
     }
 
@@ -317,7 +273,7 @@
         <span class="kw">unsafe</span> {
             <span class="ident">slice::from_raw_parts_mut</span>(
                 <span class="self">self</span>.<span class="ident">allocation</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(),
-                <span class="self">self</span>.<span class="ident">len</span>(),
+                <span class="self">self</span>.<span class="ident">capacity</span>(),
             )
         }
     }
