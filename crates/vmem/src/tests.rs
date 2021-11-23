@@ -14,7 +14,7 @@
 
 use super::*;
 
-/// Common virtual memory capcities to use in tests.
+/// Common virtual memory capacities to use in tests.
 const TEST_CAPACITIES: &[usize] = &[1, 8, 64, 1024, 4096, 16384, 100_000];
 
 #[test]
